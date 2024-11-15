@@ -144,6 +144,18 @@ const Dashboard = () => {
             onPress={() => navigation.navigate('LivestockFeedingScreen')}
             color="#FF9800"
           />
+          <MenuButton
+            title=" Farm Feeding Plan"
+            icon={icons.agriculture}
+            onPress={() => navigation.navigate('FarmFeedsScreen')}
+            color="#FF9800"
+          />
+          <MenuButton
+            title=" Animal Feeding Program"
+            icon={icons.agriculture}
+            onPress={() => navigation.navigate('AnimalFeedingProgramScreen')}
+            color="#FF9800"
+          />
         </MenuSection>
       </ScrollView>
 

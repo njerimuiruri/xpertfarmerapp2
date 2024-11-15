@@ -22,6 +22,9 @@ import OptionDetailsScreen from './livestock/optionDetails';
 import OptionLivestockGroupScreen from './livestock/OptionLivestockGroup';
 import BreedingRecordForm from './livestock/breeding/BreedingRecordForm';
 import LivestockFeedingScreen from './livestock/feeding/LivestockFeedingScreen';
+import AnimalFeedingProgramScreen from './livestock/feeding/AnimalFeedingProgramScreen';
+import FarmFeedsScreen from './livestock/feeding/FarmFeedsScreen';
+
 export {
   LoginScreen,
   SignupScreen,
@@ -44,4 +47,6 @@ export {
   OptionLivestockGroupScreen,
   BreedingRecordForm,
   LivestockFeedingScreen,
+  FarmFeedsScreen,
+  AnimalFeedingProgramScreen,
 };

@@ -32,6 +32,9 @@ import {
   OptionLivestockGroupScreen,
   BreedingRecordForm,
   LivestockFeedingScreen,
+  AnimalFeedingProgramScreen,
+  FarmFeedsScreen,
+
 } from './src/screens/index';
 import DrawerNav from './src/navigation/drawer/DrawerNav1';
 
@@ -197,6 +200,17 @@ export default function App() {
               <Stack.Screen
                 name="LivestockFeedingScreen"
                 component={LivestockFeedingScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="AnimalFeedingProgramScreen"
+                component={AnimalFeedingProgramScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="FarmFeedsScreen"
+                component={FarmFeedsScreen}
                 options={{headerShown: false}}
               />
             </Stack.Navigator>
