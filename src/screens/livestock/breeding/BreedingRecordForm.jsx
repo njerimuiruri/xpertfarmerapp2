@@ -87,7 +87,7 @@ export default function BreedingRecordForm() {
                     <Text className='text-[18px] font-semibold text-black text-center pb-2'>Breeding Purpose & Strategy</Text>
                     <Divider orientation='horizontal' />
 
-                    <View className=' flex flex-row space-x-4 justify-between'>
+                    <View className=' flex flex-row justify-between'>
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Purpose of Breeding</Text>
 
@@ -95,27 +95,28 @@ export default function BreedingRecordForm() {
                             >
                                 <Checkbox
                                     value="Improve Milk"
-                                    my={1}
                                     isChecked={purposeOfBreeding.includes("Improve Milk")}
                                     onPress={() => handleCheckboxChange("Improve Milk")}
+                                    size="sm"
                                 >
                                     Improve Milk
                                 </Checkbox>
 
                                 <Checkbox
                                     value="Stocking Number"
-                                    my={1}
                                     isChecked={purposeOfBreeding.includes("Stocking Number")}
                                     onPress={() => handleCheckboxChange("Stocking Number")}
+                                    size="sm"
                                 >
                                     Stocking Number
                                 </Checkbox>
 
                                 <Checkbox
                                     value="Immunity"
-                                    my={1}
                                     isChecked={purposeOfBreeding.includes("Immunity")}
                                     onPress={() => handleCheckboxChange("Immunity")}
+                                    size="sm"
+
                                 >
                                     Immunity
                                 </Checkbox>
@@ -131,9 +132,9 @@ export default function BreedingRecordForm() {
                                 value={breedingStrategy}
                                 onChange={setBreedingStrategy}
                             >
-                                <Radio value="Cross Breeding" my={1} className='text-[12px]'>Cross Breeding</Radio>
-                                <Radio value="Within Breeds" my={1} className='text-[12px]'>Within Breeds</Radio>
-                                <Radio value="Between Breeds" my={1} className='text-[12px]'>Between Breeds</Radio>
+                                <Radio value="Cross Breeding" my={1} size="sm">Cross Breeding</Radio>
+                                <Radio value="Within Breeds" my={1} size="sm">Within Breeds</Radio>
+                                <Radio value="Between Breeds" my={1} size="sm">Between Breeds</Radio>
                             </Radio.Group>
                         </View>
                     </View>
@@ -147,10 +148,10 @@ export default function BreedingRecordForm() {
                         accessibilityLabel="servicing method"
                         value={servicing}
                         onChange={setServicing}
-                        className='flex flex-row space-x-4'
+                        className='flex flex-row space-x-1'
                     >
-                        <Radio value="Natural Mating" my={1}>Natural Mating</Radio>
-                        <Radio value="Artificial Mating" my={1}>Artificial Mating</Radio>
+                        <Radio value="Natural Mating" my={1} size="sm">Natural Mating</Radio>
+                        <Radio value="Artificial Mating" my={1} size="sm">Artificial Mating</Radio>
                     </Radio.Group>
                 </View>
 

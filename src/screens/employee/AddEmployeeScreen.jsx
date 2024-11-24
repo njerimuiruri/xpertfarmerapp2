@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { Text, Input, Button, Select, CheckIcon } from "native-base";
+import FastImage from "react-native-fast-image";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import SecondaryHeader from "../../components/headers/secondary-header";
 import { icons } from "../../constants";
 
@@ -12,13 +14,22 @@ const AddEmployeeScreen = ({ navigation }) => {
   const [workingHour, setWorkingHour] = useState("");
   const [position, setPosition] = useState("");
   const [employmentType, setEmploymentType] = useState("");
+  const [emergencyContact, setEmergencyContact] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [date, setDate] = useState(new Date());
 
-
+  const onDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setDate(selectedDate);
+      setDateOfEmployment(selectedDate.toLocaleDateString());
+    }
+  };
 
   return (
     <View className="flex-1 bg-white">
       <SecondaryHeader title="Add Employee" />
-      <View className="rounded-lg m-4">
+      <ScrollView className="p-4">
         <View style={styles.formField}>
           <Text style={styles.label}>Full Name</Text>
           <Input
@@ -44,16 +55,37 @@ const AddEmployeeScreen = ({ navigation }) => {
 
         <View style={styles.formField}>
           <Text style={styles.label}>Date of Employment</Text>
+          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+            <Input
+              value={dateOfEmployment}
+              isReadOnly
+              placeholder="Select Date"
+              style={styles.input}
+              backgroundColor="#e8f5e9"
+            />
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={date}
+              mode="date"
+              onChange={onDateChange}
+            />
+          )}
+        </View>
+
+        <View style={styles.formField}>
+          <Text style={styles.label}>Emergency Contact</Text>
           <Input
-            value={dateOfEmployment}
-            onChangeText={setDateOfEmployment}
-            placeholder="DD/MM/YY"
+            value={emergencyContact}
+            onChangeText={setEmergencyContact}
+            placeholder="Emergency Contact"
+            keyboardType="phone-pad"
             style={styles.input}
             backgroundColor="#e8f5e9"
           />
         </View>
 
-        {/* <View style={styles.formField}>
+        <View style={styles.formField}>
           <Text style={styles.label}>Employment Type</Text>
           <Select
             selectedValue={employmentType}
@@ -70,7 +102,7 @@ const AddEmployeeScreen = ({ navigation }) => {
             <Select.Item label="Permanent" value="permanent" />
             <Select.Item label="Contractual" value="contractual" />
           </Select>
-        </View> */}
+        </View>
 
         <View style={styles.formField}>
           <Text style={styles.label}>Position</Text>
@@ -134,10 +166,11 @@ const AddEmployeeScreen = ({ navigation }) => {
           />
         </View>
 
-        <Button className="bg-emerald-600 border-0 py-3">
-          <Text className="font-semibold text-white">Submit</Text>
+        <Button className="bg-emerald-600 rounded-md h-12 justify-center">
+          <Text className="text-white font-semibold">Submit</Text>
         </Button>
-      </View>
+        <View className="h-[60px]" />
+      </ScrollView>
     </View>
   );
 }

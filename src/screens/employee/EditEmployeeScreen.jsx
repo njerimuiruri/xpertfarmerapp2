@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { Text, Input, Button, Select, Modal, Box } from "native-base";
 import SecondaryHeader from "../../components/headers/secondary-header";
 import { icons } from "../../constants";
 import FastImage from "react-native-fast-image";
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const EditEmployeeScreen = ({ navigation }) => {
   const employeeData = {
@@ -28,12 +29,21 @@ const EditEmployeeScreen = ({ navigation }) => {
   const [employmentType, setEmploymentType] = useState(employeeData.employmentType);
   const [workingHours, setWorkingHours] = useState(employeeData.workingHours);
   const [paymentRate, setPaymentRate] = useState(employeeData.paymentRate);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [date, setDate] = useState(new Date());
 
+  const onDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setDate(selectedDate);
+      setDateOfEmployment(selectedDate.toLocaleDateString());
+    }
+  };
 
   return (
     <View className="bg-white flex-1">
       <SecondaryHeader title="Edit Employee" />
-      <View className="p-4">
+      <ScrollView className="p-4">
         <View style={styles.formField}>
           <Text style={styles.label}>Full Name</Text>
           <Input
@@ -71,13 +81,22 @@ const EditEmployeeScreen = ({ navigation }) => {
 
         <View style={styles.formField}>
           <Text style={styles.label}>Date of Employment</Text>
-          <Input
-            value={dateOfEmployment}
-            onChangeText={setDateOfEmployment}
-            placeholder="DD/MM/YY"
-            style={styles.input}
-            backgroundColor="#e8f5e9"
-          />
+          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+            <Input
+              value={dateOfEmployment}
+              isReadOnly
+              placeholder="Select Date"
+              style={styles.input}
+              backgroundColor="#e8f5e9"
+            />
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={date}
+              mode="date"
+              onChange={onDateChange}
+            />
+          )}
         </View>
 
         <View style={styles.formField}>
@@ -148,7 +167,9 @@ const EditEmployeeScreen = ({ navigation }) => {
         <Button className="bg-emerald-600 rounded-md h-12 justify-center">
           <Text className="text-white font-semibold">Save Changes</Text>
         </Button>
-      </View>
+        <View className="h-[60px]" />
+
+      </ScrollView>
     </View >
   );
 }

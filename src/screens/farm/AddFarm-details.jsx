@@ -162,6 +162,7 @@ export default function AddFarmDetailsScreen({ navigation }) {
 
           </VStack>
         </Box>
+        <View className="h-[60px]" />
       </ScrollView>
     </View>
   );
