@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, {useState, useCallback, useMemo} from 'react';
 import {
   View,
   Text,
@@ -12,19 +12,54 @@ import {
   SafeAreaView,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import { icons } from '../../constants';
-import { COLORS } from '../../constants/theme';
+import {icons} from '../../constants';
+import {COLORS} from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
 const initialEmployeeData = [
-  { id: '1', fullName: "John Doe", farmId: "F001", position: "Farm Manager", phone: "123-456-7890", dateOfEmployment: "2023-01-15" },
-  { id: '2', fullName: "Jane Smith", farmId: "F002", position: "Assistant Manager", phone: "098-765-4321", dateOfEmployment: "2023-03-22" },
-  { id: '3', fullName: "Alice Johnson", farmId: "F003", position: "Field Supervisor", phone: "456-123-7890", dateOfEmployment: "2022-11-01" },
-  { id: '4', fullName: "Robert Brown", farmId: "F004", position: "Crop Technician", phone: "789-456-1230", dateOfEmployment: "2023-02-10" },
-  { id: '5', fullName: "Sarah Wilson", farmId: "F005", position: "Livestock Specialist", phone: "321-654-0987", dateOfEmployment: "2023-05-15" },
+  {
+    id: '1',
+    fullName: 'John Doe',
+    farmId: 'F001',
+    position: 'Farm Manager',
+    phone: '123-456-7890',
+    dateOfEmployment: '2023-01-15',
+  },
+  {
+    id: '2',
+    fullName: 'Jane Smith',
+    farmId: 'F002',
+    position: 'Assistant Manager',
+    phone: '098-765-4321',
+    dateOfEmployment: '2023-03-22',
+  },
+  {
+    id: '3',
+    fullName: 'Alice Johnson',
+    farmId: 'F003',
+    position: 'Field Supervisor',
+    phone: '456-123-7890',
+    dateOfEmployment: '2022-11-01',
+  },
+  {
+    id: '4',
+    fullName: 'Robert Brown',
+    farmId: 'F004',
+    position: 'Crop Technician',
+    phone: '789-456-1230',
+    dateOfEmployment: '2023-02-10',
+  },
+  {
+    id: '5',
+    fullName: 'Sarah Wilson',
+    farmId: 'F005',
+    position: 'Livestock Specialist',
+    phone: '321-654-0987',
+    dateOfEmployment: '2023-05-15',
+  },
 ];
 
-const FarmEmployeeListScreen = ({ navigation }) => {
+const FarmEmployeeListScreen = ({navigation}) => {
   const [employees, setEmployees] = useState(initialEmployeeData);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('name');
@@ -34,9 +69,10 @@ const FarmEmployeeListScreen = ({ navigation }) => {
 
   const sortedAndFilteredEmployees = useMemo(() => {
     return employees
-      .filter(employee =>
-        employee.fullName.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        (filterPosition === '' || employee.position === filterPosition)
+      .filter(
+        employee =>
+          employee.fullName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+          (filterPosition === '' || employee.position === filterPosition),
       )
       .sort((a, b) => {
         if (sortBy === 'name') {
@@ -52,39 +88,51 @@ const FarmEmployeeListScreen = ({ navigation }) => {
       });
   }, [employees, searchQuery, sortBy, sortOrder, filterPosition]);
 
-  const handleDelete = useCallback((id) => {
+  const handleDelete = useCallback(id => {
     Alert.alert(
-      "Delete Employee",
-      "Are you sure you want to delete this employee?",
+      'Delete Employee',
+      'Are you sure you want to delete this employee?',
       [
-        { text: "Cancel", style: "cancel" },
+        {text: 'Cancel', style: 'cancel'},
         {
-          text: "Delete", style: "destructive", onPress: () => {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
             setEmployees(prev => prev.filter(employee => employee.id !== id));
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   }, []);
 
-  const handleEdit = useCallback((employee) => {
-    // Navigate to edit screen with employee data
-    navigation.navigate('EditEmployeeScreen', { employee });
-  }, [navigation]);
+  const handleEdit = useCallback(
+    employee => {
+      // Navigate to edit screen with employee data
+      navigation.navigate('EditEmployeeScreen', {employee});
+    },
+    [navigation],
+  );
 
-  const toggleSort = useCallback((newSortBy) => {
-    if (sortBy === newSortBy) {
-      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(newSortBy);
-      setSortOrder('asc');
-    }
-  }, [sortBy]);
+  const toggleSort = useCallback(
+    newSortBy => {
+      if (sortBy === newSortBy) {
+        setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+      } else {
+        setSortBy(newSortBy);
+        setSortOrder('asc');
+      }
+    },
+    [sortBy],
+  );
 
   const renderHeader = () => (
     <View style={styles.header}>
       <View style={styles.searchContainer}>
-        <FastImage source={icons.search} style={styles.searchIcon} tintColor="#666" />
+        <FastImage
+          source={icons.search}
+          style={styles.searchIcon}
+          tintColor="#666"
+        />
         <TextInput
           style={styles.searchInput}
           placeholder="Search employees..."
@@ -94,20 +142,32 @@ const FarmEmployeeListScreen = ({ navigation }) => {
         />
       </View>
       <View style={styles.actionBar}>
-        <TouchableOpacity style={styles.actionButton} onPress={() => setIsFilterModalVisible(true)}>
-          <FastImage source={icons.filter} style={styles.actionIcon} tintColor="#333" />
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => setIsFilterModalVisible(true)}>
+          <FastImage
+            source={icons.filter}
+            style={styles.actionIcon}
+            tintColor="#333"
+          />
           <Text style={styles.actionText}>Filter</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionButton} onPress={() => toggleSort('date')}>
-          <FastImage source={icons.calendar} style={styles.actionIcon} tintColor="#333" />
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => toggleSort('date')}>
+          <FastImage
+            source={icons.calendar}
+            style={styles.actionIcon}
+            tintColor="#333"
+          />
           <Text style={styles.actionText}>Sort by Date</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 
-  const renderEmployeeCard = ({ item }) => (
+  const renderEmployeeCard = ({item}) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.employeeInfo}>
@@ -115,26 +175,52 @@ const FarmEmployeeListScreen = ({ navigation }) => {
           <Text style={styles.position}>{item.position}</Text>
         </View>
         <View style={styles.cardActions}>
-          <TouchableOpacity onPress={() => handleEdit(item)} style={styles.cardActionButton}>
-            <FastImage source={icons.submited} style={styles.cardActionIcon} tintColor="#4CAF50" />
+          <TouchableOpacity
+            onPress={() => handleEdit(item)}
+            style={styles.cardActionButton}>
+            <FastImage
+              source={icons.submited}
+              style={styles.cardActionIcon}
+              tintColor="#4CAF50"
+            />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.cardActionButton}>
-            <FastImage source={icons.remove} style={styles.cardActionIcon} tintColor="#F44336" />
+          <TouchableOpacity
+            onPress={() => handleDelete(item.id)}
+            style={styles.cardActionButton}>
+            <FastImage
+              source={icons.remove}
+              style={styles.cardActionIcon}
+              tintColor="#F44336"
+            />
           </TouchableOpacity>
         </View>
       </View>
       <View style={styles.cardDetails}>
         <View style={styles.detailRow}>
-          <FastImage source={icons.account} style={styles.detailIcon} tintColor="#666" />
+          <FastImage
+            source={icons.account}
+            style={styles.detailIcon}
+            tintColor="#666"
+          />
           <Text style={styles.detailText}>{item.farmId}</Text>
         </View>
         <View style={styles.detailRow}>
-          <FastImage source={icons.call} style={styles.detailIcon} tintColor="#666" />
+          <FastImage
+            source={icons.call}
+            style={styles.detailIcon}
+            tintColor="#666"
+          />
           <Text style={styles.detailText}>{item.phone}</Text>
         </View>
         <View style={styles.detailRow}>
-          <FastImage source={icons.calendar} style={styles.detailIcon} tintColor="#666" />
-          <Text style={styles.detailText}>Employed: {item.dateOfEmployment}</Text>
+          <FastImage
+            source={icons.calendar}
+            style={styles.detailIcon}
+            tintColor="#666"
+          />
+          <Text style={styles.detailText}>
+            Employed: {item.dateOfEmployment}
+          </Text>
         </View>
       </View>
     </View>
@@ -145,21 +231,33 @@ const FarmEmployeeListScreen = ({ navigation }) => {
       animationType="slide"
       transparent={true}
       visible={isFilterModalVisible}
-      onRequestClose={() => setIsFilterModalVisible(false)}
-    >
+      onRequestClose={() => setIsFilterModalVisible(false)}>
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Filter by Position</Text>
-          {['Farm Manager', 'Assistant Manager', 'Field Supervisor', 'Crop Technician', 'Livestock Specialist'].map((position) => (
+          {[
+            'Farm Manager',
+            'Assistant Manager',
+            'Field Supervisor',
+            'Crop Technician',
+            'Livestock Specialist',
+          ].map(position => (
             <TouchableOpacity
               key={position}
-              style={[styles.filterOption, filterPosition === position && styles.selectedFilterOption]}
+              style={[
+                styles.filterOption,
+                filterPosition === position && styles.selectedFilterOption,
+              ]}
               onPress={() => {
-                setFilterPosition(prev => prev === position ? '' : position);
+                setFilterPosition(prev => (prev === position ? '' : position));
                 setIsFilterModalVisible(false);
-              }}
-            >
-              <Text style={[styles.filterOptionText, filterPosition === position && styles.selectedFilterOptionText]}>
+              }}>
+              <Text
+                style={[
+                  styles.filterOptionText,
+                  filterPosition === position &&
+                    styles.selectedFilterOptionText,
+                ]}>
                 {position}
               </Text>
             </TouchableOpacity>
@@ -173,12 +271,13 @@ const FarmEmployeeListScreen = ({ navigation }) => {
               setSortBy('name');
               setSortOrder('asc');
               setIsFilterModalVisible(false);
-            }}
-          >
+            }}>
             <Text style={styles.resetButtonText}>Reset All Filters</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.closeModalButton} onPress={() => setIsFilterModalVisible(false)}>
+          <TouchableOpacity
+            style={styles.closeModalButton}
+            onPress={() => setIsFilterModalVisible(false)}>
             <Text style={styles.closeModalButtonText}>Close</Text>
           </TouchableOpacity>
         </View>
@@ -194,7 +293,7 @@ const FarmEmployeeListScreen = ({ navigation }) => {
         translucent
         backgroundColor={COLORS.green2}
         animated={true}
-        barStyle={"light-content"}
+        barStyle={'light-content'}
       />
       {renderHeader()}
       <FlatList
@@ -205,9 +304,12 @@ const FarmEmployeeListScreen = ({ navigation }) => {
       />
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('AddEmployeeScreen')}
-      >
-        <FastImage source={icons.plus} style={styles.fabIcon} tintColor="#fff" />
+        onPress={() => navigation.navigate('AddEmployeeScreen')}>
+        <FastImage
+          source={icons.plus}
+          style={styles.fabIcon}
+          tintColor="#fff"
+        />
       </TouchableOpacity>
       {renderFilterModal()}
     </SafeAreaView>
@@ -282,7 +384,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -345,7 +447,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.27,
     shadowRadius: 4.65,
   },
@@ -411,4 +513,3 @@ const styles = StyleSheet.create({
 });
 
 export default FarmEmployeeListScreen;
-

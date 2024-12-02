@@ -40,9 +40,9 @@ export default function ResetPassword({ navigation }) {
           size={5}
         />
       </Box>
-      <Image
+      {/* <Image
         source={require("../../assets/images/xpertLogo.jpeg")}
-        style={{ width: 180, height: 180, marginBottom: 10 }} />
+        style={{ width: 180, height: 180, marginBottom: 10 }} /> */}
       <Text fontSize="22" fontWeight="bold" marginBottom={5}>
         Reset Password
       </Text>

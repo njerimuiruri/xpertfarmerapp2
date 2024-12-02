@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useState} from 'react';
 import {
   Box,
   Text,
@@ -11,23 +11,27 @@ import {
   ScrollView,
   HStack,
   Fab,
-} from "native-base";
-import SecondaryHeader from "../../components/headers/secondary-header";
-import { View } from "react-native";
-import FastImage from "react-native-fast-image";
-import { icons } from "../../constants";
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+} from 'native-base';
+import SecondaryHeader from '../../components/headers/secondary-header';
+import {View} from 'react-native';
+import FastImage from 'react-native-fast-image';
+import {icons} from '../../constants';
+import {COLORS} from '../../constants/theme';
 
-export default function AddFarmDetailsScreen({ navigation }) {
+export default function AddFarmDetailsScreen({navigation}) {
   const [enableLocation, setEnableLocation] = useState(false);
-  const [farmSize, setFarmSize] = useState("");
-  const [selectedRegion, setSelectedRegion] = useState("");
-  const [selectedDivision, setSelectedDivision] = useState("");
-
+  const [farmSize, setFarmSize] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [selectedDivision, setSelectedDivision] = useState('');
 
   return (
     <View>
       <SecondaryHeader title="Add Farm Details" />
-
 
       <ScrollView>
         <Box bg="white" p={4} borderRadius={8} shadow={1} mb={8}>
@@ -38,24 +42,58 @@ export default function AddFarmDetailsScreen({ navigation }) {
           <VStack space={5}>
             <Box>
               <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
-                Region
+                Farm ID
               </Text>
-              <Select
-                selectedValue={selectedRegion}
-                minWidth="100%"
-                bg="gray.50"
+              <Input
+                variant="outline"
+                backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
-                placeholder="Select region"
-                _selectedItem={{
-                  bg: "teal.600",
-                  endIcon: <FastImage source={icons.right_arrow} className="w-[20px] h-[20px]" tintColor='white' />
-                }}
-                onValueChange={setSelectedRegion}
-              >
-                <Select.Item label="Region 1" value="region1" />
-                <Select.Item label="Region 2" value="region2" />
-              </Select>
+                isReadOnly
+                placeholder="F12345"
+              />
             </Box>
+
+            <HStack alignItems="center" justifyContent="space-between">
+              <Box flex={1}>
+                <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+                  Region
+                </Text>
+                <Select
+                  selectedValue={selectedRegion}
+                  minWidth="100%"
+                  backgroundColor={COLORS.lightGreen}
+                  borderColor="gray.200"
+                  placeholder="Select region"
+                  _selectedItem={{
+                    bg: 'teal.600',
+                    endIcon: (
+                      <FastImage
+                        source={icons.right_arrow}
+                        className="w-[20px] h-[20px]"
+                        tintColor="white"
+                      />
+                    ),
+                  }}
+                  onValueChange={setSelectedRegion}>
+                  <Select.Item label="Region 1" value="region1" />
+                  <Select.Item label="Region 2" value="region2" />
+                </Select>
+              </Box>
+            </HStack>
+
+            <HStack alignItems="center" justifyContent="space-between">
+              <Box flex={1}>
+                <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+                  Enable location
+                </Text>
+              </Box>
+              <Box>
+                <Switch
+                  isChecked={enableLocation}
+                  onToggle={setEnableLocation}
+                />
+              </Box>
+            </HStack>
 
             <Box>
               <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
@@ -64,15 +102,20 @@ export default function AddFarmDetailsScreen({ navigation }) {
               <Select
                 selectedValue={selectedDivision}
                 minWidth="100%"
-                bg="gray.50"
+                backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
                 placeholder="Select division"
                 _selectedItem={{
-                  bg: "teal.600",
-                  endIcon: <FastImage source={icons.right_arrow} className="w-[20px] h-[20px]" tintColor='white' />
+                  bg: 'teal.600',
+                  endIcon: (
+                    <FastImage
+                      source={icons.right_arrow}
+                      className="w-[20px] h-[20px]"
+                      tintColor="white"
+                    />
+                  ),
                 }}
-                onValueChange={setSelectedDivision}
-              >
+                onValueChange={setSelectedDivision}>
                 <Select.Item label="Division 1" value="division1" />
                 <Select.Item label="Division 2" value="division2" />
               </Select>
@@ -87,22 +130,50 @@ export default function AddFarmDetailsScreen({ navigation }) {
                 bg="gray.50"
                 borderColor="gray.200"
                 placeholder="Enter Administrative Location"
+                backgroundColor={COLORS.lightGreen}
               />
             </Box>
 
             <Box>
               <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
-                Farm Size
+                Farm Size (in Hectares)
               </Text>
-              <Input
-                variant="outline"
-                bg="gray.50"
-                borderColor="gray.200"
-                placeholder="Enter Farm Size"
-                keyboardType="numeric"
-                value={farmSize}
-                onChangeText={setFarmSize}
-              />
+              <HStack alignItems="center" space={2}>
+                <Button
+                  onPress={() => {
+                    const currentValue = parseFloat(farmSize) || 0;
+                    setFarmSize((currentValue - 1).toString());
+                  }}
+                  variant="outline"
+                  p={2}>
+                  -
+                </Button>
+                <Input
+                  flex={1}
+                  variant="outline"
+                  backgroundColor={COLORS.lightGreen}
+                  borderColor="gray.200"
+                  placeholder="Enter Farm Size"
+                  keyboardType="numeric"
+                  value={farmSize.toString()}
+                  onChangeText={text => {
+                    const numericText = text.replace(/[^0-9.]/g, ''); // Only allow numbers and decimals
+                    setFarmSize(numericText);
+                  }}
+                />
+                <Button
+                  onPress={() => {
+                    const currentValue = parseFloat(farmSize) || 0;
+                    setFarmSize((currentValue + 1).toString());
+                  }}
+                  variant="outline"
+                  p={2}>
+                  +
+                </Button>
+              </HStack>
+              <Text fontSize="xs" color="gray.500" mt={1}>
+                Farm size is measured in hectares.
+              </Text>
             </Box>
 
             <Box>
@@ -123,43 +194,11 @@ export default function AddFarmDetailsScreen({ navigation }) {
               </VStack>
             </Box>
 
-            <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
-                Region
-              </Text>
-              <Select
-                selectedValue={selectedRegion}
-                minWidth="100%"
-                bg="gray.50"
-                borderColor="gray.200"
-                placeholder="Select region"
-                _selectedItem={{
-                  bg: "teal.600",
-                  endIcon: <FastImage source={icons.right_arrow} className="w-[20px] h-[20px]" tintColor='white' />
-                }}
-                onValueChange={setSelectedRegion}
-              >
-                <Select.Item label="Region 1" value="region1" />
-                <Select.Item label="Region 2" value="region2" />
-              </Select>
-            </Box>
-
-
             <HStack justifyContent="space-between" mt={0}>
-
-              <Button
-                // isDisabled={!isFormComplete}
-                width="100%"
-                bg="emerald.600"
-
-              >
+              <Button width="100%" bg="emerald.600">
                 Save
               </Button>
             </HStack>
-
-
-
-
           </VStack>
         </Box>
         <View className="h-[60px]" />
