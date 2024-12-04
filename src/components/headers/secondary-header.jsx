@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   headerTitle: {
-    fontSize: 25,
+    fontSize: 18,
     fontWeight: '800',
     fontFamily: 'Poppins-SemiBold',
     color: COLORS.white,

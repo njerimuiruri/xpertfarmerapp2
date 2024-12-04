@@ -25,9 +25,9 @@ export default function LoginScreen({ navigation }) {
         />
       </Box>
 
-      <Image
+      {/* <Image
         source={require("../../assets/images/xpertLogo.jpeg")}
-        style={{ width: 180, height: 180, marginBottom: 20 }} />
+        style={{ width: 180, height: 180, marginBottom: 20 }} /> */}
 
       <Text
         fontSize="20"

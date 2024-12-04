@@ -38,9 +38,9 @@ export default function Otp({ navigation }) {
           style={{ width: 208, height: 144 }}
         />
       </Box>
-      <Image
+      {/* <Image
         source={require("../../assets/images/xpertLogo.jpeg")}
-        style={{ width: 180, height: 180, marginBottom: 10 }} />
+        style={{ width: 180, height: 180, marginBottom: 10 }} /> */}
       <Text
         fontSize="22"
         fontWeight="bold"

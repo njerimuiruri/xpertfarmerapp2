@@ -1,8 +1,11 @@
 import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
-import { Text, Input, Button, Select, CheckIcon } from "native-base";
+import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { Text, Input, Button, Select, CheckIcon, Box, HStack } from "native-base";
+import FastImage from "react-native-fast-image";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import SecondaryHeader from "../../components/headers/secondary-header";
 import { icons } from "../../constants";
+import {COLORS} from '../../constants/theme';
 
 const AddEmployeeScreen = ({ navigation }) => {
   const [fullName, setFullName] = useState("");
@@ -12,14 +15,33 @@ const AddEmployeeScreen = ({ navigation }) => {
   const [workingHour, setWorkingHour] = useState("");
   const [position, setPosition] = useState("");
   const [employmentType, setEmploymentType] = useState("");
+  const [emergencyContact, setEmergencyContact] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [date, setDate] = useState(new Date());
 
-
+  const onDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setDate(selectedDate);
+      setDateOfEmployment(selectedDate.toLocaleDateString());
+    }
+  };
 
   return (
-    <View className="flex-1 bg-white">
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Add Employee" />
-      <View className="rounded-lg m-4">
-        <View style={styles.formField}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+        <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
+          <Text  style={{
+              fontSize: 16,
+              color: 'black',
+              marginBottom: 16,
+              textAlign: 'center',
+            }}>
+            Please fill in the employee details.
+          </Text>
+
+          <View style={styles.formField}>
           <Text style={styles.label}>Full Name</Text>
           <Input
             value={fullName}
@@ -44,16 +66,37 @@ const AddEmployeeScreen = ({ navigation }) => {
 
         <View style={styles.formField}>
           <Text style={styles.label}>Date of Employment</Text>
+          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+            <Input
+              value={dateOfEmployment}
+              isReadOnly
+              placeholder="Select Date"
+              style={styles.input}
+              backgroundColor="#e8f5e9"
+            />
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={date}
+              mode="date"
+              onChange={onDateChange}
+            />
+          )}
+        </View>
+
+        <View style={styles.formField}>
+          <Text style={styles.label}>Emergency Contact</Text>
           <Input
-            value={dateOfEmployment}
-            onChangeText={setDateOfEmployment}
-            placeholder="DD/MM/YY"
+            value={emergencyContact}
+            onChangeText={setEmergencyContact}
+            placeholder="Emergency Contact"
+            keyboardType="phone-pad"
             style={styles.input}
             backgroundColor="#e8f5e9"
           />
         </View>
 
-        {/* <View style={styles.formField}>
+        <View style={styles.formField}>
           <Text style={styles.label}>Employment Type</Text>
           <Select
             selectedValue={employmentType}
@@ -70,7 +113,7 @@ const AddEmployeeScreen = ({ navigation }) => {
             <Select.Item label="Permanent" value="permanent" />
             <Select.Item label="Contractual" value="contractual" />
           </Select>
-        </View> */}
+        </View>
 
         <View style={styles.formField}>
           <Text style={styles.label}>Position</Text>
@@ -133,11 +176,34 @@ const AddEmployeeScreen = ({ navigation }) => {
             backgroundColor="#e8f5e9"
           />
         </View>
+          <HStack justifyContent="center" mt={6} space={4}>
+            <Button
+              variant="outline"
+              borderWidth={1}
+              color={COLORS.green}
 
-        <Button className="bg-emerald-600 border-0 py-3">
-          <Text className="font-semibold text-white">Submit</Text>
-        </Button>
-      </View>
+              borderColor={COLORS.green}
+              borderRadius={8}
+              px={6}
+              py={3}
+              onPress={() => navigation.goBack()}
+            >
+              Back
+            </Button>
+            <Button
+              bg="emerald.600"
+              borderRadius={8}
+              px={6}
+              py={3}
+              _pressed={{
+               bg:COLORS.green,
+              }}
+            >
+              Submit
+            </Button>
+          </HStack>
+        </Box>
+      </ScrollView>
     </View>
   );
 }
@@ -172,7 +238,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: "#333",
+    color: "#000",
     marginBottom: 8,
   },
   input: {
@@ -210,8 +276,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     textAlign: "center",
-  },
+  }
 });
 
 export default AddEmployeeScreen;
-

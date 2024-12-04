@@ -1,12 +1,12 @@
-import { createDrawerNavigator } from "@react-navigation/drawer";
-import React from "react";
-import { StyleSheet } from "react-native";
-import CustomDrawer1 from "./CustomDrawer1";
-import FastImage from "react-native-fast-image";
-import Tabs from "../Tabs";
-import { icons } from "../../constants";
-import { COLORS } from "../../constants/theme";
-import { View } from "react-native";
+import {createDrawerNavigator} from '@react-navigation/drawer';
+import React from 'react';
+import {StyleSheet} from 'react-native';
+import CustomDrawer1 from './CustomDrawer1';
+import FastImage from 'react-native-fast-image';
+import Tabs from '../Tabs';
+import {icons} from '../../constants';
+import {COLORS} from '../../constants/theme';
+import {View} from 'react-native';
 
 const Drawer = createDrawerNavigator();
 
@@ -17,22 +17,21 @@ const DrawerNav = () => {
         drawerStyle: styles.drawerStyles,
         headerShown: false,
         drawerActiveTintColor: COLORS.green,
-        drawerInactiveTintColor: "white",
-        drawerActiveTintColor: COLORS.green,
+        drawerInactiveTintColor: 'white',
         drawerLabelStyle: styles.drawerLabelStyle,
+        swipeEnabled: false,
       }}
-      drawerContent={(props) => <CustomDrawer1 {...props} />}
-    >
+      drawerContent={props => <CustomDrawer1 {...props} />}>
       <Drawer.Screen
         name="Dashboard"
         component={Tabs}
         options={{
-          title: "Dashboard",
+          title: 'Dashboard',
           drawerIcon: () => (
             <FastImage
               source={icons.home}
               style={styles.icon}
-              tintColor={"white"}
+              tintColor={'white'}
             />
           ),
         }}
@@ -41,12 +40,12 @@ const DrawerNav = () => {
         name="Employees"
         component={Tabs}
         options={{
-          title: "Employees",
+          title: 'Employees',
           drawerIcon: () => (
             <FastImage
               source={icons.employees}
               style={styles.icon}
-              tintColor={"white"}
+              tintColor={'white'}
             />
           ),
         }}
@@ -55,12 +54,12 @@ const DrawerNav = () => {
         name="Livestock"
         component={Tabs}
         options={{
-          title: "Livestock",
+          title: 'Livestock',
           drawerIcon: () => (
             <FastImage
               source={icons.livestock}
               style={styles.icon}
-              tintColor={"white"}
+              tintColor={'white'}
             />
           ),
         }}
@@ -69,12 +68,12 @@ const DrawerNav = () => {
         name="Feeding"
         component={Tabs}
         options={{
-          title: "Feeding",
+          title: 'Feeding',
           drawerIcon: () => (
             <FastImage
               source={icons.feeding}
               style={styles.icon}
-              tintColor={"white"}
+              tintColor={'white'}
             />
           ),
         }}
@@ -83,12 +82,12 @@ const DrawerNav = () => {
         name="Health"
         component={Tabs}
         options={{
-          title: "Health",
+          title: 'Health',
           drawerIcon: () => (
             <FastImage
               source={icons.health}
               style={styles.icon}
-              tintColor={"white"}
+              tintColor={'white'}
             />
           ),
         }}
@@ -97,12 +96,12 @@ const DrawerNav = () => {
         name="ProductionRecords"
         component={Tabs}
         options={{
-          title: "Production",
+          title: 'Production',
           drawerIcon: () => (
             <FastImage
               source={icons.agriculture}
               style={styles.icon}
-              tintColor={"white"}
+              tintColor={'white'}
             />
           ),
         }}
@@ -111,12 +110,12 @@ const DrawerNav = () => {
         name="AnalysisRecords"
         component={Tabs}
         options={{
-          title: "Analysis",
+          title: 'Analysis',
           drawerIcon: () => (
             <FastImage
               source={icons.analysis}
               style={styles.icon}
-              tintColor={"white"}
+              tintColor={'white'}
             />
           ),
         }}
@@ -125,12 +124,12 @@ const DrawerNav = () => {
         name="Settings"
         component={Tabs}
         options={{
-          title: "Settings",
+          title: 'Settings',
           drawerIcon: () => (
             <FastImage
               source={icons.settings}
               style={styles.icon}
-              tintColor={"white"}
+              tintColor={'white'}
             />
           ),
         }}
@@ -143,14 +142,14 @@ export default DrawerNav;
 
 const styles = StyleSheet.create({
   drawerStyles: {
-    width: "65%",
-    backgroundColor: "#121212",
+    width: '65%',
+    backgroundColor: '#121212',
   },
   drawerLabelStyle: {
-    color: "white",
+    color: 'white',
     fontSize: 15,
-    fontWeight: "800",
-    fontFamily: "HelveticaNeue-Medium",
+    fontWeight: '800',
+    fontFamily: 'HelveticaNeue-Medium',
   },
   icon: {
     width: 27,
