@@ -41,7 +41,7 @@ export default CustomDrawer1;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: '#929b92',
   },
   profileSection: {
     alignItems: 'center',

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from 'react-native';
-import { Button, Select, Input, Divider } from 'native-base';
+import { Button, Select, Input, Divider,Box,HStack } from 'native-base';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Image } from 'react-native';
 import { icons } from '../../../constants';
@@ -56,9 +56,13 @@ export default function LivestockFeedingScreen() {
     };
 
     return (
-        <View className="flex-1 bg-white">
+
+        <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
             <SecondaryHeader title="Livestock Feeding Record" />
-            <ScrollView contentContainerStyle={styles.container}>
+            <ScrollView
+        contentContainerStyle={{flexGrow: 1, justifyContent: 'center', marginTop: 5}}>
+        <Box bg="white" p={4} borderRadius={8} shadow={1} mx={6} my={8}>
+         
                 <View style={styles.formGroup}>
                     <Text style={styles.label}>Feed Type</Text>
                     <Select
@@ -236,9 +240,29 @@ export default function LivestockFeedingScreen() {
                     />
                 </View>
 
-                <Button onPress={handleSubmit} className="bg-green-600 border-0 py-3 mt-4">
-                    <Text className="font-semibold text-white">Submit</Text>
-                </Button>
+                <HStack justifyContent="center" mt={6} space={4}>
+            <Button
+              variant="outline"
+              borderWidth={1}
+              borderColor={COLORS.green}
+              borderRadius={8}
+              px={6}
+              py={3}
+              onPress={() => navigation.goBack()}>
+              Back
+            </Button>
+            <Button
+              backgroundColor={COLORS.green}
+              borderRadius={8}
+              px={6}
+              py={3}
+              _pressed={{
+                bg: 'emerald.700',
+              }}>
+              Submit
+            </Button>
+          </HStack>
+                </Box>
             </ScrollView>
         </View>
     );

@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { Text, Input, Button, Select, CheckIcon } from "native-base";
+import { Text, Input, Button, Select, CheckIcon, Box, HStack } from "native-base";
 import FastImage from "react-native-fast-image";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import SecondaryHeader from "../../components/headers/secondary-header";
 import { icons } from "../../constants";
+import {COLORS} from '../../constants/theme';
 
 const AddEmployeeScreen = ({ navigation }) => {
   const [fullName, setFullName] = useState("");
@@ -27,10 +28,20 @@ const AddEmployeeScreen = ({ navigation }) => {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Add Employee" />
-      <ScrollView className="p-4">
-        <View style={styles.formField}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+        <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
+          <Text  style={{
+              fontSize: 16,
+              color: 'black',
+              marginBottom: 16,
+              textAlign: 'center',
+            }}>
+            Please fill in the employee details.
+          </Text>
+
+          <View style={styles.formField}>
           <Text style={styles.label}>Full Name</Text>
           <Input
             value={fullName}
@@ -165,11 +176,33 @@ const AddEmployeeScreen = ({ navigation }) => {
             backgroundColor="#e8f5e9"
           />
         </View>
+          <HStack justifyContent="center" mt={6} space={4}>
+            <Button
+              variant="outline"
+              borderWidth={1}
+              color={COLORS.green}
 
-        <Button className="bg-emerald-600 rounded-md h-12 justify-center">
-          <Text className="text-white font-semibold">Submit</Text>
-        </Button>
-        <View className="h-[60px]" />
+              borderColor={COLORS.green}
+              borderRadius={8}
+              px={6}
+              py={3}
+              onPress={() => navigation.goBack()}
+            >
+              Back
+            </Button>
+            <Button
+              bg="emerald.600"
+              borderRadius={8}
+              px={6}
+              py={3}
+              _pressed={{
+               bg:COLORS.green,
+              }}
+            >
+              Submit
+            </Button>
+          </HStack>
+        </Box>
       </ScrollView>
     </View>
   );
@@ -205,7 +238,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: "#333",
+    color: "#000",
     marginBottom: 8,
   },
   input: {
@@ -243,8 +276,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     textAlign: "center",
-  },
+  }
 });
 
 export default AddEmployeeScreen;
-

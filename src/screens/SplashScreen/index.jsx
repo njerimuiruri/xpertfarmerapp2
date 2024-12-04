@@ -17,7 +17,7 @@ export default function SplashScreen() {
         barStyle={"light-content"}
       />
       <Image
-        source={require('../../assets/images/xpertLogo.jpeg')}
+        source={require('../../assets/images/xpertLogo2.png')}
         style={styles.logo}
         resizeMode="contain"
       />
@@ -32,7 +32,7 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#8cd18c',
     justifyContent: 'center',
     alignItems: 'center',
   },

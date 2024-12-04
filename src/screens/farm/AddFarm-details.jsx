@@ -30,12 +30,20 @@ export default function AddFarmDetailsScreen({navigation}) {
   const [selectedDivision, setSelectedDivision] = useState('');
 
   return (
-    <View>
+    
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Add Farm Details" />
 
-      <ScrollView>
-        <Box bg="white" p={4} borderRadius={8} shadow={1} mb={8}>
-          <Text fontSize="md" color="gray.600" mb={4}>
+      <ScrollView
+        contentContainerStyle={{flexGrow: 1, justifyContent: 'center', marginTop: 5}}>
+        <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
+          <Text
+            style={{
+              fontSize: 16,
+              color: 'black',
+              marginBottom: 16,
+              textAlign: 'center',
+            }}>
             Please fill in the farm details.
           </Text>
 
@@ -193,15 +201,30 @@ export default function AddFarmDetailsScreen({navigation}) {
                 <Checkbox value="pigs">Pigs (Swine)</Checkbox>
               </VStack>
             </Box>
-
-            <HStack justifyContent="space-between" mt={0}>
-              <Button width="100%" bg="emerald.600">
-                Save
-              </Button>
-            </HStack>
           </VStack>
+          <HStack justifyContent="center" mt={6} space={4}>
+            <Button
+              variant="outline"
+              borderWidth={1}
+              borderColor={COLORS.green}
+              borderRadius={8}
+              px={6}
+              py={3}
+              onPress={() => navigation.goBack()}>
+              Back
+            </Button>
+            <Button
+              backgroundColor={COLORS.green}
+              borderRadius={8}
+              px={6}
+              py={3}
+              _pressed={{
+                bg: 'emerald.700',
+              }}>
+              Submit
+            </Button>
+          </HStack>
         </Box>
-        <View className="h-[60px]" />
       </ScrollView>
     </View>
   );

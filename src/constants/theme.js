@@ -10,6 +10,7 @@ export const COLORS = {
   lightOrange2: '#FDDED4',
   lightOrange3: '#FFD9AD',
   green: '#27AE60',
+  green3:'#8cd18c',
   red: '#FF1717',
   blue: '#0064C0',
   darkBlue: '#111A2C',

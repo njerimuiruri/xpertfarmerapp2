@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { Button, Checkbox, Divider, Input, Radio } from 'native-base';
+import { Button, Checkbox, Divider, Input, Radio,Box,HStack } from 'native-base';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Image } from 'react-native';
@@ -80,9 +80,14 @@ export default function BreedingRecordForm() {
     };
 
     return (
-        <View className="flex-1 bg-white">
-            <SecondaryHeader title="Add Breeding Record" />
-            <ScrollView contentContainerStyle={styles.container}>
+        
+        <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
+      <SecondaryHeader title="Add Breeding Record" />
+
+      <ScrollView
+        contentContainerStyle={{flexGrow: 1, justifyContent: 'center', marginTop: 5}}>
+        <Box bg="white" p={4} borderRadius={8} shadow={1} mx={6} my={8}>
+         
                 <View>
                     <Text className='text-[18px] font-semibold text-black text-center pb-2'>Breeding Purpose & Strategy</Text>
                     <Divider orientation='horizontal' />
@@ -311,9 +316,29 @@ export default function BreedingRecordForm() {
                     </Radio.Group>
                 </View>
 
-                <Button className="bg-emerald-600 border-0 py-3">
-                    <Text className="font-semibold text-white">Submit</Text>
-                </Button>
+                <HStack justifyContent="center" mt={6} space={4}>
+            <Button
+              variant="outline"
+              borderWidth={1}
+              borderColor={COLORS.green}
+              borderRadius={8}
+              px={6}
+              py={3}
+              onPress={() => navigation.goBack()}>
+              Back
+            </Button>
+            <Button
+              backgroundColor={COLORS.green}
+              borderRadius={8}
+              px={6}
+              py={3}
+              _pressed={{
+                bg: 'emerald.700',
+              }}>
+              Submit
+            </Button>
+          </HStack>
+                </Box>
             </ScrollView>
         </View>
     );

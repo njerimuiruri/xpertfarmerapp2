@@ -1,251 +1,126 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { Text, Input, Button, Select, Modal, Box } from "native-base";
+import React, { useState } from "react";
+import { View, StyleSheet, ScrollView } from "react-native";
+import { Text, Button, Box, VStack, HStack } from "native-base";
 import SecondaryHeader from "../../components/headers/secondary-header";
-import { icons } from "../../constants";
-import FastImage from "react-native-fast-image";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { COLORS } from '../../constants/theme';
 
 const EditEmployeeScreen = ({ navigation }) => {
-  const employeeData = {
-    employeeId: "E12345",
-    farmId: "F67890",
-    fullName: "John Doe",
-    phone: "123-456-7890",
-    address: "123 Farm Lane",
-    dateOfEmployment: "01/01/2020",
-    emergencyContact: "Jane Doe",
-    position: "Farm Manager",
-    employmentType: "Permanent",
-    workingHours: "Full-Time",
-    paymentRate: "20.00"
-  };
-
-  const [fullName, setFullName] = useState(employeeData.fullName);
-  const [phone, setPhone] = useState(employeeData.phone);
-  const [dateOfEmployment, setDateOfEmployment] = useState(employeeData.dateOfEmployment);
-  const [emergencyContact, setEmergencyContact] = useState(employeeData.emergencyContact);
-  const [position, setPosition] = useState(employeeData.position);
-  const [employmentType, setEmploymentType] = useState(employeeData.employmentType);
-  const [workingHours, setWorkingHours] = useState(employeeData.workingHours);
-  const [paymentRate, setPaymentRate] = useState(employeeData.paymentRate);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [date, setDate] = useState(new Date());
-
-  const onDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setDate(selectedDate);
-      setDateOfEmployment(selectedDate.toLocaleDateString());
-    }
-  };
+  const [fullName] = useState("John Doe");
+  const [phone] = useState("0707");
+  const [dateOfEmployment] = useState("01/01/2020");
+  const [emergencyContact] = useState("Jane Doe");
+  const [position] = useState("Farm Manager");
+  const [employmentType] = useState("Permanent");
+  const [workingHours] = useState("Full-Time");
+  const [paymentRate] = useState("20.00");
 
   return (
-    <View className="bg-white flex-1">
+    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
       <SecondaryHeader title="Edit Employee" />
-      <ScrollView className="p-4">
-        <View style={styles.formField}>
-          <Text style={styles.label}>Full Name</Text>
-          <Input
-            value={fullName}
-            onChangeText={setFullName}
-            placeholder="Full Name"
-            style={styles.input}
-            backgroundColor="#e8f5e9"
-          />
-        </View>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', marginTop: -10 }}>
+        <Box bg="white" p={4} borderRadius={8} shadow={1} mx={6} mt={4}>
+          <Text style={{
+            fontSize: 16,
+            color: 'black',
+            marginBottom: 16,
+            textAlign: 'center',
+          }}>
+            Employee Details
+          </Text>
+          <VStack space={4}>
+            <View style={styles.formField}>
+              <Text style={styles.label}>Attached Farm ID</Text>
+              <Text style={styles.value}>Jk Farmer2</Text>
+            </View>
 
-        <View style={styles.formField}>
-          <Text style={styles.label}>Phone Number</Text>
-          <Input
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="Phone Number"
-            keyboardType="phone-pad"
-            style={styles.input}
-            backgroundColor="#e8f5e9"
-          />
-        </View>
+            <View style={styles.formField}>
+              <Text style={styles.label}>Full Name</Text>
+              <Text style={styles.value}>{fullName}</Text>
+            </View>
 
-        <View style={styles.formField}>
-          <Text style={styles.label}>Emergency Contact</Text>
-          <Input
-            value={emergencyContact}
-            onChangeText={setEmergencyContact}
-            placeholder="Emergency Contact"
-            keyboardType="phone-pad"
-            style={styles.input}
-            backgroundColor="#e8f5e9"
-          />
-        </View>
+            <View style={styles.formField}>
+              <Text style={styles.label}>Phone Number</Text>
+              <Text style={styles.value}>{phone}</Text>
+            </View>
 
-        <View style={styles.formField}>
-          <Text style={styles.label}>Date of Employment</Text>
-          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-            <Input
-              value={dateOfEmployment}
-              isReadOnly
-              placeholder="Select Date"
-              style={styles.input}
-              backgroundColor="#e8f5e9"
-            />
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              onChange={onDateChange}
-            />
-          )}
-        </View>
+            <View style={styles.formField}>
+              <Text style={styles.label}>Date of Employment</Text>
+              <Text style={styles.value}>{dateOfEmployment}</Text>
+            </View>
 
-        <View style={styles.formField}>
-          <Text style={styles.label}>Position</Text>
-          <Input
-            value={position}
-            onChangeText={setPosition}
-            placeholder="Position"
-            style={styles.input}
-            backgroundColor="#e8f5e9"
-          />
-        </View>
+            <View style={styles.formField}>
+              <Text style={styles.label}>Emergency Contact</Text>
+              <Text style={styles.value}>{emergencyContact}</Text>
+            </View>
 
-        <View style={styles.formField}>
-          <Text style={styles.label}>Employment Type</Text>
-          <Select
-            selectedValue={employmentType}
-            minWidth="200"
-            accessibilityLabel="Select Employment Type"
-            placeholder="Select Employment Type"
-            _selectedItem={{
-              bg: "teal.600",
-              endIcon: <FastImage source={icons.right_arrow} className="w-[20px] h-[20px]" tintColor='white' />
+            <View style={styles.formField}>
+              <Text style={styles.label}>Position</Text>
+              <Text style={styles.value}>{position}</Text>
+            </View>
 
-            }}
-            mt={1}
-            onValueChange={setEmploymentType}
-          >
-            <Select.Item label="Permanent" value="permanent" />
-            <Select.Item label="Contractual" value="contractual" />
-          </Select>
-        </View>
+            <View style={styles.formField}>
+              <Text style={styles.label}>Employment Type</Text>
+              <Text style={styles.value}>{employmentType}</Text>
+            </View>
 
-        <View style={styles.formField}>
-          <Text style={styles.label}>Working Hours</Text>
-          <Select
-            selectedValue={workingHours}
-            minWidth="200"
-            accessibilityLabel="Choose Working Hours"
-            placeholder="Choose Working Hours"
-            _selectedItem={{
-              bg: "teal.600",
-              endIcon: <FastImage source={icons.right_arrow} className="w-[20px] h-[20px]" tintColor='white' />
+            <View style={styles.formField}>
+              <Text style={styles.label}>Working Hours</Text>
+              <Text style={styles.value}>{workingHours}</Text>
+            </View>
 
-            }}
-            mt={1}
-            onValueChange={setWorkingHours}
-          >
-            <Select.Item label="Full-Time" value="full-time" />
-            <Select.Item label="Part-Time Morning and Evening" value="part-time-morning-evening" />
-            <Select.Item label="Weekends Only" value="weekends-only" />
-            <Select.Item label="Seasonal (Harvest Periods)" value="seasonal" />
-          </Select>
-        </View>
+            <View style={styles.formField}>
+              <Text style={styles.label}>Payment Rates</Text>
+              <Text style={styles.value}>{paymentRate}</Text>
+            </View>
+          </VStack>
 
-        <View style={styles.formField}>
-          <Text style={styles.label}>Payment Rate</Text>
-          <Input
-            value={paymentRate}
-            onChangeText={setPaymentRate}
-            placeholder="Payment Rate"
-            keyboardType="numeric"
-            style={styles.input}
-            backgroundColor="#e8f5e9"
-          />
-        </View>
-
-        <Button className="bg-emerald-600 rounded-md h-12 justify-center">
-          <Text className="text-white font-semibold">Save Changes</Text>
-        </Button>
-        <View className="h-[60px]" />
-
+          <HStack justifyContent="center" mt={6} space={4}>
+            <Button
+              variant="outline"
+              borderWidth={1}
+              color={COLORS.green}
+              borderColor={COLORS.green}
+              borderRadius={8}
+              px={6}
+              py={3}
+              onPress={() => navigation.goBack()}
+            >
+              Back
+            </Button>
+            <Button
+              bg={COLORS.green2}
+              borderRadius={8}
+              px={6}
+              py={3}
+              _pressed={{
+                bg: COLORS.lightGreen,
+              }}
+            >
+              Submit
+            </Button>
+          </HStack>
+        </Box>
       </ScrollView>
-    </View >
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#e8f5e9",
-  },
-  scrollViewContent: {
-    paddingVertical: 20,
-  },
-  formContainer: {
-    backgroundColor: "white",
-    margin: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 20,
-    textAlign: "center",
-  },
   formField: {
-    marginBottom: 16,
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
   },
   label: {
     fontSize: 14,
-    color: "#333",
-    marginBottom: 8,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
   },
-  input: {
-    borderRadius: 8,
-  },
-  submitButton: {
-    marginTop: 24,
-    backgroundColor: "#8bc34a",
-    borderRadius: 8,
-    height: 45,
-    justifyContent: "center",
-  },
-  submitButtonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  modalContainer: {
-    padding: 16,
-    alignItems: "center",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "500",
-    color: "#333",
-    marginBottom: 20,
-  },
-  modalButton: {
-    backgroundColor: "#8bc34a",
-    borderRadius: 8,
-    height: 45,
-    width: "100%",
-    justifyContent: "center",
-  },
-  modalButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
+  value: {
+    fontSize: 14,
+    color: COLORS.green,
   },
 });
 
 export default EditEmployeeScreen;
-
-
-

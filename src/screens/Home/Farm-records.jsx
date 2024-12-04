@@ -4,9 +4,11 @@ import FastImage from 'react-native-fast-image';
 import { COLORS } from '../../constants/theme';
 import { icons } from '../../constants';
 import { Fab } from 'native-base';
+import SecondaryHeader from '../../components/headers/secondary-header';
+
 
 const FarmRecordsScreen = ({ navigation }) => {
-  const [expandedIndex, setExpandedIndex] = useState(null);
+  const [expandedIndex, setExpandedIndex] = useState(0);
 
   const farmRecords = [
     {
@@ -33,41 +35,88 @@ const FarmRecordsScreen = ({ navigation }) => {
         "Farm size": "1500",
       },
     },
+    {
+      title: "FARM THREE",
+      details: {
+        "Farm ID": "SG2728292",
+        "Region": "Nyanza Region",
+        "Division": "Nyanza",
+        "Administrative Location": "Nyanza",
+        "Location": "Nyanza",
+        "Plot size": "25SQ BY 80SQ",
+        "Farm size": "2500",
+      },
+    },
+    {
+      title: "FARM FOUR",
+      details: {
+        "Farm ID": "SG2728293",
+        "Region": "Nyanza Region",
+        "Division": "Nyanza",
+        "Administrative Location": "Nyanza",
+        "Location": "Nyanza",
+        "Plot size": "18SQ BY 60SQ",
+        "Farm size": "1800",
+      },
+    },
+    {
+      title: "FARM Five",
+      details: {
+        "Farm ID": "SG2728290",
+        "Region": "Nyanza Region",
+        "Division": "Nyanza",
+        "Administrative Location": "Nyanza",
+        "Location": "Nyanza",
+        "Plot size": "20SQ BY 70SQ",
+        "Farm size": "2000",
+      },
+    },
+    {
+      title: "FARM Six",
+      details: {
+        "Farm ID": "SG2728290",
+        "Region": "Nyanza Region",
+        "Division": "Nyanza",
+        "Administrative Location": "Nyanza",
+        "Location": "Nyanza",
+        "Plot size": "20SQ BY 70SQ",
+        "Farm size": "2000",
+      },
+    },
+    {
+      title: "FARM Seven",
+      details: {
+        "Farm ID": "SG2728290",
+        "Region": "Nyanza Region",
+        "Division": "Nyanza",
+        "Administrative Location": "Nyanza",
+        "Location": "Nyanza",
+        "Plot size": "20SQ BY 70SQ",
+        "Farm size": "2000",
+      },
+    },
+    {
+      title: "FARM Eight",
+      details: {
+        "Farm ID": "SG2728290",
+        "Region": "Nyanza Region",
+        "Division": "Nyanza",
+        "Administrative Location": "Nyanza",
+        "Location": "Nyanza",
+        "Plot size": "20SQ BY 70SQ",
+        "Farm size": "2000",
+      },
+    },
   ];
 
   const toggleExpand = (index) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
+    setExpandedIndex(index === expandedIndex ? -1 : index);
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
-      <View style={[styles.header, { backgroundColor: COLORS.green2 }]}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconContainer}>
-              <FastImage
-                source={icons.backarrow}
-                style={styles.icon}
-                tintColor="white"
-              />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={[styles.headerTitle, styles.customFont]}>
-            Farm Records
-          </Text>
-
-          <View style={styles.headerRight}>
-            <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.iconContainer}>
-              <FastImage
-                source={icons.settings}
-                style={styles.icon}
-                tintColor="white"
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+   
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
+            <SecondaryHeader title="Farm  Records" />
 
       <Fab renderInPortal={false} shadow={2} right={5} bottom={5} size="sm" icon={<FastImage source={icons.plus} className="w-[20px] h-[20px]" tintColor='white' />} colorScheme="emerald" onPress={() => navigation.navigate('AddFarmDetailsScreen')} />
 
@@ -78,9 +127,8 @@ const FarmRecordsScreen = ({ navigation }) => {
               <Text style={[styles.farmTitle, { color: COLORS.green2 }]}>
                 {farm.title}
               </Text>
-              <View style={[styles.divider, { backgroundColor: COLORS.green2 }]} />
             </TouchableOpacity>
-            {expandedIndex === index && (
+            {index === expandedIndex && (
               <View style={styles.detailsContainer}>
                 {Object.entries(farm.details).map(([key, value], detailIndex) => (
                   <View key={detailIndex} style={[
