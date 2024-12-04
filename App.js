@@ -34,7 +34,6 @@ import {
   LivestockFeedingScreen,
   AnimalFeedingProgramScreen,
   FarmFeedsScreen,
-
 } from './src/screens/index';
 import DrawerNav from './src/navigation/drawer/DrawerNav1';
 
@@ -202,7 +201,6 @@ export default function App() {
                 component={LivestockFeedingScreen}
                 options={{headerShown: false}}
               />
-              
               <Stack.Screen
                 name="AnimalFeedingProgramScreen"
                 component={AnimalFeedingProgramScreen}

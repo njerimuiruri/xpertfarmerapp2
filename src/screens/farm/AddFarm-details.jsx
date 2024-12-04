@@ -225,6 +225,7 @@ export default function AddFarmDetailsScreen({navigation}) {
             </Button>
           </HStack>
         </Box>
+        <View className="h-[60px] bg-white" />
       </ScrollView>
     </View>
   );
