@@ -25,6 +25,15 @@ import LivestockFeedingScreen from './livestock/feeding/LivestockFeedingScreen';
 import AnimalFeedingProgramScreen from './livestock/feeding/AnimalFeedingProgramScreen';
 import FarmFeedsScreen from './livestock/feeding/FarmFeedsScreen';
 
+import AddHealthRecords from './health/AddHealthRecords';
+import Allergiesrecordsscreen from './health/Allergiesrecordsscreen';
+import AllergyBoosterScreen from './health/AllergyBoosterScreen';
+import DewormingDetailsRecords from './health/DewormingDetailsRecords';
+import Geneticdisorderscreen from './health/geneticdisorderscreen';
+import VaccineDetailsScreen from './health/VaccineDetailsScreen';
+import FarmDashboard from './Home/dashboard';
+import FarmHealthRecords from './health/health-record/record';
+
 export {
   LoginScreen,
   SignupScreen,
@@ -49,4 +58,16 @@ export {
   LivestockFeedingScreen,
   FarmFeedsScreen,
   AnimalFeedingProgramScreen,
+
+  //health
+  AddHealthRecords,
+  Allergiesrecordsscreen,
+  AllergyBoosterScreen,
+  DewormingDetailsRecords,
+  Geneticdisorderscreen,
+  VaccineDetailsScreen,
+  FarmHealthRecords,
+
+  //home
+  FarmDashboard,
 };

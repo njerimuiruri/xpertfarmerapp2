@@ -58,6 +58,11 @@ const Dashboard = () => {
           description="Manage your farm records and operational details"
         >
           <MenuButton
+            title="Dashboard"
+            icon={icons.report}
+            onPress={() => navigation.navigate('FarmDashboard')}
+          />
+          <MenuButton
             title="Farm Record"
             icon={icons.report}
             onPress={() => navigation.navigate('FarmRecord')}
@@ -157,6 +162,55 @@ const Dashboard = () => {
             color="#FF9800"
           />
         </MenuSection>
+
+        <MenuSection
+          title="Health Management Screens"
+          description="Monitor and manage animal health records"
+        >
+          <MenuButton
+            title="Add Health Records"
+            icon={icons.health}
+            onPress={() => navigation.navigate('AddHealthRecords')}
+            color="#E91E63"
+          />
+          <MenuButton
+            title="Allergies Records"
+            icon={icons.health}
+            onPress={() => navigation.navigate('Allergiesrecordsscreen')}
+            color="#E91E63"
+          />
+          <MenuButton
+            title="Allergy Booster"
+            icon={icons.health}
+            onPress={() => navigation.navigate('AllergyBoosterScreen')}
+            color="#E91E63"
+          />
+          <MenuButton
+            title="Deworming Records"
+            icon={icons.health}
+            onPress={() => navigation.navigate('DewormingDetailsRecords')}
+            color="#E91E63"
+          />
+          <MenuButton
+            title="Genetic Disorders"
+            icon={icons.health}
+            onPress={() => navigation.navigate('Geneticdisorderscreen')}
+            color="#E91E63"
+          />
+          <MenuButton
+            title="Vaccine Details"
+            icon={icons.health}
+            onPress={() => navigation.navigate('VaccineDetailsScreen')}
+            color="#E91E63"
+          />
+          <MenuButton
+            title="Health Records"
+            icon={icons.health}
+            onPress={() => navigation.navigate('FarmHealthRecords')}
+            color="#E91E63"
+          />
+        </MenuSection>
+
       </ScrollView>
 
     </View>

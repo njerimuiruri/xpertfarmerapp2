@@ -34,6 +34,18 @@ import {
   LivestockFeedingScreen,
   AnimalFeedingProgramScreen,
   FarmFeedsScreen,
+
+  //health
+  AddHealthRecords,
+  Allergiesrecordsscreen,
+  AllergyBoosterScreen,
+  DewormingDetailsRecords,
+  Geneticdisorderscreen,
+  VaccineDetailsScreen,
+
+  //home
+  FarmDashboard,
+  FarmHealthRecords,
 } from './src/screens/index';
 import DrawerNav from './src/navigation/drawer/DrawerNav1';
 
@@ -137,6 +149,11 @@ export default function App() {
                 options={{headerShown: false}}
               />
               <Stack.Screen
+                name="FarmDashboard"
+                component={FarmDashboard}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
                 name="ProfileScreen"
                 component={ProfileScreen}
                 options={{headerShown: false}}
@@ -209,6 +226,43 @@ export default function App() {
               <Stack.Screen
                 name="FarmFeedsScreen"
                 component={FarmFeedsScreen}
+                options={{headerShown: false}}
+              />
+
+              {/* health */}
+              <Stack.Screen
+                name="AddHealthRecords"
+                component={AddHealthRecords}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="Allergiesrecordsscreen"
+                component={Allergiesrecordsscreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="AllergyBoosterScreen"
+                component={AllergyBoosterScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="DewormingDetailsRecords"
+                component={DewormingDetailsRecords}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="Geneticdisorderscreen"
+                component={Geneticdisorderscreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="VaccineDetailsScreen"
+                component={VaccineDetailsScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="FarmHealthRecords"
+                component={FarmHealthRecords}
                 options={{headerShown: false}}
               />
             </Stack.Navigator>

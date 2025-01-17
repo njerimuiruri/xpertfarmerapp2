@@ -12,6 +12,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { COLORS } from '../../../constants/theme';
 
 
 
@@ -63,7 +64,7 @@ const CustomButton = ({ flatListRef, flatListIndex, dataLength, x, navigation })
     const backgroundColor = interpolateColor(
       x.value,
       [0, SCREEN_WIDTH, 2 * SCREEN_WIDTH],
-      ['#005b4f', '#1e2169', '#005b4f'],
+      ['white', 'white', 'white'],
     );
 
     return {
@@ -88,6 +89,8 @@ const CustomButton = ({ flatListRef, flatListIndex, dataLength, x, navigation })
         <Animated.Image
           source={require('./ArrowIcon.png')}
           style={[styles.arrow, arrowAnimationStyle]}
+          tintColor={COLORS.green}
+
         />
       </Animated.View>
     </TouchableWithoutFeedback>
@@ -107,6 +110,7 @@ const styles = StyleSheet.create({
   },
   arrow: {
     position: 'absolute',
+
   },
-  textButton: { color: 'white', fontSize: 16, position: 'absolute' },
+  textButton: { color: COLORS.green, fontSize: 16, position: 'absolute' },
 });

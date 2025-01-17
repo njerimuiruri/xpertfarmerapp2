@@ -70,27 +70,18 @@ const RenderItem = ({ index, x, item }) => {
         />
       </View>
 
-      <View className='flex justify-center'>
-        <Image
-          source={require('../../../assets/images/xpertLogo.jpeg')}
-          resizeMode="center"
-          height={180}
-          width={180}
-          alt='logo'
-          style={{ marginTop: 40 }}
-        />
-      </View>
+
       <Animated.View style={lottieAnimationStyle}>
 
 
-        <LottieView
+        <Image
           source={item.animation}
           style={{
             width: SCREEN_WIDTH * 0.9,
             height: SCREEN_WIDTH * 0.9,
           }}
-          autoPlay
-          loop
+          resizeMode='contain'
+          alt='image'
         />
       </Animated.View>
       <Text style={[styles.itemText, { color: item.textColor }]}>

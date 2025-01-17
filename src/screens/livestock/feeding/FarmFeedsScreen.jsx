@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Button, Select, Input, Radio } from 'native-base';
 import SecondaryHeader from '../../../components/headers/secondary-header';
+import { COLORS } from '../../../constants/theme';
 
 export default function FarmFeedsScreen() {
     const [selectedFeedType, setSelectedFeedType] = useState('');
@@ -36,7 +37,7 @@ export default function FarmFeedsScreen() {
                             placeholder="Select Feed Type"
                         >
                             <Select.Item label="Basal feeds" value="Basal feeds" />
-                            
+
                             <Select.Item label="Concentrates" value="Concentrates" />
                             <Select.Item label="Supplements" value="Supplements" />
                         </Select>
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     submitButton: {
-        backgroundColor: '#28a745',
+        backgroundColor: COLORS.green,
         borderRadius: 5,
         paddingVertical: 12,
     },

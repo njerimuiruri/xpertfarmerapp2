@@ -1,12 +1,6 @@
-<<<<<<< Updated upstream
 import React, { useState } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { Text, Button, Box, VStack, HStack } from "native-base";
-=======
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
-import { Text, Input, Button, Select, Modal, Box } from "native-base";
->>>>>>> Stashed changes
 import SecondaryHeader from "../../components/headers/secondary-header";
 import { COLORS } from '../../constants/theme';
 
@@ -23,7 +17,6 @@ const EditEmployeeScreen = ({ navigation }) => {
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
       <SecondaryHeader title="Edit Employee" />
-<<<<<<< Updated upstream
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', marginTop: -10 }}>
         <Box bg="white" p={4} borderRadius={8} shadow={1} mx={6} mt={4}>
           <Text style={{
@@ -39,19 +32,6 @@ const EditEmployeeScreen = ({ navigation }) => {
               <Text style={styles.label}>Attached Farm ID</Text>
               <Text style={styles.value}>Jk Farmer2</Text>
             </View>
-=======
-      <ScrollView className="p-4">
-        <View style={styles.formField}>
-          <Text style={styles.label}>Full Name</Text>
-          <Input
-            value={fullName}
-            onChangeText={setFullName}
-            placeholder="Full Name"
-            style={styles.input}
-            backgroundColor="#e8f5e9"
-          />
-        </View>
->>>>>>> Stashed changes
 
             <View style={styles.formField}>
               <Text style={styles.label}>Full Name</Text>
@@ -94,7 +74,6 @@ const EditEmployeeScreen = ({ navigation }) => {
             </View>
           </VStack>
 
-<<<<<<< Updated upstream
           <HStack justifyContent="center" mt={6} space={4}>
             <Button
               variant="outline"
@@ -123,27 +102,6 @@ const EditEmployeeScreen = ({ navigation }) => {
         </Box>
       </ScrollView>
     </View>
-=======
-        <View style={styles.formField}>
-          <Text style={styles.label}>Payment Rate</Text>
-          <Input
-            value={paymentRate}
-            onChangeText={setPaymentRate}
-            placeholder="Payment Rate"
-            keyboardType="numeric"
-            style={styles.input}
-            backgroundColor="#e8f5e9"
-          />
-        </View>
-
-        <Button className="bg-emerald-600 rounded-md h-12 justify-center">
-          <Text className="text-white font-semibold">Save Changes</Text>
-        </Button>
-        <View className="h-[60px] bg-white" />
-
-      </ScrollView>
-    </View >
->>>>>>> Stashed changes
   );
 };
 

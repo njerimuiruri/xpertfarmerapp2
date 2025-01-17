@@ -4,6 +4,7 @@ import { Text, Input, Button, Radio, Modal, VStack, HStack, Pressable } from "na
 import FastImage from 'react-native-fast-image';
 import { icons } from '../../constants';
 import SecondaryHeader from "../../components/headers/secondary-header";
+import { COLORS } from "../../constants/theme";
 
 export default function AddFlockDetailsScreen({ navigation }) {
   const [formData, setFormData] = useState({
@@ -80,7 +81,7 @@ export default function AddFlockDetailsScreen({ navigation }) {
           </View>
 
 
-          <Button className="bg-emerald-600 border-0 py-3">
+          <Button className=" border-0 py-3" style={{ backgroundColor: COLORS.green }}>
             <Text className="font-semibold text-white">Submit</Text>
           </Button>
         </View>

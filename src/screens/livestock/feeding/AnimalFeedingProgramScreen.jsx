@@ -236,7 +236,7 @@ export default function LivestockFeedingScreen() {
                     />
                 </View>
 
-                <Button onPress={handleSubmit} className="bg-green-600 border-0 py-3 mt-4">
+                <Button onPress={handleSubmit} className=" border-0 py-3 mt-4" style={{ backgroundColor: COLORS.green }}>
                     <Text className="font-semibold text-white">Submit</Text>
                 </Button>
             </ScrollView>

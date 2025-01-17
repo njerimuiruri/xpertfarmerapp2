@@ -7,6 +7,16 @@ import Tabs from '../Tabs';
 import {icons} from '../../constants';
 import {COLORS} from '../../constants/theme';
 import {View} from 'react-native';
+import {
+  AddFarmDetailsScreen,
+  AddLivestockScreen,
+  FarmEmployeeTableScreen,
+  FarmRecord,
+  HomeScreen,
+  LivestockFeedingScreen,
+  OptionDetailsScreen,
+  ProfileScreen,
+} from '../../screens';
 
 const Drawer = createDrawerNavigator();
 
@@ -38,7 +48,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="Employees"
-        component={Tabs}
+        component={FarmEmployeeTableScreen}
         options={{
           title: 'Employees',
           drawerIcon: () => (
@@ -52,7 +62,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="Livestock"
-        component={Tabs}
+        component={AddLivestockScreen}
         options={{
           title: 'Livestock',
           drawerIcon: () => (
@@ -66,7 +76,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="Feeding"
-        component={Tabs}
+        component={LivestockFeedingScreen}
         options={{
           title: 'Feeding',
           drawerIcon: () => (
@@ -80,7 +90,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="Health"
-        component={Tabs}
+        component={ProfileScreen}
         options={{
           title: 'Health',
           drawerIcon: () => (
@@ -94,7 +104,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="ProductionRecords"
-        component={Tabs}
+        component={FarmRecord}
         options={{
           title: 'Production',
           drawerIcon: () => (
@@ -108,7 +118,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="AnalysisRecords"
-        component={Tabs}
+        component={OptionDetailsScreen}
         options={{
           title: 'Analysis',
           drawerIcon: () => (
@@ -122,7 +132,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="Settings"
-        component={Tabs}
+        component={AddFarmDetailsScreen}
         options={{
           title: 'Settings',
           drawerIcon: () => (
