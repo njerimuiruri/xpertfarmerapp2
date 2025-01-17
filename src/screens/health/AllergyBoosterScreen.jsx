@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   Box,
   Text,
@@ -8,16 +8,17 @@ import {
   Select,
   ScrollView,
   HStack,
+  FlatList,
 } from 'native-base';
 
-import { View, TouchableOpacity, StyleSheet, Image, Modal } from 'react-native';
+import {View, TouchableOpacity, StyleSheet, Image, Modal} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import { icons } from '../../constants';
-import { COLORS } from '../../constants/theme';
+import {icons} from '../../constants';
+import {COLORS} from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
-export default function AllergyBoosterScreen({ navigation }) {
+export default function AllergyBoosterScreen({navigation}) {
   const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState('');
   const [boostersOrAdditives, setBoostersOrAdditives] = useState('');
   const [purpose, setPurpose] = useState('');
@@ -26,6 +27,7 @@ export default function AllergyBoosterScreen({ navigation }) {
   const [costOfBooster, setCostOfBooster] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [quantityUnit, setQuantityUnit] = useState('');
 
   const handleDateChange = (event, selectedDate) => {
     if (selectedDate) {
@@ -33,19 +35,19 @@ export default function AllergyBoosterScreen({ navigation }) {
     }
     setShowDatePicker(false);
   };
-  const handleSubmit = () => {
 
+  const handleSubmit = () => {
     setModalVisible(true);
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
-      <SecondaryHeader title="Fill in the allergy details" />
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
+      <SecondaryHeader title="Booster and Additives Records" />
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
           justifyContent: 'center',
-          marginTop: 5,
+          marginTop: -80,
         }}>
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
           <VStack space={5}>
@@ -64,7 +66,7 @@ export default function AllergyBoosterScreen({ navigation }) {
                   endIcon: (
                     <FastImage
                       source={icons.right_arrow}
-                      className="w-[20px] h-[20px]"
+                      style={{width: 20, height: 20}}
                       tintColor="white"
                     />
                   ),
@@ -108,38 +110,62 @@ export default function AllergyBoosterScreen({ navigation }) {
                 Quantity Given
               </Text>
               <HStack alignItems="center" space={2}>
-                <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(quantityGiven) || 1;
-                    setQuantityGiven(Math.max(currentValue - 1, 1).toString());
-                  }}
-                  variant="outline"
-                  p={2}>
-                  -
-                </Button>
-                <Input
-                  flex={1}
-                  variant="outline"
+                <Select
+                  selectedValue={quantityUnit}
+                  minWidth="40%"
                   backgroundColor={COLORS.lightGreen}
                   borderColor="gray.200"
-                  placeholder="Enter Quantity"
-                  keyboardType="numeric"
-                  value={quantityGiven.toString()}
-                  onChangeText={text => {
-                    const numericText = text.replace(/[^0-9.]/g, '');
-                    setQuantityGiven(numericText);
+                  placeholder="Select Unit"
+                  _selectedItem={{
+                    bg: 'teal.600',
                   }}
-                />
-                <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(quantityGiven) || 1;
-                    setQuantityGiven((currentValue + 1).toString());
-                  }}
-                  variant="outline"
-                  p={2}>
-                  +
-                </Button>
+                  onValueChange={setQuantityUnit}>
+                  <Select.Item label="Liters (L)" value="liters" />
+                  <Select.Item label="Kilograms (Kg)" value="kilograms" />
+                  <Select.Item label="Milliliters (ml)" value="milliliters" />
+                  <Select.Item label="Grams (g)" value="grams" />
+                </Select>
+                <HStack flex={1} alignItems="center" space={2}>
+                  <Button
+                    onPress={() => {
+                      const currentValue = parseFloat(quantityGiven) || 1;
+                      setQuantityGiven(
+                        Math.max(currentValue - 1, 1).toString(),
+                      );
+                    }}
+                    variant="outline"
+                    p={2}>
+                    -
+                  </Button>
+                  <Input
+                    flex={1}
+                    variant="outline"
+                    backgroundColor={COLORS.lightGreen}
+                    borderColor="gray.200"
+                    placeholder="Enter Quantity"
+                    keyboardType="numeric"
+                    value={quantityGiven.toString()}
+                    onChangeText={text => {
+                      const numericText = text.replace(/[^0-9.]/g, '');
+                      setQuantityGiven(numericText);
+                    }}
+                  />
+                  <Button
+                    onPress={() => {
+                      const currentValue = parseFloat(quantityGiven) || 1;
+                      setQuantityGiven((currentValue + 1).toString());
+                    }}
+                    variant="outline"
+                    p={2}>
+                    +
+                  </Button>
+                </HStack>
               </HStack>
+              {quantityUnit && (
+                <Text fontSize="xs" color="gray.500" mt={2}>
+                  Quantity is recorded in {quantityUnit}.
+                </Text>
+              )}
             </Box>
 
             <View style={styles.formGroup}>
@@ -153,7 +179,7 @@ export default function AllergyBoosterScreen({ navigation }) {
                   isReadOnly
                 />
                 <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                  <Image
+                  <FastImage
                     source={icons.calendar}
                     resizeMode="contain"
                     style={styles.calendarIcon}
@@ -204,7 +230,8 @@ export default function AllergyBoosterScreen({ navigation }) {
                 py={3}
                 _pressed={{
                   bg: 'emerald.700',
-                }}>
+                }}
+                onPress={handleSubmit}>
                 Submit
               </Button>
             </HStack>
@@ -218,12 +245,17 @@ export default function AllergyBoosterScreen({ navigation }) {
         onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            {/* <Image source={icons.checkmark} style={styles.checkIcon} /> */}
-            <Text style={styles.modalText}>Health records added successfully</Text>
+            <FastImage className="w-[25px] h-[25px]" source={icons.tick} />
+            <Text style={styles.modalText}>Record added successfully</Text>
             <Button
               backgroundColor={COLORS.green}
               borderRadius={8}
-              onPress={() => setModalVisible(false)}>
+              px={6}
+              py={2}
+              onPress={() => {
+                setModalVisible(false);
+                navigation.navigate('HomeScreen');
+              }}>
               Ok
             </Button>
           </View>
@@ -235,7 +267,7 @@ export default function AllergyBoosterScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   formGroup: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   label: {
     fontSize: 16,
@@ -271,6 +303,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     marginBottom: 15,
+    tintColor: COLORS.green,
   },
   modalText: {
     marginBottom: 20,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   Box,
   Text,
@@ -9,19 +9,19 @@ import {
   ScrollView,
   HStack,
 } from 'native-base';
-import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker'; // Importing DateTimePicker
+import {View, TouchableOpacity, StyleSheet, Image} from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import { icons } from '../../constants';
-import { COLORS } from '../../constants/theme';
+import {icons} from '../../constants';
+import {COLORS} from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
-export default function VaccineDetailsScreen({ navigation }) {
+export default function VaccineDetailsScreen({navigation}) {
   const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState('');
   const [vaccinationAgainst, setVaccinationAgainst] = useState('');
   const [drugAdministered, setDrugAdministered] = useState('');
   const [dateAdministered, setDateAdministered] = useState(new Date());
-  const [dosage, setDosage] = useState(1); // Default dosage value
+  const [dosage, setDosage] = useState(1);
   const [costOfVaccine, setCostOfVaccine] = useState('');
   const [administeredBy, setAdministeredBy] = useState('');
   const [practiceId, setPracticeId] = useState('');
@@ -36,7 +36,7 @@ export default function VaccineDetailsScreen({ navigation }) {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Vaccine Details" />
       <ScrollView
         contentContainerStyle={{
@@ -48,12 +48,13 @@ export default function VaccineDetailsScreen({ navigation }) {
           <Text
             style={{
               fontSize: 16,
-              color: 'black',
+              color: 'black', // Ensure this is within the style object
               marginBottom: 16,
               textAlign: 'center',
             }}>
             Please fill in the vaccine details.
           </Text>
+
           <VStack space={5}>
             <Box>
               <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
@@ -70,8 +71,7 @@ export default function VaccineDetailsScreen({ navigation }) {
                   endIcon: (
                     <FastImage
                       source={icons.right_arrow}
-                      className="w-[20px] h-[20px]"
-                      tintColor="white"
+                      style={{width: 20, height: 20, tintColor: 'white'}}
                     />
                   ),
                 }}
@@ -176,7 +176,24 @@ export default function VaccineDetailsScreen({ navigation }) {
                 </Button>
               </HStack>
             </Box>
-
+            <Box>
+              <HStack alignItems="center" space={2}>
+                <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+                  {' '}
+                  Cost of Vaccine
+                </Text>
+                <Input
+                  flex={1}
+                  variant="outline"
+                  backgroundColor={COLORS.lightGreen}
+                  borderColor="gray.200"
+                  placeholder="Enter cost of vaccine"
+                  keyboardType="numeric"
+                  value={costOfVaccine}
+                  onChangeText={setCostOfVaccine}
+                />
+              </HStack>
+            </Box>
             <Box>
               <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
                 Administered By
@@ -204,26 +221,6 @@ export default function VaccineDetailsScreen({ navigation }) {
                 onChangeText={setPracticeId}
               />
             </Box>
-            <Box>
-              <HStack alignItems="center" space={2}>
-                <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
-                  {' '}
-                  Cost of Vaccine
-                </Text>
-                <Input
-                  flex={1}
-                  variant="outline"
-                  backgroundColor={COLORS.lightGreen}
-                  borderColor="gray.200"
-                  placeholder="Enter cost of vaccine"
-                  keyboardType="numeric"
-                  value={costOfVaccine}
-                  onChangeText={setCostOfVaccine}
-                />
-              </HStack>
-            </Box>
-
-
 
             <Box>
               <HStack alignItems="center" space={2}>
@@ -251,9 +248,13 @@ export default function VaccineDetailsScreen({ navigation }) {
                 borderRadius={8}
                 px={6}
                 py={3}
+                _text={{
+                  color: COLORS.green, // Use _text to style the button text color
+                }}
                 onPress={() => navigation.goBack()}>
                 Cancel
               </Button>
+
               <Button
                 backgroundColor={COLORS.green}
                 borderRadius={8}
@@ -261,8 +262,9 @@ export default function VaccineDetailsScreen({ navigation }) {
                 py={3}
                 _pressed={{
                   bg: 'emerald.700',
-                }}>
-                Submit
+                }}
+                onPress={() => navigation.navigate('DewormingDetailsRecords')}>
+                Next
               </Button>
             </HStack>
           </VStack>
@@ -279,7 +281,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: 'gray.700',
+    color: COLORS.lightGray1,
     marginBottom: 8,
   },
   dateContainer: {

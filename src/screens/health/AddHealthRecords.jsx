@@ -157,7 +157,7 @@ export default function AddHealthRecords({ navigation }) {
 
                 <TouchableOpacity
                     style={[styles.option, option === 'oneByOne' && styles.selectedOption]}
-                    onPress={() => navigation.navigate('AddLivestockScreen')}
+                    onPress={() => navigation.navigate('VaccineDetailsScreen')}
                 >
                     <RadioButton
                         value="oneByOne"

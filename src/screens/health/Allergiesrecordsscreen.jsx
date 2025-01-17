@@ -1,26 +1,32 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   Box,
   Text,
-  Input,
-  Button,
   VStack,
-  Select,
   ScrollView,
+  Button,
   HStack,
+  Input,
 } from 'native-base';
-import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import FastImage from 'react-native-fast-image';
-import { icons } from '../../constants';
-import { COLORS } from '../../constants/theme';
+import {View, StyleSheet, TouchableOpacity, Image} from 'react-native';
+import {COLORS} from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
+import FastImage from 'react-native-fast-image';
+import {icons} from '../../constants';
 
-export default function Allergiesrecordsscreen({ navigation }) {
+export default function Allergiesrecordsscreen({navigation}) {
   const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState('');
   const [dateRecorded, setDateRecorded] = useState(new Date());
   const [cause, setCause] = useState('');
   const [remedy, setRemedy] = useState('');
+  const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+
+  const handleSelect = value => {
+    setAnimalIdOrFlockId(value);
+    setDropdownVisible(false);
+  };
+
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleDateChange = (event, selectedDate) => {
@@ -29,9 +35,8 @@ export default function Allergiesrecordsscreen({ navigation }) {
     }
     setShowDatePicker(false);
   };
-
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Allergy Details" />
       <ScrollView
         contentContainerStyle={{
@@ -40,34 +45,60 @@ export default function Allergiesrecordsscreen({ navigation }) {
           marginTop: 5,
         }}>
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
-          <Text style={{ fontSize: 16, color: 'black', marginBottom: 16, textAlign: 'center' }}>
+          <Text
+            style={{
+              fontSize: 16,
+              color: 'black',
+              marginBottom: 16,
+              textAlign: 'center',
+            }}>
             Fill in the allergy details
           </Text>
           <VStack space={5}>
+            {/* Combined Input and Select */}
             <Box>
               <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
                 Animal ID or Flock ID
               </Text>
-              <Select
-                selectedValue={animalIdOrFlockId}
-                minWidth="100%"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-                placeholder="Select ID"
-                _selectedItem={{
-                  bg: 'teal.600',
-                  endIcon: (
-                    <FastImage
-                      source={icons.right_arrow}
-                      className="w-[20px] h-[20px]"
-                      tintColor="white"
-                    />
-                  ),
-                }}
-                onValueChange={setAnimalIdOrFlockId}>
-                <Select.Item label="ID 1" value="id1" />
-                <Select.Item label="ID 2" value="id2" />
-              </Select>
+              <View>
+                <HStack
+                  alignItems="center"
+                  borderWidth={1}
+                  borderRadius={8}
+                  borderColor="gray.200">
+                  <Input
+                    flex={1}
+                    variant="unstyled"
+                    placeholder="Type or select ID"
+                    value={animalIdOrFlockId}
+                    onChangeText={text => setAnimalIdOrFlockId(text)}
+                    backgroundColor="transparent"
+                    borderColor="transparent"
+                  />
+                  <TouchableOpacity
+                    style={{padding: 10}}
+                    onPress={() => setDropdownVisible(prev => !prev)}>
+                    <Text style={{fontSize: 16, color: COLORS.green}}>▼</Text>
+                  </TouchableOpacity>
+                </HStack>
+                {dropdownVisible && (
+                  <Box
+                    bg="white"
+                    mt={1}
+                    borderWidth={1}
+                    borderColor="gray.200"
+                    borderRadius={8}>
+                    {availableIds.map((id, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.dropdownItem}
+                        onPress={() => handleSelect(id)}>
+                        <Text style={styles.dropdownText}>{id}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </Box>
+                )}
+              </View>
             </Box>
 
             <Box>
@@ -82,7 +113,9 @@ export default function Allergiesrecordsscreen({ navigation }) {
                   placeholder="DD/MM/YY"
                   isReadOnly
                 />
-                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                <TouchableOpacity
+                  onPress={() => setShowDatePicker(true)}
+                  style={{marginLeft: 10}}>
                   <Image
                     source={icons.calendar}
                     resizeMode="contain"
@@ -101,6 +134,7 @@ export default function Allergiesrecordsscreen({ navigation }) {
               )}
             </Box>
 
+            {/* Cause */}
             <Box>
               <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
                 Cause
@@ -115,6 +149,7 @@ export default function Allergiesrecordsscreen({ navigation }) {
               />
             </Box>
 
+            {/* Remedy */}
             <Box>
               <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
                 Remedy
@@ -131,7 +166,8 @@ export default function Allergiesrecordsscreen({ navigation }) {
               />
             </Box>
 
-            <HStack justifyContent="center" mt={6} space={8}>
+            {/* Buttons */}
+            <HStack justifyContent="center" mt={6} space={4}>
               <Button
                 variant="outline"
                 borderWidth={1}
@@ -149,8 +185,9 @@ export default function Allergiesrecordsscreen({ navigation }) {
                 py={3}
                 _pressed={{
                   bg: 'emerald.700',
-                }}>
-                Submit
+                }}
+                onPress={() => navigation.navigate('AllergyBoosterScreen')}>
+                Next
               </Button>
             </HStack>
           </VStack>
@@ -161,6 +198,15 @@ export default function Allergiesrecordsscreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  dropdownItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  dropdownText: {
+    fontSize: 14,
+    color: 'black',
+  },
   calendarIcon: {
     width: 40,
     height: 40,

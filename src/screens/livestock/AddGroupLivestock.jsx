@@ -74,9 +74,8 @@ export default function AddLivestockGroupScreen({ navigation }) {
               <Select.Item label="Animal ID 2" value="animal2" />
               <Select.Item label="Animal ID 3" value="animal3" />
               <Select.Item label="Animal ID 4" value="animal4" />
-              {/* Add more animal IDs as needed */}
             </Select>
-            <CheckIcon />
+            {/* <CheckIcon /> */}
           </View>
 
           <Button className="bg-emerald-600 border-0 py-3">

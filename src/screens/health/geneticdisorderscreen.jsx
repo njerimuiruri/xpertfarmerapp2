@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   Box,
   Text,
@@ -9,14 +9,14 @@ import {
   ScrollView,
   HStack,
 } from 'native-base';
-import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import {View, TouchableOpacity, StyleSheet, Image} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import { icons } from '../../constants';
-import { COLORS } from '../../constants/theme';
+import {icons} from '../../constants';
+import {COLORS} from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
-export default function Geneticdisorderscreen({ navigation }) {
+export default function Geneticdisorderscreen({navigation}) {
   const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState('');
   const [dateRecorded, setDateRecorded] = useState(new Date());
   const [nameOfCondition, setNameOfCondition] = useState('');
@@ -31,7 +31,7 @@ export default function Geneticdisorderscreen({ navigation }) {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Genetic Disorder Details" />
       <ScrollView
         contentContainerStyle={{
@@ -40,7 +40,13 @@ export default function Geneticdisorderscreen({ navigation }) {
           marginTop: 5,
         }}>
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
-          <Text style={{ fontSize: 16, color: 'black', marginBottom: 16, textAlign: 'center' }}>
+          <Text
+            style={{
+              fontSize: 16,
+              color: 'black',
+              marginBottom: 16,
+              textAlign: 'center',
+            }}>
             Fill in the Genetic disorder details
           </Text>
           <VStack space={5}>
@@ -82,7 +88,9 @@ export default function Geneticdisorderscreen({ navigation }) {
                   placeholder="DD/MM/YY"
                   isReadOnly
                 />
-                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                <TouchableOpacity
+                  onPress={() => setShowDatePicker(true)}
+                  style={{marginLeft: 10}}>
                   <Image
                     source={icons.calendar}
                     resizeMode="contain"
@@ -131,7 +139,7 @@ export default function Geneticdisorderscreen({ navigation }) {
               />
             </Box>
 
-            <HStack justifyContent="center" mt={6} space={8}>
+            <HStack justifyContent="center" mt={6} space={4}>
               <Button
                 variant="outline"
                 borderWidth={1}
@@ -149,8 +157,9 @@ export default function Geneticdisorderscreen({ navigation }) {
                 py={3}
                 _pressed={{
                   bg: 'emerald.700',
-                }}>
-                Submit
+                }}
+                onPress={() => navigation.navigate('Allergiesrecordsscreen')}>
+                Next
               </Button>
             </HStack>
           </VStack>

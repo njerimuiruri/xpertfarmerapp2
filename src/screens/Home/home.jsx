@@ -1,29 +1,32 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Header from '../../components/headers/main-header';
-import { useNavigation } from '@react-navigation/native';
-import { icons } from '../../constants';
+import {useNavigation} from '@react-navigation/native';
+import {icons} from '../../constants';
 
-const MenuSection = ({ title, description, children }) => (
+const MenuSection = ({title, description, children}) => (
   <View style={styles.section}>
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionTitle}>{title}</Text>
       <Text style={styles.sectionDescription}>{description}</Text>
     </View>
-    <View style={styles.sectionContent}>
-      {children}
-    </View>
+    <View style={styles.sectionContent}>{children}</View>
   </View>
 );
 
-const MenuButton = ({ title, icon, onPress, color = "#4CAF50" }) => (
+const MenuButton = ({title, icon, onPress, color = '#4CAF50'}) => (
   <TouchableOpacity
     style={styles.menuButton}
     onPress={onPress}
-    activeOpacity={0.7}
-  >
-    <View style={[styles.iconContainer, { backgroundColor: color }]}>
+    activeOpacity={0.7}>
+    <View style={[styles.iconContainer, {backgroundColor: color}]}>
       <FastImage
         source={icon}
         style={styles.icon}
@@ -47,16 +50,19 @@ const Dashboard = () => {
     <View style={styles.container}>
       <Header navigation={navigation} />
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}>
         <View style={styles.welcomeContainer}>
           <Text style={styles.welcomeText}>Welcome to XpertFarmer</Text>
-          <Text style={styles.welcomeSubtext}>Manage your farm operations efficiently</Text>
+          <Text style={styles.welcomeSubtext}>
+            Manage your farm operations efficiently
+          </Text>
         </View>
 
         <MenuSection
           title="Farm Management Screens"
-          description="Manage your farm records and operational details"
-        >
+          description="Manage your farm records and operational details">
           <MenuButton
             title="Dashboard"
             icon={icons.report}
@@ -81,8 +87,7 @@ const Dashboard = () => {
 
         <MenuSection
           title="Employee Management Screens"
-          description="Handle your workforce and staff records"
-        >
+          description="Handle your workforce and staff records">
           <MenuButton
             title="Add Employee"
             icon={icons.user}
@@ -105,8 +110,7 @@ const Dashboard = () => {
 
         <MenuSection
           title="Livestock Management Screens"
-          description="Monitor and track your livestock inventory"
-        >
+          description="Monitor and track your livestock inventory">
           <MenuButton
             title="Add Flock Details"
             icon={icons.agriculture}
@@ -129,8 +133,7 @@ const Dashboard = () => {
 
         <MenuSection
           title="Breeding Management Screens"
-          description="Manage your breeding records and operational details"
-        >
+          description="Manage your breeding records and operational details">
           <MenuButton
             title="Breeding Record"
             icon={icons.agriculture}
@@ -141,8 +144,7 @@ const Dashboard = () => {
 
         <MenuSection
           title="Feeding Management Screens"
-          description="Manage your feeding records and operational details"
-        >
+          description="Manage your feeding records and operational details">
           <MenuButton
             title="Livestock Feeding Record"
             icon={icons.agriculture}
@@ -165,54 +167,28 @@ const Dashboard = () => {
 
         <MenuSection
           title="Health Management Screens"
-          description="Monitor and manage animal health records"
-        >
+          description="Monitor and manage animal health records">
           <MenuButton
             title="Add Health Records"
             icon={icons.health}
             onPress={() => navigation.navigate('AddHealthRecords')}
             color="#E91E63"
           />
-          <MenuButton
-            title="Allergies Records"
-            icon={icons.health}
-            onPress={() => navigation.navigate('Allergiesrecordsscreen')}
-            color="#E91E63"
-          />
-          <MenuButton
-            title="Allergy Booster"
-            icon={icons.health}
-            onPress={() => navigation.navigate('AllergyBoosterScreen')}
-            color="#E91E63"
-          />
-          <MenuButton
-            title="Deworming Records"
-            icon={icons.health}
-            onPress={() => navigation.navigate('DewormingDetailsRecords')}
-            color="#E91E63"
-          />
-          <MenuButton
-            title="Genetic Disorders"
-            icon={icons.health}
-            onPress={() => navigation.navigate('Geneticdisorderscreen')}
-            color="#E91E63"
-          />
-          <MenuButton
-            title="Vaccine Details"
-            icon={icons.health}
-            onPress={() => navigation.navigate('VaccineDetailsScreen')}
-            color="#E91E63"
-          />
+
           <MenuButton
             title="Health Records"
             icon={icons.health}
             onPress={() => navigation.navigate('FarmHealthRecords')}
             color="#E91E63"
           />
+          {/* <MenuButton
+            title="Production"
+            icon={icons.health}
+            onPress={() => navigation.navigate('AddDairyDetailsScreen')}
+            color="#E91E63"
+          /> */}
         </MenuSection>
-
       </ScrollView>
-
     </View>
   );
 };

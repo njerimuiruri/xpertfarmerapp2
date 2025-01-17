@@ -183,7 +183,7 @@ export default function DewormingDetailsRecords({ navigation }) {
             </Box>
 
             <View style={styles.formGroup}>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>Date Administered</Text>
+                <Text  fontSize="sm" fontWeight="500" color="gray.700" mb={1}>Date Administered</Text>
               <View style={styles.dateContainer}>
                 <Input
                   w="85%"
@@ -212,7 +212,7 @@ export default function DewormingDetailsRecords({ navigation }) {
             </View>
 
             <Box>
-
+              
               <HStack alignItems="center" space={2}>
                 <Text fontSize="sm" fontWeight="500" color="gray.700">Cost of Drugs</Text>
                 <Input
@@ -285,7 +285,8 @@ export default function DewormingDetailsRecords({ navigation }) {
                 numberOfLines={4}
               />
             </Box>
-            <HStack justifyContent="center" mt={6} space={8}>
+
+            <HStack justifyContent="center" mt={6} space={4}>
               <Button
                 variant="outline"
                 borderWidth={1}
@@ -297,15 +298,16 @@ export default function DewormingDetailsRecords({ navigation }) {
                 Cancel
               </Button>
               <Button
-                backgroundColor={COLORS.green}
-                borderRadius={8}
-                px={6}
-                py={3}
-                _pressed={{
-                  bg: 'emerald.700',
-                }}>
-                Submit
-              </Button>
+                             backgroundColor={COLORS.green}
+                             borderRadius={8}
+                             px={6}
+                             py={3}
+                             _pressed={{
+                               bg: 'emerald.700',
+                             }}
+                             onPress={() => navigation.navigate('Geneticdisorderscreen')}>
+                             Next
+                           </Button>
             </HStack>
           </VStack>
         </Box>

@@ -33,7 +33,7 @@ import Geneticdisorderscreen from './health/geneticdisorderscreen';
 import VaccineDetailsScreen from './health/VaccineDetailsScreen';
 import FarmDashboard from './Home/dashboard';
 import FarmHealthRecords from './health/health-record/record';
-
+import AddDairyDetailsScreen from './production/AddDairyDetailsScreen'
 export {
   LoginScreen,
   SignupScreen,
@@ -68,6 +68,7 @@ export {
   VaccineDetailsScreen,
   FarmHealthRecords,
 
+  AddDairyDetailsScreen,
   //home
   FarmDashboard,
 };
