@@ -33,7 +33,13 @@ export default function DairyDetailsScreen({ navigation }) {
   const [showLactationPicker, setShowLactationPicker] = useState(false);
   const [showDryingOffPicker, setShowDryingOffPicker] = useState(false);
   const [showSaleDatePicker, setShowSaleDatePicker] = useState(false);
+const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
 
+  const handleSelect = value => {
+    setAnimalIdOrFlockId(value);
+    setDropdownVisible(false);
+  };
   const handleDateChange = (setter) => (event, selectedDate) => {
     setter(selectedDate || new Date());
   };
@@ -52,32 +58,50 @@ export default function DairyDetailsScreen({ navigation }) {
             Fill in the Dairy details
           </Text>
           <VStack space={5}>
-            <Box>
+          <Box>
               <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
                 Animal ID or Flock ID
               </Text>
-              <Select
-                selectedValue={animalIdOrFlockId}
-                minWidth="100%"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-                placeholder="Select ID"
-                _selectedItem={{
-                  bg: 'teal.600',
-                  endIcon: (
-                    <FastImage
-                      source={icons.right_arrow}
-                      className="w-[20px] h-[20px]"
-                      tintColor="white"
-                    />
-                  ),
-                }}
-                onValueChange={setAnimalIdOrFlockId}>
-                <Select.Item label="ID 1" value="id1" />
-                <Select.Item label="ID 2" value="id2" />
-              </Select>
+              <View>
+                <HStack
+                  alignItems="center"
+                  borderWidth={1}
+                  borderRadius={8}
+                  borderColor="gray.200">
+                  <Input
+                    flex={1}
+                    variant="unstyled"
+                    placeholder="Type or select ID"
+                    value={animalIdOrFlockId}
+                    onChangeText={text => setAnimalIdOrFlockId(text)}
+                    backgroundColor="transparent"
+                    borderColor="transparent"
+                  />
+                  <TouchableOpacity
+                    style={{ padding: 10 }}
+                    onPress={() => setDropdownVisible(prev => !prev)}>
+                    <Text style={{ fontSize: 16, color: COLORS.green }}>▼</Text>
+                  </TouchableOpacity>
+                </HStack>
+                {dropdownVisible && (
+                  <Box
+                    bg="white"
+                    mt={1}
+                    borderWidth={1}
+                    borderColor="gray.200"
+                    borderRadius={8}>
+                    {availableIds.map((id, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.dropdownItem}
+                        onPress={() => handleSelect(id)}>
+                        <Text style={styles.dropdownText}>{id}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </Box>
+                )}
+              </View>
             </Box>
-
             <Box>
               <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
                 Daily Milk Yield
@@ -186,7 +210,6 @@ export default function DairyDetailsScreen({ navigation }) {
                 />
               )}
             </Box>
-
             <Box>
               <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
                 Drying Off Period
@@ -432,5 +455,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     tintColor: COLORS.green,
+  },
+  dropdownItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  dropdownText: {
+    fontSize: 14,
+    color: 'black',
   },
 });

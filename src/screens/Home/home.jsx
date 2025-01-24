@@ -181,13 +181,85 @@ const Dashboard = () => {
             onPress={() => navigation.navigate('FarmHealthRecords')}
             color="#E91E63"
           />
-          {/* <MenuButton
-            title="Production"
+         
+           {/* <MenuButton
+            title=" Production"
             icon={icons.health}
-            onPress={() => navigation.navigate('AddDairyDetailsScreen')}
+            onPress={() => navigation.navigate('ProductionScreen')}
             color="#E91E63"
           /> */}
+        
         </MenuSection>
+        <MenuSection
+          title="Production records"
+          description="Monitor and manage animal production records">
+          
+          {/* <MenuButton
+            title="Add Dairy records"
+            icon={icons.dairy}
+            onPress={() => navigation.navigate('AddDairyDetailsScreen')}
+            color="#E57373 "
+          />
+           <MenuButton
+            title=" Beef Production"
+            icon={icons.beef}
+            onPress={() => navigation.navigate('BeefDetailsScreen')}
+            color="#E91E63"
+          />
+           <MenuButton
+            title=" swine Production"
+            icon={icons.swine}
+            onPress={() => navigation.navigate('SwineRecordScreen')}
+            color="#E91E63"
+          />
+          <MenuButton
+            title="sheep & Goat Production"
+            icon={icons.sheep}
+            onPress={() => navigation.navigate('SheepGoatDetailsScreen')}
+            color="#E91E63"
+          /> */}
+          
+          {/* <MenuButton
+            title="Poultry Production"
+            icon={icons.poultry}
+            onPress={() => navigation.navigate('PoultryFlockDetailsScreen')}
+            color="#E91E63"
+          /> */}
+          
+          <MenuButton
+            title="Beef Production"
+            icon={icons.health}
+            onPress={() => navigation.navigate('AnimalProductionListScreen')}
+            color="#E91E63"
+          />
+         
+          <MenuButton
+            title="Dairy Production"
+            icon={icons.health}
+            onPress={() => navigation.navigate('DairyProductionListScreen')}
+            color="#E91E63"
+          />
+           <MenuButton
+            title="Swine Production"
+            icon={icons.health}
+            onPress={() => navigation.navigate('SwineProductionListScreen')}
+            color="#E91E63"
+          />
+          <MenuButton
+            title="Sheep & Goat Production"
+            icon={icons.health}
+            onPress={() => navigation.navigate('SheepAndGoatProductionListScreen')}
+            color="#E91E63"
+          /> 
+           <MenuButton
+            title="Poultry Production"
+            icon={icons.health}
+            onPress={() => navigation.navigate('PoultryProductionListScreen')}
+            color="#E91E63"
+          />     
+        </MenuSection>
+        
+
       </ScrollView>
     </View>
   );

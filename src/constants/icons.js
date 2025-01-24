@@ -56,9 +56,23 @@ const agriculture = require('../assets/icons/agriculture.png');
 const health = require('../assets/icons/heath.png');
 const crops = require('../assets/icons/crops.png');
 const call = require('../assets/icons/call.png');
+const beef = require('../assets/icons/beef-cow.png');
+const sheep = require('../assets/icons/sheep.png');
+const goat = require('../assets/icons/goat.png');
+const poultry = require('../assets/icons/poultry.png');
+const dairy = require('../assets/icons/dairy-cow.png');
+const swine = require('../assets/icons/swine.png');
+
+
+
 
 export default {
   search,
+  dairy,
+  poultry,
+  goat,
+  sheep,
+  swine,
   filter,
   menu1,
   cross,
@@ -115,4 +129,5 @@ export default {
   health,
   crops,
   call,
+  beef,
 };
