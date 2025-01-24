@@ -8,10 +8,10 @@ import {
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Header from '../../components/headers/main-header';
-import {useNavigation} from '@react-navigation/native';
-import {icons} from '../../constants';
+import { useNavigation } from '@react-navigation/native';
+import { icons } from '../../constants';
 
-const MenuSection = ({title, description, children}) => (
+const MenuSection = ({ title, description, children }) => (
   <View style={styles.section}>
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -21,12 +21,12 @@ const MenuSection = ({title, description, children}) => (
   </View>
 );
 
-const MenuButton = ({title, icon, onPress, color = '#4CAF50'}) => (
+const MenuButton = ({ title, icon, onPress, color = '#4CAF50' }) => (
   <TouchableOpacity
     style={styles.menuButton}
     onPress={onPress}
     activeOpacity={0.7}>
-    <View style={[styles.iconContainer, {backgroundColor: color}]}>
+    <View style={[styles.iconContainer, { backgroundColor: color }]}>
       <FastImage
         source={icon}
         style={styles.icon}

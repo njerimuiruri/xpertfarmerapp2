@@ -266,7 +266,7 @@ export default function App() {
                 component={FarmHealthRecords}
                 options={{headerShown: false}}
               />
-              
+
               <Stack.Screen
                 name="AddDairyDetailsScreen"
                 component={AddDairyDetailsScreen}
