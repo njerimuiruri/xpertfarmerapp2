@@ -107,7 +107,6 @@ const FarmEmployeeListScreen = ({navigation}) => {
 
   const handleEdit = useCallback(
     employee => {
-      // Navigate to edit screen with employee data
       navigation.navigate('EditEmployeeScreen', {employee});
     },
     [navigation],

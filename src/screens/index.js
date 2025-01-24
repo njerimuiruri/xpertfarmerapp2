@@ -33,7 +33,19 @@ import Geneticdisorderscreen from './health/geneticdisorderscreen';
 import VaccineDetailsScreen from './health/VaccineDetailsScreen';
 import FarmDashboard from './Home/dashboard';
 import FarmHealthRecords from './health/health-record/record';
-import AddDairyDetailsScreen from './production/AddDairyDetailsScreen'
+import AddDairyDetailsScreen from './production/AddDairyDetailsScreen';
+import BeefDetailsScreen from './production/BeefDetailsScreen';
+
+import ProductionScreen from './production/ProductionScreen';
+import SwineRecordScreen from './production/SwineRecordScreen';
+import SheepGoatDetailsScreen from './production/SheepGoatDetailsScreen';
+import PoultryFlockDetailsScreen from './production/PoultryFlockDetailsScreen';
+import AnimalProductionListScreen from './production/AnimalProductionListScreen';
+import SwineProductionListScreen from './production/SwineProductionListScreen ';
+import DairyProductionListScreen from './production/DairyProductionListScreen';
+import SheepAndGoatProductionListScreen from './production/SheepAndGoatProductionListScreen';
+
+import PoultryProductionListScreen from './production/PoultryFlockDetailsScreen';
 export {
   LoginScreen,
   SignupScreen,
@@ -58,6 +70,7 @@ export {
   LivestockFeedingScreen,
   FarmFeedsScreen,
   AnimalFeedingProgramScreen,
+  BeefDetailsScreen,
 
   //health
   AddHealthRecords,
@@ -67,8 +80,16 @@ export {
   Geneticdisorderscreen,
   VaccineDetailsScreen,
   FarmHealthRecords,
-
+  ProductionScreen,
   AddDairyDetailsScreen,
   //home
   FarmDashboard,
+  SwineRecordScreen,
+  SheepGoatDetailsScreen,
+  PoultryFlockDetailsScreen,
+  AnimalProductionListScreen,
+  SwineProductionListScreen,
+  DairyProductionListScreen,
+  SheepAndGoatProductionListScreen,
+  PoultryProductionListScreen,
 };

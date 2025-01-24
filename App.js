@@ -35,6 +35,7 @@ import {
   AnimalFeedingProgramScreen,
   FarmFeedsScreen,
   AddDairyDetailsScreen,
+  BeefDetailsScreen,
 
   //health
   AddHealthRecords,
@@ -43,10 +44,18 @@ import {
   DewormingDetailsRecords,
   Geneticdisorderscreen,
   VaccineDetailsScreen,
-
+  ProductionScreen,
+  SwineRecordScreen,
+  SheepGoatDetailsScreen,
+  PoultryFlockDetailsScreen,
   //home
   FarmDashboard,
   FarmHealthRecords,
+  AnimalProductionListScreen,
+  SwineProductionListScreen,
+  DairyProductionListScreen,
+  SheepAndGoatProductionListScreen,
+  PoultryProductionListScreen,
 } from './src/screens/index';
 import DrawerNav from './src/navigation/drawer/DrawerNav1';
 
@@ -272,6 +281,66 @@ export default function App() {
                 component={AddDairyDetailsScreen}
                 options={{headerShown: false}}
               />
+              
+              <Stack.Screen
+                name="BeefDetailsScreen"
+                component={BeefDetailsScreen}
+                options={{headerShown: false}}
+              />
+               <Stack.Screen
+                name="ProductionScreen"
+                component={ProductionScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="SwineRecordScreen"
+                component={SwineRecordScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="SheepGoatDetailsScreen"
+                component={SheepGoatDetailsScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="PoultryFlockDetailsScreen"
+                component={PoultryFlockDetailsScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="AnimalProductionListScreen"
+                component={AnimalProductionListScreen}
+                options={{headerShown: false}}
+              />
+               
+               <Stack.Screen
+                name="SwineProductionListScreen"
+                component={SwineProductionListScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="DairyProductionListScreen"
+                component={DairyProductionListScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="SheepAndGoatProductionListScreen"
+                component={SheepAndGoatProductionListScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="PoultryProductionListScreen"
+                component={PoultryProductionListScreen}
+                options={{headerShown: false}}
+              />
+              
+              
+              
             </Stack.Navigator>
           </NavigationContainer>
         </ToastProvider>
