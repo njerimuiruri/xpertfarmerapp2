@@ -228,32 +228,32 @@ const Dashboard = () => {
           
           <MenuButton
             title="Beef Production"
-            icon={icons.health}
+            icon={icons.beef}
             onPress={() => navigation.navigate('AnimalProductionListScreen')}
             color="#E91E63"
           />
          
           <MenuButton
             title="Dairy Production"
-            icon={icons.health}
+            icon={icons.dairy}
             onPress={() => navigation.navigate('DairyProductionListScreen')}
             color="#E91E63"
           />
            <MenuButton
             title="Swine Production"
-            icon={icons.health}
+            icon={icons.swine}
             onPress={() => navigation.navigate('SwineProductionListScreen')}
             color="#E91E63"
           />
           <MenuButton
             title="Sheep & Goat Production"
-            icon={icons.health}
+            icon={icons.sheep}
             onPress={() => navigation.navigate('SheepAndGoatProductionListScreen')}
             color="#E91E63"
           /> 
            <MenuButton
             title="Poultry Production"
-            icon={icons.health}
+            icon={icons.poultry}
             onPress={() => navigation.navigate('PoultryProductionListScreen')}
             color="#E91E63"
           />     
