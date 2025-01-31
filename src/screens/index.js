@@ -51,6 +51,8 @@ import HealthRecordsScreen from './health/HealthRecordsScreen';
 
 import LivestockRecordsScreen from './livestock/LivestockRecordsScreen';
 
+import InventoryDashboard from './inventory/InventoryDashboard';
+
 export {
   LoginScreen,
   SignupScreen,
@@ -101,4 +103,7 @@ export {
   PoultryProductionListScreen,
   HealthRecordsScreen,
   LivestockRecordsScreen,
+  InventoryDashboard,
+
+  //inventory
 };

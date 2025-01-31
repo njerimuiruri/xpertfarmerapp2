@@ -58,6 +58,7 @@ import {
   PoultryProductionListScreen,
   HealthRecordsScreen,
   LivestockRecordsScreen,
+  InventoryDashboard,
 
 } from './src/screens/index';
 import DrawerNav from './src/navigation/drawer/DrawerNav1';
@@ -352,6 +353,12 @@ export default function App() {
                 component={LivestockRecordsScreen}
                 options={{headerShown: false}}
               />
+               <Stack.Screen
+                name="InventoryDashboard"
+                component={InventoryDashboard}
+                options={{headerShown: false}}
+              />
+              
               
             </Stack.Navigator>
           </NavigationContainer>
