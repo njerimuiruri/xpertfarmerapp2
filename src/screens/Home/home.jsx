@@ -256,7 +256,22 @@ const Dashboard = () => {
             icon={icons.poultry}
             onPress={() => navigation.navigate('PoultryProductionListScreen')}
             color="#E91E63"
-          />     
+          />    
+
+          
+          <MenuButton
+            title="Health Production"
+            icon={icons.poultry}
+            onPress={() => navigation.navigate('HealthRecordsScreen')}
+            color="#E91E63"
+          />   
+          <MenuButton
+            title="Livestock Production"
+            icon={icons.poultry}
+            onPress={() => navigation.navigate('LivestockRecordsScreen')}
+            color="#E91E63"
+          />   
+          
         </MenuSection>
         
 

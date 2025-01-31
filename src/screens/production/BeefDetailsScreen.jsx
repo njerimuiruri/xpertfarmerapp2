@@ -87,7 +87,7 @@ export default function BeefCattleScreen({navigation}) {
           </Text>
           <VStack space={5}>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Animal ID or Flock ID
               </Text>
               <View>
@@ -133,7 +133,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Weight Gain
                 </Text>
                 <Tooltip
@@ -188,7 +188,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Weaning Weight
                 </Text>
                 <Tooltip
@@ -243,7 +243,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Weight at Time of Scheduled Checkup
                 </Text>
                 <Tooltip
@@ -298,7 +298,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Sale Weight
                 </Text>
                 <Tooltip
@@ -353,7 +353,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Sale Date
                 </Text>
                 <Tooltip
@@ -401,7 +401,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Market Price
                 </Text>
                 <Tooltip
@@ -456,7 +456,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Sale Price
                 </Text>
                 <Tooltip
@@ -511,7 +511,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Buyer's Name
                 </Text>
                 <Tooltip
@@ -540,7 +540,7 @@ export default function BeefCattleScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={2}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={2}>
                 Buyer Type
               </Text>
               <VStack space={2}>
@@ -559,7 +559,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Profit
                 </Text>
                 <Tooltip
@@ -584,7 +584,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Weight Gain Rate
                 </Text>
                 <Tooltip
@@ -624,7 +624,7 @@ export default function BeefCattleScreen({navigation}) {
                 px={6}
                 py={3}
                 _pressed={{
-                  bg: 'emerald.700',
+                  bg:COLORS.red,
                 }}
                 isDisabled={isSaveDisabled}
                 onPress={handleSave}>

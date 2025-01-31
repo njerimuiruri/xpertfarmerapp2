@@ -62,7 +62,7 @@ const goat = require('../assets/icons/goat.png');
 const poultry = require('../assets/icons/poultry.png');
 const dairy = require('../assets/icons/dairy-cow.png');
 const swine = require('../assets/icons/swine.png');
-
+const downchevron = require('../assets/icons/down-chevron.png');
 
 
 
@@ -114,6 +114,7 @@ export default {
   cloud2,
   download,
   download2,
+  downchevron,
   filter2,
   tick,
   twitterbadge,

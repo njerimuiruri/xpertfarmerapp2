@@ -52,7 +52,7 @@ export default function AllergyBoosterScreen({navigation}) {
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
           <VStack space={5}>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Animal ID or Flock ID
               </Text>
               <Select
@@ -78,7 +78,7 @@ export default function AllergyBoosterScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Name of the Boosters or Additives
               </Text>
               <Input
@@ -92,7 +92,7 @@ export default function AllergyBoosterScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Purpose
               </Text>
               <Input
@@ -106,7 +106,7 @@ export default function AllergyBoosterScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Quantity Given
               </Text>
               <HStack alignItems="center" space={2}>
@@ -198,7 +198,7 @@ export default function AllergyBoosterScreen({navigation}) {
             </View>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Cost of Booster or Additives
               </Text>
               <Input

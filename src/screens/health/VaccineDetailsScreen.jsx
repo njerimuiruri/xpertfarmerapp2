@@ -57,7 +57,7 @@ export default function VaccineDetailsScreen({navigation}) {
 
           <VStack space={5}>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Animal ID or Flock ID
               </Text>
               <Select
@@ -82,7 +82,7 @@ export default function VaccineDetailsScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Vaccination Against
               </Text>
               <Input
@@ -96,7 +96,7 @@ export default function VaccineDetailsScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Drug Administered
               </Text>
               <Input
@@ -139,7 +139,7 @@ export default function VaccineDetailsScreen({navigation}) {
             </View>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Dosage
               </Text>
               <HStack alignItems="center" space={2}>
@@ -178,7 +178,7 @@ export default function VaccineDetailsScreen({navigation}) {
             </Box>
             <Box>
               <HStack alignItems="center" space={2}>
-                <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                   {' '}
                   Cost of Vaccine
                 </Text>
@@ -195,7 +195,7 @@ export default function VaccineDetailsScreen({navigation}) {
               </HStack>
             </Box>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Administered By
               </Text>
               <Input
@@ -209,7 +209,7 @@ export default function VaccineDetailsScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Practice ID
               </Text>
               <Input
@@ -224,7 +224,7 @@ export default function VaccineDetailsScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" space={2}>
-                <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                   Cost of Service
                 </Text>
                 <Input

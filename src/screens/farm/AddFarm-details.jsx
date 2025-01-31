@@ -49,7 +49,7 @@ export default function AddFarmDetailsScreen({navigation}) {
 
           <VStack space={5}>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Farm ID
               </Text>
               <Input
@@ -63,7 +63,7 @@ export default function AddFarmDetailsScreen({navigation}) {
 
             <HStack alignItems="center" justifyContent="space-between">
               <Box flex={1}>
-                <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                   Region
                 </Text>
                 <Select
@@ -91,7 +91,7 @@ export default function AddFarmDetailsScreen({navigation}) {
 
             <HStack alignItems="center" justifyContent="space-between">
               <Box flex={1}>
-                <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                   Enable location
                 </Text>
               </Box>
@@ -104,7 +104,7 @@ export default function AddFarmDetailsScreen({navigation}) {
             </HStack>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Division
               </Text>
               <Select
@@ -130,7 +130,7 @@ export default function AddFarmDetailsScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Administrative Location
               </Text>
               <Input
@@ -143,7 +143,7 @@ export default function AddFarmDetailsScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Farm Size (in Hectares)
               </Text>
               <HStack alignItems="center" space={2}>
@@ -185,7 +185,7 @@ export default function AddFarmDetailsScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={2}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={2}>
                 Types of Farming
               </Text>
               <Text fontSize="xs" color="gray.600" mb={2}>

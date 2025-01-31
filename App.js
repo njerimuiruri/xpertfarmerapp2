@@ -56,6 +56,9 @@ import {
   DairyProductionListScreen,
   SheepAndGoatProductionListScreen,
   PoultryProductionListScreen,
+  HealthRecordsScreen,
+  LivestockRecordsScreen,
+
 } from './src/screens/index';
 import DrawerNav from './src/navigation/drawer/DrawerNav1';
 
@@ -339,7 +342,16 @@ export default function App() {
                 options={{headerShown: false}}
               />
               
-              
+              <Stack.Screen
+                name="HealthRecordsScreen"
+                component={HealthRecordsScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="LivestockRecordsScreen"
+                component={LivestockRecordsScreen}
+                options={{headerShown: false}}
+              />
               
             </Stack.Navigator>
           </NavigationContainer>

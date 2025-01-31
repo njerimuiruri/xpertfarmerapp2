@@ -56,7 +56,7 @@ export default function SwineRecordScreen({ navigation }) {
           <VStack space={5}>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Animal ID or Flock ID
               </Text>
               <Select
@@ -86,7 +86,7 @@ export default function SwineRecordScreen({ navigation }) {
               Farrowing Records (Breeding Sows)
             </Text>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Litter Size (Number)
               </Text>
               <HStack alignItems="center">
@@ -116,7 +116,7 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Birth Weight
               </Text>
               <HStack alignItems="center">
@@ -146,7 +146,7 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Weaning Date
               </Text>
               <HStack alignItems="center">
@@ -177,7 +177,7 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Weaning Weight
               </Text>
               <HStack alignItems="center">
@@ -211,7 +211,7 @@ export default function SwineRecordScreen({ navigation }) {
               Growth and Market Records
             </Text>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Entry Weight
               </Text>
               <HStack alignItems="center">
@@ -241,7 +241,7 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Finisher Phase Weight
               </Text>
               <HStack alignItems="center">
@@ -275,7 +275,7 @@ export default function SwineRecordScreen({ navigation }) {
               Sale Information
             </Text>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Sale Weight
               </Text>
               <HStack alignItems="center">
@@ -305,7 +305,7 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Sale Date
               </Text>
               <HStack alignItems="center">
@@ -336,7 +336,7 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Market Price (Autofilled)
               </Text>
               <Input
@@ -351,7 +351,7 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Sale Price
               </Text>
               <Input
@@ -366,7 +366,7 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Buyer’s Name
               </Text>
               <Input
@@ -380,7 +380,7 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={2}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={2}>
                 Buyer Type
               </Text>
               <VStack space={2}>

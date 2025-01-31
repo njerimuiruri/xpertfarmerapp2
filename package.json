@@ -62,6 +62,7 @@
     "react-native-splash-screen": "^3.3.0",
     "react-native-step-indicator": "^1.0.3",
     "react-native-svg": "^12.5.1",
+    "react-native-svg-charts": "^5.4.0",
     "react-native-swipe-list-view": "^3.2.9",
     "react-native-tab-view": "^3.5.1",
     "react-native-table-component": "^1.2.2",

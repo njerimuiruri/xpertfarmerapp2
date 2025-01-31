@@ -59,7 +59,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
           </Text>
           <VStack space={5}>
           <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Animal ID or Flock ID
               </Text>
               <View>
@@ -103,7 +103,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
               </View>
             </Box>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Daily Milk Yield
               </Text>
               <HStack alignItems="center" space={2}>
@@ -142,7 +142,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Milk Quality
               </Text>
               <HStack alignItems="center" space={2}>
@@ -181,7 +181,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Lactation Period
               </Text>
               <HStack alignItems="center">
@@ -211,7 +211,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
               )}
             </Box>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Drying Off Period
               </Text>
               <HStack alignItems="center">
@@ -242,7 +242,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Sale Quantity
               </Text>
               <HStack alignItems="center" space={2}>
@@ -281,7 +281,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Sale Date
               </Text>
               <HStack alignItems="center">
@@ -312,7 +312,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Market Price
               </Text>
               <HStack alignItems="center" space={2}>
@@ -351,7 +351,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Sale Price
               </Text>
               <HStack alignItems="center" space={2}>
@@ -390,7 +390,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Buyer’s Name
               </Text>
               <Input
@@ -404,7 +404,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={2}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={2}>
                 Buyer Type
               </Text>
               <VStack space={2}>

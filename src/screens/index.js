@@ -46,6 +46,11 @@ import DairyProductionListScreen from './production/DairyProductionListScreen';
 import SheepAndGoatProductionListScreen from './production/SheepAndGoatProductionListScreen';
 
 import PoultryProductionListScreen from './production/PoultryFlockDetailsScreen';
+
+import HealthRecordsScreen from './health/HealthRecordsScreen';
+
+import LivestockRecordsScreen from './livestock/LivestockRecordsScreen';
+
 export {
   LoginScreen,
   SignupScreen,
@@ -83,7 +88,9 @@ export {
   ProductionScreen,
   AddDairyDetailsScreen,
   //home
+  
   FarmDashboard,
+//productionsrecord
   SwineRecordScreen,
   SheepGoatDetailsScreen,
   PoultryFlockDetailsScreen,
@@ -92,4 +99,6 @@ export {
   DairyProductionListScreen,
   SheepAndGoatProductionListScreen,
   PoultryProductionListScreen,
+  HealthRecordsScreen,
+  LivestockRecordsScreen,
 };
