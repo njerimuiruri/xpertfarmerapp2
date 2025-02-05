@@ -21,7 +21,6 @@ const healthCategories = [
     code: '234',
     image: require('../../assets/images/VaccinationDosage.png'),
     color: '#FFD700',
-    route: 'VaccineDetailsScreen'
   },
   {
     id: '2',
@@ -29,7 +28,6 @@ const healthCategories = [
     code: '234',
     image: require('../../assets/images/deworming.png'),
     color: '#FF6347',
-    route: 'DewormingDetailsRecords'
   },
   {
     id: '3',
@@ -37,7 +35,6 @@ const healthCategories = [
     code: '234',
     image: require('../../assets/images/treatment.png'),
     color: '#90EE90',
-    route: 'DewormingDetailsRecords'
   },
   {
     id: '4',
@@ -45,7 +42,6 @@ const healthCategories = [
     code: '234',
     image: require('../../assets/images/Disorder.png'),
     color: '#8B4513',
-    route: 'DisorderScreen'
   },
   {
     id: '5',
@@ -53,7 +49,6 @@ const healthCategories = [
     code: '234',
     image: require('../../assets/images/Allergies.png'),
     color: '#F4E4BC',
-    route: 'Allergiesrecordsscreen'
   },
   {
     id: '6',
@@ -61,10 +56,10 @@ const healthCategories = [
     code: '234',
     image: require('../../assets/images/Boosters.png'),
     color: '#808080',
-    route: 'AllergyBoosterScreen'
   },
 ];
-const HealthRecordsScreen = ({ navigation }) => {
+
+const HealthRecordsScreen = () => {
   const [isAccordionExpanded, setIsAccordionExpanded] = useState(true);
 
   const renderSearchBar = () => (
@@ -84,11 +79,9 @@ const HealthRecordsScreen = ({ navigation }) => {
       </TouchableOpacity>
     </View>
   );
+
   const renderHealthCard = ({item, index}) => (
-    <TouchableOpacity 
-      style={[styles.card, {borderTopColor: item.color}]}
-      onPress={() => navigation.navigate(item.route)}
-    >
+    <View style={[styles.card, {borderTopColor: item.color}]}>
       <FastImage
         source={item.image}
         style={styles.cardImage}
@@ -98,17 +91,14 @@ const HealthRecordsScreen = ({ navigation }) => {
         <Text style={styles.cardTitle}>{item.title}</Text>
         <Text style={styles.cardCode}>{item.code}</Text>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   const renderLastAdministered = () => (
     <View style={styles.lastAdministeredContainer}>
-      <TouchableOpacity 
-        style={styles.seeAllLink}
-        onPress={() => navigation.navigate('FarmHealthRecords')}
-      >
+      <View style={styles.seeAllLink}>
         <Text style={styles.seeAllText}>See all</Text>
-      </TouchableOpacity>
+      </View>
 
       <View style={styles.accordionContainer}>
         <TouchableOpacity 
@@ -267,7 +257,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    // borderBottomWidth: isAccordionExpanded ? 1 : 0,
     borderBottomColor: '#e0e0e0',
   },
   accordionTitle: {

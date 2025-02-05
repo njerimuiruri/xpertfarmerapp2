@@ -59,6 +59,8 @@ import {
   HealthRecordsScreen,
   LivestockRecordsScreen,
   InventoryDashboard,
+  AddMachinery,
+  AddGoodsInStock,
 
 } from './src/screens/index';
 import DrawerNav from './src/navigation/drawer/DrawerNav1';
@@ -358,7 +360,17 @@ export default function App() {
                 component={InventoryDashboard}
                 options={{headerShown: false}}
               />
+               <Stack.Screen
+                name="AddMachinery"
+                component={AddMachinery}
+                options={{headerShown: false}}
+              />
               
+              <Stack.Screen
+                name="AddGoodsInStock"
+                component={AddGoodsInStock}
+                options={{headerShown: false}}
+              />
               
             </Stack.Navigator>
           </NavigationContainer>

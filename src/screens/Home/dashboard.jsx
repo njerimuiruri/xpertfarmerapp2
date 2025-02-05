@@ -10,8 +10,12 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import Header from '../../components/headers/main-header';
+import {useNavigation} from '@react-navigation/native';
 
 const FarmDashboard = () => {
+      const navigation = useNavigation();
+
     const cards = [
         {
           title: 'Production Analysis',
@@ -61,17 +65,8 @@ const FarmDashboard = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity>
-          <Icon name="menu" size={24} color="#000" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Icon name="cog" size={24} color="#000" />
-        </TouchableOpacity>
-      </View>
+          <View style={styles.container}>
+          <Header navigation={navigation} />
 
       <ScrollView style={styles.scrollView}>
         <Text style={styles.headerTitle}>Hello, John!</Text>
@@ -101,6 +96,7 @@ const FarmDashboard = () => {
         {/* Cards Grid */}
         <View style={styles.cardsGrid}>{cards.map(renderCard)}</View>
       </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -109,7 +105,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    marginTop: StatusBar.currentHeight,
+    // marginTop: StatusBar.currentHeight,
   },
   header: {
     flexDirection: 'row',

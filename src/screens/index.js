@@ -53,6 +53,10 @@ import LivestockRecordsScreen from './livestock/LivestockRecordsScreen';
 
 import InventoryDashboard from './inventory/InventoryDashboard';
 
+import AddMachinery from './inventory/AddMachinery';
+
+import AddGoodsInStock from './inventory/AddGoodsInStock';
+
 export {
   LoginScreen,
   SignupScreen,
@@ -103,7 +107,8 @@ export {
   PoultryProductionListScreen,
   HealthRecordsScreen,
   LivestockRecordsScreen,
-  InventoryDashboard,
-
   //inventory
+  InventoryDashboard,
+  AddMachinery,
+  AddGoodsInStock,
 };

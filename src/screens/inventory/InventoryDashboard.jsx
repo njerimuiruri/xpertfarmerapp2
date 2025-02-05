@@ -1,74 +1,105 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Modal,
 } from 'react-native';
-import {Box, HStack} from 'native-base';
+import { Box, HStack } from 'native-base';
 import FastImage from 'react-native-fast-image';
 import LinearGradient from 'react-native-linear-gradient';
 import SecondaryHeader from '../../components/headers/secondary-header';
-import {icons} from '../../constants';
+import { icons } from '../../constants';
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
 
 export default function InventoryDashboard() {
-  const [activeSection, setActiveSection] = useState('utilities');
+  const navigation = useNavigation(); // Initialize navigation
+  const [activeSection, setActiveSection] = useState('machinery');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
-  const TabButton = ({title, isActive, onPress}) => (
+  const TabButton = ({ title, isActive, onPress }) => (
     <TouchableOpacity
       style={[styles.tab, isActive && styles.activeTab]}
-      onPress={onPress}>
+      onPress={onPress}
+    >
       <Text
         style={[styles.tabText, isActive && styles.activeTabText]}
-        numberOfLines={1}>
+        numberOfLines={1}
+      >
         {title}
       </Text>
     </TouchableOpacity>
   );
 
-  const EquipmentCard = ({index, gradientColors}) => (
+  const EquipmentCard = ({ index, gradientColors }) => (
     <LinearGradient
       colors={gradientColors}
       style={styles.equipmentCard}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
       <Text style={styles.number}>{index}.</Text>
       <Text style={styles.equipmentTitle}>Equipment Name</Text>
       <Text style={styles.equipmentId}>Equipment ID or Serial Number</Text>
-      <View style={styles.detailsButton}>
-        <Text style={styles.detailsButtonText}>show more details</Text>
-      </View>
+      <TouchableOpacity
+        style={styles.detailsButton}
+        onPress={() => {
+          setSelectedItem({
+            name: 'Tractor',
+            breedingType: 'Cross-breeding',
+            id: 'hefdoholediknkened',
+            purchaseDate: '19/07/2023',
+            location: 'Siaya',
+            condition: 'New',
+            dam: 'RT5490',
+            lastServiceDate: '19/07/2023',
+            nextServiceDate: '19/07/2023',
+          });
+          setModalVisible(true);
+        }}
+      >
+        <Text style={styles.detailsButtonText}>Show more details</Text>
+      </TouchableOpacity>
       <View style={styles.dotIndicator}>
         <View style={styles.dot} />
       </View>
     </LinearGradient>
   );
 
-  const GoodsCard = ({index, gradientColors}) => (
+  const GoodsCard = ({ index, gradientColors }) => (
     <LinearGradient
       colors={gradientColors}
       style={styles.equipmentCard}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
       <Text style={styles.number}>{index}.</Text>
       <Text style={styles.equipmentTitle}>Item Name</Text>
       <Text style={styles.equipmentId}>Type (Organic, Inorganic, Hybrid, etc.)</Text>
-      <View style={styles.detailsButton}>
-        <Text style={styles.detailsButtonText}>show more details</Text>
-      </View>
+      <TouchableOpacity
+        style={styles.detailsButton}
+        onPress={() => {
+          setModalVisible(true);
+        }}
+      >
+        <Text style={styles.detailsButtonText}>Show more details</Text>
+      </TouchableOpacity>
       <View style={styles.dotIndicator}>
         <View style={styles.dot} />
       </View>
     </LinearGradient>
   );
 
-  const UtilityCard = ({title, date, fields, gradientColors}) => (
+  const UtilityCard = ({ title, date, fields, gradientColors }) => (
     <LinearGradient
       colors={gradientColors}
       style={styles.utilityCard}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}>
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{title}</Text>
         <View style={styles.dateContainer}>
@@ -104,22 +135,19 @@ export default function InventoryDashboard() {
           <GoodsCard index={1} gradientColors={['#DBAFA4', '#755D58']} />
           <GoodsCard index={2} gradientColors={['#8CD18C', '#486B48']} />
           <GoodsCard index={3} gradientColors={['#D1D6A1', '#6D7054']} />
-          <TouchableOpacity style={styles.addButton}>
-            <FastImage source={icons.plus} style={styles.addIcon} />
-          </TouchableOpacity>
         </View>
       );
     } else if (activeSection === 'utilities') {
       return (
         <View style={styles.contentContainer}>
           <UtilityCard
-            title="Water supply"
+            title="Water Supply"
             date="1st/Jan/2025"
             gradientColors={['#DBAFA4', '#755D58']}
             fields={[
-              {label: 'Current Water Level (Liters)', value: '3000Lit'},
-              {label: 'Water Source', value: 'Borehole'},
-              {label: 'Water Storage Capacity', value: 'Tanks'},
+              { label: 'Current Water Level (Liters)', value: '3000Lit' },
+              { label: 'Water Source', value: 'Borehole' },
+              { label: 'Water Storage Capacity', value: 'Tanks' },
             ]}
           />
           <UtilityCard
@@ -127,20 +155,33 @@ export default function InventoryDashboard() {
             date="1st/Jan/2025"
             gradientColors={['#8CD18C', '#486B48']}
             fields={[
-              {label: 'Power Source', value: 'Generator'},
-              {label: 'Generator Fuel Stock (Liters)', value: '40Lit'},
+              { label: 'Power Source', value: 'Generator' },
+              { label: 'Generator Fuel Stock (Liters)', value: '40Lit' },
             ]}
           />
           <UtilityCard
             title="Facility"
             date="1st/Jan/2025"
             gradientColors={['#D1D6A1', '#6D7054']}
-            fields={[]}
+            fields={[
+              { label: 'Power Source', value: 'Generator' },
+              { label: 'Generator Fuel Stock (Liters)', value: '40Lit' },
+            ]}
           />
         </View>
       );
     }
     return null;
+  };
+
+  const handleAddButtonPress = () => {
+    if (activeSection === 'machinery') {
+      navigation.navigate('AddMachinery'); 
+    } else if (activeSection === 'goods') {
+      navigation.navigate('AddGoodsInStock'); 
+    } else if (activeSection === 'utilities') {
+      navigation.navigate('AddUtilities'); 
+    }
   };
 
   return (
@@ -151,7 +192,8 @@ export default function InventoryDashboard() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={styles.tabsContainer}>
+          style={styles.tabsContainer}
+        >
           <HStack space={2} p={4}>
             <TabButton
               title="Machinery & Equipment"
@@ -173,7 +215,97 @@ export default function InventoryDashboard() {
 
         {/* Content */}
         {renderContent()}
+
+        {/* Modal */}
+        <Modal
+          visible={modalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Machinery Details</Text>
+                <TouchableOpacity 
+                  style={styles.closeButton} 
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.closeButtonText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {selectedItem && (
+                <ScrollView style={styles.modalScrollContent}>
+                  <View style={styles.modalSection}>
+                    <Text style={styles.modalLabel}>Equipment Name</Text>
+                    <Text style={styles.modalValue}>{selectedItem.name}</Text>
+                  </View>
+
+                  <View style={styles.modalSection}>
+                    <Text style={styles.modalLabel}>Breeding Type</Text>
+                    <Text style={styles.modalValue}>{selectedItem.breedingType}</Text>
+                  </View>
+
+                  <View style={styles.modalSection}>
+                    <Text style={styles.modalLabel}>Equipment ID</Text>
+                    <Text style={styles.modalValue}>{selectedItem.id}</Text>
+                  </View>
+
+                  <View style={styles.modalSection}>
+                    <Text style={styles.modalLabel}>Purchase Date</Text>
+                    <Text style={styles.modalValue}>{selectedItem.purchaseDate}</Text>
+                  </View>
+
+                  <View style={styles.modalSection}>
+                    <Text style={styles.modalLabel}>Current Location</Text>
+                    <Text style={styles.modalValue}>{selectedItem.location}</Text>
+                  </View>
+
+                  <View style={styles.modalSection}>
+                    <Text style={styles.modalLabel}>Condition</Text>
+                    <Text style={styles.modalValue}>{selectedItem.condition}</Text>
+                  </View>
+
+                  <View style={styles.modalSection}>
+                    <Text style={styles.modalLabel}>Dam</Text>
+                    <Text style={styles.modalValue}>{selectedItem.dam}</Text>
+                  </View>
+
+                  <View style={styles.modalSection}>
+                    <Text style={styles.modalLabel}>Last Service Date</Text>
+                    <Text style={styles.modalValue}>{selectedItem.lastServiceDate}</Text>
+                  </View>
+
+                  <View style={styles.modalSection}>
+                    <Text style={styles.modalLabel}>Next Service Date</Text>
+                    <Text style={styles.modalValue}>{selectedItem.nextServiceDate}</Text>
+                  </View>
+                </ScrollView>
+              )}
+              
+              <TouchableOpacity 
+                style={styles.backButton} 
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.backButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleAddButtonPress} // Call the function to handle navigation
+      >
+        <FastImage
+          source={icons.plus}
+          style={styles.fabIcon}
+          tintColor="#fff"
+        />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -309,17 +441,91 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  addButton: {
+  fab: {
     position: 'absolute',
-    bottom: 16,
-    right: 16,
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: '#8CD18C',
-    borderRadius: 50,
-    padding: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.27,
+    shadowRadius: 4.65,
   },
-  addIcon: {
+  fabIcon: {
     width: 24,
     height: 24,
-    tintColor: 'white',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  modalContent: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  closeButtonText: {
+    fontSize: 20,
+    color: '#666',
+  },
+  modalScrollContent: {
+    maxHeight: '75%',
+  },
+  modalSection: {
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 10,
+  },
+  modalLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  modalValue: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+  backButton: {
+    backgroundColor: '#8CD18C',
+    borderRadius: 12,
+    padding: 16,
+    alignSelf: 'stretch',
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  backButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
