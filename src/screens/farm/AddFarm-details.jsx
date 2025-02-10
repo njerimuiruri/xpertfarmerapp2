@@ -10,12 +10,7 @@ import {
   Switch,
   ScrollView,
   HStack,
-  Fab,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
+  Modal,
 } from 'native-base';
 import SecondaryHeader from '../../components/headers/secondary-header';
 import {View, StyleSheet} from 'react-native';
@@ -28,17 +23,17 @@ export default function AddFarmDetailsScreen({navigation}) {
   const [farmSize, setFarmSize] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedDivision, setSelectedDivision] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   return (
     <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Add Farm Details" />
-      <ScrollView 
-        contentContainerStyle={{ 
-          flexGrow: 1, 
-          justifyContent: 'center', 
-          marginTop: 5 
-        }}
-      >
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'center',
+          marginTop: 5,
+        }}>
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
           <Text
             style={{
@@ -70,16 +65,6 @@ export default function AddFarmDetailsScreen({navigation}) {
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
                 placeholder="Select region"
-                _selectedItem={{
-                  bg: 'teal.600',
-                  endIcon: (
-                    <FastImage
-                      source={icons.right_arrow}
-                      style={{ width: 20, height: 20 }}
-                      tintColor="white"
-                    />
-                  ),
-                }}
                 onValueChange={setSelectedRegion}>
                 <Select.Item label="Region 1" value="region1" />
                 <Select.Item label="Region 2" value="region2" />
@@ -88,10 +73,7 @@ export default function AddFarmDetailsScreen({navigation}) {
 
             <HStack alignItems="center" justifyContent="space-between">
               <Text style={styles.label}>Enable location</Text>
-              <Switch
-                isChecked={enableLocation}
-                onToggle={setEnableLocation}
-              />
+              <Switch isChecked={enableLocation} onToggle={setEnableLocation} />
             </HStack>
 
             <Box>
@@ -102,30 +84,10 @@ export default function AddFarmDetailsScreen({navigation}) {
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
                 placeholder="Select division"
-                _selectedItem={{
-                  bg: 'teal.600',
-                  endIcon: (
-                    <FastImage
-                      source={icons.right_arrow}
-                      style={{ width: 20, height: 20 }}
-                      tintColor="white"
-                    />
-                  ),
-                }}
                 onValueChange={setSelectedDivision}>
                 <Select.Item label="Division 1" value="division1" />
                 <Select.Item label="Division 2" value="division2" />
               </Select>
-            </Box>
-
-            <Box>
-              <Text style={styles.label}>Administrative Location</Text>
-              <Input
-                variant="outline"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-                placeholder="Enter Administrative Location"
-              />
             </Box>
 
             <Box>
@@ -203,12 +165,40 @@ export default function AddFarmDetailsScreen({navigation}) {
               py={3}
               _pressed={{
                 bg: 'emerald.700',
-              }}>
+              }}
+              onPress={() => setShowSuccessModal(true)}>
               Submit
             </Button>
           </HStack>
         </Box>
       </ScrollView>
+
+      {/* Success Modal */}
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}>
+        <Modal.Content maxWidth="85%" borderRadius={12} p={5}>
+          <Modal.Body alignItems="center">
+            <FastImage
+              source={icons.tick}
+              style={styles.modalIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.modalText}>Farm added successfully!</Text>
+          </Modal.Body>
+          <Modal.Footer justifyContent="center">
+            <Button
+              backgroundColor={COLORS.green}
+              style={styles.modalButton}
+              onPress={() => {
+                setShowSuccessModal(false);
+                navigation.navigate('FarmRecord');
+              }}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
     </View>
   );
 }
@@ -218,5 +208,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     marginBottom: 8,
-  }
+  },
+  modalIcon: {
+    width: 50,
+    height: 50,
+    tintColor: COLORS.green,
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: COLORS.darkGray3,
+  },
+  modalButton: {
+    width: 120,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
+  },
 });
