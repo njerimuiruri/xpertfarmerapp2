@@ -1,9 +1,21 @@
 import React, { useState } from "react";
-import { View, ScrollView as RNScrollView, StyleSheet } from "react-native";
-import { Text, Input, Button, Select, CheckIcon, Radio, Modal, VStack, HStack, Pressable, Toast } from "native-base";
-import FastImage from 'react-native-fast-image';
-import { icons } from '../../constants';
+import {
+  Box,
+  Text,
+  Input,
+  Button,
+  VStack,
+  Select,
+  ScrollView,
+  HStack,
+  Radio,
+  Modal,
+} from "native-base";
+import { View, StyleSheet } from "react-native";
+import FastImage from "react-native-fast-image";
 import SecondaryHeader from "../../components/headers/secondary-header";
+import { icons } from "../../constants";
+import { COLORS } from "../../constants/theme";
 
 export default function AddLivestockScreen({ navigation }) {
   const [formData, setFormData] = useState({
@@ -14,144 +26,214 @@ export default function AddLivestockScreen({ navigation }) {
     gender: "",
     sirePhenotype: "",
     dam: "",
-    weight: ""
+    weight: 0, 
   });
 
   const [showModal, setShowModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = () => {
-    const { idNumber, breedType, phenotype, dateOfBirth, gender, sirePhenotype, dam, weight } = formData;
+   
 
-    if (!idNumber || !breedType || !phenotype || !dateOfBirth || !gender || !sirePhenotype || !dam || !weight) {
-      Toast.show({
-        title: "Error",
-        status: "error",
-        description: "Please fill in all fields before submitting.",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    setTimeout(() => {
-      console.log('Form submitted:', formData);
-      setIsLoading(false);
-      setShowModal(true);
-    }, 1000);
+    setShowModal(true);
   };
-
-  const handleAddAnother = () => {
-    setFormData({
-      idNumber: "",
-      breedType: "",
-      phenotype: "",
-      dateOfBirth: "",
-      gender: "",
-      sirePhenotype: "",
-      dam: "",
-      weight: ""
-    });
-    setShowModal(false);
-  };
-
-  const renderFormField = (label, value, onChangeText, keyboardType = "default", placeholder = "") => (
-    <View style={styles.formField}>
-      <Text style={styles.label}>{label}</Text>
-      <Input
-        value={value}
-        onChangeText={onChangeText}
-        keyboardType={keyboardType}
-        placeholder={placeholder}
-        style={styles.input}
-        backgroundColor="#e8f5e9"
-        borderWidth={0}
-        fontSize="sm"
-        height={10}
-      />
-    </View>
-  );
 
   return (
-    <View style={styles.container}>
-      <SecondaryHeader title="Add Livestock Details" />
+    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
+      <SecondaryHeader title="Add Livestock" />
+      <ScrollView contentContainerStyle={styles.scrollView}>
+        <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
+          <Text style={styles.titleText}>Fill in the Livestock Details</Text>
 
-      <RNScrollView style={styles.scrollView}>
-        <View style={styles.formContainer}>
-          <Text style={styles.subtitle}>Fill in the livestock details</Text>
+          <VStack space={5}>
+            <Box>
+              <Text style={styles.label}>ID Number</Text>
+              <Input
+                value={formData.idNumber}
+                onChangeText={(value) =>
+                  setFormData((prev) => ({ ...prev, idNumber: value }))
+                }
+                placeholder="Enter ID Number"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
+              />
+            </Box>
 
-          {renderFormField("ID Number", formData.idNumber,
-            (value) => setFormData(prev => ({ ...prev, idNumber: value })))}
+            <Box>
+              <Text style={styles.label}>Breed Type</Text>
+              <Input
+                value={formData.breedType}
+                onChangeText={(value) =>
+                  setFormData((prev) => ({ ...prev, breedType: value }))
+                }
+                placeholder="Enter Breed Type"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
+              />
+            </Box>
 
-          {renderFormField("Breed Type", formData.breedType,
-            (value) => setFormData(prev => ({ ...prev, breedType: value })))}
+            <Box>
+              <Text style={styles.label}>Phenotype</Text>
+              <Input
+                value={formData.phenotype}
+                onChangeText={(value) =>
+                  setFormData((prev) => ({ ...prev, phenotype: value }))
+                }
+                placeholder="Enter Phenotype"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
+              />
+            </Box>
 
-          {renderFormField("Phenotype", formData.phenotype,
-            (value) => setFormData(prev => ({ ...prev, phenotype: value })))}
+            <Box>
+              <Text style={styles.label}>Date of Birth</Text>
+              <Input
+                value={formData.dateOfBirth}
+                onChangeText={(value) =>
+                  setFormData((prev) => ({ ...prev, dateOfBirth: value }))
+                }
+                placeholder="DD/MM/YYYY"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
+              />
+            </Box>
 
-          {renderFormField("Date of Birth (DD/MM/YYYY)", formData.dateOfBirth,
-            (value) => setFormData(prev => ({ ...prev, dateOfBirth: value })), "default", "DD/MM/YYYY")}
+            <Box>
+              <Text style={styles.label}>Gender</Text>
+              <Radio.Group
+                name="gender"
+                value={formData.gender}
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, gender: value }))
+                }
+              >
+                <HStack space={4}>
+                  <Radio value="Male">
+                    <Text>Male</Text>
+                  </Radio>
+                  <Radio value="Female">
+                    <Text>Female</Text>
+                  </Radio>
+                </HStack>
+              </Radio.Group>
+            </Box>
 
-          <View style={styles.formField}>
-            <Text style={styles.label}>Gender</Text>
-            <Radio.Group
-              name="gender"
-              value={formData.gender}
-              onChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
-            >
-              <HStack space={4}>
-                <Radio value="Male">
-                  <Text>Male</Text>
-                </Radio>
-                <Radio value="Female">
-                  <Text>Female</Text>
-                </Radio>
-              </HStack>
-            </Radio.Group>
-          </View>
+            <Box>
+              <Text style={styles.label}>Sire Phenotype</Text>
+              <Input
+                value={formData.sirePhenotype}
+                onChangeText={(value) =>
+                  setFormData((prev) => ({ ...prev, sirePhenotype: value }))
+                }
+                placeholder="Enter Sire Phenotype"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
+              />
+            </Box>
 
-          {renderFormField("Sire Phenotype", formData.sirePhenotype,
-            (value) => setFormData(prev => ({ ...prev, sirePhenotype: value })))}
+            <Box>
+              <Text style={styles.label}>Dam</Text>
+              <Input
+                value={formData.dam}
+                onChangeText={(value) =>
+                  setFormData((prev) => ({ ...prev, dam: value }))
+                }
+                placeholder="Enter Dam"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
+              />
+            </Box>
 
-          {renderFormField("Dam", formData.dam,
-            (value) => setFormData(prev => ({ ...prev, dam: value })))}
-
-          {renderFormField("Weight (kg)", formData.weight,
-            (value) => setFormData(prev => ({ ...prev, weight: value }), "numeric"))}
-
-
-          <Button className="bg-emerald-600 border-0 py-3">
-            <Text className="font-semibold text-white">Submit</Text>
-          </Button>
-        </View>
-      </RNScrollView>
-
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
-        <Modal.Content style={styles.modalContent}>
-          <Modal.Body>
-            <VStack space={6} alignItems="center" style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>Add another livestock</Text>
-              <Text style={styles.modalSubtitle}>
-                Feel free to add another livestock; the more, the better
-              </Text>
-              <HStack space={4} width="100%">
+            {/* Weight Field with Increment & Decrement */}
+            <Box>
+              <Text style={styles.label}>Weight (kg)</Text>
+              <HStack alignItems="center" space={2}>
                 <Button
+                  onPress={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      weight: Math.max(0, prev.weight - 1),
+                    }))
+                  }
+                  variant="outline"
+                  p={2}
+                >
+                  -
+                </Button>
+                <Input
                   flex={1}
                   variant="outline"
-                  onPress={() => navigation.goBack()}
-                  style={styles.modalButton}
-                >
-                  <Text color="#666">No</Text>
-                </Button>
+                  backgroundColor={COLORS.lightGreen}
+                  borderColor="gray.200"
+                  placeholder="Enter Weight"
+                  keyboardType="numeric"
+                  value={formData.weight.toString()}
+                  onChangeText={(text) => {
+                    const numericValue = parseInt(text) || 0;
+                    setFormData((prev) => ({
+                      ...prev,
+                      weight: Math.max(0, numericValue),
+                    }));
+                  }}
+                />
                 <Button
-                  flex={1}
-                  onPress={handleAddAnother}
-                  style={[styles.modalButton, styles.modalSubmitButton]}
+                  onPress={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      weight: prev.weight + 1,
+                    }))
+                  }
+                  variant="outline"
+                  p={2}
                 >
-                  <Text color="white">Yes</Text>
+                  +
                 </Button>
               </HStack>
-            </VStack>
+            </Box>
+
+            {/* Buttons */}
+            <HStack justifyContent="center" mt={6} space={4}>
+              <Button
+                variant="outline"
+                borderWidth={1}
+                borderColor={COLORS.green}
+                borderRadius={8}
+                px={6}
+                py={3}
+                onPress={() => navigation.goBack()}
+              >
+                Back
+              </Button>
+              <Button
+                backgroundColor={COLORS.green}
+                borderRadius={8}
+                px={6}
+                py={3}
+                onPress={handleSubmit}
+              >
+                Submit
+              </Button>
+            </HStack>
+          </VStack>
+        </Box>
+      </ScrollView>
+
+      {/* Success Modal */}
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+        <Modal.Content borderRadius={12} p={5}>
+          <Modal.Body alignItems="center">
+            <Text style={styles.modalText}>
+              Your Livestock Details have been successfully added!
+            </Text>
           </Modal.Body>
+          <Modal.Footer justifyContent="center">
+            <Button
+              backgroundColor={COLORS.green}
+              style={styles.modalButton}
+              onPress={() => setShowModal(false)}
+            >
+              OK
+            </Button>
+          </Modal.Footer>
         </Modal.Content>
       </Modal>
     </View>
@@ -159,94 +241,34 @@ export default function AddLivestockScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#e8f5e9',
-  },
-  headerContainer: {
-    backgroundColor: 'white',
-    paddingVertical: 40,
-    paddingHorizontal: 10,
-  },
-  headerTitle: {
-    fontSize: 18,
-    color: '#8bc34a',
-    textAlign: 'center',
-    fontWeight: 'bold',
-    flex: 1,
-  },
-  greenLine: {
-    height: 2,
-    backgroundColor: '#8bc34a',
-    width: '100%',
-    alignSelf: 'center',
-    marginTop: 12,
-  },
   scrollView: {
-    flex: 1,
+    flexGrow: 1,
+    justifyContent: "flex-start",
+    marginTop: 5,
   },
-  formContainer: {
-    backgroundColor: 'white',
-    margin: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  formField: {
+  titleText: {
+    fontSize: 16,
+    color: "black",
     marginBottom: 16,
+    textAlign: "center",
   },
   label: {
     fontSize: 14,
-    color: '#333',
+    color: "#333",
     marginBottom: 8,
   },
-  input: {
-    borderRadius: 8,
-  },
-  buttonContainer: {
-    marginTop: 24,
-  },
-  button: {
-    height: 45,
-    borderRadius: 8,
-  },
-  submitButton: {
-    backgroundColor: '#8bc34a',
-    borderWidth: 0,
-  },
-  modalContent: {
-    borderRadius: 16,
-    margin: 20,
-  },
-  modalContainer: {
-    padding: 16,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#333',
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+  modalText: {
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "500",
+    color: COLORS.darkGray3,
+    marginTop: 10,
   },
   modalButton: {
-    height: 45,
-    borderRadius: 8,
+    width: 130,
+    height: 55,
+    borderRadius: 15,
+    justifyContent: "center",
   },
-  modalSubmitButton: {
-    backgroundColor: '#8bc34a',
-    borderWidth: 0,
-  }
 });
+

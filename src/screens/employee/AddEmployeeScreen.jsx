@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useState} from 'react';
 import {
   Box,
   Text,
@@ -6,131 +6,103 @@ import {
   Button,
   VStack,
   Select,
-  Checkbox,
   HStack,
   ScrollView,
-  Switch,
-} from "native-base";
-import FastImage from "react-native-fast-image";
-import DateTimePicker from '@react-native-community/datetimepicker';
-import SecondaryHeader from "../../components/headers/secondary-header";
-import { View } from "react-native";
-import { icons } from "../../constants";
-import { COLORS } from '../../constants/theme';
+  Modal,
+} from 'native-base';
+import {View, StyleSheet} from 'react-native';
+import FastImage from 'react-native-fast-image';
+import SecondaryHeader from '../../components/headers/secondary-header';
+import {COLORS} from '../../constants/theme';
+import {icons} from '../../constants'; // Import icons
 
-export default function AddEmployeeScreen({ navigation }) {
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [dateOfEmployment, setDateOfEmployment] = useState("");
-  const [paymentRate, setPaymentRate] = useState("");
-  const [workingHour, setWorkingHour] = useState("");
-  const [position, setPosition] = useState("");
-  const [employmentType, setEmploymentType] = useState("");
-  const [emergencyContact, setEmergencyContact] = useState("");
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [date, setDate] = useState(new Date());
+export default function AddEmployeeScreen({navigation}) {
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [dateOfEmployment, setDateOfEmployment] = useState('');
+  const [paymentRate, setPaymentRate] = useState('');
+  const [workingHour, setWorkingHour] = useState('');
+  const [position, setPosition] = useState('');
+  const [employmentType, setEmploymentType] = useState('');
+  const [emergencyContact, setEmergencyContact] = useState('');
 
-  const onDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setDate(selectedDate);
-      setDateOfEmployment(selectedDate.toLocaleDateString());
-    }
+  const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showContinueModal, setShowContinueModal] = useState(false);
+
+  const handleSubmit = () => {
+    setShowAddEmployeeModal(true);
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Add Employee" />
-      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', marginTop: 5 }}>
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'center',
+          marginTop: 5,
+        }}>
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
-          <Text
-            style={{
-              fontSize: 16,
-              color: 'black',
-              marginBottom: 16,
-              textAlign: 'center',
-            }}>
+          <Text style={styles.titleText}>
             Please fill in the employee details.
           </Text>
 
           <VStack space={5}>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Full Name
-              </Text>
+              <Text style={styles.label}>Full Name</Text>
               <Input
                 value={fullName}
                 onChangeText={setFullName}
                 placeholder="Full Name"
                 backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
               />
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Phone Number
-              </Text>
+              <Text style={styles.label}>Phone Number</Text>
               <Input
                 value={phone}
                 onChangeText={setPhone}
                 placeholder="Phone Number"
                 keyboardType="phone-pad"
                 backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
               />
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Date of Employment
-              </Text>
+              <Text style={styles.label}>Date of Employment</Text>
               <Input
                 value={dateOfEmployment}
-                isReadOnly
-                placeholder="Select Date"
-                onTouchStart={() => setShowDatePicker(true)}
+                onChangeText={setDateOfEmployment}
+                placeholder="Enter Employment Date"
                 backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
               />
-              {showDatePicker && (
-                <DateTimePicker
-                  value={date}
-                  mode="date"
-                  onChange={onDateChange}
-                />
-              )}
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Emergency Contact
-              </Text>
+              <Text style={styles.label}>Emergency Contact</Text>
               <Input
                 value={emergencyContact}
                 onChangeText={setEmergencyContact}
                 placeholder="Emergency Contact"
                 keyboardType="phone-pad"
                 backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
               />
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Employment Type
-              </Text>
+              <Text style={styles.label}>Employment Type</Text>
               <Select
                 selectedValue={employmentType}
                 minWidth="100%"
                 backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
                 placeholder="Select Employment Type"
-                _selectedItem={{
-                  bg: "teal.600",
-                  endIcon: (
-                    <FastImage
-                      source={icons.right_arrow}
-                      className="w-[20px] h-[20px]"
-                      tintColor='white'
-                    />
-                  ),
-                }}
                 onValueChange={setEmploymentType}>
                 <Select.Item label="Permanent" value="permanent" />
                 <Select.Item label="Contractual" value="contractual" />
@@ -138,30 +110,24 @@ export default function AddEmployeeScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Position
-              </Text>
+              <Text style={styles.label}>Position</Text>
               <Input
                 value={position}
                 onChangeText={setPosition}
                 placeholder="Position"
                 backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
               />
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Working Hours
-              </Text>
+              <Text style={styles.label}>Working Hours</Text>
               <Select
                 selectedValue={workingHour}
                 minWidth="100%"
                 backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
                 placeholder="Choose Working Hours"
-                _selectedItem={{
-                  bg: 'teal.600',
-                  endIcon: <FastImage source={icons.right_arrow} className="w-[20px] h-[20px]" tintColor='white' />
-                }}
                 onValueChange={setWorkingHour}>
                 <Select.Item label="Full-Time" value="full-time" />
                 <Select.Item label="Part-Time" value="part-time" />
@@ -170,15 +136,14 @@ export default function AddEmployeeScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Payment Rate
-              </Text>
+              <Text style={styles.label}>Payment Rate</Text>
               <Input
                 value={paymentRate}
                 onChangeText={setPaymentRate}
                 placeholder="Payment Rate"
                 keyboardType="numeric"
                 backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
               />
             </Box>
           </VStack>
@@ -186,28 +151,171 @@ export default function AddEmployeeScreen({ navigation }) {
           <HStack justifyContent="center" mt={6} space={4}>
             <Button
               variant="outline"
-              borderWidth={1}
               borderColor={COLORS.green}
-              borderRadius={8}
-              px={6}
-              py={3}
+              style={styles.largeButton}
               onPress={() => navigation.goBack()}>
               Back
             </Button>
             <Button
               backgroundColor={COLORS.green}
-              borderRadius={8}
-              px={6}
-              py={3}
-              _pressed={{
-                bg: 'emerald.700',
-              }}>
+              style={styles.largeButton}
+              onPress={handleSubmit}>
               Submit
             </Button>
           </HStack>
         </Box>
-        <View className="h-[60px] bg-white" />
       </ScrollView>
+
+      {/* Add Another Employee Modal */}
+      <Modal
+        isOpen={showAddEmployeeModal}
+        onClose={() => setShowAddEmployeeModal(false)}>
+        <Modal.Content maxWidth="90%">
+          <Modal.Header alignItems="center">
+            <Text style={styles.modalTitle}>Add another employee</Text>
+          </Modal.Header>
+          <Modal.Body alignItems="center">
+            <Text style={styles.modalText}>
+              Feel free to add another employee, the more the better
+            </Text>
+          </Modal.Body>
+          <Modal.Footer justifyContent="center">
+            <HStack space={4}>
+              <Button
+                variant="outline"
+                borderColor={COLORS.green}
+                style={styles.modalButton}
+                onPress={() => {
+                  setShowAddEmployeeModal(false);
+                  setShowSuccessModal(true);
+                }}>
+                No
+              </Button>
+              <Button
+                backgroundColor={COLORS.green}
+                style={styles.modalButton}
+                onPress={() => setShowAddEmployeeModal(false)}>
+                Yes
+              </Button>
+            </HStack>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
+
+      {/* Employee Updated Successfully Modal */}
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}>
+        <Modal.Content maxWidth="85%" borderRadius={12} p={5}>
+          <Modal.Body alignItems="center">
+            <View style={styles.iconContainer}>
+              <FastImage
+                source={icons.tick}
+                style={styles.tickIcon}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={styles.modalText}>
+              Your Employee has been updated successfully
+            </Text>
+          </Modal.Body>
+          <Modal.Footer justifyContent="center">
+            <Button
+              backgroundColor={COLORS.green}
+              style={styles.modalButton}
+              onPress={() => {
+                setShowSuccessModal(false);
+                setShowContinueModal(true);
+              }}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
+
+      <Modal
+        isOpen={showContinueModal}
+        onClose={() => setShowContinueModal(false)}>
+        <Modal.Content maxWidth="90%">
+          <Modal.Header alignItems="center">
+            <Text style={styles.modalTitle}>Continue with the setup</Text>
+          </Modal.Header>
+          <Modal.Body alignItems="center">
+            <Text style={styles.modalText}>
+              The next step is adding your livestock details, are you ready?
+            </Text>
+          </Modal.Body>
+          <Modal.Footer justifyContent="center">
+          <HStack space={4}>
+        <Button
+          variant="outline"
+          borderColor={COLORS.green}
+          style={styles.modalButton}
+          onPress={() => {
+            setShowContinueModal(false);
+            navigation.navigate("FarmEmployeeTableScreen"); 
+          }}>
+          Cancel
+        </Button>
+        <Button
+          backgroundColor={COLORS.green}
+          style={styles.modalButton}
+          onPress={() => {
+            setShowContinueModal(false);
+            navigation.navigate("OptionDetailsScreen"); 
+          }}>
+          Continue
+        </Button>
+      </HStack>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  titleText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 16,
+    textAlign: "center", 
+    alignSelf: "center", 
+  },
+  modalButton: {
+    width: 120,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
+  },
+  largeButton: {
+    width: 160,
+    height: 55,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    fontSize: 16,
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    backgroundColor: COLORS.green,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  tickIcon: {
+    width: 40,
+    height: 40,
+    tintColor: '#fff',
+  },
+  modalText: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '500',
+    color: COLORS.darkGray3,
+    marginTop: 10,
+  },
+});

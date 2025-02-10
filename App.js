@@ -19,23 +19,33 @@ import {
   OnboardingScreen,
   ResetPassword,
   EmailOtpScreen,
-  FarmRecord,
   ProfileScreen,
+
+  // Farm
+  FarmRecord,
   AddFarmDetailsScreen,
+  // Employees
   AddEmployeeScreen,
   FarmEmployeeTableScreen,
   EditEmployeeScreen,
+  EmployeeScreen,
+
+  // Livestock
   AddFlockDetailsScreen,
   AddLivestockScreen,
   AddLivestockGroupScreen,
   OptionDetailsScreen,
   OptionLivestockGroupScreen,
+
+  // Breeding
   BreedingRecordForm,
+
+  // Feeds
   LivestockFeedingScreen,
   AnimalFeedingProgramScreen,
   FarmFeedsScreen,
-  AddDairyDetailsScreen,
-  BeefDetailsScreen,
+  FeedingManagementScreen,
+  FeedingRecordScreen,
 
   //health
   AddHealthRecords,
@@ -44,13 +54,16 @@ import {
   DewormingDetailsRecords,
   Geneticdisorderscreen,
   VaccineDetailsScreen,
+  HealthManagementScreen,
+  FarmHealthRecords,
+
+  //Production
   ProductionScreen,
+  AddDairyDetailsScreen,
+  BeefDetailsScreen,
   SwineRecordScreen,
   SheepGoatDetailsScreen,
   PoultryFlockDetailsScreen,
-  //home
-  FarmDashboard,
-  FarmHealthRecords,
   AnimalProductionListScreen,
   SwineProductionListScreen,
   DairyProductionListScreen,
@@ -58,10 +71,13 @@ import {
   PoultryProductionListScreen,
   HealthRecordsScreen,
   LivestockRecordsScreen,
+
+  //home
+  FarmDashboard,
   InventoryDashboard,
   AddMachinery,
   AddGoodsInStock,
-
+  LivestockManagementScreen,
 } from './src/screens/index';
 import DrawerNav from './src/navigation/drawer/DrawerNav1';
 
@@ -189,6 +205,12 @@ export default function App() {
                 component={AddEmployeeScreen}
                 options={{headerShown: false}}
               />
+
+              <Stack.Screen
+                name="EmployeeScreen"
+                component={EmployeeScreen}
+                options={{headerShown: false}}
+              />
               <Stack.Screen
                 name="FarmEmployeeTableScreen"
                 component={FarmEmployeeTableScreen}
@@ -199,9 +221,16 @@ export default function App() {
                 component={EditEmployeeScreen}
                 options={{headerShown: false}}
               />
+              {/* livestock */}
               <Stack.Screen
                 name="AddFlockDetailsScreen"
                 component={AddFlockDetailsScreen}
+                options={{headerShown: false}}
+              />
+
+              <Stack.Screen
+                name="LivestockManagementScreen"
+                component={LivestockManagementScreen}
                 options={{headerShown: false}}
               />
               <Stack.Screen
@@ -244,7 +273,16 @@ export default function App() {
                 component={FarmFeedsScreen}
                 options={{headerShown: false}}
               />
-
+              <Stack.Screen
+                name="FeedingRecordScreen"
+                component={FeedingRecordScreen}
+                options={{headerShown: false}}
+              />
+               <Stack.Screen
+                name="FeedingManagementScreen"
+                component={FeedingManagementScreen}
+                options={{headerShown: false}}
+              />
               {/* health */}
               <Stack.Screen
                 name="AddHealthRecords"
@@ -281,49 +319,61 @@ export default function App() {
                 component={FarmHealthRecords}
                 options={{headerShown: false}}
               />
-              
+               <Stack.Screen
+                name="HealthManagementScreen"
+                component={HealthManagementScreen}
+                options={{headerShown: false}}
+              />
+
+              <Stack.Screen
+                name="HealthRecordsScreen"
+                component={HealthRecordsScreen}
+                options={{headerShown: false}}
+              />
+
+              {/* production */}
               <Stack.Screen
                 name="AddDairyDetailsScreen"
                 component={AddDairyDetailsScreen}
                 options={{headerShown: false}}
               />
-              
+
               <Stack.Screen
                 name="BeefDetailsScreen"
                 component={BeefDetailsScreen}
                 options={{headerShown: false}}
               />
-               <Stack.Screen
+              <Stack.Screen
                 name="ProductionScreen"
                 component={ProductionScreen}
                 options={{headerShown: false}}
               />
-              
+
               <Stack.Screen
                 name="SwineRecordScreen"
                 component={SwineRecordScreen}
                 options={{headerShown: false}}
               />
-              
+
               <Stack.Screen
                 name="SheepGoatDetailsScreen"
                 component={SheepGoatDetailsScreen}
                 options={{headerShown: false}}
               />
-              
+
               <Stack.Screen
                 name="PoultryFlockDetailsScreen"
                 component={PoultryFlockDetailsScreen}
                 options={{headerShown: false}}
               />
-              
+
               <Stack.Screen
                 name="AnimalProductionListScreen"
                 component={AnimalProductionListScreen}
                 options={{headerShown: false}}
               />
-               
-               <Stack.Screen
+
+              <Stack.Screen
                 name="SwineProductionListScreen"
                 component={SwineProductionListScreen}
                 options={{headerShown: false}}
@@ -338,40 +388,34 @@ export default function App() {
                 component={SheepAndGoatProductionListScreen}
                 options={{headerShown: false}}
               />
-              
+
               <Stack.Screen
                 name="PoultryProductionListScreen"
                 component={PoultryProductionListScreen}
                 options={{headerShown: false}}
               />
+
               
-              <Stack.Screen
-                name="HealthRecordsScreen"
-                component={HealthRecordsScreen}
-                options={{headerShown: false}}
-              />
               <Stack.Screen
                 name="LivestockRecordsScreen"
                 component={LivestockRecordsScreen}
                 options={{headerShown: false}}
               />
-               <Stack.Screen
+              <Stack.Screen
                 name="InventoryDashboard"
                 component={InventoryDashboard}
                 options={{headerShown: false}}
               />
-               <Stack.Screen
+              <Stack.Screen
                 name="AddMachinery"
                 component={AddMachinery}
                 options={{headerShown: false}}
               />
-              
               <Stack.Screen
                 name="AddGoodsInStock"
                 component={AddGoodsInStock}
                 options={{headerShown: false}}
               />
-              
             </Stack.Navigator>
           </NavigationContainer>
         </ToastProvider>

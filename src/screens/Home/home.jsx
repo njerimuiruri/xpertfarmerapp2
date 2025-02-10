@@ -123,6 +123,12 @@ const Dashboard = () => {
             onPress={() => navigation.navigate('OptionLivestockGroupScreen')}
             color="#FF9800"
           />
+          {/* <MenuButton
+            title="Livestock Production"
+            icon={icons.poultry}
+            onPress={() => navigation.navigate('LivestockRecordsScreen')}
+            color="#E91E63"
+          /> */}
           <MenuButton
             title="Livestock Profile"
             icon={icons.agriculture}
@@ -145,10 +151,17 @@ const Dashboard = () => {
         <MenuSection
           title="Feeding Management Screens"
           description="Manage your feeding records and operational details">
-          <MenuButton
+          {/* <MenuButton
             title="Livestock Feeding Record"
             icon={icons.agriculture}
             onPress={() => navigation.navigate('LivestockFeedingScreen')}
+            color="#FF9800"
+          /> */}
+
+          <MenuButton
+            title=" Animal Feeding Program"
+            icon={icons.agriculture}
+            onPress={() => navigation.navigate('AnimalFeedingProgramScreen')}
             color="#FF9800"
           />
           <MenuButton
@@ -158,9 +171,9 @@ const Dashboard = () => {
             color="#FF9800"
           />
           <MenuButton
-            title=" Animal Feeding Program"
+            title=" Farm Feeding Records"
             icon={icons.agriculture}
-            onPress={() => navigation.navigate('AnimalFeedingProgramScreen')}
+            onPress={() => navigation.navigate('FeedingRecordScreen')}
             color="#FF9800"
           />
         </MenuSection>
@@ -168,6 +181,12 @@ const Dashboard = () => {
         <MenuSection
           title="Health Management Screens"
           description="Monitor and manage animal health records">
+          <MenuButton
+            title="Health"
+            icon={icons.health}
+            onPress={() => navigation.navigate('HealthRecordsScreen')}
+            color="#E91E63"
+          />
           <MenuButton
             title="Add Health Records"
             icon={icons.health}
@@ -181,65 +200,24 @@ const Dashboard = () => {
             onPress={() => navigation.navigate('FarmHealthRecords')}
             color="#E91E63"
           />
-         
-           {/* <MenuButton
-            title=" Production"
-            icon={icons.health}
-            onPress={() => navigation.navigate('ProductionScreen')}
-            color="#E91E63"
-          /> */}
-        
         </MenuSection>
         <MenuSection
           title="Production records"
           description="Monitor and manage animal production records">
-          
-          {/* <MenuButton
-            title="Add Dairy records"
-            icon={icons.dairy}
-            onPress={() => navigation.navigate('AddDairyDetailsScreen')}
-            color="#E57373 "
-          />
-           <MenuButton
-            title=" Beef Production"
-            icon={icons.beef}
-            onPress={() => navigation.navigate('BeefDetailsScreen')}
-            color="#E91E63"
-          />
-           <MenuButton
-            title=" swine Production"
-            icon={icons.swine}
-            onPress={() => navigation.navigate('SwineRecordScreen')}
-            color="#E91E63"
-          />
-          <MenuButton
-            title="sheep & Goat Production"
-            icon={icons.sheep}
-            onPress={() => navigation.navigate('SheepGoatDetailsScreen')}
-            color="#E91E63"
-          /> */}
-          
-          {/* <MenuButton
-            title="Poultry Production"
-            icon={icons.poultry}
-            onPress={() => navigation.navigate('PoultryFlockDetailsScreen')}
-            color="#E91E63"
-          /> */}
-          
           <MenuButton
             title="Beef Production"
             icon={icons.beef}
             onPress={() => navigation.navigate('AnimalProductionListScreen')}
             color="#E91E63"
           />
-         
+
           <MenuButton
             title="Dairy Production"
             icon={icons.dairy}
             onPress={() => navigation.navigate('DairyProductionListScreen')}
             color="#E91E63"
           />
-           <MenuButton
+          <MenuButton
             title="Swine Production"
             icon={icons.swine}
             onPress={() => navigation.navigate('SwineProductionListScreen')}
@@ -248,38 +226,28 @@ const Dashboard = () => {
           <MenuButton
             title="Sheep & Goat Production"
             icon={icons.sheep}
-            onPress={() => navigation.navigate('SheepAndGoatProductionListScreen')}
+            onPress={() =>
+              navigation.navigate('SheepAndGoatProductionListScreen')
+            }
             color="#E91E63"
-          /> 
-           <MenuButton
+          />
+          <MenuButton
             title="Poultry Production"
             icon={icons.poultry}
             onPress={() => navigation.navigate('PoultryProductionListScreen')}
             color="#E91E63"
-          />    
-
-          
-          <MenuButton
-            title="Health Production"
-            icon={icons.poultry}
-            onPress={() => navigation.navigate('HealthRecordsScreen')}
-            color="#E91E63"
-          />   
-          <MenuButton
-            title="Livestock Production"
-            icon={icons.poultry}
-            onPress={() => navigation.navigate('LivestockRecordsScreen')}
-            color="#E91E63"
-          />   
+          />
+        </MenuSection>
+        <MenuSection
+          title="Analytics"
+          description="Analyze and visualize your farm data">
           <MenuButton
             title="Inventory"
-            icon={icons.poultry}
+            icon={icons.analysis}
             onPress={() => navigation.navigate('InventoryDashboard')}
-            color="#E91E63"
-          />  
+            color="#9C27B0"
+          />
         </MenuSection>
-        
-
       </ScrollView>
     </View>
   );

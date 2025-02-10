@@ -1,144 +1,187 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { Button, Select, Input, Radio, Box, VStack } from 'native-base';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { Box, Text, VStack, Checkbox, Button, HStack } from 'native-base';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 import { COLORS } from '../../../constants/theme';
 
 export default function FarmFeedsScreen({ navigation }) {
-    const [selectedFeedType, setSelectedFeedType] = useState('');
-    const [sourceOfFeed, setSourceOfFeed] = useState('');
-    const [feedingSchedule, setFeedingSchedule] = useState('');
-    const [quantity, setQuantity] = useState('');
-    const [purchasePrice, setPurchasePrice] = useState('');
-    const [supplierName, setSupplierName] = useState('');
+  const [selectedProgram, setSelectedProgram] = useState(null);
+  const [selectedAnimalType, setSelectedAnimalType] = useState(null);
+  const [selectedLifecycleStages, setSelectedLifecycleStages] = useState([]);
 
-    const handleSubmit = () => {
-        const feedingData = {
-            selectedFeedType,
-            sourceOfFeed,
-            feedingSchedule,
-            quantity,
-            purchasePrice,
-            supplierName,
-        };
-        console.log(feedingData);
-        // Save or submit the data
-    };
+  const lifecycleStages = {
+    single: {
+      'Dairy': ['Calf', 'Heifer', 'Lactating cows', 'Dry Cows'],
+      'Beef': ['Starter', 'Grower', 'Finisher'],
+      'Swine': ['Starter', 'Grower', 'Finisher', 'Breeding herd'],
+      'Poultry': ['Starter', 'Grower', 'Finisher', 'Layer'],
+      'Sheep & Goats': ['Lambs and Kids', 'Growing', 'Production', 'Maintenance']
+    },
+    group: {
+      'Dairy': ['Calf', 'Heifer', 'Lactating cows', 'Dry Cows'],
+      'Beef': ['Starter', 'Grower', 'Finisher'],
+      'Swine': ['Starter', 'Grower', 'Finisher', 'Breeding herd'],
+      'Poultry': ['Starter', 'Grower', 'Finisher', 'Layer'],
+      'Sheep & Goats': ['Lambs and Kids', 'Growing', 'Production', 'Maintenance']
+    }
+  };
 
-    return (
-        <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
-            <SecondaryHeader title="Farm Feeds" />
-            <ScrollView contentContainerStyle={styles.container}>
-                <Box bg="white" borderRadius={8} p={6} shadow={1} mx={6} my={8}>
-                    <VStack space={4}>
+  const handleProgramSelection = (program) => {
+    setSelectedProgram(program === selectedProgram ? null : program);
+    setSelectedAnimalType(null);
+    setSelectedLifecycleStages([]);
+  };
 
-                        <View style={styles.formGroup}>
-                            <Text style={styles.label}>Type of Feed</Text>
-                            <Select
-                                selectedValue={selectedFeedType}
-                                onValueChange={(value) => setSelectedFeedType(value)}
-                                placeholder="Select Feed Type"
-                                backgroundColor={COLORS.lightGreen}
-                            >
-                                <Select.Item label="Basal feeds" value="Basal feeds" />
-                                <Select.Item label="Concentrates" value="Concentrates" />
-                                <Select.Item label="Supplements" value="Supplements" />
-                            </Select>
-                        </View>
+  const handleAnimalTypeSelection = (animalType) => {
+    setSelectedAnimalType(animalType === selectedAnimalType ? null : animalType);
+    setSelectedLifecycleStages([]);
+  };
 
-                        <View style={styles.formGroup}>
-                            <Text style={styles.label}>Source of Feed</Text>
-                            <Radio.Group
-                                name="sourceOfFeed"
-                                value={sourceOfFeed}
-                                onChange={setSourceOfFeed}
-                            >
-                                <Radio value="Personally Grown" my={1}>
-                                    Personally Grown
-                                </Radio>
-                                <Radio value="Purchased" my={1}>
-                                    Purchased
-                                </Radio>
-                                <Radio value="Mixed" my={1}>
-                                    Mixed
-                                </Radio>
-                            </Radio.Group>
-                        </View>
-
-                        <View style={styles.formGroup}>
-                            <Text style={styles.label}>Feeding Schedule</Text>
-                            <Input
-                                placeholder="Enter Feeding Schedule"
-                                value={feedingSchedule}
-                                onChangeText={setFeedingSchedule}
-                                backgroundColor={COLORS.lightGreen}
-                            />
-                        </View>
-
-                        <View style={styles.formGroup}>
-                            <Text style={styles.label}>Quantity</Text>
-                            <Input
-                                placeholder="Enter Quantity"
-                                value={quantity}
-                                onChangeText={setQuantity}
-                                keyboardType="numeric"
-                                backgroundColor={COLORS.lightGreen}
-                            />
-                        </View>
-
-                        <View style={styles.formGroup}>
-                            <Text style={styles.label}>Purchase Price</Text>
-                            <Input
-                                placeholder="Enter Purchase Price"
-                                value={purchasePrice}
-                                onChangeText={setPurchasePrice}
-                                keyboardType="numeric"
-                                backgroundColor={COLORS.lightGreen}
-                            />
-                        </View>
-
-                        <View style={styles.formGroup}>
-                            <Text style={styles.label}>Supplier Name</Text>
-                            <Input
-                                placeholder="Enter Supplier Name"
-                                value={supplierName}
-                                onChangeText={setSupplierName}
-                                backgroundColor={COLORS.lightGreen}
-                            />
-                        </View>
-
-                        <Button onPress={handleSubmit} style={styles.submitButton}>
-                            <Text style={styles.submitButtonText}>Submit</Text>
-                        </Button>
-                    </VStack>
-                </Box>
-            </ScrollView>
-        </View>
+  const handleLifecycleStageSelection = (stage) => {
+    setSelectedLifecycleStages((prev) =>
+      prev.includes(stage)
+        ? prev.filter((s) => s !== stage) 
+        : [...prev, stage] 
     );
+  };
+
+  const isSelectionComplete = selectedProgram && selectedAnimalType && selectedLifecycleStages.length > 0;
+
+  return (
+    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
+      <SecondaryHeader title="Farm Feeds Selection" navigation={navigation} />
+
+      <ScrollView contentContainerStyle={styles.container}>
+        <Box bg="white" p={6} borderRadius={8} shadow={1} width="100%">
+          <VStack space={4} mb={4}>
+            <Text style={styles.sectionTitle}>Select Feeding Program</Text>
+            <VStack space={2}>
+              <Checkbox 
+                value="single"
+                isChecked={selectedProgram === 'single'}
+                onChange={() => handleProgramSelection('single')}
+                colorScheme="green"
+              >
+                Single Animal Feeding Program
+              </Checkbox>
+              <Checkbox 
+                value="group"
+                isChecked={selectedProgram === 'group'}
+                onChange={() => handleProgramSelection('group')}
+                colorScheme="green"
+              >
+                Group Feeding Program
+              </Checkbox>
+            </VStack>
+          </VStack>
+
+          {selectedProgram && (
+            <VStack space={4} mb={4}>
+              <Text style={styles.sectionTitle}>Select Animal Type</Text>
+              <VStack space={2}>
+                {Object.keys(lifecycleStages[selectedProgram]).map((type) => (
+                  <Checkbox 
+                    key={type}
+                    value={type}
+                    isChecked={selectedAnimalType === type}
+                    onChange={() => handleAnimalTypeSelection(type)}
+                    colorScheme="green"
+                  >
+                    {type}
+                  </Checkbox>
+                ))}
+              </VStack>
+            </VStack>
+          )}
+
+          {selectedAnimalType && (
+            <VStack space={4} mb={4}>
+              <Text style={styles.sectionTitle}>Select Lifecycle Stage</Text>
+              <VStack space={2}>
+                {lifecycleStages[selectedProgram][selectedAnimalType].map((stage) => (
+                  <Checkbox 
+                    key={stage}
+                    value={stage}
+                    isChecked={selectedLifecycleStages.includes(stage)}
+                    onChange={() => handleLifecycleStageSelection(stage)}
+                    colorScheme="green"
+                  >
+                    {stage}
+                  </Checkbox>
+                ))}
+              </VStack>
+            </VStack>
+          )}
+
+          {isSelectionComplete && (
+            <Box bg={COLORS.lightGreen} p={4} borderRadius={8} mt={4} mb={4}>
+              <Text style={styles.summaryTitle}>Selection Summary</Text>
+              <Text style={styles.summaryText}>Feeding Program: {selectedProgram}</Text>
+              <Text style={styles.summaryText}>Animal Type: {selectedAnimalType}</Text>
+              <Text style={styles.summaryText}>Lifecycle Stages: {selectedLifecycleStages.join(', ')}</Text>
+            </Box>
+          )}
+
+          {/* Back & Next Buttons (only appear when all selections are made) */}
+          {isSelectionComplete && (
+            <HStack justifyContent="space-between" style={styles.buttonContainer}>
+              <Button
+                variant="outline"
+                borderColor={COLORS.green}
+                style={styles.button}
+                onPress={() => navigation.goBack()}
+              >
+                Back
+              </Button>
+              <Button
+                backgroundColor={COLORS.green}
+                style={styles.button}
+                onPress={() => navigation.navigate('AnimalFeedingProgramScreen')}
+              >
+                Next
+              </Button>
+            </HStack>
+          )}
+        </Box>
+      </ScrollView>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-        backgroundColor: '#F8F9FA',
-    },
-    formGroup: {
-        marginBottom: 16,
-    },
-    label: {
-        fontSize: 14,
-        color: '#333',
-        marginBottom: 8,
-    },
-    submitButton: {
-        backgroundColor: COLORS.green,
-        borderRadius: 5,
-        paddingVertical: 12,
-        marginTop: 10,
-    },
-    submitButtonText: {
-        color: '#fff',
-        textAlign: 'center',
-        fontWeight: 'bold',
-    },
+  container: {
+    flexGrow: 1,
+    justifyContent: 'flex-start', 
+    padding: 20,
+    backgroundColor: COLORS.lightGreen,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: COLORS.black,
+  },
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.green,
+    marginBottom: 6,
+  },
+  summaryText: {
+    fontSize: 14,
+    color: COLORS.darkGray3,
+    marginBottom: 4,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20, // Add margin to separate from checkboxes
+  },
+  button: {
+    width: 140,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
+  },
 });
+

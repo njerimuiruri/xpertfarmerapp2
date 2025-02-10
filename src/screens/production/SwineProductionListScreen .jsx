@@ -201,7 +201,6 @@ const SwineProductionListScreen = ({navigation}) => {
           <Text style={styles.swineDate}>Sale Date: {item.saleDate}</Text>
         </View>
         <View style={styles.cardActions}>
-          
           <TouchableOpacity
             onPress={() => handleDelete(item.id)}
             style={styles.cardActionButton}>

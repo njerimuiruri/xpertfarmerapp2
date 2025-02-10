@@ -68,7 +68,7 @@ const initialSheepAndGoatData = [
     saleWeight: 118, // in lbs
     saleDate: '2023-09-10',
     marketPrice: 3.25, // price per lb
-    salePrice: 383.50, // total sale price
+    salePrice: 383.5, // total sale price
     buyer: 'Urban Grocers',
     company: 'Prime Sheep Co.',
     icon: icons.sheep,
@@ -79,7 +79,7 @@ const initialSheepAndGoatData = [
     saleWeight: 122,
     saleDate: '2023-10-15',
     marketPrice: 3.3,
-    salePrice: 402.60,
+    salePrice: 402.6,
     buyer: 'Fresh Farm Market',
     company: 'Elite Goat Corp.',
     icon: icons.goat,
@@ -90,7 +90,7 @@ const initialSheepAndGoatData = [
     saleWeight: 128,
     saleDate: '2023-11-20',
     marketPrice: 3.4,
-    salePrice: 435.20,
+    salePrice: 435.2,
     buyer: 'Village Market',
     company: 'Grassland Sheep Co.',
     icon: icons.sheep,
@@ -101,7 +101,7 @@ const initialSheepAndGoatData = [
     saleWeight: 132,
     saleDate: '2023-12-05',
     marketPrice: 3.35,
-    salePrice: 442.20,
+    salePrice: 442.2,
     buyer: 'Township Meat Co.',
     company: 'Excellence Goat Ltd.',
     icon: icons.goat,
@@ -112,7 +112,7 @@ const initialSheepAndGoatData = [
     saleWeight: 127,
     saleDate: '2024-01-10',
     marketPrice: 3.5,
-    salePrice: 444.50,
+    salePrice: 444.5,
     buyer: 'Regional Farms',
     company: 'Heritage Sheep and Goat Producers',
     icon: icons.sheep,
@@ -206,7 +206,6 @@ const SheepAndGoatProductionListScreen = ({navigation}) => {
           <Text style={styles.animalDate}>Sale Date: {item.saleDate}</Text>
         </View>
         <View style={styles.cardActions}>
-          
           <TouchableOpacity
             onPress={() => handleDelete(item.id)}
             style={styles.cardActionButton}>
@@ -317,7 +316,7 @@ const SheepAndGoatProductionListScreen = ({navigation}) => {
       {renderAnimalDetailModal()}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('PoultryFlockDetailsScreen')}>
+        onPress={() => navigation.navigate('SheepGoatDetailsScreen')}>
         <FastImage
           source={icons.plus}
           style={styles.fabIcon}

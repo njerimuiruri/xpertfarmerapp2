@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   Box,
   Text,
@@ -9,15 +9,16 @@ import {
   ScrollView,
   HStack,
   Checkbox,
+  Modal,
 } from 'native-base';
-import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import {View, TouchableOpacity, StyleSheet, Image} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import { icons } from '../../constants';
-import { COLORS } from '../../constants/theme';
+import {icons} from '../../constants';
+import {COLORS} from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
-export default function PoultryFlockDetailsScreen({ navigation }) {
+export default function PoultryFlockDetailsScreen({navigation}) {
   const [flockId, setFlockId] = useState('');
   const [dailyEggCount, setDailyEggCount] = useState(0);
   const [eggWeight, setEggWeight] = useState(0);
@@ -30,17 +31,19 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
   const [buyerName, setBuyerName] = useState('');
   const [isCompany, setIsCompany] = useState(false);
   const [isIndividual, setIsIndividual] = useState(false);
-  const [showEggProductionDatePicker, setShowEggProductionDatePicker] = useState(false);
+  const [showEggProductionDatePicker, setShowEggProductionDatePicker] =
+    useState(false);
   const [showSaleDatePicker, setShowSaleDatePicker] = useState(false);
- const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
+  const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
-  const handleDateChange = (setter) => (event, selectedDate) => {
+  const handleDateChange = setter => (event, selectedDate) => {
     setter(selectedDate || new Date());
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Add Poultry Record" />
       <ScrollView
         contentContainerStyle={{
@@ -49,69 +52,85 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
           marginTop: 5,
         }}>
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
-          <Text style={{ fontSize: 16, color: 'black', marginBottom: 16, textAlign: 'center' }}>
+          <Text
+            style={{
+              fontSize: 16,
+              color: 'black',
+              marginBottom: 16,
+              textAlign: 'center',
+            }}>
             Fill in the poultry flock details
           </Text>
 
           <VStack space={5}>
-
-             <Box>
-                         <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                           Animal ID or Flock ID
-                         </Text>
-                         <View>
-                           <HStack
-                             alignItems="center"
-                             borderWidth={1}
-                             borderRadius={8}
-                             borderColor="gray.200">
-                             <Input
-                               flex={1}
-                               variant="unstyled"
-                               placeholder="Type or select ID"
-                               value={flockId}
-                               onChangeText={text => setFlockId(text)}
-                               backgroundColor="transparent"
-                               borderColor="transparent"
-                             />
-                             <TouchableOpacity
-                               style={{padding: 10}}
-                               onPress={() => setDropdownVisible(prev => !prev)}>
-                               <Text style={{fontSize: 16, color: COLORS.green}}>▼</Text>
-                             </TouchableOpacity>
-                           </HStack>
-                           {dropdownVisible && (
-                             <Box
-                               bg="white"
-                               mt={1}
-                               borderWidth={1}
-                               borderColor="gray.200"
-                               borderRadius={8}>
-                               {availableIds.map((id, index) => (
-                                 <TouchableOpacity
-                                   key={index}
-                                   style={styles.dropdownItem}
-                                   onPress={() => handleSelect(id)}>
-                                   <Text style={styles.dropdownText}>{id}</Text>
-                                 </TouchableOpacity>
-                               ))}
-                             </Box>
-                           )}
-                         </View>
-                       </Box>
+            <Box>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
+                Animal ID or Flock ID
+              </Text>
+              <View>
+                <HStack
+                  alignItems="center"
+                  borderWidth={1}
+                  borderRadius={8}
+                  borderColor="gray.200">
+                  <Input
+                    flex={1}
+                    variant="unstyled"
+                    placeholder="Type or select ID"
+                    value={flockId}
+                    onChangeText={text => setFlockId(text)}
+                    backgroundColor="transparent"
+                    borderColor="transparent"
+                  />
+                  <TouchableOpacity
+                    style={{padding: 10}}
+                    onPress={() => setDropdownVisible(prev => !prev)}>
+                    <Text style={{fontSize: 16, color: COLORS.green}}>▼</Text>
+                  </TouchableOpacity>
+                </HStack>
+                {dropdownVisible && (
+                  <Box
+                    bg="white"
+                    mt={1}
+                    borderWidth={1}
+                    borderColor="gray.200"
+                    borderRadius={8}>
+                    {availableIds.map((id, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.dropdownItem}
+                        onPress={() => handleSelect(id)}>
+                        <Text style={styles.dropdownText}>{id}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </Box>
+                )}
+              </View>
+            </Box>
 
             {/* Egg Production */}
             <Text fontSize="lg" fontWeight="bold" color="gray.800" mt={4}>
               Egg Production
             </Text>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Daily Egg Count
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Button
-                  onPress={() => setDailyEggCount(dailyEggCount > 0 ? dailyEggCount - 1 : 0)}
+                  onPress={() =>
+                    setDailyEggCount(dailyEggCount > 0 ? dailyEggCount - 1 : 0)
+                  }
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -123,11 +142,14 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
                   placeholder="Daily egg count"
                   keyboardType="numeric"
                   value={dailyEggCount.toString()}
-                  onChangeText={text => setDailyEggCount(Math.max(0, parseInt(text) || 0))}
+                  onChangeText={text =>
+                    setDailyEggCount(Math.max(0, parseInt(text) || 0))
+                  }
                 />
                 <Button
                   onPress={() => setDailyEggCount(dailyEggCount + 1)}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -135,13 +157,20 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Egg Weight
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Button
-                  onPress={() => setEggWeight(eggWeight > 0 ? eggWeight - 1 : 0)}
+                  onPress={() =>
+                    setEggWeight(eggWeight > 0 ? eggWeight - 1 : 0)
+                  }
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -153,11 +182,14 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
                   placeholder="Egg weight"
                   keyboardType="numeric"
                   value={eggWeight.toString()}
-                  onChangeText={text => setEggWeight(Math.max(0, parseInt(text) || 0))}
+                  onChangeText={text =>
+                    setEggWeight(Math.max(0, parseInt(text) || 0))
+                  }
                 />
                 <Button
                   onPress={() => setEggWeight(eggWeight + 1)}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -165,13 +197,22 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Number of Layers per Day
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Button
-                  onPress={() => setNumberOfLayers(numberOfLayers > 0 ? numberOfLayers - 1 : 0)}
+                  onPress={() =>
+                    setNumberOfLayers(
+                      numberOfLayers > 0 ? numberOfLayers - 1 : 0,
+                    )
+                  }
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -183,11 +224,14 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
                   placeholder="Number of layers"
                   keyboardType="numeric"
                   value={numberOfLayers.toString()}
-                  onChangeText={text => setNumberOfLayers(Math.max(0, parseInt(text) || 0))}
+                  onChangeText={text =>
+                    setNumberOfLayers(Math.max(0, parseInt(text) || 0))
+                  }
                 />
                 <Button
                   onPress={() => setNumberOfLayers(numberOfLayers + 1)}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -195,10 +239,14 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Egg Production Date
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Input
                   w="85%"
                   backgroundColor={COLORS.lightGreen}
@@ -206,7 +254,8 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
                   placeholder="DD/MM/YY"
                   isReadOnly
                 />
-                <TouchableOpacity onPress={() => setShowEggProductionDatePicker(true)}>
+                <TouchableOpacity
+                  onPress={() => setShowEggProductionDatePicker(true)}>
                   <Image
                     source={icons.calendar}
                     resizeMode="contain"
@@ -230,13 +279,20 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
               Sale Information
             </Text>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Sale Weight
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Button
-                  onPress={() => setSaleWeight(saleWeight > 0 ? saleWeight - 1 : 0)}
+                  onPress={() =>
+                    setSaleWeight(saleWeight > 0 ? saleWeight - 1 : 0)
+                  }
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -248,11 +304,14 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
                   placeholder="Enter sale weight"
                   keyboardType="numeric"
                   value={saleWeight.toString()}
-                  onChangeText={text => setSaleWeight(Math.max(0, parseInt(text) || 0))}
+                  onChangeText={text =>
+                    setSaleWeight(Math.max(0, parseInt(text) || 0))
+                  }
                 />
                 <Button
                   onPress={() => setSaleWeight(saleWeight + 1)}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -260,10 +319,14 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Sale Date
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Input
                   w="85%"
                   backgroundColor={COLORS.lightGreen}
@@ -291,7 +354,11 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Market Price
               </Text>
               <Input
@@ -306,7 +373,11 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Sale Price
               </Text>
               <Input
@@ -321,7 +392,11 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Buyer’s Name
               </Text>
               <Input
@@ -335,7 +410,11 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={2}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={2}>
                 Buyer Type
               </Text>
               <VStack space={2}>
@@ -356,7 +435,6 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
           <HStack justifyContent="center" mt={6} space={4}>
             <Button
               variant="outline"
-              borderWidth={1}
               borderColor={COLORS.green}
               borderRadius={8}
               px={6}
@@ -369,14 +447,38 @@ export default function PoultryFlockDetailsScreen({ navigation }) {
               borderRadius={8}
               px={6}
               py={3}
-              _pressed={{
-                bg: 'emerald.700',
-              }}>
+              _pressed={{bg: 'emerald.700'}}
+              onPress={() => setShowSaveModal(true)}>
               Save
             </Button>
           </HStack>
         </Box>
       </ScrollView>
+      <Modal isOpen={showSaveModal} onClose={() => setShowSaveModal(false)}>
+        <Modal.Content maxWidth="85%" borderRadius={12} p={5}>
+          <Modal.Body alignItems="center">
+            <FastImage
+              source={icons.tick}
+              style={styles.modalIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.modalText}>
+              Poultry Record has been saved successfully!
+            </Text>
+          </Modal.Body>
+          <Modal.Footer justifyContent="center">
+            <Button
+              backgroundColor={COLORS.green}
+              style={styles.modalButton}
+              onPress={() => {
+                setShowSaveModal(false);
+                navigation.navigate('PoultryProductionListScreen');
+              }}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
     </View>
   );
 }
@@ -395,5 +497,28 @@ const styles = StyleSheet.create({
   dropdownText: {
     fontSize: 14,
     color: 'black',
+  },
+  incrementButton: {
+    width: 45,
+    height: 45,
+    borderRadius: 8,
+  },
+  modalIcon: {
+    width: 50,
+    height: 50,
+    tintColor: COLORS.green,
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: COLORS.darkGray3,
+  },
+  modalButton: {
+    width: 120,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
   },
 });

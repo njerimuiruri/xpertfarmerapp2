@@ -112,7 +112,7 @@ const initialPoultryData = [
     saleWeight: 9.5,
     saleDate: '2024-02-01',
     marketPrice: 1.8,
-    salePrice: 17.10,
+    salePrice: 17.1,
     buyer: 'Regional Farms',
     company: 'Heritage Poultry Producers',
     icon: icons.poultry,
@@ -206,7 +206,6 @@ const PoultryProductionListScreen = ({navigation}) => {
           <Text style={styles.poultryDate}>Sale Date: {item.saleDate}</Text>
         </View>
         <View style={styles.cardActions}>
-          
           <TouchableOpacity
             onPress={() => handleDelete(item.id)}
             style={styles.cardActionButton}>

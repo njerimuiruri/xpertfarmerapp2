@@ -8,14 +8,15 @@ import {icons} from '../../constants';
 import {COLORS} from '../../constants/theme';
 import {View} from 'react-native';
 import {
-  AddFarmDetailsScreen,
-  AddLivestockScreen,
-  FarmEmployeeTableScreen,
-  FarmRecord,
-  HomeScreen,
-  LivestockFeedingScreen,
-  OptionDetailsScreen,
+  
+  EmployeeScreen,
+  
   ProfileScreen,
+  InventoryDashboard,
+  HealthManagementScreen,
+  LivestockManagementScreen,
+  FeedingManagementScreen,
+  AnimalProductionListScreen,
 } from '../../screens';
 
 const Drawer = createDrawerNavigator();
@@ -48,7 +49,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="Employees"
-        component={FarmEmployeeTableScreen}
+        component={EmployeeScreen}
         options={{
           title: 'Employees',
           drawerIcon: () => (
@@ -62,7 +63,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="Livestock"
-        component={AddLivestockScreen}
+        component={LivestockManagementScreen}
         options={{
           title: 'Livestock',
           drawerIcon: () => (
@@ -76,7 +77,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="Feeding"
-        component={LivestockFeedingScreen}
+        component={FeedingManagementScreen}
         options={{
           title: 'Feeding',
           drawerIcon: () => (
@@ -90,7 +91,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="Health"
-        component={ProfileScreen}
+        component={HealthManagementScreen}
         options={{
           title: 'Health',
           drawerIcon: () => (
@@ -104,7 +105,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="ProductionRecords"
-        component={FarmRecord}
+        component={AnimalProductionListScreen}
         options={{
           title: 'Production',
           drawerIcon: () => (
@@ -117,10 +118,10 @@ const DrawerNav = () => {
         }}
       />
       <Drawer.Screen
-        name="AnalysisRecords"
-        component={OptionDetailsScreen}
+        name="InventoryDashboard"
+        component={InventoryDashboard}
         options={{
-          title: 'Analysis',
+          title: 'Inventory',
           drawerIcon: () => (
             <FastImage
               source={icons.analysis}
@@ -132,7 +133,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="Settings"
-        component={AddFarmDetailsScreen}
+        component={ProfileScreen}
         options={{
           title: 'Settings',
           drawerIcon: () => (
