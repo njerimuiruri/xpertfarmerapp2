@@ -74,9 +74,13 @@ import {
 
   //home
   FarmDashboard,
+
+  // inventory
   InventoryDashboard,
   AddMachinery,
   AddGoodsInStock,
+  AddUtilityDetails,
+
   LivestockManagementScreen,
 } from './src/screens/index';
 import DrawerNav from './src/navigation/drawer/DrawerNav1';
@@ -401,6 +405,7 @@ export default function App() {
                 component={LivestockRecordsScreen}
                 options={{headerShown: false}}
               />
+             {/* inventory */}
               <Stack.Screen
                 name="InventoryDashboard"
                 component={InventoryDashboard}
@@ -416,6 +421,13 @@ export default function App() {
                 component={AddGoodsInStock}
                 options={{headerShown: false}}
               />
+              <Stack.Screen
+                name="AddUtilityDetails"
+                component={AddUtilityDetails}
+                options={{headerShown: false}}
+              />
+              
+
             </Stack.Navigator>
           </NavigationContainer>
         </ToastProvider>

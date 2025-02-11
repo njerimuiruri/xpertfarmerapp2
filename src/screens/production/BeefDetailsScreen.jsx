@@ -157,13 +157,15 @@ export default function BeefCattleScreen({navigation}) {
                   />
                 </Tooltip>
               </HStack>
-              <HStack alignItems="center" space={2}>
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => {
                     const currentValue = parseFloat(weightGain) || 0;
                     setWeightGain((currentValue - 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
+
                   p={2}>
                   -
                 </Button>
@@ -186,6 +188,8 @@ export default function BeefCattleScreen({navigation}) {
                     setWeightGain((currentValue + 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
+
                   p={2}>
                   +
                 </Button>

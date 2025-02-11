@@ -8,22 +8,25 @@ import {
   Select,
   ScrollView,
   HStack,
+  Modal,
 } from 'native-base';
 import {View, TouchableOpacity, StyleSheet, Image} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import {icons} from '../../constants'; // Ensure you have appropriate icons in your constants
+import {icons} from '../../constants';
 import {COLORS} from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
+import FastImage from 'react-native-fast-image';
 
 export default function AddGoodsInStock({navigation}) {
   const [itemName, setItemName] = useState('');
   const [sku, setSku] = useState('');
-  const [quantity, setQuantity] = useState(0); // Change to number
+  const [quantity, setQuantity] = useState('0');
   const [currentLocation, setCurrentLocation] = useState('');
   const [condition, setCondition] = useState('');
   const [expirationDate, setExpirationDate] = useState(new Date());
   const [showExpirationDatePicker, setShowExpirationDatePicker] =
     useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleDateChange =
     (setDate, setShowDatePicker) => (event, selectedDate) => {
@@ -33,43 +36,18 @@ export default function AddGoodsInStock({navigation}) {
       setShowDatePicker(false);
     };
 
-  const incrementQuantity = () => {
-    setQuantity(prevQuantity => prevQuantity + 1);
-  };
-
-  const decrementQuantity = () => {
-    setQuantity(prevQuantity => (prevQuantity > 0 ? prevQuantity - 1 : 0));
-  };
-
   return (
     <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Add Goods in Stock" />
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: 'center',
-          marginTop: 5,
-        }}>
+      <ScrollView contentContainerStyle={styles.container}>
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
-          <Text
-            style={{
-              fontSize: 16,
-              color: 'black',
-              marginBottom: 16,
-              textAlign: 'center',
-            }}>
+          <Text style={styles.headerText}>
             Please fill in the inventory details.
           </Text>
 
           <VStack space={5}>
             <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={1}>
-                Item Name
-              </Text>
+              <Text style={styles.label}>Item Name</Text>
               <Input
                 variant="outline"
                 backgroundColor={COLORS.lightGreen}
@@ -81,13 +59,7 @@ export default function AddGoodsInStock({navigation}) {
             </Box>
 
             <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={1}>
-                SKU
-              </Text>
+              <Text style={styles.label}>SKU</Text>
               <Input
                 variant="outline"
                 backgroundColor={COLORS.lightGreen}
@@ -99,48 +71,47 @@ export default function AddGoodsInStock({navigation}) {
             </Box>
 
             <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={1}>
-                Quantity
-              </Text>
-              <HStack alignItems="center" space={4}>
-                <Button onPress={decrementQuantity} size="sm" colorScheme="red">
+              <Text style={styles.label}>Quantity</Text>
+              <HStack alignItems="center" space={3}>
+                <Button
+                  onPress={() => {
+                    const currentValue = parseFloat(quantity) || 0;
+                    setQuantity(Math.max(currentValue - 1, 0).toString());
+                  }}
+                  variant="outline"
+                  style={styles.incrementButton}
+                  p={2}>
                   -
                 </Button>
                 <Input
+                  flex={1}
                   variant="outline"
                   backgroundColor={COLORS.lightGreen}
                   borderColor="gray.200"
-                  placeholder="0"
-                  value={String(quantity)} // Convert to string for input
-                  onChangeText={text => {
-                    const num = parseInt(text, 10);
-                    setQuantity(isNaN(num) ? 0 : num); // Allow manual input
-                  }}
+                  placeholder="Enter quantity"
                   keyboardType="numeric"
-                  width="50"
+                  value={quantity}
+                  onChangeText={text => {
+                    const numericText = text.replace(/[^0-9]/g, '');
+                    setQuantity(numericText);
+                  }}
                   textAlign="center"
                 />
                 <Button
-                  onPress={incrementQuantity}
-                  size="sm"
-                  colorScheme="green">
+                  onPress={() => {
+                    const currentValue = parseFloat(quantity) || 0;
+                    setQuantity((currentValue + 1).toString());
+                  }}
+                  variant="outline"
+                  style={styles.incrementButton}
+                  p={2}>
                   +
                 </Button>
               </HStack>
             </Box>
 
             <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={1}>
-                Current Location
-              </Text>
+              <Text style={styles.label}>Current Location</Text>
               <Input
                 variant="outline"
                 backgroundColor={COLORS.lightGreen}
@@ -152,13 +123,7 @@ export default function AddGoodsInStock({navigation}) {
             </Box>
 
             <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={1}>
-                Condition
-              </Text>
+              <Text style={styles.label}>Condition</Text>
               <Select
                 selectedValue={condition}
                 minWidth="100%"
@@ -213,9 +178,7 @@ export default function AddGoodsInStock({navigation}) {
                 borderRadius={8}
                 px={6}
                 py={3}
-                _text={{
-                  color: COLORS.green,
-                }}
+                _text={{color: COLORS.green}}
                 onPress={() => navigation.goBack()}>
                 Cancel
               </Button>
@@ -225,29 +188,69 @@ export default function AddGoodsInStock({navigation}) {
                 borderRadius={8}
                 px={6}
                 py={3}
-                _pressed={{
-                  bg: 'emerald.700',
-                }}
-                onPress={() => navigation.goBack()}>
+                _pressed={{bg: 'emerald.700'}}
+                onPress={() => setShowSuccessModal(true)}>
                 Save
               </Button>
             </HStack>
           </VStack>
         </Box>
       </ScrollView>
+
+      {/* Success Modal */}
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}>
+        <Modal.Content maxWidth="85%" borderRadius={12} p={5}>
+          <Modal.Body alignItems="center">
+            <FastImage
+              source={icons.tick}
+              style={styles.modalIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.modalText}>
+              Inventory record saved successfully!
+            </Text>
+          </Modal.Body>
+          <Modal.Footer justifyContent="center">
+            <Button
+              backgroundColor={COLORS.green}
+              style={styles.modalButton}
+              onPress={() => {
+                setShowSuccessModal(false);
+                navigation.goBack();
+              }}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  formGroup: {
+  container: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    marginTop: 5,
+  },
+  headerText: {
+    fontSize: 16,
+    color: 'black',
     marginBottom: 16,
+    textAlign: 'center',
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
-    color: COLORS.lightGray1,
-    marginBottom: 8,
+    color: COLORS.darkGray3,
+    marginBottom: 5,
+  },
+  incrementButton: {
+    width: 45,
+    height: 45,
+    borderRadius: 8,
   },
   dateContainer: {
     flexDirection: 'row',
@@ -258,5 +261,23 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     tintColor: COLORS.green2,
+  },
+  modalIcon: {
+    width: 50,
+    height: 50,
+    tintColor: COLORS.green,
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: COLORS.darkGray3,
+  },
+  modalButton: {
+    width: 120,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
   },
 });

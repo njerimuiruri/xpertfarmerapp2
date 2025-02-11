@@ -12,10 +12,10 @@ import FastImage from 'react-native-fast-image';
 import LinearGradient from 'react-native-linear-gradient';
 import SecondaryHeader from '../../components/headers/secondary-header';
 import { icons } from '../../constants';
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import { useNavigation } from '@react-navigation/native'; 
 
 export default function InventoryDashboard() {
-  const navigation = useNavigation(); // Initialize navigation
+  const navigation = useNavigation(); 
   const [activeSection, setActiveSection] = useState('machinery');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -180,7 +180,7 @@ export default function InventoryDashboard() {
     } else if (activeSection === 'goods') {
       navigation.navigate('AddGoodsInStock'); 
     } else if (activeSection === 'utilities') {
-      navigation.navigate('AddUtilities'); 
+      navigation.navigate('AddUtilityDetails'); 
     }
   };
 

@@ -66,6 +66,9 @@ import LivestockRecordsScreen from './livestock/LivestockRecordsScreen';
 import InventoryDashboard from './inventory/InventoryDashboard';
 import AddMachinery from './inventory/AddMachinery';
 import AddGoodsInStock from './inventory/AddGoodsInStock';
+import AddUtilityDetails from './inventory/AddUtilityDetails';
+
+
 export {
   LoginScreen,
   SignupScreen,
@@ -136,4 +139,5 @@ export {
   InventoryDashboard,
   AddMachinery,
   AddGoodsInStock,
+  AddUtilityDetails,
 };

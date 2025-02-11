@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   Box,
   Text,
@@ -8,15 +8,16 @@ import {
   Select,
   ScrollView,
   HStack,
+  Modal,
 } from 'native-base';
-import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import {View, TouchableOpacity, StyleSheet, Image} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import { icons } from '../../constants'; 
-import { COLORS } from '../../constants/theme'; 
+import {icons} from '../../constants';
+import {COLORS} from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
-export default function AddMachinery({ navigation }) {
+export default function AddMachinery({navigation}) {
   const [equipmentName, setEquipmentName] = useState('');
   const [equipmentId, setEquipmentId] = useState('');
   const [purchaseDate, setPurchaseDate] = useState(new Date());
@@ -25,18 +26,22 @@ export default function AddMachinery({ navigation }) {
   const [lastServiceDate, setLastServiceDate] = useState(new Date());
   const [nextServiceDate, setNextServiceDate] = useState(new Date());
   const [showPurchaseDatePicker, setShowPurchaseDatePicker] = useState(false);
-  const [showLastServiceDatePicker, setShowLastServiceDatePicker] = useState(false);
-  const [showNextServiceDatePicker, setShowNextServiceDatePicker] = useState(false);
+  const [showLastServiceDatePicker, setShowLastServiceDatePicker] =
+    useState(false);
+  const [showNextServiceDatePicker, setShowNextServiceDatePicker] =
+    useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const handleDateChange = (setDate, setShowDatePicker) => (event, selectedDate) => {
-    if (selectedDate) {
-      setDate(selectedDate);
-    }
-    setShowDatePicker(false);
-  };
+  const handleDateChange =
+    (setDate, setShowDatePicker) => (event, selectedDate) => {
+      if (selectedDate) {
+        setDate(selectedDate);
+      }
+      setShowDatePicker(false);
+    };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Add Machinery" />
       <ScrollView
         contentContainerStyle={{
@@ -57,7 +62,11 @@ export default function AddMachinery({ navigation }) {
 
           <VStack space={5}>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Equipment Name
               </Text>
               <Input
@@ -71,7 +80,11 @@ export default function AddMachinery({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Equipment ID or Serial Number
               </Text>
               <Input
@@ -94,7 +107,8 @@ export default function AddMachinery({ navigation }) {
                   placeholder="DD/MM/YY"
                   isReadOnly
                 />
-                <TouchableOpacity onPress={() => setShowPurchaseDatePicker(true)}>
+                <TouchableOpacity
+                  onPress={() => setShowPurchaseDatePicker(true)}>
                   <Image
                     source={icons.calendar}
                     resizeMode="contain"
@@ -108,13 +122,20 @@ export default function AddMachinery({ navigation }) {
                   value={purchaseDate}
                   mode="date"
                   is24Hour={true}
-                  onChange={handleDateChange(setPurchaseDate, setShowPurchaseDatePicker)}
+                  onChange={handleDateChange(
+                    setPurchaseDate,
+                    setShowPurchaseDatePicker,
+                  )}
                 />
               )}
             </View>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Current Location
               </Text>
               <Input
@@ -128,7 +149,11 @@ export default function AddMachinery({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Condition
               </Text>
               <Select
@@ -154,7 +179,8 @@ export default function AddMachinery({ navigation }) {
                   placeholder="DD/MM/YY"
                   isReadOnly
                 />
-                <TouchableOpacity onPress={() => setShowLastServiceDatePicker(true)}>
+                <TouchableOpacity
+                  onPress={() => setShowLastServiceDatePicker(true)}>
                   <Image
                     source={icons.calendar}
                     resizeMode="contain"
@@ -168,7 +194,10 @@ export default function AddMachinery({ navigation }) {
                   value={lastServiceDate}
                   mode="date"
                   is24Hour={true}
-                  onChange={handleDateChange(setLastServiceDate, setShowLastServiceDatePicker)}
+                  onChange={handleDateChange(
+                    setLastServiceDate,
+                    setShowLastServiceDatePicker,
+                  )}
                 />
               )}
             </View>
@@ -183,7 +212,8 @@ export default function AddMachinery({ navigation }) {
                   placeholder="DD/MM/YY"
                   isReadOnly
                 />
-                <TouchableOpacity onPress={() => setShowNextServiceDatePicker(true)}>
+                <TouchableOpacity
+                  onPress={() => setShowNextServiceDatePicker(true)}>
                   <Image
                     source={icons.calendar}
                     resizeMode="contain"
@@ -197,7 +227,10 @@ export default function AddMachinery({ navigation }) {
                   value={nextServiceDate}
                   mode="date"
                   is24Hour={true}
-                  onChange={handleDateChange(setNextServiceDate, setShowNextServiceDatePicker)}
+                  onChange={handleDateChange(
+                    setNextServiceDate,
+                    setShowNextServiceDatePicker,
+                  )}
                 />
               )}
             </View>
@@ -222,16 +255,41 @@ export default function AddMachinery({ navigation }) {
                 borderRadius={8}
                 px={6}
                 py={3}
-                _pressed={{
-                  bg: 'emerald.700',
-                }}
-                onPress={() => navigation.goBack()}>
-                                    Save
+                _pressed={{bg: 'emerald.700'}}
+                onPress={() => setShowSuccessModal(true)}>
+                Save
               </Button>
             </HStack>
           </VStack>
         </Box>
       </ScrollView>
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}>
+        <Modal.Content maxWidth="85%" borderRadius={12} p={5}>
+          <Modal.Body alignItems="center">
+            <FastImage
+              source={icons.tick}
+              style={styles.modalIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.modalText}>
+              Machinery record saved successfully!
+            </Text>
+          </Modal.Body>
+          <Modal.Footer justifyContent="center">
+            <Button
+              backgroundColor={COLORS.green}
+              style={styles.modalButton}
+              onPress={() => {
+                setShowSuccessModal(false);
+                navigation.goBack();
+              }}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
     </View>
   );
 }
@@ -255,5 +313,23 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     tintColor: COLORS.green2,
+  },
+  modalIcon: {
+    width: 50,
+    height: 50,
+    tintColor: COLORS.green,
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: COLORS.darkGray3,
+  },
+  modalButton: {
+    width: 120,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
   },
 });
