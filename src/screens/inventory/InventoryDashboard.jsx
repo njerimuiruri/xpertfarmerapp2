@@ -213,7 +213,6 @@ export default function InventoryDashboard() {
           </HStack>
         </ScrollView>
 
-        {/* Content */}
         {renderContent()}
 
         {/* Modal */}
@@ -298,7 +297,7 @@ export default function InventoryDashboard() {
       {/* Floating Action Button */}
       <TouchableOpacity
         style={styles.fab}
-        onPress={handleAddButtonPress} // Call the function to handle navigation
+        onPress={handleAddButtonPress} 
       >
         <FastImage
           source={icons.plus}

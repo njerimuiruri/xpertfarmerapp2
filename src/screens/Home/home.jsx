@@ -123,12 +123,12 @@ const Dashboard = () => {
             onPress={() => navigation.navigate('OptionLivestockGroupScreen')}
             color="#FF9800"
           />
-          {/* <MenuButton
+          <MenuButton
             title="Livestock Production"
             icon={icons.poultry}
             onPress={() => navigation.navigate('LivestockRecordsScreen')}
             color="#E91E63"
-          /> */}
+          />
           <MenuButton
             title="Livestock Profile"
             icon={icons.agriculture}

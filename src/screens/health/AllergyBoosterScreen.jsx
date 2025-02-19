@@ -23,7 +23,7 @@ export default function AllergyBoosterScreen({navigation}) {
   const [boostersOrAdditives, setBoostersOrAdditives] = useState('');
   const [purpose, setPurpose] = useState('');
   const [quantityGiven, setQuantityGiven] = useState(1);
-  const [dateRecorded, setDateRecorded] = useState(new Date());
+  const [dateAdministered, setDateAdministered] = useState(new Date());
   const [costOfBooster, setCostOfBooster] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -31,7 +31,7 @@ export default function AllergyBoosterScreen({navigation}) {
 
   const handleDateChange = (event, selectedDate) => {
     if (selectedDate) {
-      setDateRecorded(selectedDate);
+      setDateAdministered(selectedDate);
     }
     setShowDatePicker(false);
   };
@@ -169,17 +169,17 @@ export default function AllergyBoosterScreen({navigation}) {
             </Box>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Date Recorded</Text>
+                <Text  fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>Date Administered</Text>
               <View style={styles.dateContainer}>
                 <Input
                   w="85%"
                   backgroundColor={COLORS.lightGreen}
-                  value={dateRecorded.toLocaleDateString('en-GB')}
+                  value={dateAdministered.toLocaleDateString('en-GB')}
                   placeholder="DD/MM/YY"
                   isReadOnly
                 />
                 <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                  <FastImage
+                  <Image
                     source={icons.calendar}
                     resizeMode="contain"
                     style={styles.calendarIcon}
@@ -189,7 +189,7 @@ export default function AllergyBoosterScreen({navigation}) {
               {showDatePicker && (
                 <DateTimePicker
                   testID="dateTimePicker"
-                  value={dateRecorded}
+                  value={dateAdministered}
                   mode="date"
                   is24Hour={true}
                   onChange={handleDateChange}

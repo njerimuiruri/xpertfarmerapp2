@@ -13,6 +13,7 @@ import FastImage from 'react-native-fast-image';
 import {icons} from '../../constants';
 import {COLORS} from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
+import { useNavigation } from '@react-navigation/native';
 
 const healthCategories = [
   {
@@ -61,6 +62,7 @@ const healthCategories = [
 
 const HealthRecordsScreen = () => {
   const [isAccordionExpanded, setIsAccordionExpanded] = useState(true);
+  const navigation = useNavigation();
 
   const renderSearchBar = () => (
     <View style={styles.searchContainer}>
@@ -96,10 +98,13 @@ const HealthRecordsScreen = () => {
 
   const renderLastAdministered = () => (
     <View style={styles.lastAdministeredContainer}>
-      <View style={styles.seeAllLink}>
+      <TouchableOpacity 
+        style={styles.seeAllLink} 
+        onPress={() => navigation.navigate('FarmHealthRecords')}
+      >
         <Text style={styles.seeAllText}>See all</Text>
-      </View>
-
+      </TouchableOpacity>
+    
       <View style={styles.accordionContainer}>
         <TouchableOpacity 
           style={styles.accordionHeader}

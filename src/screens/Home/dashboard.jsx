@@ -1,20 +1,18 @@
 import React from 'react';
 import {
+  SafeAreaView,
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
+  ScrollView,
   StatusBar,
 } from 'react-native';
-import FastImage from 'react-native-fast-image';
-import Header from '../../components/headers/main-header';
-import { useNavigation } from '@react-navigation/native';
-import { icons } from '../../constants';
-import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import LinearGradient from 'react-native-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 
-const Dashboard = () => {
+const FarmDashboard = () => {
   const navigation = useNavigation();
 
   const cardScreens = {
@@ -37,7 +35,7 @@ const Dashboard = () => {
       details: [
         'Milk Yield: 200ML',
         'Animal sold: 100',
-        'Feeds Purchased: 10KG',
+        'Feeds: 10KG',
       ],
       colors: ['#D79F91', '#4C7153'],
     },
@@ -63,6 +61,7 @@ const Dashboard = () => {
     },
   ];
 
+
   const renderCard = ({ title, details, colors }) => (
     <LinearGradient colors={colors} style={styles.card} key={title}>
       <View style={styles.cardContent}>
@@ -84,19 +83,28 @@ const Dashboard = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <Header navigation={navigation} />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity>
+          <Icon name="menu" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Icon name="cog" size={24} color="#000" />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView style={styles.scrollView}>
         <Text style={styles.headerTitle}>Hello, John!</Text>
 
-        {/* Welcome Banner */}
         <LinearGradient
           colors={['#8CD18C', '#A7E3A7']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.welcomeBanner}
         >
-          {/* Left content */}
           <View style={styles.welcomeTextContainer}>
             <Text style={styles.welcomeTitle}>Welcome to Xpert Farmers</Text>
             <Text style={styles.welcomeSubtitle}>
@@ -132,10 +140,9 @@ const Dashboard = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Cards Grid */}
         <View style={styles.cardsGrid}>{cards.map(renderCard)}</View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -143,18 +150,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    marginTop: StatusBar.currentHeight,
   },
-  scrollView: {
-    flex: 1,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     paddingHorizontal: 16,
-    marginBottom: 16, 
-    marginTop: 20, 
+    marginBottom: 0,
     color: '#333',
   },
+  scrollView: {
+    flex: 1,
+  },
+ 
   welcomeBanner: {
     margin: 16,
     padding: 20,
@@ -270,4 +284,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Dashboard;
+export default FarmDashboard;
