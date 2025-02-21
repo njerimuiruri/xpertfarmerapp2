@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Image } from "react-native";
 import {
   Box,
@@ -8,8 +8,11 @@ import {
   VStack,
   Pressable,
 } from "native-base";
+import CustomIcon from '../../components/CustomIcon';
 
 export default function LoginScreen({ navigation }) {
+      const [showPassword, setShowPassword] = useState(false);
+  
   return (
     <Box
       flex={1}
@@ -55,30 +58,33 @@ export default function LoginScreen({ navigation }) {
         </Box>
 
         <Box>
-          <Text fontSize="16" fontWeight={500} mb={1} color="black">
+          <Text fontSize="12" mb={1} color="black"
+            className="text-[16px] font-semibold"
+          >
             Password
           </Text>
           <Input
             variant="filled"
+            bg="#e5f3e5"
             width="100%"
-            height={10}
-            backgroundColor="#e5f3e5"
-            paddingLeft={2}
+            p={1}
             borderRadius={8}
-            secureTextEntry
+            secureTextEntry={!showPassword}
+            InputRightElement={
+              <Pressable onPress={() => setShowPassword(!showPassword)}>
+                <CustomIcon
+                  library="AntDesign"
+                  name={showPassword ? "eye" : "eyeo"}
+                  size={20}
+                  color="gray"
+                  style={{ marginRight: 2 }}
+                />
+              </Pressable>
+            }
+            required
+
           />
-
-          <Pressable
-            onPress={() => navigation.navigate("ForgotPasswordScreen")}
-            alignSelf="flex-end"
-            mt={1}
-          >
-            <Text fontSize="13" color="black" className="underline">
-              Forgot Password?
-            </Text>
-          </Pressable>
         </Box>
-
         <Button
           onPress={() => navigation.navigate('DrawerNav')}
           width="100%"

@@ -10,15 +10,10 @@ import {
   Switch,
   ScrollView,
   HStack,
-  Fab,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
+  Modal,
 } from 'native-base';
 import SecondaryHeader from '../../components/headers/secondary-header';
-import {View} from 'react-native';
+import {View, StyleSheet} from 'react-native';
 import FastImage from 'react-native-fast-image';
 import {icons} from '../../constants';
 import {COLORS} from '../../constants/theme';
@@ -28,14 +23,17 @@ export default function AddFarmDetailsScreen({navigation}) {
   const [farmSize, setFarmSize] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedDivision, setSelectedDivision] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   return (
-    
     <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Add Farm Details" />
-
       <ScrollView
-        contentContainerStyle={{flexGrow: 1, justifyContent: 'center', marginTop: 5}}>
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'center',
+          marginTop: 5,
+        }}>
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
           <Text
             style={{
@@ -49,9 +47,7 @@ export default function AddFarmDetailsScreen({navigation}) {
 
           <VStack space={5}>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
-                Farm ID
-              </Text>
+              <Text style={styles.label}>Farm ID</Text>
               <Input
                 variant="outline"
                 backgroundColor={COLORS.lightGreen}
@@ -61,68 +57,33 @@ export default function AddFarmDetailsScreen({navigation}) {
               />
             </Box>
 
-            <HStack alignItems="center" justifyContent="space-between">
-              <Box flex={1}>
-                <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
-                  Region
-                </Text>
-                <Select
-                  selectedValue={selectedRegion}
-                  minWidth="100%"
-                  backgroundColor={COLORS.lightGreen}
-                  borderColor="gray.200"
-                  placeholder="Select region"
-                  _selectedItem={{
-                    bg: 'teal.600',
-                    endIcon: (
-                      <FastImage
-                        source={icons.right_arrow}
-                        className="w-[20px] h-[20px]"
-                        tintColor="white"
-                      />
-                    ),
-                  }}
-                  onValueChange={setSelectedRegion}>
-                  <Select.Item label="Region 1" value="region1" />
-                  <Select.Item label="Region 2" value="region2" />
-                </Select>
-              </Box>
-            </HStack>
+            <Box>
+              <Text style={styles.label}>Region</Text>
+              <Select
+                selectedValue={selectedRegion}
+                minWidth="100%"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
+                placeholder="Select region"
+                onValueChange={setSelectedRegion}>
+                <Select.Item label="Region 1" value="region1" />
+                <Select.Item label="Region 2" value="region2" />
+              </Select>
+            </Box>
 
             <HStack alignItems="center" justifyContent="space-between">
-              <Box flex={1}>
-                <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
-                  Enable location
-                </Text>
-              </Box>
-              <Box>
-                <Switch
-                  isChecked={enableLocation}
-                  onToggle={setEnableLocation}
-                />
-              </Box>
+              <Text style={styles.label}>Enable location</Text>
+              <Switch isChecked={enableLocation} onToggle={setEnableLocation} />
             </HStack>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
-                Division
-              </Text>
+              <Text style={styles.label}>Division</Text>
               <Select
                 selectedValue={selectedDivision}
                 minWidth="100%"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
                 placeholder="Select division"
-                _selectedItem={{
-                  bg: 'teal.600',
-                  endIcon: (
-                    <FastImage
-                      source={icons.right_arrow}
-                      className="w-[20px] h-[20px]"
-                      tintColor="white"
-                    />
-                  ),
-                }}
                 onValueChange={setSelectedDivision}>
                 <Select.Item label="Division 1" value="division1" />
                 <Select.Item label="Division 2" value="division2" />
@@ -130,27 +91,12 @@ export default function AddFarmDetailsScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
-                Administrative Location
-              </Text>
-              <Input
-                variant="outline"
-                bg="gray.50"
-                borderColor="gray.200"
-                placeholder="Enter Administrative Location"
-                backgroundColor={COLORS.lightGreen}
-              />
-            </Box>
-
-            <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
-                Farm Size (in Hectares)
-              </Text>
+              <Text style={styles.label}>Farm Size (in Hectares)</Text>
               <HStack alignItems="center" space={2}>
                 <Button
                   onPress={() => {
                     const currentValue = parseFloat(farmSize) || 0;
-                    setFarmSize((currentValue - 1).toString());
+                    setFarmSize(Math.max(currentValue - 1, 0).toString());
                   }}
                   variant="outline"
                   p={2}>
@@ -163,9 +109,9 @@ export default function AddFarmDetailsScreen({navigation}) {
                   borderColor="gray.200"
                   placeholder="Enter Farm Size"
                   keyboardType="numeric"
-                  value={farmSize.toString()}
+                  value={farmSize}
                   onChangeText={text => {
-                    const numericText = text.replace(/[^0-9.]/g, ''); // Only allow numbers and decimals
+                    const numericText = text.replace(/[^0-9.]/g, '');
                     setFarmSize(numericText);
                   }}
                 />
@@ -185,9 +131,7 @@ export default function AddFarmDetailsScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={2}>
-                Types of Farming
-              </Text>
+              <Text style={styles.label}>Types of Farming</Text>
               <Text fontSize="xs" color="gray.600" mb={2}>
                 Select one or more types of farming
               </Text>
@@ -202,7 +146,8 @@ export default function AddFarmDetailsScreen({navigation}) {
               </VStack>
             </Box>
           </VStack>
-          <HStack justifyContent="center" mt={6} space={4}>
+
+          <HStack justifyContent="center" mt={6} space={8}>
             <Button
               variant="outline"
               borderWidth={1}
@@ -220,13 +165,66 @@ export default function AddFarmDetailsScreen({navigation}) {
               py={3}
               _pressed={{
                 bg: 'emerald.700',
-              }}>
+              }}
+              onPress={() => setShowSuccessModal(true)}>
               Submit
             </Button>
           </HStack>
         </Box>
-        <View className="h-[60px] bg-white" />
       </ScrollView>
+
+      {/* Success Modal */}
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}>
+        <Modal.Content maxWidth="85%" borderRadius={12} p={5}>
+          <Modal.Body alignItems="center">
+            <FastImage
+              source={icons.tick}
+              style={styles.modalIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.modalText}>Farm added successfully!</Text>
+          </Modal.Body>
+          <Modal.Footer justifyContent="center">
+            <Button
+              backgroundColor={COLORS.green}
+              style={styles.modalButton}
+              onPress={() => {
+                setShowSuccessModal(false);
+                navigation.navigate('FarmRecord');
+              }}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  label: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 8,
+  },
+  modalIcon: {
+    width: 50,
+    height: 50,
+    tintColor: COLORS.green,
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: COLORS.darkGray3,
+  },
+  modalButton: {
+    width: 120,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
+  },
+});

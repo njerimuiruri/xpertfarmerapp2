@@ -45,221 +45,121 @@ const MenuButton = ({ title, icon, onPress, color = '#4CAF50' }) => (
 
 const Dashboard = () => {
   const navigation = useNavigation();
+  const cardScreens = {
+    'Production Analysis': 'AnimalProductionListScreen',
+    'Sales Data': 'InventoryDashboard',
+    'Employees': 'EmployeeScreen',
+    'Feeds': 'FeedingManagementScreen',
+    'Animals': 'LivestockManagementScreen',
+    'Breeding': 'BreedingRecordForm',
+  };
 
+  const cards = [
+    {
+      title: 'Production Analysis',
+      details: ['Total Animal: 200', 'Cows: 100', 'Dairy: 100'],
+      colors: ['#F4EBD0', '#4C7153'],
+    },
+    {
+      title: 'Sales Data',
+      details: [
+        'Milk Yield: 200ML',
+        'Animal sold: 100',
+        'Feeds: 10KG',
+      ],
+      colors: ['#D79F91', '#4C7153'],
+    },
+    {
+      title: 'Employees',
+      details: ['Total: 20', 'Exits: 2'],
+      colors: ['#91D79E', '#4C7153'],
+    },
+    {
+      title: 'Feeds',
+      details: ['Feeds available: 10KG', 'Feeds Purchased: 10KG'],
+      colors: ['#CBD18F', '#4C7153'],
+    },
+    {
+      title: 'Animals',
+      details: ['Total Animal: 200', 'Flocks: 100'],
+      colors: ['#BD91D7', '#4C7153'],
+    },
+    {
+      title: 'Breeding',
+      details: ['Total Animal: 50', 'Young ones: 52'],
+      colors: ['#CDD9CD', '#4C7153'],
+    },
+  ];
+
+
+  const renderCard = ({ title, details, colors }) => (
+    <LinearGradient colors={colors} style={styles.card} key={title}>
+      <View style={styles.cardContent}>
+        <Text style={styles.cardTitle}>{title}</Text>
+        {details.map((detail, index) => (
+          <Text key={index} style={styles.cardDetail}>
+            {detail}
+          </Text>
+        ))}
+      </View>
+
+      <TouchableOpacity
+        onPress={() => navigation.navigate(cardScreens[title])}
+        style={styles.plusButton}
+      >
+        <Icon name="plus-circle-outline" size={32} color="#fff" />
+      </TouchableOpacity>
+    </LinearGradient>
+  );
   return (
     <View style={styles.container}>
       <Header navigation={navigation} />
 
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}>
-        <View style={styles.welcomeContainer}>
-          <Text style={styles.welcomeText}>Welcome to XpertFarmer</Text>
-          <Text style={styles.welcomeSubtext}>
-            Manage your farm operations efficiently
-          </Text>
+      <ScrollView style={styles.scrollView}>
+        <Text style={styles.headerTitle}>Hello, John!</Text>
+
+        <LinearGradient
+          colors={['#8CD18C', '#A7E3A7']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.welcomeBanner}
+        >
+          <View style={styles.welcomeTextContainer}>
+            <Text style={styles.welcomeTitle}>Welcome to Xpert Farmers</Text>
+            <Text style={styles.welcomeSubtitle}>
+              Cultivating Success,{'\n'}
+              Harvesting Excellence,{'\n'}
+              Nurturing Tomorrow
+            </Text>
+          </View>
+
+          {/* Right side with see more and circles */}
+          <View style={styles.rightContainer}>
+            <View
+              style={[styles.circle, styles.circleSmall, { top: 10, right: 10 }]}
+            />
+            <View
+              style={[styles.circle, styles.circleMedium, { top: '40%', right: 40 }]}
+            />
+            <View
+              style={[styles.circle, styles.circleSmall, { bottom: 30, right: 20 }]}
+            />
+            <TouchableOpacity style={styles.seeMoreButton}>
+              <Text style={styles.seeMoreText}>See more</Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+
+        {/* Farm Overview */}
+        <View style={styles.overviewSection}>
+          <Text style={styles.overviewTitle}>Farm Overview</Text>
+          <TouchableOpacity style={styles.monthSelector}>
+            <Text style={styles.monthText}>This month</Text>
+            <Icon name="chevron-down" size={20} color="#666" />
+          </TouchableOpacity>
         </View>
 
-        <MenuSection
-          title="Farm Management Screens"
-          description="Manage your farm records and operational details">
-          <MenuButton
-            title="Dashboard"
-            icon={icons.report}
-            onPress={() => navigation.navigate('FarmDashboard')}
-          />
-          <MenuButton
-            title="Farm Record"
-            icon={icons.report}
-            onPress={() => navigation.navigate('FarmRecord')}
-          />
-          <MenuButton
-            title="Add Farm Details"
-            icon={icons.feeding}
-            onPress={() => navigation.navigate('AddFarmDetailsScreen')}
-          />
-          <MenuButton
-            title="Profile Settings"
-            icon={icons.settings}
-            onPress={() => navigation.navigate('ProfileScreen')}
-          />
-        </MenuSection>
-
-        <MenuSection
-          title="Employee Management Screens"
-          description="Handle your workforce and staff records">
-          <MenuButton
-            title="Add Employee"
-            icon={icons.user}
-            onPress={() => navigation.navigate('AddEmployeeScreen')}
-            color="#2196F3"
-          />
-          <MenuButton
-            title="Edit Employee"
-            icon={icons.settings}
-            onPress={() => navigation.navigate('EditEmployeeScreen')}
-            color="#2196F3"
-          />
-          <MenuButton
-            title="Employee Directory"
-            icon={icons.account}
-            onPress={() => navigation.navigate('FarmEmployeeTableScreen')}
-            color="#2196F3"
-          />
-        </MenuSection>
-
-        <MenuSection
-          title="Livestock Management Screens"
-          description="Monitor and track your livestock inventory">
-          <MenuButton
-            title="Add Flock Details"
-            icon={icons.agriculture}
-            onPress={() => navigation.navigate('AddFlockDetailsScreen')}
-            color="#FF9800"
-          />
-          <MenuButton
-            title="Livestock Groups"
-            icon={icons.agriculture}
-            onPress={() => navigation.navigate('OptionLivestockGroupScreen')}
-            color="#FF9800"
-          />
-          <MenuButton
-            title="Livestock Profile"
-            icon={icons.agriculture}
-            onPress={() => navigation.navigate('OptionDetailsScreen')}
-            color="#FF9800"
-          />
-        </MenuSection>
-
-        <MenuSection
-          title="Breeding Management Screens"
-          description="Manage your breeding records and operational details">
-          <MenuButton
-            title="Breeding Record"
-            icon={icons.agriculture}
-            onPress={() => navigation.navigate('BreedingRecordForm')}
-            color="#FF9800"
-          />
-        </MenuSection>
-
-        <MenuSection
-          title="Feeding Management Screens"
-          description="Manage your feeding records and operational details">
-          <MenuButton
-            title="Livestock Feeding Record"
-            icon={icons.agriculture}
-            onPress={() => navigation.navigate('LivestockFeedingScreen')}
-            color="#FF9800"
-          />
-          <MenuButton
-            title=" Farm Feeding Plan"
-            icon={icons.agriculture}
-            onPress={() => navigation.navigate('FarmFeedsScreen')}
-            color="#FF9800"
-          />
-          <MenuButton
-            title=" Animal Feeding Program"
-            icon={icons.agriculture}
-            onPress={() => navigation.navigate('AnimalFeedingProgramScreen')}
-            color="#FF9800"
-          />
-        </MenuSection>
-
-        <MenuSection
-          title="Health Management Screens"
-          description="Monitor and manage animal health records">
-          <MenuButton
-            title="Add Health Records"
-            icon={icons.health}
-            onPress={() => navigation.navigate('AddHealthRecords')}
-            color="#E91E63"
-          />
-
-          <MenuButton
-            title="Health Records"
-            icon={icons.health}
-            onPress={() => navigation.navigate('FarmHealthRecords')}
-            color="#E91E63"
-          />
-         
-           {/* <MenuButton
-            title=" Production"
-            icon={icons.health}
-            onPress={() => navigation.navigate('ProductionScreen')}
-            color="#E91E63"
-          /> */}
-        
-        </MenuSection>
-        <MenuSection
-          title="Production records"
-          description="Monitor and manage animal production records">
-          
-          {/* <MenuButton
-            title="Add Dairy records"
-            icon={icons.dairy}
-            onPress={() => navigation.navigate('AddDairyDetailsScreen')}
-            color="#E57373 "
-          />
-           <MenuButton
-            title=" Beef Production"
-            icon={icons.beef}
-            onPress={() => navigation.navigate('BeefDetailsScreen')}
-            color="#E91E63"
-          />
-           <MenuButton
-            title=" swine Production"
-            icon={icons.swine}
-            onPress={() => navigation.navigate('SwineRecordScreen')}
-            color="#E91E63"
-          />
-          <MenuButton
-            title="sheep & Goat Production"
-            icon={icons.sheep}
-            onPress={() => navigation.navigate('SheepGoatDetailsScreen')}
-            color="#E91E63"
-          /> */}
-          
-          {/* <MenuButton
-            title="Poultry Production"
-            icon={icons.poultry}
-            onPress={() => navigation.navigate('PoultryFlockDetailsScreen')}
-            color="#E91E63"
-          /> */}
-          
-          <MenuButton
-            title="Beef Production"
-            icon={icons.beef}
-            onPress={() => navigation.navigate('AnimalProductionListScreen')}
-            color="#E91E63"
-          />
-         
-          <MenuButton
-            title="Dairy Production"
-            icon={icons.dairy}
-            onPress={() => navigation.navigate('DairyProductionListScreen')}
-            color="#E91E63"
-          />
-           <MenuButton
-            title="Swine Production"
-            icon={icons.swine}
-            onPress={() => navigation.navigate('SwineProductionListScreen')}
-            color="#E91E63"
-          />
-          <MenuButton
-            title="Sheep & Goat Production"
-            icon={icons.sheep}
-            onPress={() => navigation.navigate('SheepAndGoatProductionListScreen')}
-            color="#E91E63"
-          /> 
-           <MenuButton
-            title="Poultry Production"
-            icon={icons.poultry}
-            onPress={() => navigation.navigate('PoultryProductionListScreen')}
-            color="#E91E63"
-          />     
-        </MenuSection>
-        
-
+        <View style={styles.cardsGrid}>{cards.map(renderCard)}</View>
       </ScrollView>
     </View>
   );
@@ -272,83 +172,121 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    padding: 16,
   },
-  welcomeContainer: {
-    marginBottom: 24,
-    paddingVertical: 16,
-  },
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
-    marginBottom: 4,
-  },
-  welcomeSubtext: {
-    fontSize: 16,
-    color: '#666666',
-  },
-  section: {
-    marginBottom: 24,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  sectionHeader: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
-    marginBottom: 4,
-  },
-  sectionDescription: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  sectionContent: {
-    gap: 12,
-  },
-  menuButton: {
+
+
+  welcomeBanner: {
+    margin: 16,
+    padding: 20,
+    borderRadius: 16,
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
+    justifyContent: 'space-between',
+    overflow: 'hidden',
+    minHeight: 160,
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  icon: {
-    width: 24,
-    height: 24,
-    tintColor: '#FFFFFF',
-  },
-  menuButtonText: {
+  welcomeTextContainer: {
     flex: 1,
+    paddingRight: 20,
+  },
+  welcomeTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 12,
+  },
+  welcomeSubtitle: {
     fontSize: 16,
-    color: '#1A1A1A',
+    color: '#fff',
+    lineHeight: 24,
+  },
+  rightContainer: {
+    width: 100,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  seeMoreButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignSelf: 'flex-end',
+    marginTop: 'auto',
+    marginBottom: 10,
+  },
+  seeMoreText: {
+    color: '#fff',
+    fontSize: 14,
     fontWeight: '500',
   },
-  arrowIcon: {
-    width: 20,
-    height: 20,
+  circle: {
+    position: 'absolute',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  circleSmall: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  circleMedium: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  overviewSection: {
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  overviewTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  monthSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  monthText: {
+    marginRight: 4,
+    color: '#666',
+  },
+  cardsGrid: {
+    padding: 16,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  card: {
+    width: '47%',
+    padding: 16,
+    borderRadius: 16,
+    minHeight: 140,
+  },
+  cardContent: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  cardDetail: {
+    fontSize: 13,
+    color: '#fff',
+    marginBottom: 4,
+  },
+  plusButton: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
   },
 });
 

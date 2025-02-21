@@ -11,39 +11,57 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 
+import { useNavigation } from '@react-navigation/native';
+
 const FarmDashboard = () => {
-    const cards = [
-        {
-          title: 'Production Analysis',
-          details: ['Total Animal: 200', 'Cows: 100', 'Dairy: 100'],
-          colors: ['#F4EBD0', '#4C7153'], 
-        },
-        {
-          title: 'Sales Data',
-          details: ['Milk Yield: 200ML', 'Animal sold: 100', 'Feeds Purchased: 10KG'],
-          colors: ['#D79F91', '#4C7153'], 
-        },
-        {
-          title: 'Employees',
-          details: ['Total: 20', 'Exits: 2'],
-          colors: ['#91D79E', '#4C7153'], 
-        },
-        {
-          title: 'Feeds',
-          details: ['Feeds available: 10KG', 'Feeds Purchased: 10KG'],
-          colors: ['#CBD18F', '#4C7153'], 
-        },
-        {
-          title: 'Animals',
-          details: ['Total Animal: 200', 'Flocks: 100'],
-          colors: ['#BD91D7', '#4C7153'], 
-        },
-        {
-          title: 'Breeding',
-          details: ['Total Animal: 50', 'Young ones: 52'],
-          colors: ['#CDD9CD', '#4C7153'], 
-        },
-      ];
+  const navigation = useNavigation();
+
+  const cardScreens = {
+    'Production Analysis': 'AnimalProductionListScreen',
+    'Sales Data': 'InventoryDashboard',
+    'Employees': 'EmployeeScreen',
+    'Feeds': 'FeedingManagementScreen',
+    'Animals': 'LivestockManagementScreen',
+    'Breeding': 'BreedingRecordForm',
+  };
+
+  const cards = [
+    {
+      title: 'Production Analysis',
+      details: ['Total Animal: 200', 'Cows: 100', 'Dairy: 100'],
+      colors: ['#F4EBD0', '#4C7153'],
+    },
+    {
+      title: 'Sales Data',
+      details: [
+        'Milk Yield: 200ML',
+        'Animal sold: 100',
+        'Feeds: 10KG',
+      ],
+      colors: ['#D79F91', '#4C7153'],
+    },
+    {
+      title: 'Employees',
+      details: ['Total: 20', 'Exits: 2'],
+      colors: ['#91D79E', '#4C7153'],
+    },
+    {
+      title: 'Feeds',
+      details: ['Feeds available: 10KG', 'Feeds Purchased: 10KG'],
+      colors: ['#CBD18F', '#4C7153'],
+    },
+    {
+      title: 'Animals',
+      details: ['Total Animal: 200', 'Flocks: 100'],
+      colors: ['#BD91D7', '#4C7153'],
+    },
+    {
+      title: 'Breeding',
+      details: ['Total Animal: 50', 'Young ones: 52'],
+      colors: ['#CDD9CD', '#4C7153'],
+    },
+  ];
+
 
   const renderCard = ({ title, details, colors }) => (
     <LinearGradient colors={colors} style={styles.card} key={title}>
@@ -55,7 +73,13 @@ const FarmDashboard = () => {
           </Text>
         ))}
       </View>
-      <Icon name="plus-circle-outline" size={24} style={styles.plusIcon} color="#fff" />
+
+      <TouchableOpacity
+        onPress={() => navigation.navigate(cardScreens[title])} 
+        style={styles.plusButton}
+      >
+        <Icon name="plus-circle-outline" size={32} color="#fff" />
+      </TouchableOpacity>
     </LinearGradient>
   );
 
@@ -76,17 +100,36 @@ const FarmDashboard = () => {
       <ScrollView style={styles.scrollView}>
         <Text style={styles.headerTitle}>Hello, John!</Text>
 
-        {/* Welcome Banner */}
-        <LinearGradient colors={['#8CD18C', '#8CD18C']} style={styles.welcomeBanner}>
-          <View>
+        <LinearGradient
+          colors={['#8CD18C', '#A7E3A7']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.welcomeBanner}
+        >
+          <View style={styles.welcomeTextContainer}>
             <Text style={styles.welcomeTitle}>Welcome to Xpert Farmers</Text>
             <Text style={styles.welcomeSubtitle}>
-              Cultivating Success,{'\n'}Harvesting Excellence,{'\n'}Nurturing Tomorrow
+              Cultivating Success,{'\n'}
+              Harvesting Excellence,{'\n'}
+              Nurturing Tomorrow
             </Text>
           </View>
-          <TouchableOpacity style={styles.seeMoreButton}>
-            <Text style={styles.seeMoreText}>See more</Text>
-          </TouchableOpacity>
+
+          {/* Right side with see more and circles */}
+          <View style={styles.rightContainer}>
+            <View
+              style={[styles.circle, styles.circleSmall, { top: 10, right: 10 }]}
+            />
+            <View
+              style={[styles.circle, styles.circleMedium, { top: '40%', right: 40 }]}
+            />
+            <View
+              style={[styles.circle, styles.circleSmall, { bottom: 30, right: 20 }]}
+            />
+            <TouchableOpacity style={styles.seeMoreButton}>
+              <Text style={styles.seeMoreText}>See more</Text>
+            </TouchableOpacity>
+          </View>
         </LinearGradient>
 
         {/* Farm Overview */}
@@ -98,7 +141,6 @@ const FarmDashboard = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Cards Grid */}
         <View style={styles.cardsGrid}>{cards.map(renderCard)}</View>
       </ScrollView>
     </SafeAreaView>
@@ -127,42 +169,72 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  
+ 
   welcomeBanner: {
     margin: 16,
-    paddingHorizontal: 20,
-    paddingVertical: 30,
+    padding: 20,
     borderRadius: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    overflow: 'hidden',
+    minHeight: 160,
+  },
+  welcomeTextContainer: {
+    flex: 1,
+    paddingRight: 20,
   },
   welcomeTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '600',
     color: '#fff',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   welcomeSubtitle: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#fff',
-    lineHeight: 20,
+    lineHeight: 24,
+  },
+  rightContainer: {
+    width: 100,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    position: 'relative',
   },
   seeMoreButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    marginTop: 50,
+    alignSelf: 'flex-end',
+    marginTop: 'auto',
+    marginBottom: 10,
   },
   seeMoreText: {
     color: '#fff',
+    fontSize: 14,
     fontWeight: '500',
+  },
+  circle: {
+    position: 'absolute',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  circleSmall: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  circleMedium: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
   overviewSection: {
     paddingHorizontal: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 16,
   },
   overviewTitle: {
     fontSize: 18,
@@ -207,7 +279,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginBottom: 4,
   },
-  plusIcon: {
+  plusButton: {
     position: 'absolute',
     bottom: 12,
     right: 12,

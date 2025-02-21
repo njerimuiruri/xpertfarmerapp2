@@ -54,22 +54,22 @@ export default function ProfileScreen({ navigation }) {
 
       <VStack mt={8} px={4} space={4}>
         <HStack justifyContent="space-between" borderBottomWidth={1} borderBottomColor={COLORS.green2} py={3}>
-          <Text fontSize="md" color="gray.700">First name</Text>
+          <Text fontSize="md" color={COLORS.darkGray3}>First name</Text>
           <Text fontSize="md" color="black">Jane</Text>
         </HStack>
 
         <HStack justifyContent="space-between" borderBottomWidth={1} borderBottomColor={COLORS.green2} py={3}>
-          <Text fontSize="md" color="gray.700">Second name</Text>
+          <Text fontSize="md" color={COLORS.darkGray3}>Second name</Text>
           <Text fontSize="md" color="black">Doe</Text>
         </HStack>
 
         <HStack justifyContent="space-between" borderBottomWidth={1} borderBottomColor={COLORS.green2} py={3}>
-          <Text fontSize="md" color="gray.700">Phone number</Text>
+          <Text fontSize="md" color={COLORS.darkGray3}>Phone number</Text>
           <Text fontSize="md" color="black">0707625331</Text>
         </HStack>
 
         <HStack justifyContent="space-between" borderBottomWidth={1} borderBottomColor={COLORS.green2} py={3}>
-          <Text fontSize="md" color="gray.700">Email Address</Text>
+          <Text fontSize="md" color={COLORS.darkGray3}>Email Address</Text>
           <Text fontSize="md" color="black">support@yahoo.com</Text>
         </HStack>
       </VStack>

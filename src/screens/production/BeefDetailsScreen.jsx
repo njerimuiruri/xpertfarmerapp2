@@ -11,6 +11,7 @@ import {
   Checkbox,
   Tooltip,
   Icon,
+  Modal,
 } from 'native-base';
 import {View, TouchableOpacity, StyleSheet, Image} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -36,6 +37,7 @@ export default function BeefCattleScreen({navigation}) {
   const [isSaveDisabled, setIsSaveDisabled] = useState(false);
   const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const handleDateChange = setter => (event, selectedDate) => {
     setter(selectedDate || new Date());
@@ -87,7 +89,11 @@ export default function BeefCattleScreen({navigation}) {
           </Text>
           <VStack space={5}>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Animal ID or Flock ID
               </Text>
               <View>
@@ -133,7 +139,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Weight Gain
                 </Text>
                 <Tooltip
@@ -151,13 +157,15 @@ export default function BeefCattleScreen({navigation}) {
                   />
                 </Tooltip>
               </HStack>
-              <HStack alignItems="center" space={2}>
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => {
                     const currentValue = parseFloat(weightGain) || 0;
                     setWeightGain((currentValue - 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
+
                   p={2}>
                   -
                 </Button>
@@ -180,6 +188,8 @@ export default function BeefCattleScreen({navigation}) {
                     setWeightGain((currentValue + 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
+
                   p={2}>
                   +
                 </Button>
@@ -188,7 +198,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Weaning Weight
                 </Text>
                 <Tooltip
@@ -206,13 +216,14 @@ export default function BeefCattleScreen({navigation}) {
                   />
                 </Tooltip>
               </HStack>
-              <HStack alignItems="center" space={2}>
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => {
                     const currentValue = parseFloat(weaningWeight) || 0;
                     setWeaningWeight((currentValue - 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -235,6 +246,7 @@ export default function BeefCattleScreen({navigation}) {
                     setWeaningWeight((currentValue + 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -243,7 +255,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Weight at Time of Scheduled Checkup
                 </Text>
                 <Tooltip
@@ -261,13 +273,14 @@ export default function BeefCattleScreen({navigation}) {
                   />
                 </Tooltip>
               </HStack>
-              <HStack alignItems="center" space={2}>
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => {
                     const currentValue = parseFloat(weightAtCheckup) || 0;
                     setWeightAtCheckup((currentValue - 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -290,6 +303,7 @@ export default function BeefCattleScreen({navigation}) {
                     setWeightAtCheckup((currentValue + 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -298,7 +312,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Sale Weight
                 </Text>
                 <Tooltip
@@ -316,13 +330,14 @@ export default function BeefCattleScreen({navigation}) {
                   />
                 </Tooltip>
               </HStack>
-              <HStack alignItems="center" space={2}>
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => {
                     const currentValue = parseFloat(saleWeight) || 0;
                     setSaleWeight((currentValue - 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -345,6 +360,7 @@ export default function BeefCattleScreen({navigation}) {
                     setSaleWeight((currentValue + 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -353,7 +369,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Sale Date
                 </Text>
                 <Tooltip
@@ -371,7 +387,7 @@ export default function BeefCattleScreen({navigation}) {
                   />
                 </Tooltip>
               </HStack>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Input
                   w="85%"
                   backgroundColor={COLORS.lightGreen}
@@ -401,7 +417,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Market Price
                 </Text>
                 <Tooltip
@@ -419,13 +435,14 @@ export default function BeefCattleScreen({navigation}) {
                   />
                 </Tooltip>
               </HStack>
-              <HStack alignItems="center" space={2}>
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => {
                     const currentValue = parseFloat(marketPrice) || 0;
                     setMarketPrice((currentValue - 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -448,6 +465,7 @@ export default function BeefCattleScreen({navigation}) {
                     setMarketPrice((currentValue + 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -456,7 +474,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Sale Price
                 </Text>
                 <Tooltip
@@ -474,13 +492,14 @@ export default function BeefCattleScreen({navigation}) {
                   />
                 </Tooltip>
               </HStack>
-              <HStack alignItems="center" space={2}>
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => {
                     const currentValue = parseFloat(salePrice) || 0;
                     setSalePrice((currentValue - 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -503,6 +522,7 @@ export default function BeefCattleScreen({navigation}) {
                     setSalePrice((currentValue + 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -511,7 +531,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Buyer's Name
                 </Text>
                 <Tooltip
@@ -540,7 +560,11 @@ export default function BeefCattleScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={2}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={2}>
                 Buyer Type
               </Text>
               <VStack space={2}>
@@ -559,7 +583,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Profit
                 </Text>
                 <Tooltip
@@ -584,7 +608,7 @@ export default function BeefCattleScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color="gray.700">
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Weight Gain Rate
                 </Text>
                 <Tooltip
@@ -610,7 +634,6 @@ export default function BeefCattleScreen({navigation}) {
             <HStack justifyContent="center" mt={6} space={4}>
               <Button
                 variant="outline"
-                borderWidth={1}
                 borderColor={COLORS.green}
                 borderRadius={8}
                 px={6}
@@ -623,17 +646,39 @@ export default function BeefCattleScreen({navigation}) {
                 borderRadius={8}
                 px={6}
                 py={3}
-                _pressed={{
-                  bg: 'emerald.700',
-                }}
-                isDisabled={isSaveDisabled}
-                onPress={handleSave}>
+                _pressed={{bg: 'emerald.700'}}
+                onPress={() => setShowSaveModal(true)}>
                 Save
               </Button>
             </HStack>
           </VStack>
         </Box>
       </ScrollView>
+      <Modal isOpen={showSaveModal} onClose={() => setShowSaveModal(false)}>
+        <Modal.Content maxWidth="85%" borderRadius={12} p={5}>
+          <Modal.Body alignItems="center">
+            <FastImage
+              source={icons.tick}
+              style={styles.modalIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.modalText}>
+             Beef Record has been saved successfully!
+            </Text>
+          </Modal.Body>
+          <Modal.Footer justifyContent="center">
+            <Button
+              backgroundColor={COLORS.green}
+              style={styles.modalButton}
+              onPress={() => {
+                setShowSaveModal(false);
+                navigation.navigate('AnimalProductionListScreen');
+              }}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
     </View>
   );
 }
@@ -652,5 +697,28 @@ const styles = StyleSheet.create({
   dropdownText: {
     fontSize: 14,
     color: 'black',
+  },
+  incrementButton: {
+    width: 45,
+    height: 45,
+    borderRadius: 8,
+  },
+  modalIcon: {
+    width: 50,
+    height: 50,
+    tintColor: COLORS.green,
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: COLORS.darkGray3,
+  },
+  modalButton: {
+    width: 120,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
   },
 });

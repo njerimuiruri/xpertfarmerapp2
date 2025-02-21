@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   Box,
   Text,
@@ -9,15 +9,16 @@ import {
   ScrollView,
   HStack,
   Checkbox,
+  Modal,
 } from 'native-base';
-import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import {View, TouchableOpacity, StyleSheet, Image} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import { icons } from '../../constants';
-import { COLORS } from '../../constants/theme';
+import {icons} from '../../constants';
+import {COLORS} from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
-export default function DairyDetailsScreen({ navigation }) {
+export default function DairyDetailsScreen({navigation}) {
   const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState('');
   const [dailyMilkYield, setDailyMilkYield] = useState('');
   const [milkQuality, setMilkQuality] = useState('');
@@ -33,19 +34,20 @@ export default function DairyDetailsScreen({ navigation }) {
   const [showLactationPicker, setShowLactationPicker] = useState(false);
   const [showDryingOffPicker, setShowDryingOffPicker] = useState(false);
   const [showSaleDatePicker, setShowSaleDatePicker] = useState(false);
-const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
+  const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const handleSelect = value => {
     setAnimalIdOrFlockId(value);
     setDropdownVisible(false);
   };
-  const handleDateChange = (setter) => (event, selectedDate) => {
+  const handleDateChange = setter => (event, selectedDate) => {
     setter(selectedDate || new Date());
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Dairy Details" />
       <ScrollView
         contentContainerStyle={{
@@ -54,12 +56,22 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
           marginTop: 5,
         }}>
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
-          <Text style={{ fontSize: 16, color: 'black', marginBottom: 16, textAlign: 'center' }}>
+          <Text
+            style={{
+              fontSize: 16,
+              color: 'black',
+              marginBottom: 16,
+              textAlign: 'center',
+            }}>
             Fill in the Dairy details
           </Text>
           <VStack space={5}>
-          <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+            <Box>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Animal ID or Flock ID
               </Text>
               <View>
@@ -78,9 +90,9 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
                     borderColor="transparent"
                   />
                   <TouchableOpacity
-                    style={{ padding: 10 }}
+                    style={{padding: 10}}
                     onPress={() => setDropdownVisible(prev => !prev)}>
-                    <Text style={{ fontSize: 16, color: COLORS.green }}>▼</Text>
+                    <Text style={{fontSize: 16, color: COLORS.green}}>▼</Text>
                   </TouchableOpacity>
                 </HStack>
                 {dropdownVisible && (
@@ -103,16 +115,21 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
               </View>
             </Box>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Daily Milk Yield
               </Text>
-              <HStack alignItems="center" space={2}>
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => {
                     const currentValue = parseFloat(dailyMilkYield) || 0;
                     setDailyMilkYield((currentValue - 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -125,7 +142,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
                   keyboardType="numeric"
                   value={dailyMilkYield.toString()}
                   onChangeText={text => {
-                    const numericText = text.replace(/[^0-9.]/g, ''); 
+                    const numericText = text.replace(/[^0-9.]/g, '');
                     setDailyMilkYield(numericText);
                   }}
                 />
@@ -135,6 +152,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
                     setDailyMilkYield((currentValue + 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -142,16 +160,21 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Milk Quality
               </Text>
-              <HStack alignItems="center" space={2}>
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => {
                     const currentValue = parseFloat(milkQuality) || 0;
                     setMilkQuality((currentValue - 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -174,6 +197,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
                     setMilkQuality((currentValue + 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -181,10 +205,14 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Lactation Period
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Input
                   w="85%"
                   backgroundColor={COLORS.lightGreen}
@@ -211,10 +239,14 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
               )}
             </Box>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Drying Off Period
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Input
                   w="85%"
                   backgroundColor={COLORS.lightGreen}
@@ -242,16 +274,21 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Sale Quantity
               </Text>
-              <HStack alignItems="center" space={2}>
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => {
                     const currentValue = parseFloat(saleQuantity) || 0;
                     setSaleQuantity((currentValue - 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -264,7 +301,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
                   keyboardType="numeric"
                   value={saleQuantity.toString()}
                   onChangeText={text => {
-                    const numericText = text.replace(/[^0-9.]/g, ''); 
+                    const numericText = text.replace(/[^0-9.]/g, '');
                     setSaleQuantity(numericText);
                   }}
                 />
@@ -274,6 +311,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
                     setSaleQuantity((currentValue + 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -281,10 +319,14 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Sale Date
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Input
                   w="85%"
                   backgroundColor={COLORS.lightGreen}
@@ -312,16 +354,21 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Market Price
               </Text>
-              <HStack alignItems="center" space={2}>
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => {
                     const currentValue = parseFloat(marketPrice) || 0;
                     setMarketPrice((currentValue - 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -334,7 +381,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
                   keyboardType="numeric"
                   value={marketPrice.toString()}
                   onChangeText={text => {
-                    const numericText = text.replace(/[^0-9.]/g, ''); 
+                    const numericText = text.replace(/[^0-9.]/g, '');
                     setMarketPrice(numericText);
                   }}
                 />
@@ -344,6 +391,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
                     setMarketPrice((currentValue + 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -351,16 +399,21 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Sale Price
               </Text>
-              <HStack alignItems="center" space={2}>
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => {
                     const currentValue = parseFloat(salePrice) || 0;
                     setSalePrice((currentValue - 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -373,7 +426,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
                   keyboardType="numeric"
                   value={salePrice.toString()}
                   onChangeText={text => {
-                    const numericText = text.replace(/[^0-9.]/g, ''); 
+                    const numericText = text.replace(/[^0-9.]/g, '');
                     setSalePrice(numericText);
                   }}
                 />
@@ -383,6 +436,7 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
                     setSalePrice((currentValue + 1).toString());
                   }}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -390,7 +444,11 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Buyer’s Name
               </Text>
               <Input
@@ -404,7 +462,11 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={2}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={2}>
                 Buyer Type
               </Text>
               <VStack space={2}>
@@ -425,7 +487,6 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
           <HStack justifyContent="center" mt={6} space={4}>
             <Button
               variant="outline"
-              borderWidth={1}
               borderColor={COLORS.green}
               borderRadius={8}
               px={6}
@@ -438,14 +499,38 @@ const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
               borderRadius={8}
               px={6}
               py={3}
-              _pressed={{
-                bg: 'emerald.700',
-              }}>
+              _pressed={{bg: 'emerald.700'}}
+              onPress={() => setShowSaveModal(true)}>
               Save
             </Button>
           </HStack>
         </Box>
       </ScrollView>
+      <Modal isOpen={showSaveModal} onClose={() => setShowSaveModal(false)}>
+        <Modal.Content maxWidth="85%" borderRadius={12} p={5}>
+          <Modal.Body alignItems="center">
+            <FastImage
+              source={icons.tick}
+              style={styles.modalIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.modalText}>
+              Dairy Record has been saved successfully!
+            </Text>
+          </Modal.Body>
+          <Modal.Footer justifyContent="center">
+            <Button
+              backgroundColor={COLORS.green}
+              style={styles.modalButton}
+              onPress={() => {
+                setShowSaveModal(false);
+                navigation.navigate('DairyProductionListScreen');
+              }}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
     </View>
   );
 }
@@ -464,5 +549,28 @@ const styles = StyleSheet.create({
   dropdownText: {
     fontSize: 14,
     color: 'black',
+  },
+  incrementButton: {
+    width: 45,
+    height: 45,
+    borderRadius: 8,
+  },
+  modalIcon: {
+    width: 50,
+    height: 50,
+    tintColor: COLORS.green,
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: COLORS.darkGray3,
+  },
+  modalButton: {
+    width: 120,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
   },
 });

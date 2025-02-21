@@ -9,6 +9,7 @@ import {
   ScrollView,
   HStack,
   Checkbox,
+  Modal
 } from 'native-base';
 import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -34,6 +35,7 @@ export default function SwineRecordScreen({ navigation }) {
   const [isIndividual, setIsIndividual] = useState(false);
   const [showWeaningDatePicker, setShowWeaningDatePicker] = useState(false);
   const [showSaleDatePicker, setShowSaleDatePicker] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const handleDateChange = (setter) => (event, selectedDate) => {
     setter(selectedDate || new Date());
@@ -56,7 +58,7 @@ export default function SwineRecordScreen({ navigation }) {
           <VStack space={5}>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Animal ID or Flock ID
               </Text>
               <Select
@@ -86,13 +88,14 @@ export default function SwineRecordScreen({ navigation }) {
               Farrowing Records (Breeding Sows)
             </Text>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Litter Size (Number)
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => setLitterSize(litterSize > 0 ? litterSize - 1 : 0)}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -109,6 +112,7 @@ export default function SwineRecordScreen({ navigation }) {
                 <Button
                   onPress={() => setLitterSize(litterSize + 1)}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -116,13 +120,15 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Birth Weight
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center"space={3}>
                 <Button
                   onPress={() => setBirthWeight(birthWeight > 0 ? birthWeight - 1 : 0)}
                   variant="outline"
+                  style={styles.incrementButton}
+
                   p={2}>
                   -
                 </Button>
@@ -139,6 +145,8 @@ export default function SwineRecordScreen({ navigation }) {
                 <Button
                   onPress={() => setBirthWeight(birthWeight + 1)}
                   variant="outline"
+                  style={styles.incrementButton}
+
                   p={2}>
                   +
                 </Button>
@@ -146,10 +154,10 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Weaning Date
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Input
                   w="85%"
                   backgroundColor={COLORS.lightGreen}
@@ -177,13 +185,15 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Weaning Weight
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => setWeaningWeight(weaningWeight > 0 ? weaningWeight - 1 : 0)}
                   variant="outline"
+                  style={styles.incrementButton}
+
                   p={2}>
                   -
                 </Button>
@@ -200,6 +210,8 @@ export default function SwineRecordScreen({ navigation }) {
                 <Button
                   onPress={() => setWeaningWeight(weaningWeight + 1)}
                   variant="outline"
+                  style={styles.incrementButton}
+
                   p={2}>
                   +
                 </Button>
@@ -211,13 +223,15 @@ export default function SwineRecordScreen({ navigation }) {
               Growth and Market Records
             </Text>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Entry Weight
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => setEntryWeight(entryWeight > 0 ? entryWeight - 1 : 0)}
                   variant="outline"
+                  style={styles.incrementButton}
+
                   p={2}>
                   -
                 </Button>
@@ -234,6 +248,8 @@ export default function SwineRecordScreen({ navigation }) {
                 <Button
                   onPress={() => setEntryWeight(entryWeight + 1)}
                   variant="outline"
+                  style={styles.incrementButton}
+
                   p={2}>
                   +
                 </Button>
@@ -241,13 +257,15 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Finisher Phase Weight
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => setFinisherPhaseWeight(finisherPhaseWeight > 0 ? finisherPhaseWeight - 1 : 0)}
                   variant="outline"
+                  style={styles.incrementButton}
+
                   p={2}>
                   -
                 </Button>
@@ -264,6 +282,8 @@ export default function SwineRecordScreen({ navigation }) {
                 <Button
                   onPress={() => setFinisherPhaseWeight(finisherPhaseWeight + 1)}
                   variant="outline"
+                  style={styles.incrementButton}
+
                   p={2}>
                   +
                 </Button>
@@ -275,13 +295,14 @@ export default function SwineRecordScreen({ navigation }) {
               Sale Information
             </Text>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Sale Weight
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Button
                   onPress={() => setSaleWeight(saleWeight > 0 ? saleWeight - 1 : 0)}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -298,6 +319,7 @@ export default function SwineRecordScreen({ navigation }) {
                 <Button
                   onPress={() => setSaleWeight(saleWeight + 1)}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -305,10 +327,10 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Sale Date
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Input
                   w="85%"
                   backgroundColor={COLORS.lightGreen}
@@ -336,7 +358,7 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Market Price (Autofilled)
               </Text>
               <Input
@@ -351,7 +373,7 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Sale Price
               </Text>
               <Input
@@ -366,7 +388,7 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Buyer’s Name
               </Text>
               <Input
@@ -380,7 +402,7 @@ export default function SwineRecordScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={2}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={2}>
                 Buyer Type
               </Text>
               <VStack space={2}>
@@ -399,29 +421,31 @@ export default function SwineRecordScreen({ navigation }) {
           </VStack>
 
           <HStack justifyContent="center" mt={6} space={4}>
-            <Button
-              variant="outline"
-              borderWidth={1}
-              borderColor={COLORS.green}
-              borderRadius={8}
-              px={6}
-              py={3}
-              onPress={() => navigation.goBack()}>
-              Cancel
-            </Button>
-            <Button
-              backgroundColor={COLORS.green}
-              borderRadius={8}
-              px={6}
-              py={3}
-              _pressed={{
-                bg: 'emerald.700',
-              }}>
-              Save
-            </Button>
+          <Button variant="outline" borderColor={COLORS.green} borderRadius={8} px={6} py={3} onPress={() => navigation.goBack()}>
+                Cancel
+              </Button>
+              <Button backgroundColor={COLORS.green} borderRadius={8} px={6} py={3} _pressed={{ bg: "emerald.700" }} onPress={() => setShowSaveModal(true)}>
+                Save
+              </Button>
           </HStack>
         </Box>
       </ScrollView>
+      <Modal isOpen={showSaveModal} onClose={() => setShowSaveModal(false)}>
+        <Modal.Content maxWidth="85%" borderRadius={12} p={5}>
+          <Modal.Body alignItems="center">
+            <FastImage source={icons.tick} style={styles.modalIcon} resizeMode="contain" />
+            <Text style={styles.modalText}>Swine Record has been saved successfully!</Text>
+          </Modal.Body>
+          <Modal.Footer justifyContent="center">
+            <Button backgroundColor={COLORS.green} style={styles.modalButton} onPress={() => {
+                setShowSaveModal(false);
+                navigation.navigate("SwineProductionListScreen"); 
+              }}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
     </View>
   );
 }
@@ -431,5 +455,28 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     tintColor: COLORS.green,
+  },
+  incrementButton: {
+    width: 45,
+    height: 45,
+    borderRadius: 8,
+  },
+  modalIcon: {
+    width: 50,
+    height: 50,
+    tintColor: COLORS.green,
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: COLORS.darkGray3,
+  },
+  modalButton: {
+    width: 120,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: "center",
   },
 });

@@ -58,7 +58,7 @@ export default function DewormingDetailsRecords({ navigation }) {
           </Text>
           <VStack space={5}>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Animal ID or Flock ID
               </Text>
               <Select
@@ -84,7 +84,7 @@ export default function DewormingDetailsRecords({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Health Event Symptoms
               </Text>
               <Input
@@ -98,7 +98,7 @@ export default function DewormingDetailsRecords({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Diagnosis
               </Text>
               <Input
@@ -112,7 +112,7 @@ export default function DewormingDetailsRecords({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Treatment Given
               </Text>
               <VStack space={2}>
@@ -144,7 +144,7 @@ export default function DewormingDetailsRecords({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Dosage Administered
               </Text>
               <HStack alignItems="center" space={2}>
@@ -183,7 +183,7 @@ export default function DewormingDetailsRecords({ navigation }) {
             </Box>
 
             <View style={styles.formGroup}>
-                <Text  fontSize="sm" fontWeight="500" color="gray.700" mb={1}>Date Administered</Text>
+                <Text  fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>Date Administered</Text>
               <View style={styles.dateContainer}>
                 <Input
                   w="85%"
@@ -214,7 +214,7 @@ export default function DewormingDetailsRecords({ navigation }) {
             <Box>
               
               <HStack alignItems="center" space={2}>
-                <Text fontSize="sm" fontWeight="500" color="gray.700">Cost of Drugs</Text>
+                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>Cost of Drugs</Text>
                 <Input
                   flex={1}
                   variant="outline"
@@ -229,7 +229,7 @@ export default function DewormingDetailsRecords({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Medical Officer Name
               </Text>
               <Input
@@ -243,7 +243,7 @@ export default function DewormingDetailsRecords({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Practice ID
               </Text>
               <Input
@@ -257,7 +257,7 @@ export default function DewormingDetailsRecords({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Farmer or Witness
               </Text>
               <Input
@@ -271,7 +271,7 @@ export default function DewormingDetailsRecords({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Notes
               </Text>
               <Input

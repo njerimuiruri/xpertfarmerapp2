@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   Box,
   Text,
@@ -9,15 +9,16 @@ import {
   ScrollView,
   HStack,
   Checkbox,
+  Modal,
 } from 'native-base';
-import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import {View, TouchableOpacity, StyleSheet, Image} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import { icons } from '../../constants';
-import { COLORS } from '../../constants/theme';
+import {icons} from '../../constants';
+import {COLORS} from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
-export default function SheepGoatDetailsScreen({ navigation }) {
+export default function SheepGoatDetailsScreen({navigation}) {
   const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState('');
   const [shearingDate, setShearingDate] = useState(new Date());
   const [woolWeight, setWoolWeight] = useState(0);
@@ -33,13 +34,14 @@ export default function SheepGoatDetailsScreen({ navigation }) {
   const [isIndividual, setIsIndividual] = useState(false);
   const [showShearingDatePicker, setShowShearingDatePicker] = useState(false);
   const [showSaleDatePicker, setShowSaleDatePicker] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
-  const handleDateChange = (setter) => (event, selectedDate) => {
+  const handleDateChange = setter => (event, selectedDate) => {
     setter(selectedDate || new Date());
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Add Sheep/Goat Record" />
       <ScrollView
         contentContainerStyle={{
@@ -48,14 +50,23 @@ export default function SheepGoatDetailsScreen({ navigation }) {
           marginTop: 5,
         }}>
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
-          <Text style={{ fontSize: 16, color: 'black', marginBottom: 16, textAlign: 'center' }}>
+          <Text
+            style={{
+              fontSize: 16,
+              color: 'black',
+              marginBottom: 16,
+              textAlign: 'center',
+            }}>
             Fill in the sheep/goat details
           </Text>
 
           <VStack space={5}>
-
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Animal ID or Flock ID
               </Text>
               <Select
@@ -85,10 +96,14 @@ export default function SheepGoatDetailsScreen({ navigation }) {
               Wool/Fiber Production
             </Text>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Shearing Date
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Input
                   w="85%"
                   backgroundColor={COLORS.lightGreen}
@@ -96,7 +111,8 @@ export default function SheepGoatDetailsScreen({ navigation }) {
                   placeholder="DD/MM/YY"
                   isReadOnly
                 />
-                <TouchableOpacity onPress={() => setShowShearingDatePicker(true)}>
+                <TouchableOpacity
+                  onPress={() => setShowShearingDatePicker(true)}>
                   <Image
                     source={icons.calendar}
                     resizeMode="contain"
@@ -116,13 +132,20 @@ export default function SheepGoatDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Wool Weight
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Button
-                  onPress={() => setWoolWeight(woolWeight > 0 ? woolWeight - 1 : 0)}
+                  onPress={() =>
+                    setWoolWeight(woolWeight > 0 ? woolWeight - 1 : 0)
+                  }
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -134,11 +157,14 @@ export default function SheepGoatDetailsScreen({ navigation }) {
                   placeholder="Enter wool weight"
                   keyboardType="numeric"
                   value={woolWeight.toString()}
-                  onChangeText={text => setWoolWeight(Math.max(0, parseInt(text) || 0))}
+                  onChangeText={text =>
+                    setWoolWeight(Math.max(0, parseInt(text) || 0))
+                  }
                 />
                 <Button
                   onPress={() => setWoolWeight(woolWeight + 1)}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -146,7 +172,11 @@ export default function SheepGoatDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Wool Quality
               </Text>
               <Input
@@ -164,13 +194,20 @@ export default function SheepGoatDetailsScreen({ navigation }) {
               Meat and Milk Production
             </Text>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Weaning Weight
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Button
-                  onPress={() => setWeaningWeight(weaningWeight > 0 ? weaningWeight - 1 : 0)}
+                  onPress={() =>
+                    setWeaningWeight(weaningWeight > 0 ? weaningWeight - 1 : 0)
+                  }
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -182,11 +219,14 @@ export default function SheepGoatDetailsScreen({ navigation }) {
                   placeholder="Enter weaning weight"
                   keyboardType="numeric"
                   value={weaningWeight.toString()}
-                  onChangeText={text => setWeaningWeight(Math.max(0, parseInt(text) || 0))}
+                  onChangeText={text =>
+                    setWeaningWeight(Math.max(0, parseInt(text) || 0))
+                  }
                 />
                 <Button
                   onPress={() => setWeaningWeight(weaningWeight + 1)}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -194,13 +234,20 @@ export default function SheepGoatDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Milk Yield
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Button
-                  onPress={() => setMilkYield(milkYield > 0 ? milkYield - 1 : 0)}
+                  onPress={() =>
+                    setMilkYield(milkYield > 0 ? milkYield - 1 : 0)
+                  }
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -212,11 +259,14 @@ export default function SheepGoatDetailsScreen({ navigation }) {
                   placeholder="Enter milk yield"
                   keyboardType="numeric"
                   value={milkYield.toString()}
-                  onChangeText={text => setMilkYield(Math.max(0, parseInt(text) || 0))}
+                  onChangeText={text =>
+                    setMilkYield(Math.max(0, parseInt(text) || 0))
+                  }
                 />
                 <Button
                   onPress={() => setMilkYield(milkYield + 1)}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -228,13 +278,20 @@ export default function SheepGoatDetailsScreen({ navigation }) {
               Sale Information
             </Text>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Sale Weight
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Button
-                  onPress={() => setSaleWeight(saleWeight > 0 ? saleWeight - 1 : 0)}
+                  onPress={() =>
+                    setSaleWeight(saleWeight > 0 ? saleWeight - 1 : 0)
+                  }
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   -
                 </Button>
@@ -246,11 +303,14 @@ export default function SheepGoatDetailsScreen({ navigation }) {
                   placeholder="Enter sale weight"
                   keyboardType="numeric"
                   value={saleWeight.toString()}
-                  onChangeText={text => setSaleWeight(Math.max(0, parseInt(text) || 0))}
+                  onChangeText={text =>
+                    setSaleWeight(Math.max(0, parseInt(text) || 0))
+                  }
                 />
                 <Button
                   onPress={() => setSaleWeight(saleWeight + 1)}
                   variant="outline"
+                  style={styles.incrementButton}
                   p={2}>
                   +
                 </Button>
@@ -258,10 +318,14 @@ export default function SheepGoatDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Sale Date
               </Text>
-              <HStack alignItems="center">
+              <HStack alignItems="center" space={3}>
                 <Input
                   w="85%"
                   backgroundColor={COLORS.lightGreen}
@@ -289,7 +353,11 @@ export default function SheepGoatDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Market Price
               </Text>
               <Input
@@ -304,7 +372,11 @@ export default function SheepGoatDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Sale Price
               </Text>
               <Input
@@ -319,7 +391,11 @@ export default function SheepGoatDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Buyer’s Name
               </Text>
               <Input
@@ -333,7 +409,11 @@ export default function SheepGoatDetailsScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={2}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={2}>
                 Buyer Type
               </Text>
               <VStack space={2}>
@@ -354,7 +434,6 @@ export default function SheepGoatDetailsScreen({ navigation }) {
           <HStack justifyContent="center" mt={6} space={4}>
             <Button
               variant="outline"
-              borderWidth={1}
               borderColor={COLORS.green}
               borderRadius={8}
               px={6}
@@ -367,14 +446,38 @@ export default function SheepGoatDetailsScreen({ navigation }) {
               borderRadius={8}
               px={6}
               py={3}
-              _pressed={{
-                bg: 'emerald.700',
-              }}>
+              _pressed={{bg: 'emerald.700'}}
+              onPress={() => setShowSaveModal(true)}>
               Save
             </Button>
           </HStack>
         </Box>
       </ScrollView>
+      <Modal isOpen={showSaveModal} onClose={() => setShowSaveModal(false)}>
+        <Modal.Content maxWidth="85%" borderRadius={12} p={5}>
+          <Modal.Body alignItems="center">
+            <FastImage
+              source={icons.tick}
+              style={styles.modalIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.modalText}>
+              Sheep & Goat Record has been saved successfully!
+            </Text>
+          </Modal.Body>
+          <Modal.Footer justifyContent="center">
+            <Button
+              backgroundColor={COLORS.green}
+              style={styles.modalButton}
+              onPress={() => {
+                setShowSaveModal(false);
+                navigation.navigate('SheepAndGoatProductionListScreen');
+              }}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
     </View>
   );
 }
@@ -384,5 +487,28 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     tintColor: COLORS.green,
+  },
+  incrementButton: {
+    width: 45,
+    height: 45,
+    borderRadius: 8,
+  },
+  modalIcon: {
+    width: 50,
+    height: 50,
+    tintColor: COLORS.green,
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: COLORS.darkGray3,
+  },
+  modalButton: {
+    width: 120,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
   },
 });

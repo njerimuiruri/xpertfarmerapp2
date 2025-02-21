@@ -51,7 +51,7 @@ export default function Geneticdisorderscreen({navigation}) {
           </Text>
           <VStack space={5}>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Animal ID or Flock ID
               </Text>
               <Select
@@ -77,7 +77,7 @@ export default function Geneticdisorderscreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Date Recorded
               </Text>
               <HStack alignItems="center">
@@ -110,7 +110,7 @@ export default function Geneticdisorderscreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Name of the Condition
               </Text>
               <Input
@@ -124,7 +124,7 @@ export default function Geneticdisorderscreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Remedy
               </Text>
               <Input

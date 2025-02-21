@@ -57,7 +57,7 @@ export default function Allergiesrecordsscreen({navigation}) {
           <VStack space={5}>
             {/* Combined Input and Select */}
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Animal ID or Flock ID
               </Text>
               <View>
@@ -102,7 +102,7 @@ export default function Allergiesrecordsscreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Date Recorded
               </Text>
               <HStack alignItems="center">
@@ -136,7 +136,7 @@ export default function Allergiesrecordsscreen({navigation}) {
 
             {/* Cause */}
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Cause
               </Text>
               <Input
@@ -151,7 +151,7 @@ export default function Allergiesrecordsscreen({navigation}) {
 
             {/* Remedy */}
             <Box>
-              <Text fontSize="sm" fontWeight="500" color="gray.700" mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Remedy
               </Text>
               <Input

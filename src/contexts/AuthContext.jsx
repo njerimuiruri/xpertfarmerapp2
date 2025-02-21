@@ -32,9 +32,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, _password) => {
     try {
-      // Mock authentication logic (replace with your API call)
       const mockUser = { id: '1', name: 'John Doe', email };
-      await AsyncStorage.setItem('user', JSON.stringify(mockUser)); // Store user in AsyncStorage
+      await AsyncStorage.setItem('user', JSON.stringify(mockUser)); 
       setUser(mockUser); // Update user state
     } catch (error) {
       Alert.alert('Login failed', 'Invalid email or password');
