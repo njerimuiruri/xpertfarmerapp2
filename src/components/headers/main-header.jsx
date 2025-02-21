@@ -1,16 +1,15 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import FastImage from 'react-native-fast-image';
-import { COLORS } from '../../constants/theme';
-import { icons } from '../../constants';
+import {COLORS} from '../../constants/theme';
+import {icons} from '../../constants';
 
-const Header = ({ navigation }) => {
+const Header = ({navigation}) => {
   return (
     <View
       style={{
         backgroundColor: COLORS.green2,
       }}>
-
       <View className="mt-5 mx-4 py-2 flex flex-row justify-between items-center">
         <View className="flex flex-row space-x-3 items-center">
           <TouchableOpacity

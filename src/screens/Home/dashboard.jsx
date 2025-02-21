@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
+
 import { useNavigation } from '@react-navigation/native';
 
 const FarmDashboard = () => {
@@ -168,6 +169,7 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  
  
   welcomeBanner: {
     margin: 16,

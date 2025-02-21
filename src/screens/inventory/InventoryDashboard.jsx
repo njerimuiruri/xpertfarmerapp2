@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -7,40 +7,37 @@ import {
   TouchableOpacity,
   Modal,
 } from 'react-native';
-import { Box, HStack } from 'native-base';
+import {Box, HStack} from 'native-base';
 import FastImage from 'react-native-fast-image';
 import LinearGradient from 'react-native-linear-gradient';
 import SecondaryHeader from '../../components/headers/secondary-header';
-import { icons } from '../../constants';
-import { useNavigation } from '@react-navigation/native'; 
+import {icons} from '../../constants';
+import {useNavigation} from '@react-navigation/native';
 
 export default function InventoryDashboard() {
-  const navigation = useNavigation(); 
+  const navigation = useNavigation();
   const [activeSection, setActiveSection] = useState('machinery');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  const TabButton = ({ title, isActive, onPress }) => (
+  const TabButton = ({title, isActive, onPress}) => (
     <TouchableOpacity
       style={[styles.tab, isActive && styles.activeTab]}
-      onPress={onPress}
-    >
+      onPress={onPress}>
       <Text
         style={[styles.tabText, isActive && styles.activeTabText]}
-        numberOfLines={1}
-      >
+        numberOfLines={1}>
         {title}
       </Text>
     </TouchableOpacity>
   );
 
-  const EquipmentCard = ({ index, gradientColors }) => (
+  const EquipmentCard = ({index, gradientColors}) => (
     <LinearGradient
       colors={gradientColors}
       style={styles.equipmentCard}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
       <Text style={styles.number}>{index}.</Text>
       <Text style={styles.equipmentTitle}>Equipment Name</Text>
       <Text style={styles.equipmentId}>Equipment ID or Serial Number</Text>
@@ -59,8 +56,7 @@ export default function InventoryDashboard() {
             nextServiceDate: '19/07/2023',
           });
           setModalVisible(true);
-        }}
-      >
+        }}>
         <Text style={styles.detailsButtonText}>Show more details</Text>
       </TouchableOpacity>
       <View style={styles.dotIndicator}>
@@ -69,22 +65,33 @@ export default function InventoryDashboard() {
     </LinearGradient>
   );
 
-  const GoodsCard = ({ index, gradientColors }) => (
+  const GoodsCard = ({index, gradientColors}) => (
     <LinearGradient
       colors={gradientColors}
       style={styles.equipmentCard}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
       <Text style={styles.number}>{index}.</Text>
       <Text style={styles.equipmentTitle}>Item Name</Text>
-      <Text style={styles.equipmentId}>Type (Organic, Inorganic, Hybrid, etc.)</Text>
+      <Text style={styles.equipmentId}>
+        Type (Organic, Inorganic, Hybrid, etc.)
+      </Text>
       <TouchableOpacity
         style={styles.detailsButton}
         onPress={() => {
+          setSelectedItem({
+            name: 'Organic Fertilizer',
+            type: 'Organic',
+            batchNumber: 'OF-2025-001',
+            supplier: 'AgriFarms Ltd.',
+            quantity: '500 kg',
+            purchaseDate: '15/01/2025',
+            expiryDate: '15/01/2026',
+            storageLocation: 'Warehouse A',
+            status: 'In Stock',
+          });
           setModalVisible(true);
-        }}
-      >
+        }}>
         <Text style={styles.detailsButtonText}>Show more details</Text>
       </TouchableOpacity>
       <View style={styles.dotIndicator}>
@@ -93,13 +100,12 @@ export default function InventoryDashboard() {
     </LinearGradient>
   );
 
-  const UtilityCard = ({ title, date, fields, gradientColors }) => (
+  const UtilityCard = ({title, date, fields, gradientColors}) => (
     <LinearGradient
       colors={gradientColors}
       style={styles.utilityCard}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{title}</Text>
         <View style={styles.dateContainer}>
@@ -145,9 +151,9 @@ export default function InventoryDashboard() {
             date="1st/Jan/2025"
             gradientColors={['#DBAFA4', '#755D58']}
             fields={[
-              { label: 'Current Water Level (Liters)', value: '3000Lit' },
-              { label: 'Water Source', value: 'Borehole' },
-              { label: 'Water Storage Capacity', value: 'Tanks' },
+              {label: 'Current Water Level (Liters)', value: '3000Lit'},
+              {label: 'Water Source', value: 'Borehole'},
+              {label: 'Water Storage Capacity', value: 'Tanks'},
             ]}
           />
           <UtilityCard
@@ -155,8 +161,8 @@ export default function InventoryDashboard() {
             date="1st/Jan/2025"
             gradientColors={['#8CD18C', '#486B48']}
             fields={[
-              { label: 'Power Source', value: 'Generator' },
-              { label: 'Generator Fuel Stock (Liters)', value: '40Lit' },
+              {label: 'Power Source', value: 'Generator'},
+              {label: 'Generator Fuel Stock (Liters)', value: '40Lit'},
             ]}
           />
           <UtilityCard
@@ -164,8 +170,8 @@ export default function InventoryDashboard() {
             date="1st/Jan/2025"
             gradientColors={['#D1D6A1', '#6D7054']}
             fields={[
-              { label: 'Power Source', value: 'Generator' },
-              { label: 'Generator Fuel Stock (Liters)', value: '40Lit' },
+              {label: 'Power Source', value: 'Generator'},
+              {label: 'Generator Fuel Stock (Liters)', value: '40Lit'},
             ]}
           />
         </View>
@@ -176,11 +182,11 @@ export default function InventoryDashboard() {
 
   const handleAddButtonPress = () => {
     if (activeSection === 'machinery') {
-      navigation.navigate('AddMachinery'); 
+      navigation.navigate('AddMachinery');
     } else if (activeSection === 'goods') {
-      navigation.navigate('AddGoodsInStock'); 
+      navigation.navigate('AddGoodsInStock');
     } else if (activeSection === 'utilities') {
-      navigation.navigate('AddUtilityDetails'); 
+      navigation.navigate('AddUtilityDetails');
     }
   };
 
@@ -192,8 +198,7 @@ export default function InventoryDashboard() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={styles.tabsContainer}
-        >
+          style={styles.tabsContainer}>
           <HStack space={2} p={4}>
             <TabButton
               title="Machinery & Equipment"
@@ -216,77 +221,121 @@ export default function InventoryDashboard() {
         {renderContent()}
 
         {/* Modal */}
+        {/* Modal */}
         <Modal
           visible={modalVisible}
           transparent={true}
           animationType="slide"
-          onRequestClose={() => setModalVisible(false)}
-        >
+          onRequestClose={() => setModalVisible(false)}>
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Machinery Details</Text>
-                <TouchableOpacity 
-                  style={styles.closeButton} 
-                  onPress={() => setModalVisible(false)}
-                >
+                <Text style={styles.modalTitle}>
+                  {activeSection === 'machinery'
+                    ? 'Machinery Details'
+                    : 'Goods Details'}
+                </Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setModalVisible(false)}>
                   <Text style={styles.closeButtonText}>✕</Text>
                 </TouchableOpacity>
               </View>
-              
+
               {selectedItem && (
                 <ScrollView style={styles.modalScrollContent}>
                   <View style={styles.modalSection}>
-                    <Text style={styles.modalLabel}>Equipment Name</Text>
+                    <Text style={styles.modalLabel}>
+                      {activeSection === 'machinery'
+                        ? 'Equipment Name'
+                        : 'Item Name'}
+                    </Text>
                     <Text style={styles.modalValue}>{selectedItem.name}</Text>
                   </View>
 
-                  <View style={styles.modalSection}>
-                    <Text style={styles.modalLabel}>Breeding Type</Text>
-                    <Text style={styles.modalValue}>{selectedItem.breedingType}</Text>
-                  </View>
-
-                  <View style={styles.modalSection}>
-                    <Text style={styles.modalLabel}>Equipment ID</Text>
-                    <Text style={styles.modalValue}>{selectedItem.id}</Text>
-                  </View>
-
-                  <View style={styles.modalSection}>
-                    <Text style={styles.modalLabel}>Purchase Date</Text>
-                    <Text style={styles.modalValue}>{selectedItem.purchaseDate}</Text>
-                  </View>
-
-                  <View style={styles.modalSection}>
-                    <Text style={styles.modalLabel}>Current Location</Text>
-                    <Text style={styles.modalValue}>{selectedItem.location}</Text>
-                  </View>
-
-                  <View style={styles.modalSection}>
-                    <Text style={styles.modalLabel}>Condition</Text>
-                    <Text style={styles.modalValue}>{selectedItem.condition}</Text>
-                  </View>
-
-                  <View style={styles.modalSection}>
-                    <Text style={styles.modalLabel}>Dam</Text>
-                    <Text style={styles.modalValue}>{selectedItem.dam}</Text>
-                  </View>
-
-                  <View style={styles.modalSection}>
-                    <Text style={styles.modalLabel}>Last Service Date</Text>
-                    <Text style={styles.modalValue}>{selectedItem.lastServiceDate}</Text>
-                  </View>
-
-                  <View style={styles.modalSection}>
-                    <Text style={styles.modalLabel}>Next Service Date</Text>
-                    <Text style={styles.modalValue}>{selectedItem.nextServiceDate}</Text>
-                  </View>
+                  {activeSection === 'machinery' ? (
+                    <>
+                      <View style={styles.modalSection}>
+                        <Text style={styles.modalLabel}>Equipment ID</Text>
+                        <Text style={styles.modalValue}>{selectedItem.id}</Text>
+                      </View>
+                      <View style={styles.modalSection}>
+                        <Text style={styles.modalLabel}>Purchase Date</Text>
+                        <Text style={styles.modalValue}>
+                          {selectedItem.purchaseDate}
+                        </Text>
+                      </View>
+                      <View style={styles.modalSection}>
+                        <Text style={styles.modalLabel}>Current Location</Text>
+                        <Text style={styles.modalValue}>
+                          {selectedItem.location}
+                        </Text>
+                      </View>
+                      <View style={styles.modalSection}>
+                        <Text style={styles.modalLabel}>Condition</Text>
+                        <Text style={styles.modalValue}>
+                          {selectedItem.condition}
+                        </Text>
+                      </View>
+                    </>
+                  ) : (
+                    <>
+                      <View style={styles.modalSection}>
+                        <Text style={styles.modalLabel}>Type</Text>
+                        <Text style={styles.modalValue}>
+                          {selectedItem.type}
+                        </Text>
+                      </View>
+                      <View style={styles.modalSection}>
+                        <Text style={styles.modalLabel}>Batch Number</Text>
+                        <Text style={styles.modalValue}>
+                          {selectedItem.batchNumber}
+                        </Text>
+                      </View>
+                      <View style={styles.modalSection}>
+                        <Text style={styles.modalLabel}>Supplier</Text>
+                        <Text style={styles.modalValue}>
+                          {selectedItem.supplier}
+                        </Text>
+                      </View>
+                      <View style={styles.modalSection}>
+                        <Text style={styles.modalLabel}>Quantity</Text>
+                        <Text style={styles.modalValue}>
+                          {selectedItem.quantity}
+                        </Text>
+                      </View>
+                      <View style={styles.modalSection}>
+                        <Text style={styles.modalLabel}>Purchase Date</Text>
+                        <Text style={styles.modalValue}>
+                          {selectedItem.purchaseDate}
+                        </Text>
+                      </View>
+                      <View style={styles.modalSection}>
+                        <Text style={styles.modalLabel}>Expiry Date</Text>
+                        <Text style={styles.modalValue}>
+                          {selectedItem.expiryDate}
+                        </Text>
+                      </View>
+                      <View style={styles.modalSection}>
+                        <Text style={styles.modalLabel}>Storage Location</Text>
+                        <Text style={styles.modalValue}>
+                          {selectedItem.storageLocation}
+                        </Text>
+                      </View>
+                      <View style={styles.modalSection}>
+                        <Text style={styles.modalLabel}>Status</Text>
+                        <Text style={styles.modalValue}>
+                          {selectedItem.status}
+                        </Text>
+                      </View>
+                    </>
+                  )}
                 </ScrollView>
               )}
-              
-              <TouchableOpacity 
-                style={styles.backButton} 
-                onPress={() => setModalVisible(false)}
-              >
+
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => setModalVisible(false)}>
                 <Text style={styles.backButtonText}>Close</Text>
               </TouchableOpacity>
             </View>
@@ -294,11 +343,7 @@ export default function InventoryDashboard() {
         </Modal>
       </ScrollView>
 
-      {/* Floating Action Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={handleAddButtonPress} 
-      >
+      <TouchableOpacity style={styles.fab} onPress={handleAddButtonPress}>
         <FastImage
           source={icons.plus}
           style={styles.fabIcon}
@@ -452,7 +497,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.27,
     shadowRadius: 4.65,
   },
