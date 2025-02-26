@@ -581,55 +581,7 @@ export default function BeefCattleScreen({navigation}) {
               </VStack>
             </Box>
 
-            <Box>
-              <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
-                  Profit
-                </Text>
-                <Tooltip
-                  label="The difference between the sale price and market price"
-                  placement="top"
-                  backgroundColor={COLORS.green}
-                  _text={{
-                    color: 'white',
-                  }}>
-                  <Icon
-                    as={FastImage}
-                    source={icons.info}
-                    size={5}
-                    color="gray.500"
-                  />
-                </Tooltip>
-              </HStack>
-              <Text fontSize="md" fontWeight="bold" color={COLORS.green}>
-                ${calculateProfit()}
-              </Text>
-            </Box>
-
-            <Box>
-              <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
-                  Weight Gain Rate
-                </Text>
-                <Tooltip
-                  label="The average daily weight gain of the animal"
-                  placement="top"
-                  backgroundColor={COLORS.green}
-                  _text={{
-                    color: 'white',
-                  }}>
-                  <Icon
-                    as={FastImage}
-                    source={icons.info}
-                    size={5}
-                    color="gray.500"
-                  />
-                </Tooltip>
-              </HStack>
-              <Text fontSize="md" fontWeight="bold" color={COLORS.green}>
-                {calculateWeightGainRate()} lbs/day
-              </Text>
-            </Box>
+          
 
             <HStack justifyContent="center" mt={6} space={4}>
               <Button

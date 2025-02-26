@@ -53,9 +53,7 @@ export default function DewormingDetailsRecords({ navigation }) {
           marginTop: 5,
         }}>
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
-          <Text style={{ fontSize: 16, color: 'black', marginBottom: 16, textAlign: 'center' }}>
-            Please fill in the deworming details.
-          </Text>
+         
           <VStack space={5}>
             <Box>
               <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>

@@ -58,8 +58,7 @@ export default function LoginScreen({ navigation }) {
         </Box>
 
         <Box>
-          <Text fontSize="12" mb={1} color="black"
-            className="text-[16px] font-semibold"
+          <Text fontSize="16" fontWeight={500} mb={1} color="black"
           >
             Password
           </Text>

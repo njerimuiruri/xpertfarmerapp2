@@ -47,7 +47,7 @@ export default function Geneticdisorderscreen({navigation}) {
               marginBottom: 16,
               textAlign: 'center',
             }}>
-            Fill in the Genetic disorder details
+            Fill in the Genetic disorder
           </Text>
           <VStack space={5}>
             <Box>

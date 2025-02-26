@@ -32,8 +32,7 @@ export default function AddLivestockScreen({ navigation }) {
   const [showModal, setShowModal] = useState(false);
 
   const handleSubmit = () => {
-   
-
+    // Form submission logic would go here
     setShowModal(true);
   };
 
@@ -118,26 +117,26 @@ export default function AddLivestockScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text style={styles.label}>Sire Phenotype</Text>
+              <Text style={styles.label}>Sire Phenotype (Male Parent)</Text>
               <Input
                 value={formData.sirePhenotype}
                 onChangeText={(value) =>
                   setFormData((prev) => ({ ...prev, sirePhenotype: value }))
                 }
-                placeholder="Enter Sire Phenotype"
+                placeholder="Enter Male Parent's Phenotype"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
               />
             </Box>
 
             <Box>
-              <Text style={styles.label}>Dam</Text>
+              <Text style={styles.label}>Dam (Female Parent)</Text>
               <Input
                 value={formData.dam}
                 onChangeText={(value) =>
                   setFormData((prev) => ({ ...prev, dam: value }))
                 }
-                placeholder="Enter Dam"
+                placeholder="Enter Female Parent Information"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
               />
@@ -229,7 +228,10 @@ export default function AddLivestockScreen({ navigation }) {
             <Button
               backgroundColor={COLORS.green}
               style={styles.modalButton}
-              onPress={() => setShowModal(false)}
+              onPress={() => {
+                setShowModal(false);
+                navigation.goBack();
+              }}
             >
               OK
             </Button>
@@ -271,4 +273,3 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 });
-
