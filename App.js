@@ -56,6 +56,8 @@ import {
   VaccineDetailsScreen,
   HealthManagementScreen,
   FarmHealthRecords,
+  CurativeTreatmentScreen,
+
 
   //Production
   ProductionScreen,
@@ -332,6 +334,12 @@ export default function App() {
               <Stack.Screen
                 name="HealthRecordsScreen"
                 component={HealthRecordsScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="CurativeTreatmentScreen"
+                component={CurativeTreatmentScreen}
                 options={{headerShown: false}}
               />
 

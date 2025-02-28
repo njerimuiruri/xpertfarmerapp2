@@ -59,7 +59,7 @@ const Dashboard = () => {
     'Employees': 'EmployeeScreen',
     'Feeds': 'FeedingManagementScreen',
     'Animals': 'LivestockManagementScreen',
-    'Breeding': 'BreedingRecordForm',
+    'Breeding': 'CurativeTreatmentScreen',
   };
 
   const cards = [

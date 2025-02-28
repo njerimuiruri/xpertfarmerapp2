@@ -8,7 +8,6 @@ import {
   Select,
   ScrollView,
   HStack,
-  FlatList,
 } from 'native-base';
 
 import {View, TouchableOpacity, StyleSheet, Image, Modal} from 'react-native';
@@ -42,7 +41,7 @@ export default function AllergyBoosterScreen({navigation}) {
 
   return (
     <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
-      <SecondaryHeader title="Booster and Additives Records" />
+      <SecondaryHeader title="Booster and Additives" />
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
@@ -107,14 +106,20 @@ export default function AllergyBoosterScreen({navigation}) {
                 mb={1}>
                 Purpose
               </Text>
-              <Input
-                variant="outline"
+              <Select
+                selectedValue={purpose}
+                minWidth="100%"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
-                placeholder="Enter purpose"
-                value={purpose}
-                onChangeText={setPurpose}
-              />
+                placeholder="Select Purpose"
+                _selectedItem={{
+                  bg: 'teal.600',
+                }}
+                onValueChange={setPurpose}>
+                <Select.Item label="Growth" value="growth" />
+                <Select.Item label="Production" value="production" />
+                <Select.Item label="Immunity" value="immunity" />
+              </Select>
             </Box>
 
             <Box>

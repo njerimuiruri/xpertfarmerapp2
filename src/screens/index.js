@@ -43,6 +43,7 @@ import Geneticdisorderscreen from './health/geneticdisorderscreen';
 import VaccineDetailsScreen from './health/VaccineDetailsScreen';
 import FarmHealthRecords from './health/health-record/record';
 import HealthRecordsScreen from './health/HealthRecordsScreen';
+import CurativeTreatmentScreen from './health/CurativeTreatmentScreen';
 
 
 // Home DashboardScreen
@@ -118,6 +119,7 @@ export {
   ProductionScreen,
   AddDairyDetailsScreen,
   HealthManagementScreen,
+  CurativeTreatmentScreen,
 
   //home
   

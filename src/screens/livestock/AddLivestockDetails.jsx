@@ -117,7 +117,7 @@ export default function AddLivestockScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text style={styles.label}>Sire Phenotype (Male Parent)</Text>
+              <Text style={styles.label}>Male Parent</Text>
               <Input
                 value={formData.sirePhenotype}
                 onChangeText={(value) =>
@@ -130,7 +130,7 @@ export default function AddLivestockScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text style={styles.label}>Dam (Female Parent)</Text>
+              <Text style={styles.label}>Female Parent</Text>
               <Input
                 value={formData.dam}
                 onChangeText={(value) =>
@@ -142,7 +142,6 @@ export default function AddLivestockScreen({ navigation }) {
               />
             </Box>
 
-            {/* Weight Field with Increment & Decrement */}
             <Box>
               <Text style={styles.label}>Weight (kg)</Text>
               <HStack alignItems="center" space={2}>
