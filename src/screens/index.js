@@ -23,20 +23,24 @@ import AddLivestockGroupScreen from './livestock/AddGroupLivestock';
 import OptionDetailsScreen from './livestock/optionDetails';
 import OptionLivestockGroupScreen from './livestock/OptionLivestockGroup';
 
-import LivestockManagementScreen from './livestock/LivestockManagementScreen';
 
+import BreedingModuleLandingScreen from './livestock/breeding/BreedingModuleLandingScreen';
+
+import LivestockModuleScreen from './livestock/LivestockModuleScreen';
+import AnimalDetailScreen from './livestock/AnimalDetailScreen';
 import BreedingRecordForm from './livestock/breeding/BreedingRecordForm';
 import LivestockFeedingScreen from './livestock/feeding/LivestockFeedingScreen';
 import AnimalFeedingProgramScreen from './livestock/feeding/AnimalFeedingProgramScreen';
 import FarmFeedsScreen from './livestock/feeding/FarmFeedsScreen';
 import FeedingManagementScreen from './livestock/feeding/FeedingManagementScreen';
-import FeedingRecordScreen from './livestock/feeding/FeedingRecordScreen';
+
+import FeedingModuleScreen from './livestock/feeding/FeedingModuleScreen';
+
 
 
 // Health
 import AddHealthRecords from './health/AddHealthRecords';
 import Allergiesrecordsscreen from './health/Allergiesrecordsscreen';
-import HealthManagementScreen from './health/HealthManagementScreen';
 import AllergyBoosterScreen from './health/AllergyBoosterScreen';
 import DewormingDetailsRecords from './health/DewormingDetailsRecords';
 import Geneticdisorderscreen from './health/geneticdisorderscreen';
@@ -94,9 +98,12 @@ export {
   AddFlockDetailsScreen,
   AddLivestockScreen,
   AddLivestockGroupScreen,
-  LivestockManagementScreen,
   OptionDetailsScreen,
   OptionLivestockGroupScreen,
+  LivestockModuleScreen,
+  AnimalDetailScreen,
+  FeedingModuleScreen,
+  BreedingModuleLandingScreen,
 
   // Breeding
   BreedingRecordForm,
@@ -106,7 +113,6 @@ export {
   AnimalFeedingProgramScreen,
   BeefDetailsScreen,
   FeedingManagementScreen,
-  FeedingRecordScreen,
 
   //health
   AddHealthRecords,
@@ -118,7 +124,6 @@ export {
   FarmHealthRecords,
   ProductionScreen,
   AddDairyDetailsScreen,
-  HealthManagementScreen,
   CurativeTreatmentScreen,
 
   //home

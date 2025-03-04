@@ -8,11 +8,15 @@ import {
   VStack,
   Pressable,
 } from "native-base";
-import CustomIcon from '../../components/CustomIcon';
+import FastImage from "react-native-fast-image";
+import { icons } from '../../constants';
 
 export default function RegisterScreen({ navigation }) {
-  const [showPassword, setShowPassword] = useState(false);
+ const [showPassword, setShowPassword] = useState(false);
 
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
   return (
     <Box
       flex={1}
@@ -114,31 +118,26 @@ export default function RegisterScreen({ navigation }) {
         </Box>
 
         <Box>
-          <Text fontSize="12" mb={1} color="black"
-            className="text-[16px] font-semibold"
-          >
+        <Text fontSize="16" fontWeight={500} mb={1} color="black">
             Password
           </Text>
           <Input
             variant="filled"
-            bg="#e5f3e5"
             width="100%"
-            p={1}
+            height={10}
+            backgroundColor="#e5f3e5"
+            paddingLeft={2}
             borderRadius={8}
             secureTextEntry={!showPassword}
             InputRightElement={
-              <Pressable onPress={() => setShowPassword(!showPassword)}>
-                <CustomIcon
-                  library="AntDesign"
-                  name={showPassword ? "eye" : "eyeo"}
-                  size={20}
-                  color="gray"
-                  style={{ marginRight: 2 }}
+              <Pressable onPress={toggleShowPassword} mr={2}>
+                <FastImage 
+                  source={showPassword ? icons.eye : icons.eye_close} 
+                  style={{ width: 24, height: 24 }} 
                 />
               </Pressable>
             }
             required
-
           />
         </Box>
 

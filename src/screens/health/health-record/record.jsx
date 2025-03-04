@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         marginBottom: 8,
-        color: '#1b5e20', // Darker shade of green for important text
+        color: '#1b5e20', 
     },
 });
 

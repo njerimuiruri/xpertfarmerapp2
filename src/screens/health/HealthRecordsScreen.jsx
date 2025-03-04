@@ -18,52 +18,54 @@ import { useNavigation } from '@react-navigation/native';
 const healthCategories = [
   {
     id: '1',
-    title: 'Vaccine dosage',
-    code: '234',
+    title: 'Vaccine Dosage',
     image: require('../../assets/images/VaccinationDosage.png'),
     color: '#FFD700',
+    screen: 'VaccineDetailsScreen',
   },
   {
     id: '2',
     title: 'Deworming',
-    code: '234',
     image: require('../../assets/images/deworming.png'),
     color: '#FF6347',
+    screen: 'DewormingDetailsRecords',
   },
   {
     id: '3',
     title: 'Treatment',
-    code: '234',
     image: require('../../assets/images/treatment.png'),
     color: '#90EE90',
+    screen: 'CurativeTreatmentScreen',
   },
   {
     id: '4',
     title: 'Disorder',
-    code: '234',
     image: require('../../assets/images/Disorder.png'),
     color: '#8B4513',
+    screen: 'geneticdisorderscreen',
   },
   {
     id: '5',
     title: 'Allergies',
-    code: '234',
     image: require('../../assets/images/Allergies.png'),
     color: '#F4E4BC',
+    screen: 'Allergiesrecordsscreen',
   },
   {
     id: '6',
     title: 'Boosters',
-    code: '234',
     image: require('../../assets/images/Boosters.png'),
     color: '#808080',
+    screen: 'AllergyBoostersScreen',
   },
 ];
 
 const HealthRecordsScreen = () => {
   const [isAccordionExpanded, setIsAccordionExpanded] = useState(true);
   const navigation = useNavigation();
-
+  const navigateToScreen = (screen, categoryTitle) => {
+    navigation.navigate(screen, { category: categoryTitle });
+  };
   const renderSearchBar = () => (
     <View style={styles.searchContainer}>
       <FastImage source={icons.search} style={styles.searchIcon} tintColor="#666" />
@@ -83,17 +85,12 @@ const HealthRecordsScreen = () => {
   );
 
   const renderHealthCard = ({item, index}) => (
-    <View style={[styles.card, {borderTopColor: item.color}]}>
-      <FastImage
-        source={item.image}
-        style={styles.cardImage}
-        resizeMode={FastImage.resizeMode.cover}
-      />
-      <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardCode}>{item.code}</Text>
-      </View>
+    <TouchableOpacity onPress={() => navigateToScreen(item.screen, item.title)} style={[styles.card, { borderTopColor: item.color }]}>
+    <FastImage source={item.image} style={styles.cardImage} resizeMode={FastImage.resizeMode.cover} />
+    <View style={styles.cardContent}>
+      <Text style={styles.cardTitle}>{item.title}</Text>
     </View>
+  </TouchableOpacity>
   );
 
   const renderLastAdministered = () => (
@@ -136,10 +133,18 @@ const HealthRecordsScreen = () => {
               <Text style={styles.infoLabel}>Recorded by:</Text>
               <Text style={styles.infoValue}>John Doe</Text>
             </View>
+            
           </View>
+          
         )}
       </View>
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('AddHealthRecords')}>
+        <FastImage source={icons.plus} style={styles.fabIcon} tintColor="#fff" />
+      </TouchableOpacity>
     </View>
+    
   );
 
   return (
@@ -290,6 +295,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     fontWeight: '500',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#4CAF50',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.27,
+    shadowRadius: 4.65,
+  },
+  fabIcon: {
+    width: 24,
+    height: 24,
   },
 });
 

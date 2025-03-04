@@ -7,12 +7,19 @@ import {
   Button,
   VStack,
   Pressable,
+  Icon,
+  IconButton,
 } from "native-base";
-import CustomIcon from '../../components/CustomIcon';
+import FastImage from "react-native-fast-image";
+import { icons } from '../../constants';
 
 export default function LoginScreen({ navigation }) {
-      const [showPassword, setShowPassword] = useState(false);
-  
+  const [showPassword, setShowPassword] = useState(false);
+
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <Box
       flex={1}
@@ -30,7 +37,8 @@ export default function LoginScreen({ navigation }) {
 
       {/* <Image
         source={require("../../assets/images/xpertLogo.jpeg")}
-        style={{ width: 180, height: 180, marginBottom: 20 }} /> */}
+        style={{ width: 180, height: 180, marginBottom: 20 }}
+      /> */}
 
       <Text
         fontSize="20"
@@ -58,32 +66,38 @@ export default function LoginScreen({ navigation }) {
         </Box>
 
         <Box>
-          <Text fontSize="16" fontWeight={500} mb={1} color="black"
-          >
+          <Text fontSize="16" fontWeight={500} mb={1} color="black">
             Password
           </Text>
           <Input
             variant="filled"
-            bg="#e5f3e5"
             width="100%"
-            p={1}
+            height={10}
+            backgroundColor="#e5f3e5"
+            paddingLeft={2}
             borderRadius={8}
             secureTextEntry={!showPassword}
             InputRightElement={
-              <Pressable onPress={() => setShowPassword(!showPassword)}>
-                <CustomIcon
-                  library="AntDesign"
-                  name={showPassword ? "eye" : "eyeo"}
-                  size={20}
-                  color="gray"
-                  style={{ marginRight: 2 }}
+              <Pressable onPress={toggleShowPassword} mr={2}>
+                <FastImage 
+                  source={showPassword ? icons.eye : icons.eye_close} 
+                  style={{ width: 24, height: 24 }} 
                 />
               </Pressable>
             }
-            required
-
           />
+
+          <Pressable
+            onPress={() => navigation.navigate("ForgotPasswordScreen")}
+            alignSelf="flex-end"
+            mt={1}
+          >
+            <Text fontSize="13" color="black" className="underline">
+              Forgot Password?
+            </Text>
+          </Pressable>
         </Box>
+
         <Button
           onPress={() => navigation.navigate('DrawerNav')}
           width="100%"

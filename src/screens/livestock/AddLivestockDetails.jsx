@@ -5,16 +5,13 @@ import {
   Input,
   Button,
   VStack,
-  Select,
   ScrollView,
   HStack,
   Radio,
   Modal,
 } from "native-base";
 import { View, StyleSheet } from "react-native";
-import FastImage from "react-native-fast-image";
 import SecondaryHeader from "../../components/headers/secondary-header";
-import { icons } from "../../constants";
 import { COLORS } from "../../constants/theme";
 
 export default function AddLivestockScreen({ navigation }) {
@@ -32,7 +29,6 @@ export default function AddLivestockScreen({ navigation }) {
   const [showModal, setShowModal] = useState(false);
 
   const handleSubmit = () => {
-    // Form submission logic would go here
     setShowModal(true);
   };
 
@@ -215,7 +211,6 @@ export default function AddLivestockScreen({ navigation }) {
         </Box>
       </ScrollView>
 
-      {/* Success Modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
         <Modal.Content borderRadius={12} p={5}>
           <Modal.Body alignItems="center">
@@ -223,16 +218,26 @@ export default function AddLivestockScreen({ navigation }) {
               Your Livestock Details have been successfully added!
             </Text>
           </Modal.Body>
-          <Modal.Footer justifyContent="center">
+          <Modal.Footer justifyContent="space-between">
             <Button
               backgroundColor={COLORS.green}
               style={styles.modalButton}
               onPress={() => {
                 setShowModal(false);
-                navigation.goBack();
+                navigation.navigate("LivestockModuleScreen"); 
               }}
             >
-              OK
+              Cancel
+            </Button>
+            <Button
+              backgroundColor={COLORS.green}
+              style={styles.modalButton}
+              onPress={() => {
+                setShowModal(false);
+                // Optionally clear form data here if needed
+              }}
+            >
+              Add Another
             </Button>
           </Modal.Footer>
         </Modal.Content>

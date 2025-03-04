@@ -72,9 +72,7 @@ export default function AnimalFeedingProgramScreen({navigation}) {
     }));
   };
 
-  // Handle numeric input for quantity
   const handleQuantityChange = text => {
-    // Remove any non-numeric characters
     const numericValue = text.replace(/[^0-9.]/g, '');
     setQuantity(numericValue);
   };
@@ -246,7 +244,6 @@ export default function AnimalFeedingProgramScreen({navigation}) {
             )}
           </Box>
 
-          {/* Purchase Price - Only visible if not personally grown */}
           {showPurchaseInfo && (
             <Box mt={4}>
               <Text style={styles.label}>Purchase price</Text>
@@ -267,7 +264,6 @@ export default function AnimalFeedingProgramScreen({navigation}) {
             </Box>
           )}
 
-          {/* Supplier Name - Only visible if not personally grown */}
           {showPurchaseInfo && (
             <Box mt={4}>
               <Text style={styles.label}>Supplier name</Text>
@@ -282,7 +278,6 @@ export default function AnimalFeedingProgramScreen({navigation}) {
             </Box>
           )}
 
-          {/* Back & Submit Buttons */}
           <HStack justifyContent="center" mt={6} space={4}>
             <Button
               variant="outline"
@@ -323,7 +318,7 @@ export default function AnimalFeedingProgramScreen({navigation}) {
               style={styles.modalButton}
               onPress={() => {
                 setShowSubmitModal(false); 
-                setTimeout(() => navigation.navigate('FeedingRecordScreen'), 300); 
+                setTimeout(() => navigation.navigate('FeedingModuleScreen'), 300); 
               }}>
               OK
             </Button>

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Text,
@@ -10,13 +10,13 @@ import {
   ScrollView,
   Modal,
 } from 'native-base';
-import {View, StyleSheet} from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import SecondaryHeader from '../../components/headers/secondary-header';
-import {COLORS} from '../../constants/theme';
-import {icons} from '../../constants'; // Import icons
+import { COLORS } from '../../constants/theme';
+import { icons } from '../../constants'; 
 
-export default function AddEmployeeScreen({navigation}) {
+export default function AddEmployeeScreen({ navigation }) {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [dateOfEmployment, setDateOfEmployment] = useState('');
@@ -26,16 +26,14 @@ export default function AddEmployeeScreen({navigation}) {
   const [employmentType, setEmploymentType] = useState('');
   const [emergencyContact, setEmergencyContact] = useState('');
 
-  const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showContinueModal, setShowContinueModal] = useState(false);
-
+  
   const handleSubmit = () => {
-    setShowAddEmployeeModal(true);
+    setShowSuccessModal(true);
   };
 
   return (
-    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
+    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
       <SecondaryHeader title="Add Employee" />
       <ScrollView
         contentContainerStyle={{
@@ -166,42 +164,6 @@ export default function AddEmployeeScreen({navigation}) {
         </Box>
       </ScrollView>
 
-      {/* Add Another Employee Modal */}
-      <Modal
-        isOpen={showAddEmployeeModal}
-        onClose={() => setShowAddEmployeeModal(false)}>
-        <Modal.Content maxWidth="90%">
-          <Modal.Header alignItems="center">
-            <Text style={styles.modalTitle}>Add another employee</Text>
-          </Modal.Header>
-          <Modal.Body alignItems="center">
-            <Text style={styles.modalText}>
-              Feel free to add another employee, the more the better
-            </Text>
-          </Modal.Body>
-          <Modal.Footer justifyContent="center">
-            <HStack space={4}>
-              <Button
-                variant="outline"
-                borderColor={COLORS.green}
-                style={styles.modalButton}
-                onPress={() => {
-                  setShowAddEmployeeModal(false);
-                  setShowSuccessModal(true);
-                }}>
-                No
-              </Button>
-              <Button
-                backgroundColor={COLORS.green}
-                style={styles.modalButton}
-                onPress={() => setShowAddEmployeeModal(false)}>
-                Yes
-              </Button>
-            </HStack>
-          </Modal.Footer>
-        </Modal.Content>
-      </Modal>
-
       {/* Employee Updated Successfully Modal */}
       <Modal
         isOpen={showSuccessModal}
@@ -216,57 +178,39 @@ export default function AddEmployeeScreen({navigation}) {
               />
             </View>
             <Text style={styles.modalText}>
-              Your Employee has been updated successfully
+              Your Employee has been updated successfully!
             </Text>
+           
           </Modal.Body>
           <Modal.Footer justifyContent="center">
-            <Button
-              backgroundColor={COLORS.green}
-              style={styles.modalButton}
-              onPress={() => {
-                setShowSuccessModal(false);
-                setShowContinueModal(true);
-              }}>
-              OK
-            </Button>
-          </Modal.Footer>
-        </Modal.Content>
-      </Modal>
-
-      <Modal
-        isOpen={showContinueModal}
-        onClose={() => setShowContinueModal(false)}>
-        <Modal.Content maxWidth="90%">
-          <Modal.Header alignItems="center">
-            <Text style={styles.modalTitle}>Continue with the setup</Text>
-          </Modal.Header>
-          <Modal.Body alignItems="center">
-            <Text style={styles.modalText}>
-              The next step is adding your livestock details, are you ready?
-            </Text>
-          </Modal.Body>
-          <Modal.Footer justifyContent="center">
-          <HStack space={4}>
-        <Button
-          variant="outline"
-          borderColor={COLORS.green}
-          style={styles.modalButton}
-          onPress={() => {
-            setShowContinueModal(false);
-            navigation.navigate("FarmEmployeeTableScreen"); 
-          }}>
-          Cancel
-        </Button>
-        <Button
-          backgroundColor={COLORS.green}
-          style={styles.modalButton}
-          onPress={() => {
-            setShowContinueModal(false);
-            navigation.navigate("OptionDetailsScreen"); 
-          }}>
-          Continue
-        </Button>
-      </HStack>
+            <HStack space={4}>
+              <Button
+                variant="outline"
+                borderColor={COLORS.green}
+                style={styles.modalButton}
+                onPress={() => {
+                  setShowSuccessModal(false);
+                  navigation.navigate("FarmEmployeeTableScreen"); 
+                }}>
+                Cancel
+              </Button>
+              <Button
+                backgroundColor={COLORS.green}
+                style={styles.modalButton}
+                onPress={() => {
+                  setShowSuccessModal(false);
+                  setFullName('');
+                  setPhone('');
+                  setDateOfEmployment('');
+                  setPaymentRate('');
+                  setWorkingHour('');
+                  setPosition('');
+                  setEmploymentType('');
+                  setEmergencyContact('');
+                }}>
+                Add Another
+              </Button>
+            </HStack>
           </Modal.Footer>
         </Modal.Content>
       </Modal>
@@ -278,7 +222,7 @@ const styles = StyleSheet.create({
   titleText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
+    color:COLORS.black,
     marginBottom: 16,
     textAlign: "center", 
     alignSelf: "center", 
@@ -309,7 +253,7 @@ const styles = StyleSheet.create({
   tickIcon: {
     width: 40,
     height: 40,
-    tintColor: '#fff',
+    tintColor:COLORS.white,
   },
   modalText: {
     textAlign: 'center',

@@ -55,11 +55,11 @@ const Dashboard = () => {
   
   const cardScreens = {
     'Production Analysis': 'AnimalProductionListScreen',
-    'Sales Data': 'InventoryDashboard',
-    'Employees': 'EmployeeScreen',
-    'Feeds': 'FeedingManagementScreen',
-    'Animals': 'LivestockManagementScreen',
-    'Breeding': 'CurativeTreatmentScreen',
+    'Inventory Data': 'InventoryDashboard',
+    'Employees': 'AddEmployeeScreen',
+    'Feeds': 'FarmFeedsScreen',
+    'Animals': 'OptionDetailsScreen',
+    'Breeding': 'BreedingModuleLandingScreen',
   };
 
   const cards = [
