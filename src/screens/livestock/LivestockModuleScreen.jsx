@@ -243,7 +243,7 @@ const LivestockModuleScreen = ({route, navigation}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <SecondaryHeader title="Livestock Profiles" />
+      <SecondaryHeader title="Livestock Management" />
       {renderHeader()}
       <FlatList
         data={filteredData}
