@@ -10,38 +10,10 @@ import FastImage from 'react-native-fast-image';
 import Header from '../../components/headers/main-header';
 import { useNavigation } from '@react-navigation/native';
 import { icons } from '../../constants';
+import LinearGradient from 'react-native-linear-gradient';
 
-const MenuSection = ({ title, description, children }) => (
-  <View style={styles.section}>
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <Text style={styles.sectionDescription}>{description}</Text>
-    </View>
-    <View style={styles.sectionContent}>{children}</View>
-  </View>
-);
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const MenuButton = ({ title, icon, onPress, color = '#4CAF50' }) => (
-  <TouchableOpacity
-    style={styles.menuButton}
-    onPress={onPress}
-    activeOpacity={0.7}>
-    <View style={[styles.iconContainer, { backgroundColor: color }]}>
-      <FastImage
-        source={icon}
-        style={styles.icon}
-        resizeMode={FastImage.resizeMode.contain}
-      />
-    </View>
-    <Text style={styles.menuButtonText}>{title}</Text>
-    <FastImage
-      source={icons.rightArrow}
-      style={styles.arrowIcon}
-      tintColor="#666"
-      resizeMode={FastImage.resizeMode.contain}
-    />
-  </TouchableOpacity>
-);
 
 const Dashboard = () => {
   const navigation = useNavigation();
