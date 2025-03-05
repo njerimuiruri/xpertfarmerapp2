@@ -45,19 +45,13 @@ export default function VaccineDetailsScreen({navigation}) {
           marginTop: 5,
         }}>
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
-          <Text
-            style={{
-              fontSize: 16,
-              color: 'black', // Ensure this is within the style object
-              marginBottom: 16,
-              textAlign: 'center',
-            }}>
-            Please fill in the vaccine details.
-          </Text>
-
           <VStack space={5}>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Animal ID or Flock ID
               </Text>
               <Select
@@ -82,7 +76,11 @@ export default function VaccineDetailsScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Vaccination Against
               </Text>
               <Input
@@ -96,7 +94,11 @@ export default function VaccineDetailsScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Drug Administered
               </Text>
               <Input
@@ -109,24 +111,32 @@ export default function VaccineDetailsScreen({navigation}) {
               />
             </Box>
 
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Date Administered</Text>
-              <View style={styles.dateContainer}>
+            <Box>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
+                Date Administered
+              </Text>
+              <Box flexDirection="row" alignItems="center">
                 <Input
-                  w="85%"
+                  flex={1}
                   backgroundColor={COLORS.lightGreen}
                   value={dateAdministered.toLocaleDateString('en-GB')}
                   placeholder="DD/MM/YY"
                   isReadOnly
                 />
-                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                <TouchableOpacity
+                  onPress={() => setShowDatePicker(true)}
+                  ml={2}>
                   <Image
                     source={icons.calendar}
                     resizeMode="contain"
                     style={styles.calendarIcon}
                   />
                 </TouchableOpacity>
-              </View>
+              </Box>
               {showDatePicker && (
                 <DateTimePicker
                   testID="dateTimePicker"
@@ -136,10 +146,14 @@ export default function VaccineDetailsScreen({navigation}) {
                   onChange={handleDateChange}
                 />
               )}
-            </View>
+            </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Dosage
               </Text>
               <HStack alignItems="center" space={2}>
@@ -178,7 +192,11 @@ export default function VaccineDetailsScreen({navigation}) {
             </Box>
             <Box>
               <HStack alignItems="center" space={2}>
-                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+                <Text
+                  fontSize="sm"
+                  fontWeight="500"
+                  color={COLORS.darkGray3}
+                  mb={1}>
                   {' '}
                   Cost of Vaccine
                 </Text>
@@ -195,7 +213,11 @@ export default function VaccineDetailsScreen({navigation}) {
               </HStack>
             </Box>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Administered By
               </Text>
               <Input
@@ -209,7 +231,11 @@ export default function VaccineDetailsScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Practice ID
               </Text>
               <Input
@@ -224,7 +250,11 @@ export default function VaccineDetailsScreen({navigation}) {
 
             <Box>
               <HStack alignItems="center" space={2}>
-                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+                <Text
+                  fontSize="sm"
+                  fontWeight="500"
+                  color={COLORS.darkGray3}
+                  mb={1}>
                   Cost of Service
                 </Text>
                 <Input

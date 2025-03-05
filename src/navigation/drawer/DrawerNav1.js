@@ -10,13 +10,14 @@ import {View} from 'react-native';
 import {
   
   EmployeeScreen,
-  
+  FarmEmployeeTableScreen,
   ProfileScreen,
   InventoryDashboard,
-  HealthManagementScreen,
-  LivestockManagementScreen,
-  FeedingManagementScreen,
+  HealthRecordsScreen,
+  LivestockModuleScreen,
+  FeedingModuleScreen,
   AnimalProductionListScreen,
+  BreedingModuleLandingScreen,
 } from '../../screens';
 
 const Drawer = createDrawerNavigator();
@@ -49,7 +50,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="Employees"
-        component={EmployeeScreen}
+        component={FarmEmployeeTableScreen}
         options={{
           title: 'Employees',
           drawerIcon: () => (
@@ -63,7 +64,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="Livestock"
-        component={LivestockManagementScreen}
+        component={LivestockModuleScreen}
         options={{
           title: 'Livestock',
           drawerIcon: () => (
@@ -77,7 +78,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="Feeding"
-        component={FeedingManagementScreen}
+        component={FeedingModuleScreen}
         options={{
           title: 'Feeding',
           drawerIcon: () => (
@@ -89,9 +90,25 @@ const DrawerNav = () => {
           ),
         }}
       />
+      
+
+      <Drawer.Screen
+        name="Breeding"
+        component={BreedingModuleLandingScreen}
+        options={{
+          title: 'Breeding',
+          drawerIcon: () => (
+            <FastImage
+              source={icons.breeding}
+              style={styles.icon}
+              tintColor={'white'}
+            />
+          ),
+        }}
+      />
       <Drawer.Screen
         name="Health"
-        component={HealthManagementScreen}
+        component={HealthRecordsScreen}
         options={{
           title: 'Health',
           drawerIcon: () => (

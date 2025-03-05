@@ -19,19 +19,14 @@ import SecondaryHeader from '../../components/headers/secondary-header';
 
 export default function DewormingDetailsRecords({ navigation }) {
   const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState('');
-  const [healthEventSymptoms, setHealthEventSymptoms] = useState('');
-  const [diagnosis, setDiagnosis] = useState('');
-  const [treatmentGiven, setTreatmentGiven] = useState({
-    curative: false,
-    preventive: false,
-    supportive: false,
-    behavioralAndAlternative: false,
-  });
+  const [dewormingAgainst, setDewormingAgainst] = useState('');
+  const [dewormingDrug, setDewormingDrug] = useState('');
   const [dosage, setDosage] = useState(1);
   const [dateAdministered, setDateAdministered] = useState(new Date());
+  const [costOfVaccine, setCostOfVaccine] = useState('');
+  const [costOfService, setCostOfService] = useState('');
   const [medicalOfficerName, setMedicalOfficerName] = useState('');
   const [practiceId, setPracticeId] = useState('');
-  const [costOfService, setCostOfService] = useState('');
   const [farmerWitness, setFarmerWitness] = useState('');
   const [notes, setNotes] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -53,9 +48,7 @@ export default function DewormingDetailsRecords({ navigation }) {
           marginTop: 5,
         }}>
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
-          <Text style={{ fontSize: 16, color: 'black', marginBottom: 16, textAlign: 'center' }}>
-            Please fill in the deworming details.
-          </Text>
+         
           <VStack space={5}>
             <Box>
               <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
@@ -85,67 +78,64 @@ export default function DewormingDetailsRecords({ navigation }) {
 
             <Box>
               <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Health Event Symptoms
+                Deworming Against
               </Text>
               <Input
                 variant="outline"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
-                placeholder="Enter symptoms"
-                value={healthEventSymptoms}
-                onChangeText={setHealthEventSymptoms}
+                placeholder="Enter parasite/condition"
+                value={dewormingAgainst}
+                onChangeText={setDewormingAgainst}
               />
             </Box>
 
             <Box>
               <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Diagnosis
+                Deworming Drug administered
               </Text>
               <Input
                 variant="outline"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
-                placeholder="Enter diagnosis"
-                value={diagnosis}
-                onChangeText={setDiagnosis}
+                placeholder="Enter drug name"
+                value={dewormingDrug}
+                onChangeText={setDewormingDrug}
               />
             </Box>
 
-            <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Treatment Given
-              </Text>
-              <VStack space={2}>
-                <Checkbox
-                  isChecked={treatmentGiven.curative}
-                  onChange={() => setTreatmentGiven({ ...treatmentGiven, curative: !treatmentGiven.curative })}
-                >
-                  Curative
-                </Checkbox>
-                <Checkbox
-                  isChecked={treatmentGiven.preventive}
-                  onChange={() => setTreatmentGiven({ ...treatmentGiven, preventive: !treatmentGiven.preventive })}
-                >
-                  Preventive
-                </Checkbox>
-                <Checkbox
-                  isChecked={treatmentGiven.supportive}
-                  onChange={() => setTreatmentGiven({ ...treatmentGiven, supportive: !treatmentGiven.supportive })}
-                >
-                  Supportive
-                </Checkbox>
-                <Checkbox
-                  isChecked={treatmentGiven.behavioralAndAlternative}
-                  onChange={() => setTreatmentGiven({ ...treatmentGiven, behavioralAndAlternative: !treatmentGiven.behavioralAndAlternative })}
-                >
-                  Behavioral and Alternative
-                </Checkbox>
-              </VStack>
-            </Box>
+            <View style={styles.formGroup}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>Date</Text>
+              <View style={styles.dateContainer}>
+                <Input
+                  w="85%"
+                  backgroundColor={COLORS.lightGreen}
+                  value={dateAdministered.toLocaleDateString('en-GB')}
+                  placeholder="DD/MM/YY"
+                  isReadOnly
+                />
+                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                  <Image
+                    source={icons.calendar}
+                    resizeMode="contain"
+                    style={styles.calendarIcon}
+                  />
+                </TouchableOpacity>
+              </View>
+              {showDatePicker && (
+                <DateTimePicker
+                  testID="dateTimePicker"
+                  value={dateAdministered}
+                  mode="date"
+                  is24Hour={true}
+                  onChange={handleDateChange}
+                />
+              )}
+            </View>
 
             <Box>
               <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Dosage Administered
+                Dosage
               </Text>
               <HStack alignItems="center" space={2}>
                 <Button
@@ -182,77 +172,68 @@ export default function DewormingDetailsRecords({ navigation }) {
               </HStack>
             </Box>
 
-            <View style={styles.formGroup}>
-                <Text  fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>Date Administered</Text>
-              <View style={styles.dateContainer}>
-                <Input
-                  w="85%"
-                  backgroundColor={COLORS.lightGreen}
-                  value={dateAdministered.toLocaleDateString('en-GB')}
-                  placeholder="DD/MM/YY"
-                  isReadOnly
-                />
-                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                  <Image
-                    source={icons.calendar}
-                    resizeMode="contain"
-                    style={styles.calendarIcon}
-                  />
-                </TouchableOpacity>
-              </View>
-              {showDatePicker && (
-                <DateTimePicker
-                  testID="dateTimePicker"
-                  value={dateAdministered}
-                  mode="date"
-                  is24Hour={true}
-                  onChange={handleDateChange}
-                />
-              )}
-            </View>
-
-            <Box>
-              
-              <HStack alignItems="center" space={2}>
-                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>Cost of Drugs</Text>
-                <Input
-                  flex={1}
-                  variant="outline"
-                  backgroundColor={COLORS.lightGreen}
-                  borderColor="gray.200"
-                  placeholder="Enter cost of drugs"
-                  keyboardType="numeric"
-                  value={costOfService}
-                  onChangeText={setCostOfService}
-                />
-              </HStack>
-            </Box>
-
             <Box>
               <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Medical Officer Name
+                Cost of Vaccine
               </Text>
               <Input
                 variant="outline"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
-                placeholder="Enter medical officer name"
-                value={medicalOfficerName}
-                onChangeText={setMedicalOfficerName}
+                placeholder="Enter cost of vaccine"
+                keyboardType="numeric"
+                value={costOfVaccine}
+                onChangeText={setCostOfVaccine}
               />
             </Box>
 
             <Box>
               <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Practice ID
+                Administered by:
+              </Text>
+              <VStack space={3} pl={4}>
+                <Box>
+                  <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+                    Name
+                  </Text>
+                  <Input
+                    variant="outline"
+                    backgroundColor={COLORS.lightGreen}
+                    borderColor="gray.200"
+                    placeholder="Enter medical officer name"
+                    value={medicalOfficerName}
+                    onChangeText={setMedicalOfficerName}
+                  />
+                </Box>
+                
+                <Box>
+                  <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+                    Practice ID
+                  </Text>
+                  <Input
+                    variant="outline"
+                    backgroundColor={COLORS.lightGreen}
+                    borderColor="gray.200"
+                    placeholder="Enter practice ID"
+                    value={practiceId}
+                    onChangeText={setPracticeId}
+                  />
+                </Box>
+              </VStack>
+            </Box>
+
+            <Box>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+                Cost of Service
               </Text>
               <Input
                 variant="outline"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
-                placeholder="Enter practice ID"
-                value={practiceId}
-                onChangeText={setPracticeId}
+                placeholder="Enter cost of service"
+                keyboardType="numeric"
+                value={costOfService}
+                onChangeText={setCostOfService}
               />
             </Box>
 
@@ -298,16 +279,16 @@ export default function DewormingDetailsRecords({ navigation }) {
                 Cancel
               </Button>
               <Button
-                             backgroundColor={COLORS.green}
-                             borderRadius={8}
-                             px={6}
-                             py={3}
-                             _pressed={{
-                               bg: 'emerald.700',
-                             }}
-                             onPress={() => navigation.navigate('Geneticdisorderscreen')}>
-                             Next
-                           </Button>
+                backgroundColor={COLORS.green}
+                borderRadius={8}
+                px={6}
+                py={3}
+                _pressed={{
+                  bg: 'emerald.700',
+                }}
+                onPress={() => navigation.navigate('Geneticdisorderscreen')}>
+                Next
+              </Button>
             </HStack>
           </VStack>
         </Box>

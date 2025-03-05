@@ -5,16 +5,13 @@ import {
   Input,
   Button,
   VStack,
-  Select,
   ScrollView,
   HStack,
   Radio,
   Modal,
 } from "native-base";
 import { View, StyleSheet } from "react-native";
-import FastImage from "react-native-fast-image";
 import SecondaryHeader from "../../components/headers/secondary-header";
-import { icons } from "../../constants";
 import { COLORS } from "../../constants/theme";
 
 export default function AddLivestockScreen({ navigation }) {
@@ -32,8 +29,6 @@ export default function AddLivestockScreen({ navigation }) {
   const [showModal, setShowModal] = useState(false);
 
   const handleSubmit = () => {
-   
-
     setShowModal(true);
   };
 
@@ -118,32 +113,31 @@ export default function AddLivestockScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text style={styles.label}>Sire Phenotype</Text>
+              <Text style={styles.label}>Male Parent</Text>
               <Input
                 value={formData.sirePhenotype}
                 onChangeText={(value) =>
                   setFormData((prev) => ({ ...prev, sirePhenotype: value }))
                 }
-                placeholder="Enter Sire Phenotype"
+                placeholder="Enter Male Parent's Phenotype"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
               />
             </Box>
 
             <Box>
-              <Text style={styles.label}>Dam</Text>
+              <Text style={styles.label}>Female Parent</Text>
               <Input
                 value={formData.dam}
                 onChangeText={(value) =>
                   setFormData((prev) => ({ ...prev, dam: value }))
                 }
-                placeholder="Enter Dam"
+                placeholder="Enter Female Parent Information"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
               />
             </Box>
 
-            {/* Weight Field with Increment & Decrement */}
             <Box>
               <Text style={styles.label}>Weight (kg)</Text>
               <HStack alignItems="center" space={2}>
@@ -217,7 +211,6 @@ export default function AddLivestockScreen({ navigation }) {
         </Box>
       </ScrollView>
 
-      {/* Success Modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
         <Modal.Content borderRadius={12} p={5}>
           <Modal.Body alignItems="center">
@@ -225,13 +218,26 @@ export default function AddLivestockScreen({ navigation }) {
               Your Livestock Details have been successfully added!
             </Text>
           </Modal.Body>
-          <Modal.Footer justifyContent="center">
+          <Modal.Footer justifyContent="space-between">
             <Button
               backgroundColor={COLORS.green}
               style={styles.modalButton}
-              onPress={() => setShowModal(false)}
+              onPress={() => {
+                setShowModal(false);
+                navigation.navigate("LivestockModuleScreen"); 
+              }}
             >
-              OK
+              Cancel
+            </Button>
+            <Button
+              backgroundColor={COLORS.green}
+              style={styles.modalButton}
+              onPress={() => {
+                setShowModal(false);
+                // Optionally clear form data here if needed
+              }}
+            >
+              Add Another
             </Button>
           </Modal.Footer>
         </Modal.Content>
@@ -271,4 +277,3 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 });
-

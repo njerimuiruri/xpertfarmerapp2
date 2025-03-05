@@ -107,7 +107,7 @@ const FarmDashboard = () => {
           style={styles.welcomeBanner}
         >
           <View style={styles.welcomeTextContainer}>
-            <Text style={styles.welcomeTitle}>Welcome to Xpert Farmers</Text>
+            <Text style={styles.welcomeTitle}>Xpert Farmers</Text>
             <Text style={styles.welcomeSubtitle}>
               Cultivating Success,{'\n'}
               Harvesting Excellence,{'\n'}

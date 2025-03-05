@@ -165,7 +165,7 @@ export default function AddHealthRecords({ navigation }) {
                         onPress={() => { setOption('oneByOne') }}
                         color="#4CAF50"
                     />
-                    <Text style={styles.optionText}>Key in livestock health one by one </Text>
+                    <Text style={styles.optionText}>Key in health one by one </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity

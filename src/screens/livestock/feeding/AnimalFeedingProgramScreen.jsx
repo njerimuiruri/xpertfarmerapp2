@@ -24,7 +24,7 @@ import {format} from 'date-fns';
 export default function AnimalFeedingProgramScreen({navigation}) {
   const [selectedFeedType, setSelectedFeedType] = useState('');
   const [sourceOfFeed, setSourceOfFeed] = useState('');
-  const [feedingSchedule, setFeedingSchedule] = useState('');
+  const [feedingSchedule, setFeedingSchedule] = useState([]);
   const [quantity, setQuantity] = useState('');
   const [purchaseDate, setPurchaseDate] = useState(new Date());
   const [purchasePrice, setPurchasePrice] = useState('');
@@ -38,12 +38,25 @@ export default function AnimalFeedingProgramScreen({navigation}) {
     concentrates: false,
     supplements: false,
   });
+  
+  // Check if purchase information should be visible
+  const showPurchaseInfo = sourceOfFeed !== 'Personally grown';
+  
   const handleFeedSelection = feedType => {
     setSelectedFeeds(
       prevSelected =>
         prevSelected.includes(feedType)
           ? prevSelected.filter(feed => feed !== feedType) // Deselect if already selected
           : [...prevSelected, feedType], // Add if not selected
+    );
+  };
+
+  const handleFeedingScheduleSelection = schedule => {
+    setFeedingSchedule(
+      prevSelected =>
+        prevSelected.includes(schedule)
+          ? prevSelected.filter(item => item !== schedule) // Deselect if already selected
+          : [...prevSelected, schedule], // Add if not selected
     );
   };
 
@@ -57,6 +70,11 @@ export default function AnimalFeedingProgramScreen({navigation}) {
       ...prev,
       [option]: !prev[option],
     }));
+  };
+
+  const handleQuantityChange = text => {
+    const numericValue = text.replace(/[^0-9.]/g, '');
+    setQuantity(numericValue);
   };
 
   return (
@@ -140,32 +158,64 @@ export default function AnimalFeedingProgramScreen({navigation}) {
             </VStack>
           </Box>
 
+          {/* Feeding Schedule Options */}
           <Box mt={4}>
             <Text style={styles.label}>Feeding schedule</Text>
-            <Input
-              variant="outline"
-              backgroundColor={COLORS.lightGreen}
-              borderColor="gray.200"
-              placeholder="Enter feeding schedule (e.g. Twice a day)"
-              value={feedingSchedule}
-              onChangeText={setFeedingSchedule}
-            />
+            <VStack space={2}>
+              <Checkbox
+                value="Morning"
+                isChecked={feedingSchedule.includes('Morning')}
+                onChange={() => handleFeedingScheduleSelection('Morning')}
+                colorScheme="green">
+                Morning
+              </Checkbox>
+              
+              <Checkbox
+                value="Afternoon"
+                isChecked={feedingSchedule.includes('Afternoon')}
+                onChange={() => handleFeedingScheduleSelection('Afternoon')}
+                colorScheme="green">
+                Afternoon
+              </Checkbox>
+              
+              <Checkbox
+                value="Evening"
+                isChecked={feedingSchedule.includes('Evening')}
+                onChange={() => handleFeedingScheduleSelection('Evening')}
+                colorScheme="green">
+                Evening
+              </Checkbox>
+              
+              <Checkbox
+                value="Whole Day Grazing"
+                isChecked={feedingSchedule.includes('Whole Day Grazing')}
+                onChange={() => handleFeedingScheduleSelection('Whole Day Grazing')}
+                colorScheme="green">
+                Whole Day Grazing
+              </Checkbox>
+            </VStack>
           </Box>
 
-          {/* Quantity */}
+          {/* Quantity - Numeric field */}
           <Box mt={4}>
-            <Text style={styles.label}>Quantity</Text>
+            <Text style={styles.label}>Quantity (kg)</Text>
             <Input
               variant="outline"
               backgroundColor={COLORS.lightGreen}
               borderColor="gray.200"
-              placeholder="Enter quantity (e.g. 10kg)"
+              placeholder="Enter quantity in kg"
               keyboardType="numeric"
               value={quantity}
-              onChangeText={setQuantity}
+              onChangeText={handleQuantityChange}
+              InputRightElement={
+                <Text px={2} color="gray.500">
+                  kg
+                </Text>
+              }
             />
           </Box>
 
+          {/* Date - Visible to all */}
           <Box mt={4}>
             <Text style={styles.label}>Date</Text>
             <HStack alignItems="center" space={3}>
@@ -194,34 +244,40 @@ export default function AnimalFeedingProgramScreen({navigation}) {
             )}
           </Box>
 
-          {/* Purchase Price */}
-          <Box mt={4}>
-            <Text style={styles.label}>Purchase price</Text>
-            <Input
-              variant="outline"
-              backgroundColor={COLORS.lightGreen}
-              borderColor="gray.200"
-              placeholder="Enter price (Ksh)"
-              keyboardType="numeric"
-              value={purchasePrice}
-              onChangeText={setPurchasePrice}
-            />
-          </Box>
+          {showPurchaseInfo && (
+            <Box mt={4}>
+              <Text style={styles.label}>Purchase price</Text>
+              <Input
+                variant="outline"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
+                placeholder="Enter price (Ksh)"
+                keyboardType="numeric"
+                value={purchasePrice}
+                onChangeText={(text) => setPurchasePrice(text.replace(/[^0-9]/g, ''))}
+                InputRightElement={
+                  <Text px={2} color="gray.500">
+                    Ksh
+                  </Text>
+                }
+              />
+            </Box>
+          )}
 
-          {/* Supplier Name */}
-          <Box mt={4}>
-            <Text style={styles.label}>Supplier name</Text>
-            <Input
-              variant="outline"
-              backgroundColor={COLORS.lightGreen}
-              borderColor="gray.200"
-              placeholder="Enter supplier name"
-              value={supplierName}
-              onChangeText={setSupplierName}
-            />
-          </Box>
+          {showPurchaseInfo && (
+            <Box mt={4}>
+              <Text style={styles.label}>Supplier name</Text>
+              <Input
+                variant="outline"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
+                placeholder="Enter supplier name"
+                value={supplierName}
+                onChangeText={setSupplierName}
+              />
+            </Box>
+          )}
 
-          {/* Back & Submit Buttons */}
           <HStack justifyContent="center" mt={6} space={4}>
             <Button
               variant="outline"
@@ -245,30 +301,30 @@ export default function AnimalFeedingProgramScreen({navigation}) {
       </ScrollView>
 
       <Modal isOpen={showSubmitModal} onClose={() => setShowSubmitModal(false)}>
-  <Modal.Content maxWidth="85%" borderRadius={12} p={5}>
-    <Modal.Body alignItems="center">
-      <FastImage
-        source={icons.tick}
-        style={styles.modalIcon}
-        resizeMode="contain"
-      />
-      <Text style={styles.modalText}>
-        Feed record saved successfully!
-      </Text>
-    </Modal.Body>
-    <Modal.Footer justifyContent="center">
-      <Button
-        backgroundColor={COLORS.green}
-        style={styles.modalButton}
-        onPress={() => {
-          setShowSubmitModal(false); 
-          setTimeout(() => navigation.navigate('FeedingRecordScreen'), 300); 
-        }}>
-        OK
-      </Button>
-    </Modal.Footer>
-  </Modal.Content>
-</Modal>
+        <Modal.Content maxWidth="85%" borderRadius={12} p={5}>
+          <Modal.Body alignItems="center">
+            <FastImage
+              source={icons.tick}
+              style={styles.modalIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.modalText}>
+              Feed record saved successfully!
+            </Text>
+          </Modal.Body>
+          <Modal.Footer justifyContent="center">
+            <Button
+              backgroundColor={COLORS.green}
+              style={styles.modalButton}
+              onPress={() => {
+                setShowSubmitModal(false); 
+                setTimeout(() => navigation.navigate('FeedingModuleScreen'), 300); 
+              }}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
     </View>
   );
 }
