@@ -92,7 +92,7 @@ export default function DewormingDetailsRecords({ navigation }) {
 
             <Box>
               <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Deworming Drug administered
+                 Drug administered
               </Text>
               <Input
                 variant="outline"

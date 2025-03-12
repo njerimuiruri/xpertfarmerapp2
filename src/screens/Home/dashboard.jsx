@@ -21,7 +21,7 @@ const FarmDashboard = () => {
     'Sales Data': 'InventoryDashboard',
     'Employees': 'EmployeeScreen',
     'Feeds': 'FeedingManagementScreen',
-    'Animals': 'LivestockManagementScreen',
+    'Livestock': 'LivestockManagementScreen',
     'Breeding': 'BreedingRecordForm',
   };
 

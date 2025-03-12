@@ -33,7 +33,7 @@ const Header = ({navigation}) => {
             <FastImage
               className="w-[25px] h-[25px]"
               tintColor="white"
-              source={icons.settings}
+              source={icons.avatar}
             />
           </TouchableOpacity>
         </View>

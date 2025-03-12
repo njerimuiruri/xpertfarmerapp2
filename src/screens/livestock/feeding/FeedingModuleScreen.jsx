@@ -265,7 +265,7 @@ const FeedingModuleScreen = ({navigation}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <SecondaryHeader title="Feeding Requirements" />
+      <SecondaryHeader title="Feeding" />
       <StatusBar
         translucent
         backgroundColor={COLORS.green2}

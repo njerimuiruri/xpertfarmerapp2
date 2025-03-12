@@ -202,7 +202,7 @@ export default function OptionLivestockGroupScreen({ navigation }) {
                             resizeMode={FastImage.resizeMode.contain}
                         />
                         <Text style={styles.optionText}>
-                            {fileName ? fileName : 'Choose CSV file from storage'}
+                            {fileName ? fileName : 'Upload file from storage'}
                         </Text>
                     </View>
                 </TouchableOpacity>

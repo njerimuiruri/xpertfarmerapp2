@@ -23,7 +23,6 @@ export default function AddEmployeeScreen({ navigation }) {
   const [paymentRate, setPaymentRate] = useState('');
   const [workingHour, setWorkingHour] = useState('');
   const [position, setPosition] = useState('');
-  const [employmentType, setEmploymentType] = useState('');
   const [emergencyContact, setEmergencyContact] = useState('');
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -93,19 +92,7 @@ export default function AddEmployeeScreen({ navigation }) {
               />
             </Box>
 
-            <Box>
-              <Text style={styles.label}>Employment Type</Text>
-              <Select
-                selectedValue={employmentType}
-                minWidth="100%"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-                placeholder="Select Employment Type"
-                onValueChange={setEmploymentType}>
-                <Select.Item label="Permanent" value="permanent" />
-                <Select.Item label="Contractual" value="contractual" />
-              </Select>
-            </Box>
+            
 
             <Box>
               <Text style={styles.label}>Position</Text>
@@ -205,7 +192,6 @@ export default function AddEmployeeScreen({ navigation }) {
                   setPaymentRate('');
                   setWorkingHour('');
                   setPosition('');
-                  setEmploymentType('');
                   setEmergencyContact('');
                 }}>
                 Add Another

@@ -56,9 +56,9 @@ const Dashboard = () => {
   const cardScreens = {
     'Production Analysis': 'AnimalProductionListScreen',
     'Inventory Data': 'InventoryDashboard',
-    'Employees': 'AddEmployeeScreen',
+    'Health': 'AddEmployeeScreen',
     'Feeds': 'FarmFeedsScreen',
-    'Animals': 'OptionDetailsScreen',
+    'Livestock': 'OptionDetailsScreen',
     'Breeding': 'BreedingModuleLandingScreen',
   };
 
@@ -67,6 +67,21 @@ const Dashboard = () => {
       title: 'Production Analysis',
       details: ['Total Animal: 200', 'Cows: 100', 'Dairy: 100'],
       colors: ['#F4EBD0', '#4C7153'],
+    },
+    {
+      title: 'Livestock',
+      details: ['Total Animal: 200', 'Flocks: 100'],
+      colors: ['#BD91D7', '#4C7153'],
+    },
+    {
+      title: 'Feeds',
+      details: ['Feeds available: 10KG', 'Feeds Purchased: 10KG'],
+      colors: ['#CBD18F', '#4C7153'],
+    },
+    {
+      title: 'Breeding',
+      details: ['Total Animal: 50', 'Young ones: 52'],
+      colors: ['#CDD9CD', '#4C7153'],
     },
     {
       "title": "Inventory Data",
@@ -79,25 +94,13 @@ const Dashboard = () => {
     },
     
     {
-      title: 'Employees',
+      title: 'Health',
       details: ['Total: 20', 'Exits: 2'],
       colors: ['#91D79E', '#4C7153'],
     },
-    {
-      title: 'Feeds',
-      details: ['Feeds available: 10KG', 'Feeds Purchased: 10KG'],
-      colors: ['#CBD18F', '#4C7153'],
-    },
-    {
-      title: 'Animals',
-      details: ['Total Animal: 200', 'Flocks: 100'],
-      colors: ['#BD91D7', '#4C7153'],
-    },
-    {
-      title: 'Breeding',
-      details: ['Total Animal: 50', 'Young ones: 52'],
-      colors: ['#CDD9CD', '#4C7153'],
-    },
+   
+   
+    
   ];
 
   const renderCard = ({ title, details, colors }) => (
