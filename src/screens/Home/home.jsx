@@ -11,6 +11,8 @@ import FastImage from 'react-native-fast-image';
 import Header from '../../components/headers/main-header';
 import { useNavigation } from '@react-navigation/native';
 import { icons } from '../../constants';
+import LinearGradient from 'react-native-linear-gradient';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const MenuSection = ({ title, description, children }) => (
   <View style={styles.section}>

@@ -47,6 +47,7 @@ import {
   AnimalFeedingProgramScreen,
   FarmFeedsScreen,
   FeedingManagementScreen,
+  EditFeedingRequirementScreen,
 
   //health
   AddHealthRecords,
@@ -298,16 +299,19 @@ export default function App() {
                 component={FarmFeedsScreen}
                 options={{headerShown: false}}
               />
-              <Stack.Screen
-                name="FeedingRecordScreen"
-                component={FeedingRecordScreen}
-                options={{headerShown: false}}
-              />
+             
               <Stack.Screen
                 name="FeedingManagementScreen"
                 component={FeedingManagementScreen}
                 options={{headerShown: false}}
               />
+              <Stack.Screen
+                name="EditFeedingRequirementScreen"
+                component={EditFeedingRequirementScreen}
+                options={{headerShown: false}}
+              />
+              
+
               {/* health */}
               <Stack.Screen
                 name="AddHealthRecords"

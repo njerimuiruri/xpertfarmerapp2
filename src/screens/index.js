@@ -33,6 +33,7 @@ import LivestockFeedingScreen from './livestock/feeding/LivestockFeedingScreen';
 import AnimalFeedingProgramScreen from './livestock/feeding/AnimalFeedingProgramScreen';
 import FarmFeedsScreen from './livestock/feeding/FarmFeedsScreen';
 import FeedingManagementScreen from './livestock/feeding/FeedingManagementScreen';
+import EditFeedingRequirementScreen from './livestock/feeding/EditFeedingRequirementScreen';
 
 import FeedingModuleScreen from './livestock/feeding/FeedingModuleScreen';
 
@@ -113,6 +114,7 @@ export {
   AnimalFeedingProgramScreen,
   BeefDetailsScreen,
   FeedingManagementScreen,
+  EditFeedingRequirementScreen,
 
   //health
   AddHealthRecords,
