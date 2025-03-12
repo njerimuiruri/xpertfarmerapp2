@@ -9,12 +9,10 @@ import {
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Header from '../../components/headers/main-header';
-import {useNavigation} from '@react-navigation/native';
-import {icons} from '../../constants';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import LinearGradient from 'react-native-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
+import { icons } from '../../constants';
 
-const MenuSection = ({title, description, children}) => (
+const MenuSection = ({ title, description, children }) => (
   <View style={styles.section}>
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -24,12 +22,12 @@ const MenuSection = ({title, description, children}) => (
   </View>
 );
 
-const MenuButton = ({title, icon, onPress, color = '#4CAF50'}) => (
+const MenuButton = ({ title, icon, onPress, color = '#4CAF50' }) => (
   <TouchableOpacity
     style={styles.menuButton}
     onPress={onPress}
     activeOpacity={0.7}>
-    <View style={[styles.iconContainer, {backgroundColor: color}]}>
+    <View style={[styles.iconContainer, { backgroundColor: color }]}>
       <FastImage
         source={icon}
         style={styles.icon}
@@ -115,7 +113,7 @@ const Dashboard = () => {
       </View>
 
       <TouchableOpacity
-        onPress={() => navigation.navigate(cardScreens[title])} 
+        onPress={() => navigation.navigate(cardScreens[title])}
         style={styles.plusButton}
       >
         <Icon name="plus-circle-outline" size={32} color="#fff" />
@@ -180,13 +178,15 @@ const Dashboard = () => {
           style={styles.welcomeBanner}
         >
           <View style={styles.welcomeTextContainer}>
-            <Text style={styles.welcomeTitle}>Xpert Farmers</Text>
+            <Text style={styles.welcomeTitle}>Welcome to Xpert Farmers</Text>
             <Text style={styles.welcomeSubtitle}>
-            Data to Farm,  
-            Data for Business,{'\n'}
+              Cultivating Success,{'\n'}
+              Harvesting Excellence,{'\n'}
+              Nurturing Tomorrow
             </Text>
           </View>
 
+          {/* Right side with see more and circles */}
           <View style={styles.rightContainer}>
             <View
               style={[styles.circle, styles.circleSmall, { top: 10, right: 10 }]}
@@ -203,21 +203,17 @@ const Dashboard = () => {
           </View>
         </LinearGradient>
 
+        {/* Farm Overview */}
         <View style={styles.overviewSection}>
           <Text style={styles.overviewTitle}>Farm Overview</Text>
-          <TouchableOpacity 
-            style={styles.monthSelector}
-            onPress={() => setShowPeriodModal(true)}
-          >
-            <Text style={styles.monthText}>{selectedPeriod}</Text>
+          <TouchableOpacity style={styles.monthSelector}>
+            <Text style={styles.monthText}>This month</Text>
             <Icon name="chevron-down" size={20} color="#666" />
           </TouchableOpacity>
         </View>
 
         <View style={styles.cardsGrid}>{cards.map(renderCard)}</View>
       </ScrollView>
-      
-      {renderTimePeriodsModal()}
     </View>
   );
 };
@@ -230,13 +226,8 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginLeft: 16,
-    marginTop: 16,
-  },
+
+
   welcomeBanner: {
     margin: 16,
     padding: 20,

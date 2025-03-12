@@ -114,9 +114,9 @@ const FarmRecordsScreen = ({ navigation }) => {
   };
 
   return (
-   
-    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
-            <SecondaryHeader title="Farm  Records" />
+
+    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
+      <SecondaryHeader title="Farm  Records" />
 
       <Fab renderInPortal={false} shadow={2} right={5} bottom={5} size="sm" icon={<FastImage source={icons.plus} className="w-[20px] h-[20px]" tintColor='white' />} colorScheme="emerald" onPress={() => navigation.navigate('AddFarmDetailsScreen')} />
 

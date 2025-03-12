@@ -84,7 +84,7 @@ import {
   AddMachinery,
   AddGoodsInStock,
   AddUtilityDetails,
-
+  LivestockManagementScreen,
 } from './src/screens/index';
 import DrawerNav from './src/navigation/drawer/DrawerNav1';
 
@@ -298,8 +298,12 @@ export default function App() {
                 component={FarmFeedsScreen}
                 options={{headerShown: false}}
               />
-             
-               <Stack.Screen
+              <Stack.Screen
+                name="FeedingRecordScreen"
+                component={FeedingRecordScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
                 name="FeedingManagementScreen"
                 component={FeedingManagementScreen}
                 options={{headerShown: false}}
@@ -340,21 +344,7 @@ export default function App() {
                 component={FarmHealthRecords}
                 options={{headerShown: false}}
               />
-              
 
-              <Stack.Screen
-                name="HealthRecordsScreen"
-                component={HealthRecordsScreen}
-                options={{headerShown: false}}
-              />
-              
-              <Stack.Screen
-                name="CurativeTreatmentScreen"
-                component={CurativeTreatmentScreen}
-                options={{headerShown: false}}
-              />
-
-              {/* production */}
               <Stack.Screen
                 name="AddDairyDetailsScreen"
                 component={AddDairyDetailsScreen}
@@ -418,13 +408,12 @@ export default function App() {
                 options={{headerShown: false}}
               />
 
-              
               <Stack.Screen
                 name="LivestockRecordsScreen"
                 component={LivestockRecordsScreen}
                 options={{headerShown: false}}
               />
-             {/* inventory */}
+              {/* inventory */}
               <Stack.Screen
                 name="InventoryDashboard"
                 component={InventoryDashboard}
@@ -445,8 +434,6 @@ export default function App() {
                 component={AddUtilityDetails}
                 options={{headerShown: false}}
               />
-              
-
             </Stack.Navigator>
           </NavigationContainer>
         </ToastProvider>
