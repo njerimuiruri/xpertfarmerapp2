@@ -20,7 +20,7 @@ const FarmDashboard = () => {
     'Production Analysis': 'AnimalProductionListScreen',
     'Sales Data': 'InventoryDashboard',
     'Employees': 'EmployeeScreen',
-    'Feeds': 'FeedingManagementScreen',
+    // 'Feeds': 'FeedingManagementScreen',
     'Livestock': 'LivestockManagementScreen',
     'Breeding': 'BreedingRecordForm',
   };

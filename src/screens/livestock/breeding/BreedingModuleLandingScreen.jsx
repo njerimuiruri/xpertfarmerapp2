@@ -145,7 +145,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
 
   const handleEdit = useCallback(
     record => {
-    //   navigation.navigate('EditBreedingRecordScreen', {record});
+      navigation.navigate('EditBreedingRecordScreen', {record});
     },
     [navigation],
   );
@@ -350,7 +350,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
         
         {item.status === 'Pregnant' && (
           <TouchableOpacity
-            // onPress={() => navigation.navigate('RecordBirthScreen', {record: item})}
+            onPress={() => navigation.navigate('RecordBirthScreen', {record: item})}
             style={styles.cardActionButton}>
             <FastImage
               source={icons.submited}

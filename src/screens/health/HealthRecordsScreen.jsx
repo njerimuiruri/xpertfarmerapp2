@@ -39,10 +39,10 @@ const healthCategories = [
   },
   {
     id: '4',
-    title: 'Disorder',
+    title: 'Disorders',
     image: require('../../assets/images/Disorder.png'),
     color: '#8B4513',
-    screen: 'geneticdisorderscreen',
+    screen: 'Geneticdisorderscreen',
   },
   {
     id: '5',
@@ -56,7 +56,7 @@ const healthCategories = [
     title: 'Boosters',
     image: require('../../assets/images/Boosters.png'),
     color: '#808080',
-    screen: 'AllergyBoostersScreen',
+    screen: 'AllergyBoosterScreen',
   },
 ];
 

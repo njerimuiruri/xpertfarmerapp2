@@ -41,12 +41,12 @@ import {
 
   // Breeding
   BreedingRecordForm,
+  EditBreedingRecordScreen,
 
   // Feeds
   LivestockFeedingScreen,
   AnimalFeedingProgramScreen,
   FarmFeedsScreen,
-  FeedingManagementScreen,
   EditFeedingRequirementScreen,
 
   //health
@@ -76,7 +76,7 @@ import {
   LivestockRecordsScreen,
   LivestockModuleScreen,
   BreedingModuleLandingScreen,
-
+  RecordBirthScreen,
   //home
   FarmDashboard,
 
@@ -235,6 +235,11 @@ export default function App() {
                 component={AddFlockDetailsScreen}
                 options={{headerShown: false}}
               />
+               <Stack.Screen
+                name="EditBreedingRecordScreen"
+                component={EditBreedingRecordScreen}
+                options={{headerShown: false}}
+              />
               
               <Stack.Screen
                 name="LivestockModuleScreen"
@@ -246,8 +251,12 @@ export default function App() {
                 component={AnimalDetailScreen}
                 options={{headerShown: false}}
               />
+               <Stack.Screen
+                name="RecordBirthScreen"
+                component={RecordBirthScreen}
+                options={{headerShown: false}}
+              />
               
-            
               <Stack.Screen
                 name="FeedingModuleScreen"
                 component={FeedingModuleScreen}
@@ -300,11 +309,7 @@ export default function App() {
                 options={{headerShown: false}}
               />
              
-              <Stack.Screen
-                name="FeedingManagementScreen"
-                component={FeedingManagementScreen}
-                options={{headerShown: false}}
-              />
+              
               <Stack.Screen
                 name="EditFeedingRequirementScreen"
                 component={EditFeedingRequirementScreen}
@@ -318,6 +323,12 @@ export default function App() {
                 component={AddHealthRecords}
                 options={{headerShown: false}}
               />
+              <Stack.Screen
+                name="HealthRecordsScreen"
+                component={HealthRecordsScreen}
+                options={{headerShown: false}}
+              />
+              
               <Stack.Screen
                 name="Allergiesrecordsscreen"
                 component={Allergiesrecordsscreen}
@@ -336,6 +347,11 @@ export default function App() {
               <Stack.Screen
                 name="Geneticdisorderscreen"
                 component={Geneticdisorderscreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="CurativeTreatmentScreen"
+                component={CurativeTreatmentScreen}
                 options={{headerShown: false}}
               />
               <Stack.Screen

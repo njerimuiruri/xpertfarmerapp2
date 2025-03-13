@@ -56,7 +56,7 @@ const Dashboard = () => {
   const cardScreens = {
     'Production Analysis': 'AnimalProductionListScreen',
     'Inventory Data': 'InventoryDashboard',
-    'Health': 'AddEmployeeScreen',
+    'Health': 'AddHealthRecords',
     'Feeds': 'FarmFeedsScreen',
     'Livestock': 'OptionDetailsScreen',
     'Breeding': 'BreedingModuleLandingScreen',
@@ -182,13 +182,12 @@ const Dashboard = () => {
           <View style={styles.welcomeTextContainer}>
             <Text style={styles.welcomeTitle}>Welcome to Xpert Farmers</Text>
             <Text style={styles.welcomeSubtitle}>
-              Cultivating Success,{'\n'}
-              Harvesting Excellence,{'\n'}
-              Nurturing Tomorrow
+            Data to Farm,{'\n'}
+            Data for Business,{'\n'}
+             
             </Text>
           </View>
 
-          {/* Right side with see more and circles */}
           <View style={styles.rightContainer}>
             <View
               style={[styles.circle, styles.circleSmall, { top: 10, right: 10 }]}

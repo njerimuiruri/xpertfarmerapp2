@@ -285,7 +285,7 @@ export default function AllergyBoosterScreen({navigation}) {
               py={2}
               onPress={() => {
                 setModalVisible(false);
-                navigation.navigate('record');
+                navigation.navigate('HealthRecordsScreen');
               }}>
               Ok
             </Button>

@@ -8,8 +8,9 @@ import {
   Select,
   ScrollView,
   HStack,
+ 
 } from 'native-base';
-import {View, TouchableOpacity, StyleSheet, Image} from 'react-native';
+import {View, TouchableOpacity, StyleSheet,Image} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
 import {icons} from '../../constants';
@@ -27,12 +28,35 @@ export default function VaccineDetailsScreen({navigation}) {
   const [practiceId, setPracticeId] = useState('');
   const [costOfService, setCostOfService] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleDateChange = (event, selectedDate) => {
     if (selectedDate) {
       setDateAdministered(selectedDate);
     }
     setShowDatePicker(false);
+  };
+
+  const handleSave = () => {
+   
+    setShowSuccessModal(true);
+  };
+
+  const handleDone = () => {
+    navigation.navigate('DewormingDetailsRecords'); 
+  };
+
+  const handleAddAnother = () => {
+    setAnimalIdOrFlockId('');
+    setVaccinationAgainst('');
+    setDrugAdministered('');
+    setDateAdministered(new Date());
+    setDosage(1);
+    setCostOfVaccine('');
+    setAdministeredBy('');
+    setPracticeId('');
+    setCostOfService('');
+    setShowSuccessModal(false);
   };
 
   return (
@@ -154,7 +178,7 @@ export default function VaccineDetailsScreen({navigation}) {
                 fontWeight="500"
                 color={COLORS.darkGray3}
                 mb={1}>
-                Dosage
+                Dosage (ml)
               </Text>
               <HStack alignItems="center" space={2}>
                 <Button
@@ -171,13 +195,18 @@ export default function VaccineDetailsScreen({navigation}) {
                   variant="outline"
                   backgroundColor={COLORS.lightGreen}
                   borderColor="gray.200"
-                  placeholder="Enter Dosage"
+                  placeholder="Enter Dosage (ml)"
                   keyboardType="numeric"
                   value={dosage.toString()}
                   onChangeText={text => {
                     const numericText = text.replace(/[^0-9.]/g, '');
                     setDosage(numericText);
                   }}
+                  InputRightElement={
+                    <Text px={2} color={COLORS.darkGray3}>
+                      ml
+                    </Text>
+                  }
                 />
                 <Button
                   onPress={() => {
@@ -191,26 +220,25 @@ export default function VaccineDetailsScreen({navigation}) {
               </HStack>
             </Box>
             <Box>
-              <HStack alignItems="center" space={2}>
-                <Text
-                  fontSize="sm"
-                  fontWeight="500"
-                  color={COLORS.darkGray3}
-                  mb={1}>
-                  {' '}
-                  Cost of Vaccine
-                </Text>
-                <Input
-                  flex={1}
-                  variant="outline"
-                  backgroundColor={COLORS.lightGreen}
-                  borderColor="gray.200"
-                  placeholder="Enter cost of vaccine"
-                  keyboardType="numeric"
-                  value={costOfVaccine}
-                  onChangeText={setCostOfVaccine}
-                />
-              </HStack>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
+                Cost of Vaccine
+              </Text>
+              <Input
+                variant="outline"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
+                placeholder="Enter cost of vaccine"
+                keyboardType="numeric"
+                value={costOfVaccine}
+                onChangeText={text => {
+                  const numericText = text.replace(/[^0-9.]/g, '');
+                  setCostOfVaccine(numericText);
+                }}
+              />
             </Box>
             <Box>
               <Text
@@ -249,25 +277,25 @@ export default function VaccineDetailsScreen({navigation}) {
             </Box>
 
             <Box>
-              <HStack alignItems="center" space={2}>
-                <Text
-                  fontSize="sm"
-                  fontWeight="500"
-                  color={COLORS.darkGray3}
-                  mb={1}>
-                  Cost of Service
-                </Text>
-                <Input
-                  flex={1}
-                  variant="outline"
-                  backgroundColor={COLORS.lightGreen}
-                  borderColor="gray.200"
-                  placeholder="Enter cost of service"
-                  keyboardType="numeric"
-                  value={costOfService}
-                  onChangeText={setCostOfService}
-                />
-              </HStack>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
+                Cost of Service
+              </Text>
+              <Input
+                variant="outline"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
+                placeholder="Enter cost of service"
+                keyboardType="numeric"
+                value={costOfService}
+                onChangeText={text => {
+                  const numericText = text.replace(/[^0-9.]/g, '');
+                  setCostOfService(numericText);
+                }}
+              />
             </Box>
 
             <HStack justifyContent="center" mt={6} space={8}>
@@ -279,7 +307,7 @@ export default function VaccineDetailsScreen({navigation}) {
                 px={6}
                 py={3}
                 _text={{
-                  color: COLORS.green, // Use _text to style the button text color
+                  color: COLORS.green, 
                 }}
                 onPress={() => navigation.goBack()}>
                 Cancel
@@ -293,13 +321,62 @@ export default function VaccineDetailsScreen({navigation}) {
                 _pressed={{
                   bg: 'emerald.700',
                 }}
-                onPress={() => navigation.navigate('DewormingDetailsRecords')}>
-                Next
+                onPress={handleSave}>
+                Done
               </Button>
             </HStack>
           </VStack>
         </Box>
       </ScrollView>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <Box 
+          position="absolute" 
+          top="0" 
+          bottom="0" 
+          left="0" 
+          right="0" 
+          bg="rgba(0,0,0,0.5)" 
+          justifyContent="center" 
+          alignItems="center"
+        >
+          <Box bg="white" p={6} borderRadius={8} width="80%" maxWidth="400px">
+            <VStack space={4} alignItems="center">
+              <FastImage
+                source={icons.tick} 
+                style={{width: 60, height: 60}}
+                resizeMode="contain"
+              />
+              <Text fontSize="lg" fontWeight="bold" textAlign="center">
+                Vaccine Record Added Successfully!
+              </Text>
+              
+              <HStack space={4} mt={2}>
+                <Button
+                  flex={1}
+                  variant="outline"
+                  borderColor={COLORS.green}
+                  _text={{
+                    color: COLORS.green,
+                  }}
+                  onPress={handleDone}>
+                  OK
+                </Button>
+                <Button
+                  flex={1}
+                  bg={COLORS.green}
+                  _pressed={{
+                    bg: 'emerald.700',
+                  }}
+                  onPress={handleAddAnother}>
+                  Add Another
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        </Box>
+      )}
     </View>
   );
 }

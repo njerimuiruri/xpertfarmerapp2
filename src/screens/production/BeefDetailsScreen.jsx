@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Text,
@@ -13,15 +13,15 @@ import {
   Icon,
   Modal,
 } from 'native-base';
-import {View, TouchableOpacity, StyleSheet, Image} from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../constants';
-import {COLORS} from '../../constants/theme';
+import { icons } from '../../constants';
+import { COLORS } from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
-import {format, addDays} from 'date-fns';
+import { format, addDays } from 'date-fns';
 
-export default function BeefCattleScreen({navigation}) {
+export default function BeefCattleScreen({ navigation }) {
   const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState('');
   const [weightGain, setWeightGain] = useState('');
   const [weaningWeight, setWeaningWeight] = useState('');
@@ -39,8 +39,14 @@ export default function BeefCattleScreen({navigation}) {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
 
-  const handleDateChange = setter => (event, selectedDate) => {
+  const handleDateChange = (setter) => (event, selectedDate) => {
     setter(selectedDate || new Date());
+  };
+
+  const handleSelect = (id) => {
+    setAnimalIdOrFlockId(id);
+    setDropdownVisible(false);
+    // optional: load weight gain data based on ID selection
   };
 
   const handleSave = () => {
@@ -48,7 +54,6 @@ export default function BeefCattleScreen({navigation}) {
       setIsSaveDisabled(true);
       return;
     }
-
     setIsSaveDisabled(false);
     // Add your save logic here
   };
@@ -69,7 +74,7 @@ export default function BeefCattleScreen({navigation}) {
   };
 
   return (
-    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
+    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
       <SecondaryHeader title="Beef Cattle" />
       <ScrollView
         contentContainerStyle={{
@@ -88,55 +93,52 @@ export default function BeefCattleScreen({navigation}) {
             Fill in the Beef Cattle details
           </Text>
           <VStack space={5}>
+
+            {/* Animal ID or Flock ID Section */}
             <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={1}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
                 Animal ID or Flock ID
               </Text>
-              <View>
-                <HStack
-                  alignItems="center"
+              <HStack
+                alignItems="center"
+                borderWidth={1}
+                borderRadius={8}
+                borderColor="gray.200">
+                <Input
+                  flex={1}
+                  variant="unstyled"
+                  placeholder="Type or select ID"
+                  value={animalIdOrFlockId}
+                  onChangeText={text => setAnimalIdOrFlockId(text)}
+                  backgroundColor="transparent"
+                  borderColor="transparent"
+                />
+                <TouchableOpacity
+                  style={{ padding: 10 }}
+                  onPress={() => setDropdownVisible(prev => !prev)}>
+                  <Text style={{ fontSize: 16, color: COLORS.green }}>▼</Text>
+                </TouchableOpacity>
+              </HStack>
+              {dropdownVisible && (
+                <Box
+                  bg="white"
+                  mt={1}
                   borderWidth={1}
-                  borderRadius={8}
-                  borderColor="gray.200">
-                  <Input
-                    flex={1}
-                    variant="unstyled"
-                    placeholder="Type or select ID"
-                    value={animalIdOrFlockId}
-                    onChangeText={text => setAnimalIdOrFlockId(text)}
-                    backgroundColor="transparent"
-                    borderColor="transparent"
-                  />
-                  <TouchableOpacity
-                    style={{padding: 10}}
-                    onPress={() => setDropdownVisible(prev => !prev)}>
-                    <Text style={{fontSize: 16, color: COLORS.green}}>▼</Text>
-                  </TouchableOpacity>
-                </HStack>
-                {dropdownVisible && (
-                  <Box
-                    bg="white"
-                    mt={1}
-                    borderWidth={1}
-                    borderColor="gray.200"
-                    borderRadius={8}>
-                    {availableIds.map((id, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={styles.dropdownItem}
-                        onPress={() => handleSelect(id)}>
-                        <Text style={styles.dropdownText}>{id}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </Box>
-                )}
-              </View>
+                  borderColor="gray.200"
+                  borderRadius={8}>
+                  {availableIds.map((id, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={styles.dropdownItem}
+                      onPress={() => handleSelect(id)}>
+                      <Text style={styles.dropdownText}>{id}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </Box>
+              )}
             </Box>
 
+            {/* Weight Gain Section */}
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
                 <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
@@ -146,26 +148,15 @@ export default function BeefCattleScreen({navigation}) {
                   label="Enter the total weight gained by the animal"
                   placement="top"
                   backgroundColor={COLORS.green}
-                  _text={{
-                    color: 'white',
-                  }}>
-                  <Icon
-                    as={FastImage}
-                    source={icons.info}
-                    size={5}
-                    color="gray.500"
-                  />
+                  _text={{ color: 'white' }}>
+                  <Icon as={FastImage} source={icons.info} size={5} color="gray.500" />
                 </Tooltip>
               </HStack>
               <HStack alignItems="center" space={3}>
                 <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(weightGain) || 0;
-                    setWeightGain((currentValue - 1).toString());
-                  }}
+                  onPress={() => setWeightGain((parseFloat(weightGain) || 0) - 1)}
                   variant="outline"
                   style={styles.incrementButton}
-
                   p={2}>
                   -
                 </Button>
@@ -183,68 +174,7 @@ export default function BeefCattleScreen({navigation}) {
                   }}
                 />
                 <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(weightGain) || 0;
-                    setWeightGain((currentValue + 1).toString());
-                  }}
-                  variant="outline"
-                  style={styles.incrementButton}
-
-                  p={2}>
-                  +
-                </Button>
-              </HStack>
-            </Box>
-
-            <Box>
-              <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
-                  Weaning Weight
-                </Text>
-                <Tooltip
-                  label="Enter the weight of the calf at the time of weaning"
-                  placement="top"
-                  backgroundColor={COLORS.green}
-                  _text={{
-                    color: 'white',
-                  }}>
-                  <Icon
-                    as={FastImage}
-                    source={icons.info}
-                    size={5}
-                    color="gray.500"
-                  />
-                </Tooltip>
-              </HStack>
-              <HStack alignItems="center" space={3}>
-                <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(weaningWeight) || 0;
-                    setWeaningWeight((currentValue - 1).toString());
-                  }}
-                  variant="outline"
-                  style={styles.incrementButton}
-                  p={2}>
-                  -
-                </Button>
-                <Input
-                  flex={1}
-                  variant="outline"
-                  backgroundColor={COLORS.lightGreen}
-                  borderColor="gray.200"
-                  placeholder="Enter weaning weight"
-                  keyboardType="numeric"
-                  value={weaningWeight.toString()}
-                  onChangeText={text => {
-                    const numericText = text.replace(/[^0-9.]/g, '');
-                    setWeaningWeight(numericText);
-                  }}
-                />
-                <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(weaningWeight) || 0;
-                    setWeaningWeight((currentValue + 1).toString());
-                  }}
+                  onPress={() => setWeightGain((parseFloat(weightGain) || 0) + 1)}
                   variant="outline"
                   style={styles.incrementButton}
                   p={2}>
@@ -253,63 +183,7 @@ export default function BeefCattleScreen({navigation}) {
               </HStack>
             </Box>
 
-            <Box>
-              <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
-                  Weight at Time of Scheduled Checkup
-                </Text>
-                <Tooltip
-                  label="Enter the animal's weight during the scheduled health checkup"
-                  placement="top"
-                  backgroundColor={COLORS.green}
-                  _text={{
-                    color: 'white',
-                  }}>
-                  <Icon
-                    as={FastImage}
-                    source={icons.info}
-                    size={5}
-                    color="gray.500"
-                  />
-                </Tooltip>
-              </HStack>
-              <HStack alignItems="center" space={3}>
-                <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(weightAtCheckup) || 0;
-                    setWeightAtCheckup((currentValue - 1).toString());
-                  }}
-                  variant="outline"
-                  style={styles.incrementButton}
-                  p={2}>
-                  -
-                </Button>
-                <Input
-                  flex={1}
-                  variant="outline"
-                  backgroundColor={COLORS.lightGreen}
-                  borderColor="gray.200"
-                  placeholder="Enter weight at checkup"
-                  keyboardType="numeric"
-                  value={weightAtCheckup.toString()}
-                  onChangeText={text => {
-                    const numericText = text.replace(/[^0-9.]/g, '');
-                    setWeightAtCheckup(numericText);
-                  }}
-                />
-                <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(weightAtCheckup) || 0;
-                    setWeightAtCheckup((currentValue + 1).toString());
-                  }}
-                  variant="outline"
-                  style={styles.incrementButton}
-                  p={2}>
-                  +
-                </Button>
-              </HStack>
-            </Box>
-
+            {/* Sale Weight Section with Prefill Feature */}
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
                 <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
@@ -319,23 +193,13 @@ export default function BeefCattleScreen({navigation}) {
                   label="Enter the weight of the animal at the time of sale"
                   placement="top"
                   backgroundColor={COLORS.green}
-                  _text={{
-                    color: 'white',
-                  }}>
-                  <Icon
-                    as={FastImage}
-                    source={icons.info}
-                    size={5}
-                    color="gray.500"
-                  />
+                  _text={{ color: 'white' }}>
+                  <Icon as={FastImage} source={icons.info} size={5} color="gray.500" />
                 </Tooltip>
               </HStack>
               <HStack alignItems="center" space={3}>
                 <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(saleWeight) || 0;
-                    setSaleWeight((currentValue - 1).toString());
-                  }}
+                  onPress={() => setSaleWeight((parseFloat(saleWeight) || 0) - 1)}
                   variant="outline"
                   style={styles.incrementButton}
                   p={2}>
@@ -355,10 +219,7 @@ export default function BeefCattleScreen({navigation}) {
                   }}
                 />
                 <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(saleWeight) || 0;
-                    setSaleWeight((currentValue + 1).toString());
-                  }}
+                  onPress={() => setSaleWeight((parseFloat(saleWeight) || 0) + 1)}
                   variant="outline"
                   style={styles.incrementButton}
                   p={2}>
@@ -367,24 +228,18 @@ export default function BeefCattleScreen({navigation}) {
               </HStack>
             </Box>
 
+            {/* Sale Date Section */}
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
                 <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
                   Sale Date
                 </Text>
                 <Tooltip
-                  label="Enter the date when the animal was sold"
+                  label="Select the date when the animal was sold"
                   placement="top"
                   backgroundColor={COLORS.green}
-                  _text={{
-                    color: 'white',
-                  }}>
-                  <Icon
-                    as={FastImage}
-                    source={icons.info}
-                    size={5}
-                    color="gray.500"
-                  />
+                  _text={{ color: 'white' }}>
+                  <Icon as={FastImage} source={icons.info} size={5} color="gray.500" />
                 </Tooltip>
               </HStack>
               <HStack alignItems="center" space={3}>
@@ -415,6 +270,7 @@ export default function BeefCattleScreen({navigation}) {
               )}
             </Box>
 
+            {/* Additional Sales Information: Market Price and Sale Price */}
             <Box>
               <HStack alignItems="center" justifyContent="space-between">
                 <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
@@ -424,23 +280,13 @@ export default function BeefCattleScreen({navigation}) {
                   label="Enter the current market rate for the sold beef"
                   placement="top"
                   backgroundColor={COLORS.green}
-                  _text={{
-                    color: 'white',
-                  }}>
-                  <Icon
-                    as={FastImage}
-                    source={icons.info}
-                    size={5}
-                    color="gray.500"
-                  />
+                  _text={{ color: 'white' }}>
+                  <Icon as={FastImage} source={icons.info} size={5} color="gray.500" />
                 </Tooltip>
               </HStack>
               <HStack alignItems="center" space={3}>
                 <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(marketPrice) || 0;
-                    setMarketPrice((currentValue - 1).toString());
-                  }}
+                  onPress={() => setMarketPrice((parseFloat(marketPrice) || 0) - 1)}
                   variant="outline"
                   style={styles.incrementButton}
                   p={2}>
@@ -460,10 +306,7 @@ export default function BeefCattleScreen({navigation}) {
                   }}
                 />
                 <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(marketPrice) || 0;
-                    setMarketPrice((currentValue + 1).toString());
-                  }}
+                  onPress={() => setMarketPrice((parseFloat(marketPrice) || 0) + 1)}
                   variant="outline"
                   style={styles.incrementButton}
                   p={2}>
@@ -481,23 +324,13 @@ export default function BeefCattleScreen({navigation}) {
                   label="Enter the price at which the animal was sold"
                   placement="top"
                   backgroundColor={COLORS.green}
-                  _text={{
-                    color: 'white',
-                  }}>
-                  <Icon
-                    as={FastImage}
-                    source={icons.info}
-                    size={5}
-                    color="gray.500"
-                  />
+                  _text={{ color: 'white' }}>
+                  <Icon as={FastImage} source={icons.info} size={5} color="gray.500" />
                 </Tooltip>
               </HStack>
               <HStack alignItems="center" space={3}>
                 <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(salePrice) || 0;
-                    setSalePrice((currentValue - 1).toString());
-                  }}
+                  onPress={() => setSalePrice((parseFloat(salePrice) || 0) - 1)}
                   variant="outline"
                   style={styles.incrementButton}
                   p={2}>
@@ -517,10 +350,7 @@ export default function BeefCattleScreen({navigation}) {
                   }}
                 />
                 <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(salePrice) || 0;
-                    setSalePrice((currentValue + 1).toString());
-                  }}
+                  onPress={() => setSalePrice((parseFloat(salePrice) || 0) + 1)}
                   variant="outline"
                   style={styles.incrementButton}
                   p={2}>
@@ -529,26 +359,11 @@ export default function BeefCattleScreen({navigation}) {
               </HStack>
             </Box>
 
+            {/* Buyer's Name Section */}
             <Box>
-              <HStack alignItems="center" justifyContent="space-between">
-                <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
-                  Buyer's Name
-                </Text>
-                <Tooltip
-                  label="Enter the full legal name of the buyer"
-                  placement="top"
-                  backgroundColor={COLORS.green}
-                  _text={{
-                    color: 'white',
-                  }}>
-                  <Icon
-                    as={FastImage}
-                    source={icons.info}
-                    size={5}
-                    color="gray.500"
-                  />
-                </Tooltip>
-              </HStack>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={2}>
+                Buyer's Name
+              </Text>
               <Input
                 variant="outline"
                 backgroundColor={COLORS.lightGreen}
@@ -560,28 +375,18 @@ export default function BeefCattleScreen({navigation}) {
             </Box>
 
             <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={2}>
+              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={2}>
                 Buyer Type
               </Text>
               <VStack space={2}>
-                <Checkbox
-                  isChecked={isCompany}
-                  onChange={() => setIsCompany(!isCompany)}>
+                <Checkbox isChecked={isCompany} onChange={() => setIsCompany(!isCompany)}>
                   Company
                 </Checkbox>
-                <Checkbox
-                  isChecked={isIndividual}
-                  onChange={() => setIsIndividual(!isIndividual)}>
+                <Checkbox isChecked={isIndividual} onChange={() => setIsIndividual(!isIndividual)}>
                   Individual
                 </Checkbox>
               </VStack>
             </Box>
-
-          
 
             <HStack justifyContent="center" mt={6} space={4}>
               <Button
@@ -598,7 +403,7 @@ export default function BeefCattleScreen({navigation}) {
                 borderRadius={8}
                 px={6}
                 py={3}
-                _pressed={{bg: 'emerald.700'}}
+                _pressed={{ bg: 'emerald.700' }}
                 onPress={() => setShowSaveModal(true)}>
                 Save
               </Button>
@@ -606,16 +411,13 @@ export default function BeefCattleScreen({navigation}) {
           </VStack>
         </Box>
       </ScrollView>
+      
       <Modal isOpen={showSaveModal} onClose={() => setShowSaveModal(false)}>
         <Modal.Content maxWidth="85%" borderRadius={12} p={5}>
           <Modal.Body alignItems="center">
-            <FastImage
-              source={icons.tick}
-              style={styles.modalIcon}
-              resizeMode="contain"
-            />
+            <FastImage source={icons.tick} style={styles.modalIcon} resizeMode="contain" />
             <Text style={styles.modalText}>
-             Beef Record has been saved successfully!
+             Beef record has been saved successfully!
             </Text>
           </Modal.Body>
           <Modal.Footer justifyContent="center">
