@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   Box,
   Text,
@@ -10,35 +10,38 @@ import {
   HStack,
   Radio,
 } from 'native-base';
-import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import {View, TouchableOpacity, StyleSheet, Image} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import { icons } from '../../constants';
-import { COLORS } from '../../constants/theme';
+import {icons} from '../../constants';
+import {COLORS} from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
-export default function CurativeTreatmentScreen({ navigation }) {
+export default function CurativeTreatmentScreen({navigation}) {
   const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState('');
   const [healthEventDate, setHealthEventDate] = useState(new Date());
   const [healthEventSymptoms, setHealthEventSymptoms] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
   const [treatmentType, setTreatmentType] = useState('');
-  
+
   const [drugAdministered, setDrugAdministered] = useState('');
   const [dateAdministered, setDateAdministered] = useState(new Date());
   const [dosageAdministered, setDosageAdministered] = useState('1');
   const [costOfDrugs, setCostOfDrugs] = useState('');
-  
+
   const [medicalOfficerName, setMedicalOfficerName] = useState('');
   const [licenseId, setLicenseId] = useState('');
   const [costOfService, setCostOfService] = useState('');
-  
+
   const [farmerWitnessName, setFarmerWitnessName] = useState('');
   const [notes, setNotes] = useState('');
-  
-  const [showHealthEventDatePicker, setShowHealthEventDatePicker] = useState(false);
-  const [showDateAdministeredPicker, setShowDateAdministeredPicker] = useState(false);
 
+  const [showHealthEventDatePicker, setShowHealthEventDatePicker] =
+    useState(false);
+  const [showDateAdministeredPicker, setShowDateAdministeredPicker] =
+    useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [description, setDescription] = useState('');
   const handleHealthEventDateChange = (event, selectedDate) => {
     if (selectedDate) {
       setHealthEventDate(selectedDate);
@@ -52,11 +55,26 @@ export default function CurativeTreatmentScreen({ navigation }) {
     }
     setShowDateAdministeredPicker(false);
   };
+  const handleSave = () => {
+    setShowSuccessModal(true);
+  };
 
-  const treatmentTypes = ["Curative", "Preventive", "Supportive", "Behavioral and Alternative"];
+  const handleDone = () => {
+    navigation.navigate('Geneticdisorderscreen');
+  };
+  const handleAddAnother = () => {
+    setShowSuccessModal(false);
+  };
+
+  const treatmentTypes = [
+    'Curative',
+    'Preventive',
+    'Supportive',
+    'Behavioral and Alternative',
+  ];
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Curative Treatment" />
       <ScrollView
         contentContainerStyle={{
@@ -67,7 +85,11 @@ export default function CurativeTreatmentScreen({ navigation }) {
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
           <VStack space={5}>
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Animal ID or Flock ID
               </Text>
               <Select
@@ -93,7 +115,11 @@ export default function CurativeTreatmentScreen({ navigation }) {
             </Box>
 
             <View style={styles.formGroup}>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Health Event Date
               </Text>
               <View style={styles.dateContainer}>
@@ -104,7 +130,8 @@ export default function CurativeTreatmentScreen({ navigation }) {
                   placeholder="DD/MM/YY"
                   isReadOnly
                 />
-                <TouchableOpacity onPress={() => setShowHealthEventDatePicker(true)}>
+                <TouchableOpacity
+                  onPress={() => setShowHealthEventDatePicker(true)}>
                   <Image
                     source={icons.calendar}
                     resizeMode="contain"
@@ -124,7 +151,11 @@ export default function CurativeTreatmentScreen({ navigation }) {
             </View>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Health Event Symptoms
               </Text>
               <Input
@@ -141,7 +172,11 @@ export default function CurativeTreatmentScreen({ navigation }) {
 
             {/* Diagnosis */}
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Diagnosis
               </Text>
               <Input
@@ -155,16 +190,19 @@ export default function CurativeTreatmentScreen({ navigation }) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Treatment Given
               </Text>
               <Radio.Group
                 name="treatmentType"
                 value={treatmentType}
-                onChange={setTreatmentType}
-              >
+                onChange={setTreatmentType}>
                 <VStack space={2}>
-                  {treatmentTypes.map((type) => (
+                  {treatmentTypes.map(type => (
                     <Radio key={type} value={type} my={1}>
                       {type}
                     </Radio>
@@ -174,15 +212,22 @@ export default function CurativeTreatmentScreen({ navigation }) {
             </Box>
 
             {/* Conditional Rendering of Curative Treatment Details */}
-            {treatmentType === "Curative" && (
+
+
+            
+            {treatmentType === 'Curative' && (
               <VStack space={4} pl={4} mt={2}>
                 <Text fontSize="md" fontWeight="500" color={COLORS.darkGray3}>
                   Curative Treatment Details:
                 </Text>
-                
+
                 {/* Drug Administered */}
                 <Box>
-                  <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="500"
+                    color={COLORS.darkGray3}
+                    mb={1}>
                     Drug Administered (Name and Type)
                   </Text>
                   <Input
@@ -197,7 +242,11 @@ export default function CurativeTreatmentScreen({ navigation }) {
 
                 {/* Date Administered */}
                 <View style={styles.formGroup}>
-                  <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="500"
+                    color={COLORS.darkGray3}
+                    mb={1}>
                     Date Administered
                   </Text>
                   <View style={styles.dateContainer}>
@@ -208,7 +257,8 @@ export default function CurativeTreatmentScreen({ navigation }) {
                       placeholder="DD/MM/YY"
                       isReadOnly
                     />
-                    <TouchableOpacity onPress={() => setShowDateAdministeredPicker(true)}>
+                    <TouchableOpacity
+                      onPress={() => setShowDateAdministeredPicker(true)}>
                       <Image
                         source={icons.calendar}
                         resizeMode="contain"
@@ -229,14 +279,21 @@ export default function CurativeTreatmentScreen({ navigation }) {
 
                 {/* Dosage Administered */}
                 <Box>
-                  <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="500"
+                    color={COLORS.darkGray3}
+                    mb={1}>
                     Dosage Administered
                   </Text>
                   <HStack alignItems="center" space={2}>
                     <Button
                       onPress={() => {
-                        const currentValue = parseFloat(dosageAdministered) || 1;
-                        setDosageAdministered(Math.max(currentValue - 1, 1).toString());
+                        const currentValue =
+                          parseFloat(dosageAdministered) || 1;
+                        setDosageAdministered(
+                          Math.max(currentValue - 1, 1).toString(),
+                        );
                       }}
                       variant="outline"
                       p={2}>
@@ -257,7 +314,8 @@ export default function CurativeTreatmentScreen({ navigation }) {
                     />
                     <Button
                       onPress={() => {
-                        const currentValue = parseFloat(dosageAdministered) || 1;
+                        const currentValue =
+                          parseFloat(dosageAdministered) || 1;
                         setDosageAdministered((currentValue + 1).toString());
                       }}
                       variant="outline"
@@ -267,9 +325,12 @@ export default function CurativeTreatmentScreen({ navigation }) {
                   </HStack>
                 </Box>
 
-                {/* Cost of Drugs */}
                 <Box>
-                  <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="500"
+                    color={COLORS.darkGray3}
+                    mb={1}>
                     Cost of Drugs
                   </Text>
                   <Input
@@ -287,13 +348,20 @@ export default function CurativeTreatmentScreen({ navigation }) {
 
             {/* Medical Officer */}
             <Box mt={2}>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Medical Officer
               </Text>
               <VStack space={3} pl={4}>
-                {/* Name */}
                 <Box>
-                  <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="500"
+                    color={COLORS.darkGray3}
+                    mb={1}>
                     Name
                   </Text>
                   <Input
@@ -305,10 +373,14 @@ export default function CurativeTreatmentScreen({ navigation }) {
                     onChangeText={setMedicalOfficerName}
                   />
                 </Box>
-                
+
                 {/* License ID */}
                 <Box>
-                  <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="500"
+                    color={COLORS.darkGray3}
+                    mb={1}>
                     License ID
                   </Text>
                   <Input
@@ -320,10 +392,14 @@ export default function CurativeTreatmentScreen({ navigation }) {
                     onChangeText={setLicenseId}
                   />
                 </Box>
-                
+
                 {/* Cost of Service */}
                 <Box>
-                  <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="500"
+                    color={COLORS.darkGray3}
+                    mb={1}>
                     Cost of Service
                   </Text>
                   <Input
@@ -341,13 +417,21 @@ export default function CurativeTreatmentScreen({ navigation }) {
 
             {/* Farmer or Witness */}
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Farmer or Witness
               </Text>
               <VStack space={3} pl={4}>
                 {/* Name */}
                 <Box>
-                  <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="500"
+                    color={COLORS.darkGray3}
+                    mb={1}>
                     Name
                   </Text>
                   <Input
@@ -359,10 +443,14 @@ export default function CurativeTreatmentScreen({ navigation }) {
                     onChangeText={setFarmerWitnessName}
                   />
                 </Box>
-                
+
                 {/* Notes */}
                 <Box>
-                  <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="500"
+                    color={COLORS.darkGray3}
+                    mb={1}>
                     Notes
                   </Text>
                   <Input
@@ -399,13 +487,59 @@ export default function CurativeTreatmentScreen({ navigation }) {
                 _pressed={{
                   bg: 'emerald.700',
                 }}
-                >
-                Next
+                onPress={handleSave}>
+                Done
               </Button>
             </HStack>
           </VStack>
         </Box>
       </ScrollView>
+      {showSuccessModal && (
+        <Box
+          position="absolute"
+          top="0"
+          bottom="0"
+          left="0"
+          right="0"
+          bg="rgba(0,0,0,0.5)"
+          justifyContent="center"
+          alignItems="center">
+          <Box bg="white" p={6} borderRadius={8} width="80%" maxWidth="400px">
+            <VStack space={4} alignItems="center">
+              <FastImage
+                source={icons.tick}
+                style={{width: 60, height: 60}}
+                resizeMode="contain"
+              />
+              <Text fontSize="lg" fontWeight="bold" textAlign="center">
+                Curative Treatment Record Added Successfully!
+              </Text>
+
+              <HStack space={4} mt={2}>
+                <Button
+                  flex={1}
+                  variant="outline"
+                  borderColor={COLORS.green}
+                  _text={{
+                    color: COLORS.green,
+                  }}
+                  onPress={handleDone}>
+                  OK
+                </Button>
+                <Button
+                  flex={1}
+                  bg={COLORS.green}
+                  _pressed={{
+                    bg: 'emerald.700',
+                  }}
+                  onPress={handleAddAnother}>
+                  Add Another
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        </Box>
+      )}
     </View>
   );
 }

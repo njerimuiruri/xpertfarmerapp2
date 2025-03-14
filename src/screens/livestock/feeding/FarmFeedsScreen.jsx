@@ -43,7 +43,6 @@ const FarmFeedsScreen = ({navigation}) => {
     groupLifecycleStages: [],
   });
 
-  // Feeds state
   const [feedType, setFeedType] = useState('');
   const [feedData, setFeedData] = useState({
     basal: {
@@ -75,14 +74,12 @@ const FarmFeedsScreen = ({navigation}) => {
     },
   });
 
-  // Date picker state
   const [datePickerVisible, setDatePickerVisible] = useState({
     basal: false,
     concentrate: false,
     supplement: false,
   });
 
-  // Reset lifecycle stages when animal/group type changes
   useEffect(() => {
     if (animalData.type)
       setAnimalData(prev => ({...prev, lifecycleStages: []}));
@@ -90,7 +87,6 @@ const FarmFeedsScreen = ({navigation}) => {
       setAnimalData(prev => ({...prev, groupLifecycleStages: []}));
   }, [animalData.type, animalData.groupType]);
 
-  // Helper functions for lifecycle options
   const getLifecycleOptions = (type, isGroup = false) => {
     const options = {
       Dairy: ['Calf', 'Heifer', 'Lactating cows', 'Dry Cows'],
@@ -107,7 +103,6 @@ const FarmFeedsScreen = ({navigation}) => {
     return type ? options[type] || [] : [];
   };
 
-  // Toggle functions for selections
   const toggleSelection = (item, field) => {
     setAnimalData(prev => {
       const current = prev[field];
@@ -126,7 +121,6 @@ const FarmFeedsScreen = ({navigation}) => {
     );
   };
 
-  // Handle date changes
   const handleDateChange = (feedKey, selectedDate) => {
     setDatePickerVisible({...datePickerVisible, [feedKey]: false});
     if (selectedDate) {
@@ -145,21 +139,18 @@ const FarmFeedsScreen = ({navigation}) => {
     }));
   };
 
-  // Update animal data
   const updateAnimalData = (field, value) => {
     setAnimalData(prev => ({...prev, [field]: value}));
   };
 
-  // Modified validation functions - removed required field checks
   const validateStep1 = () => {
-    return true; // Always allow progression to next step
+    return true;
   };
 
   const validateStep2 = () => {
-    return true; // Always allow submission
+    return true;
   };
 
-  // Navigation functions
   const nextStep = () => {
     if (currentStep === 1 && validateStep1()) setCurrentStep(2);
   };
@@ -168,85 +159,10 @@ const FarmFeedsScreen = ({navigation}) => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  // Submit function
   const handleSubmit = () => {
-    if (validateStep2()) {
-      const {basal, concentrate, supplement} = feedData;
-      const isAnimal = programType === 'Single Animal';
-
-      const newFeedingRequirement = {
-        id: Math.random().toString(36).substring(2, 9),
-        animalType: isAnimal ? animalData.type : animalData.groupType,
-        feedName:
-          feedType === 'Basal Feeds'
-            ? basal.feedType
-            : `${basal.feedType} with supplements`,
-        frequency: basal.schedule,
-        amount: `${basal.quantity} kg per ${isAnimal ? 'animal' : 'group'}`,
-        lastFed: new Date().toISOString().split('T')[0],
-        nextFeeding: new Date(new Date().setDate(new Date().getDate() + 1))
-          .toISOString()
-          .split('T')[0],
-        nutritionalInfo:
-          feedType === 'Basal Feeds'
-            ? `Source: ${basal.source}`
-            : `Basal: ${basal.feedType}, Concentrate: ${concentrate.feedType}, Supplement: ${supplement.feedType}`,
-        timeOfDay,
-        programDetails: {
-          programType,
-          ...(isAnimal
-            ? {
-                animalId: animalData.id,
-                animalType: animalData.type,
-                lifecycleStages: animalData.lifecycleStages,
-              }
-            : {
-                groupId: animalData.groupId,
-                groupType: animalData.groupType,
-                groupLifecycleStages: animalData.groupLifecycleStages,
-              }),
-          feedType,
-          basalDetails: {
-            feedType: basal.feedType,
-            source: basal.source,
-            schedule: basal.schedule,
-            quantity: basal.quantity,
-            dateAcquired: basal.date.toISOString().split('T')[0],
-            cost: basal.cost,
-            supplier: basal.supplier,
-          },
-          ...(feedType === 'Basal Feed + Concentrates + Supplements' && {
-            concentrateDetails: {
-              feedType: concentrate.feedType,
-              source: concentrate.source,
-              schedule: concentrate.schedule,
-              quantity: concentrate.quantity,
-              dateAcquired: concentrate.date.toISOString().split('T')[0],
-              cost: concentrate.cost,
-              supplier: concentrate.supplier,
-            },
-            supplementDetails: {
-              feedType: supplement.feedType,
-              source: supplement.source,
-              schedule: supplement.schedule,
-              quantity: supplement.quantity,
-              dateAcquired: supplement.date.toISOString().split('T')[0],
-              cost: supplement.cost,
-              supplier: supplement.supplier,
-            },
-          }),
-        },
-      };
-
-      setModalVisible(true);
-      setTimeout(() => {
-        setModalVisible(false);
-        navigation.navigate('FeedingModuleScreen', {newFeedingRequirement});
-      }, 1500);
-    }
+    setModalVisible(true);
   };
 
-  // Render feed form section
   const renderFeedForm = (feedKey, title) => (
     <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -357,7 +273,6 @@ const FarmFeedsScreen = ({navigation}) => {
     </Box>
   );
 
-  // Render selection buttons (lifecycle stages or time of day)
   const renderSelectionButtons = (options, selectedValues, onToggle) => (
     <VStack space={2}>
       {options.map(option => (
@@ -442,8 +357,7 @@ const FarmFeedsScreen = ({navigation}) => {
               )}
             </FormControl>
           )}
-          
-          {/* Navigation buttons inside the card */}
+
           <Center mt={6}>
             <HStack space={4} justifyContent="center">
               <Button
@@ -454,8 +368,8 @@ const FarmFeedsScreen = ({navigation}) => {
                 onPress={() => navigation.goBack()}>
                 Cancel
               </Button>
-              <Button 
-                backgroundColor={COLORS.green} 
+              <Button
+                backgroundColor={COLORS.green}
                 borderRadius={8}
                 onPress={nextStep}>
                 Next
@@ -505,8 +419,7 @@ const FarmFeedsScreen = ({navigation}) => {
               )}
             </FormControl>
           )}
-          
-          {/* Navigation buttons inside the card */}
+
           <Center mt={6}>
             <HStack space={4} justifyContent="center">
               <Button
@@ -517,8 +430,8 @@ const FarmFeedsScreen = ({navigation}) => {
                 onPress={() => navigation.goBack()}>
                 Cancel
               </Button>
-              <Button 
-                backgroundColor={COLORS.green} 
+              <Button
+                backgroundColor={COLORS.green}
                 borderRadius={8}
                 onPress={nextStep}>
                 Next
@@ -527,8 +440,6 @@ const FarmFeedsScreen = ({navigation}) => {
           </Center>
         </Box>
       )}
-
-      {/* Removed the bottom navigation buttons since they're now in the cards */}
     </ScrollView>
   );
 
@@ -584,8 +495,7 @@ const FarmFeedsScreen = ({navigation}) => {
             placeholder="Additional notes or instructions..."
           />
         </FormControl>
-        
-        {/* Navigation buttons inside the last card */}
+
         <Center mt={6}>
           <HStack space={4} justifyContent="center">
             <Button
@@ -604,8 +514,8 @@ const FarmFeedsScreen = ({navigation}) => {
               onPress={() => navigation.goBack()}>
               Cancel
             </Button>
-            <Button 
-              backgroundColor={COLORS.green} 
+            <Button
+              backgroundColor={COLORS.green}
               borderRadius={8}
               onPress={handleSubmit}>
               Submit
@@ -613,8 +523,6 @@ const FarmFeedsScreen = ({navigation}) => {
           </HStack>
         </Center>
       </Box>
-
-      {/* Removed the bottom navigation buttons since they're now in the cards */}
     </ScrollView>
   );
 
@@ -650,22 +558,32 @@ const FarmFeedsScreen = ({navigation}) => {
       {currentStep === 1 ? renderStep1() : renderStep2()}
 
       <Modal
-        animationType="fade"
+        animationType="slide"
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalContent}>
             <FastImage
-              source={icons.check}
+              source={icons.tick}
               style={styles.successIcon}
               tintColor={COLORS.green}
             />
             <Text style={styles.modalText}>
-              Feeding Program Created Successfully!
+              Your feeding program has been successfully created and saved.
             </Text>
+            <Button
+              backgroundColor={COLORS.green}
+              borderRadius={8}
+              mt={4}
+              onPress={() => {
+                setModalVisible(false);
+                navigation.navigate('FeedingModuleScreen');
+              }}>
+              Done
+            </Button>
           </View>
-        </View>
+        </SafeAreaView>
       </Modal>
     </SafeAreaView>
   );
@@ -714,25 +632,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalView: {
-    margin: 20,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 35,
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  successIcon: {width: 60, height: 60, marginBottom: 15},
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
-    fontSize: 18,
+  modalContent: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+  },
+  successIcon: {
+    width: 60,
+    height: 60,
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.green2,
+    marginBottom: 8,
+    color: COLORS.green,
+  },
+  modalText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 16,
+    color: '#666',
   },
 });
 

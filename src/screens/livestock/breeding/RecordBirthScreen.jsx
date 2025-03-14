@@ -54,55 +54,9 @@ const RecordBirthScreen = ({route, navigation}) => {
     setShowDeliveryMethodPicker(false);
   };
 
-  const validateForm = () => {
-    if (!birthDetails.youngOnes) {
-      Alert.alert('Error', 'Please enter the number of offspring');
-      return false;
-    }
-    
-    if (record.animalType === 'Swine' && !birthDetails.litterWeight) {
-      Alert.alert('Error', 'Please enter litter weight');
-      return false;
-    }
-    
-    if (record.animalType !== 'Swine' && !birthDetails.birthWeight) {
-      Alert.alert('Error', 'Please enter birth weight');
-      return false;
-    }
-    
-    if (!birthDetails.offspringSex) {
-      Alert.alert('Error', 'Please enter offspring sex information');
-      return false;
-    }
-    
-    return true;
-  };
-
-  const handleSaveRecord = () => {
-    if (!validateForm()) return;
-    
-    // Here you would update the breeding record in your state/database
-    // This is a simplified example that just shows success and goes back
-    Alert.alert(
-      'Success',
-      'Birth record saved successfully',
-      [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ],
-    );
-  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar
-        translucent
-        backgroundColor={COLORS.green2}
-        animated={true}
-        barStyle={'light-content'}
-      />
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Record Birth" />
       
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -192,12 +146,12 @@ const RecordBirthScreen = ({route, navigation}) => {
                 value={birthDetails.youngOnes}
                 onChangeText={(text) => setBirthDetails({...birthDetails, youngOnes: text})}
                 keyboardType="numeric"
+                
                 placeholder="Enter number"
               />
             </View>
           </View>
           
-          {/* Weight Fields - Different based on animal type */}
           {record.animalType === 'Swine' ? (
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Litter Weight</Text>
@@ -265,13 +219,13 @@ const RecordBirthScreen = ({route, navigation}) => {
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.button, styles.saveButton]} 
-            onPress={handleSaveRecord}
+           
           >
             <Text style={styles.buttonSaveText}>Save Record</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -396,13 +350,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: COLORS.lightGreen,
+
   },
   textInput: {
     flex: 1,
     height: '100%',
     fontSize: 16,
-    color: '#333',
+    color:COLORS.black,
   },
   unitText: {
     fontSize: 16,

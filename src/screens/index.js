@@ -55,7 +55,6 @@ import CurativeTreatmentScreen from './health/CurativeTreatmentScreen';
 
 
 // Home DashboardScreen
-import FarmDashboard from './Home/dashboard';
 
 //productionsScreen
 import AddDairyDetailsScreen from './production/AddDairyDetailsScreen';
@@ -134,7 +133,6 @@ export {
 
   //home
   
-  FarmDashboard,
 
 //productionsrecord
   SwineRecordScreen,

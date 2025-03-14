@@ -25,7 +25,6 @@ const initialFeedingData = [
     amount: '12 kg per animal',
     lastFed: '2025-03-03',
     nextFeeding: '2025-03-04',
-    nutritionalInfo: 'Protein: 18%, Fiber: 12%, Fat: 4%',
     timeOfDay: ['Morning', 'Evening'],
   },
   {
@@ -36,7 +35,6 @@ const initialFeedingData = [
     amount: '10 kg per animal',
     lastFed: '2025-03-03',
     nextFeeding: '2025-03-04',
-    nutritionalInfo: 'Protein: 16%, Fiber: 15%, Fat: 3%',
     timeOfDay: ['Morning', 'Afternoon', 'Evening'],
   },
   {
@@ -47,7 +45,6 @@ const initialFeedingData = [
     amount: '120 g per bird',
     lastFed: '2025-03-03',
     nextFeeding: '2025-03-04',
-    nutritionalInfo: 'Protein: 16%, Calcium: 4%, Fiber: 5%',
     timeOfDay: ['Morning'],
   },
   {
@@ -58,7 +55,6 @@ const initialFeedingData = [
     amount: '1.5 kg per animal',
     lastFed: '2025-03-03',
     nextFeeding: '2025-03-04',
-    nutritionalInfo: 'Protein: 20%, Fiber: 4%, Fat: 6%',
     timeOfDay: ['Morning', 'Afternoon', 'Evening'],
   },
   {
@@ -69,7 +65,6 @@ const initialFeedingData = [
     amount: '0.8 kg per animal',
     lastFed: '2025-03-03',
     nextFeeding: '2025-03-04',
-    nutritionalInfo: 'Protein: 14%, Fiber: 20%, Fat: 2%',
     timeOfDay: ['Morning'],
   },
 ];
@@ -81,8 +76,8 @@ const FeedingModuleScreen = ({navigation}) => {
   const [filterAnimalType, setFilterAnimalType] = useState('');
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const currentDate = new Date().toISOString().split('T')[0];
-  const [sortBy, setSortBy] = useState('nextFeeding'); // Default sorting by date
-  const [sortOrder, setSortOrder] = useState('asc'); // Default ascending order
+  const [sortBy, setSortBy] = useState('nextFeeding');
+  const [sortOrder, setSortOrder] = useState('asc');
   const sortedAndFilteredRequirements = useMemo(() => {
     return feedingRequirements
       .filter(
@@ -185,9 +180,18 @@ const FeedingModuleScreen = ({navigation}) => {
             />
             <Text style={styles.detailText}>Amount: {item.amount}</Text>
           </View>
-          <View style={styles.nutritionContainer}>
-            <Text style={styles.nutritionTitle}>Nutrition Info:</Text>
-            <Text style={styles.nutritionText}>{item.nutritionalInfo}</Text>
+          <View style={styles.feedStatusContainer}>
+            <Text style={styles.feedStatusTitle}>Feed Status:</Text>
+            <View style={styles.feedStatusRow}>
+              <View style={styles.statusItem}>
+                <Text style={styles.statusLabel}>Last Fed:</Text>
+                <Text style={styles.statusValue}>{item.lastFed}</Text>
+              </View>
+              <View style={styles.statusItem}>
+                <Text style={styles.statusLabel}>Next Feed:</Text>
+                <Text style={styles.statusValue}>{item.nextFeeding}</Text>
+              </View>
+            </View>
           </View>
           {isToday && (
             <View style={styles.feedingScheduleContainer}>
@@ -195,9 +199,7 @@ const FeedingModuleScreen = ({navigation}) => {
               <View style={styles.timeSlotContainer}>
                 {item.timeOfDay.map(time => (
                   <View key={time} style={styles.timeSlotWrapper}>
-                    <TouchableOpacity
-                      style={styles.timeSlot}
-                      >
+                    <TouchableOpacity style={styles.timeSlot}>
                       <Text style={styles.timeSlotText}>{time}</Text>
                     </TouchableOpacity>
                   </View>
@@ -560,21 +562,33 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-  nutritionContainer: {
+  feedStatusContainer: {
     marginTop: 8,
-    backgroundColor: '#f0f8ff',
+    backgroundColor: '#f5f5f5',
     padding: 10,
     borderRadius: 8,
   },
-  nutritionTitle: {
+  feedStatusTitle: {
     fontSize: 14,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 4,
   },
-  nutritionText: {
-    fontSize: 13,
+  feedStatusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statusItem: {
+    flex: 1,
+  },
+  statusLabel: {
+    fontSize: 12,
     color: '#666',
+  },
+  statusValue: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#333',
   },
 });
 

@@ -26,7 +26,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [dropdownField, setDropdownField] = useState(null);
   
-  // Dropdown options
   const dropdownOptions = {
     animalType: ['Dairy Cow', 'Goat', 'Swine', 'Sheep'],
     purpose: ['Improve Milk Production', 'Stocking Number', 'Immunity'],
@@ -35,7 +34,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
     status: ['Pregnant', 'Delivered', 'Failed'],
   };
   
-  // Calculate gestation period based on animal type
   useEffect(() => {
     if (breedingRecord.animalType === 'Dairy Cow') {
       setBreedingRecord(prev => ({...prev, gestationPeriod: '280 days'}));
@@ -48,7 +46,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
     }
   }, [breedingRecord.animalType]);
   
-  // Calculate expected birth date based on service date and gestation period
   useEffect(() => {
     if (breedingRecord.serviceDate && breedingRecord.gestationPeriod) {
       const days = parseInt(breedingRecord.gestationPeriod.split(' ')[0]);
@@ -141,22 +138,7 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
     return true;
   };
 
-  const handleSaveRecord = () => {
-    if (!validateForm()) return;
-    
-    // Here you would update the breeding record in your state/database
-    // This is a simplified example that just shows success and goes back
-    Alert.alert(
-      'Success',
-      'Breeding record updated successfully',
-      [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ],
-    );
-  };
+ 
 
   const renderDropdownModal = () => {
     if (!dropdownField) return null;
@@ -205,13 +187,8 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar
-        translucent
-        backgroundColor={COLORS.green2}
-        animated={true}
-        barStyle={'light-content'}
-      />
+        <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
+    
       <SecondaryHeader title="Edit Breeding Record" />
       
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -225,6 +202,7 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
               <TextInput
                 style={styles.textInput}
                 value={breedingRecord.animalId}
+                backgroundColor={COLORS.lightGreen}
                 onChangeText={(text) => setBreedingRecord({...breedingRecord, animalId: text})}
                 placeholder="Enter Animal ID"
               />
@@ -311,7 +289,7 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Service Date</Text>
             <TouchableOpacity 
-              style={styles.datePickerButton}
+              style={styles.datePickerButton}              
               onPress={() => showDatePickerModal('serviceDate')}
             >
               <Text style={styles.dateText}>
@@ -334,15 +312,13 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
             )}
           </View>
           
-          {/* Gestation Period (Read-only, calculated based on animal type) */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Gestation Period</Text>
             <View style={[styles.textInputContainer, styles.readOnlyInput]}>
-              <Text style={styles.readOnlyText}>{breedingRecord.gestationPeriod}</Text>
+              <Text style={styles.readOnlyText}>{breedingRecord.gestationPeriod }</Text>
             </View>
           </View>
           
-          {/* Expected Birth Date (Read-only, calculated) */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Expected Birth Date</Text>
             <View style={[styles.textInputContainer, styles.readOnlyInput]}>
@@ -490,21 +466,20 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
       
       {/* Render the dropdown modal */}
       {renderDropdownModal()}
-    </SafeAreaView>
+      </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
   },
   formCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor:COLORS.white,
     borderRadius: 10,
     padding: 16,
     marginBottom: 16,
@@ -533,10 +508,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   textInputContainer: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor:COLORS.lightGreen,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor:COLORS.lightGray1,
     height: 48,
     paddingHorizontal: 12,
     justifyContent: 'center',
@@ -546,11 +521,13 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   readOnlyInput: {
-    backgroundColor: '#F0F0F0',
+    backgroundColor:COLORS.lightGreen,
+
   },
   readOnlyText: {
     fontSize: 16,
     color: '#666',
+    
   },
   pickerButton: {
     flexDirection: 'row',

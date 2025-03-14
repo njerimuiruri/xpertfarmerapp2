@@ -22,6 +22,7 @@ export default function Geneticdisorderscreen({navigation}) {
   const [nameOfCondition, setNameOfCondition] = useState('');
   const [remedy, setRemedy] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleDateChange = (event, selectedDate) => {
     if (selectedDate) {
@@ -29,7 +30,16 @@ export default function Geneticdisorderscreen({navigation}) {
     }
     setShowDatePicker(false);
   };
+  const handleSave = () => {
+    setShowSuccessModal(true);
+  };
 
+  const handleDone = () => {
+    navigation.navigate('Allergiesrecordsscreen');
+  };
+  const handleAddAnother = () => {
+    setShowSuccessModal(false);
+  };
   return (
     <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Genetic Disorder Details" />
@@ -151,20 +161,66 @@ export default function Geneticdisorderscreen({navigation}) {
                 Cancel
               </Button>
               <Button
-                backgroundColor={COLORS.green}
-                borderRadius={8}
-                px={6}
-                py={3}
-                _pressed={{
-                  bg: 'emerald.700',
-                }}
-                onPress={() => navigation.navigate('Allergiesrecordsscreen')}>
-                Next
-              </Button>
+                             backgroundColor={COLORS.green}
+                             borderRadius={8}
+                             px={6}
+                             py={3}
+                             _pressed={{
+                               bg: 'emerald.700',
+                             }}
+                             onPress={handleSave}>
+                             Done
+                           </Button>
             </HStack>
           </VStack>
         </Box>
       </ScrollView>
+      {showSuccessModal && (
+        <Box
+          position="absolute"
+          top="0"
+          bottom="0"
+          left="0"
+          right="0"
+          bg="rgba(0,0,0,0.5)"
+          justifyContent="center"
+          alignItems="center">
+          <Box bg="white" p={6} borderRadius={8} width="80%" maxWidth="400px">
+            <VStack space={4} alignItems="center">
+              <FastImage
+                source={icons.tick}
+                style={{width: 60, height: 60}}
+                resizeMode="contain"
+              />
+              <Text fontSize="lg" fontWeight="bold" textAlign="center">
+                Genetic Disorder Record Added Successfully!
+              </Text>
+
+              <HStack space={4} mt={2}>
+                <Button
+                  flex={1}
+                  variant="outline"
+                  borderColor={COLORS.green}
+                  _text={{
+                    color: COLORS.green,
+                  }}
+                  onPress={handleDone}>
+                  OK
+                </Button>
+                <Button
+                  flex={1}
+                  bg={COLORS.green}
+                  _pressed={{
+                    bg: 'emerald.700',
+                  }}
+                  onPress={handleAddAnother}>
+                  Add Another
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        </Box>
+      )}
     </View>
   );
 }

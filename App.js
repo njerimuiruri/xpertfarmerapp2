@@ -78,7 +78,6 @@ import {
   BreedingModuleLandingScreen,
   RecordBirthScreen,
   //home
-  FarmDashboard,
 
   // inventory
   InventoryDashboard,
@@ -188,11 +187,7 @@ export default function App() {
                 component={HomeScreen}
                 options={{headerShown: false}}
               />
-              <Stack.Screen
-                name="FarmDashboard"
-                component={FarmDashboard}
-                options={{headerShown: false}}
-              />
+              
               <Stack.Screen
                 name="ProfileScreen"
                 component={ProfileScreen}

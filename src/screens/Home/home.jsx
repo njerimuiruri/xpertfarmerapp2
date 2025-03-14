@@ -59,7 +59,7 @@ const Dashboard = () => {
     'Health': 'AddHealthRecords',
     'Feeds': 'FarmFeedsScreen',
     'Livestock': 'OptionDetailsScreen',
-    'Breeding': 'BreedingModuleLandingScreen',
+    'Breeding': 'BreedingRecordForm',
   };
 
   const cards = [
@@ -127,7 +127,6 @@ const Dashboard = () => {
     <Modal
       transparent={true}
       visible={showPeriodModal}
-      animationType="fade"
       onRequestClose={() => setShowPeriodModal(false)}
     >
       <TouchableOpacity 
