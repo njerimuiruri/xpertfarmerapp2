@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Image } from "react-native";
+import { Image, Alert } from "react-native";
 import {
   Box,
   Text,
@@ -7,17 +7,56 @@ import {
   Button,
   VStack,
   Pressable,
-  Icon,
-  IconButton,
 } from "native-base";
 import FastImage from "react-native-fast-image";
 import { icons } from '../../constants';
 
 export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");  
+  const [password, setPassword] = useState("");        
+  const [loading, setLoading] = useState(false);   
 
   const toggleShowPassword = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleLogin = async () => {
+    if (!phoneNumber || !password) {
+      Alert.alert("Error", "Please enter both phone number and password.");
+      return;
+    }
+
+    setLoading(true); 
+
+    try {
+      const response = await fetch(
+        "https://xpert-farmer-bc7936403999.herokuapp.com/api/v1/user/auth/login/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phone_number: phoneNumber,
+            password: password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        navigation.navigate("DrawerNav");
+      } else {
+        Alert.alert("Login Failed", data.message || "An error occurred. Please try again.");
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);  
+    }
   };
 
   return (
@@ -34,11 +73,6 @@ export default function LoginScreen({ navigation }) {
           style={{ width: 208, height: 144 }}
         />
       </Box>
-
-      {/* <Image
-        source={require("../../assets/images/xpertLogo.jpeg")}
-        style={{ width: 180, height: 180, marginBottom: 20 }}
-      /> */}
 
       <Text
         fontSize="20"
@@ -62,6 +96,8 @@ export default function LoginScreen({ navigation }) {
             paddingLeft={2}
             borderRadius={8}
             keyboardType="phone-pad"
+            value={phoneNumber}        
+            onChangeText={setPhoneNumber} 
           />
         </Box>
 
@@ -77,6 +113,8 @@ export default function LoginScreen({ navigation }) {
             paddingLeft={2}
             borderRadius={8}
             secureTextEntry={!showPassword}
+            value={password}           
+            onChangeText={setPassword} 
             InputRightElement={
               <Pressable onPress={toggleShowPassword} mr={2}>
                 <FastImage 
@@ -99,12 +137,13 @@ export default function LoginScreen({ navigation }) {
         </Box>
 
         <Button
-          onPress={() => navigation.navigate('DrawerNav')}
+          onPress={handleLogin}  
           width="100%"
           mt={5}
           backgroundColor="#74c474"
           padding={3}
           borderRadius={8}
+          isLoading={loading}   
         >
           <Text color="white" fontWeight="bold">
             LOGIN

@@ -84,11 +84,6 @@ import {
   AddMachinery,
   AddGoodsInStock,
   AddUtilityDetails,
-<<<<<<< HEAD
-  LivestockManagementScreen,
-=======
-
->>>>>>> 2e505abcc55dfb39bb39eb68d8bf21d866f01b9a
 } from './src/screens/index';
 import DrawerNav from './src/navigation/drawer/DrawerNav1';
 
@@ -302,17 +297,8 @@ export default function App() {
                 component={FarmFeedsScreen}
                 options={{headerShown: false}}
               />
-<<<<<<< HEAD
-              <Stack.Screen
-                name="FeedingRecordScreen"
-                component={FeedingRecordScreen}
-                options={{headerShown: false}}
-              />
-              <Stack.Screen
-=======
              
                <Stack.Screen
->>>>>>> 2e505abcc55dfb39bb39eb68d8bf21d866f01b9a
                 name="FeedingManagementScreen"
                 component={FeedingManagementScreen}
                 options={{headerShown: false}}
@@ -353,10 +339,6 @@ export default function App() {
                 component={FarmHealthRecords}
                 options={{headerShown: false}}
               />
-<<<<<<< HEAD
-
-              <Stack.Screen
-=======
               
 
               <Stack.Screen
@@ -373,7 +355,6 @@ export default function App() {
 
               {/* production */}
               <Stack.Screen
->>>>>>> 2e505abcc55dfb39bb39eb68d8bf21d866f01b9a
                 name="AddDairyDetailsScreen"
                 component={AddDairyDetailsScreen}
                 options={{headerShown: false}}
