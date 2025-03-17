@@ -7,14 +7,11 @@ import {
   TouchableOpacity,
   Modal,
 } from 'react-native';
-import FastImage from 'react-native-fast-image';
 import Header from '../../components/headers/main-header';
 import { useNavigation } from '@react-navigation/native';
-import { icons } from '../../constants';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
 const Dashboard = () => {
@@ -94,47 +91,7 @@ const Dashboard = () => {
     </LinearGradient>
   );
   
-  const renderTimePeriodsModal = () => (
-    <Modal
-      transparent={true}
-      visible={showPeriodModal}
-      onRequestClose={() => setShowPeriodModal(false)}
-    >
-      <TouchableOpacity 
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={() => setShowPeriodModal(false)}
-      >
-        <View style={styles.periodModalContainer}>
-          {timePeriods.map((period) => (
-            <TouchableOpacity
-              key={period}
-              style={[
-                styles.periodOption,
-                selectedPeriod === period && styles.selectedPeriodOption
-              ]}
-              onPress={() => {
-                setSelectedPeriod(period);
-                setShowPeriodModal(false);
-              }}
-            >
-              <Text 
-                style={[
-                  styles.periodOptionText,
-                  selectedPeriod === period && styles.selectedPeriodOptionText
-                ]}
-              >
-                {period}
-              </Text>
-              {selectedPeriod === period && (
-                <Icon name="check" size={18} color="#4CAF50" />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      </TouchableOpacity>
-    </Modal>
-  );
+ 
   
   return (
     <View style={styles.container}>
@@ -344,4 +301,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Dashboard;
+export default Dashboard

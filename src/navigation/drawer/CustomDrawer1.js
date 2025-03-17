@@ -12,11 +12,30 @@ import CopyRight from '../../components/CopyRight';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
 import {Switch} from 'native-base';
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 
 const CustomDrawer1 = props => {
   const navigation = useNavigation();
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [userData, setUserData] = useState({
+    first_name: '',
+    last_name: '',
+    role: ''
+  });
+console.log(userData)
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem('userData');
+        if (storedData) {
+          setUserData(JSON.parse(storedData));
+        }
+      } catch (error) {
+        console.error('Failed to load user data:', error);
+      }
+    };
+    loadUserData();
+  }, []);
 
   const toggleSwitch = () => setIsDarkMode(previousState => !previousState);
 
@@ -34,8 +53,8 @@ const CustomDrawer1 = props => {
       {/* Profile Section */}
       <View style={styles.profileSection}>
         <FastImage source={icons.avatar} style={styles.avatar} />
-        <Text style={styles.nameText}>John Doe</Text>
-        <Text style={styles.roleText}>Admin</Text>
+        <Text style={styles.nameText}>{`${userData.first_name} ${userData.last_name}`}</Text>
+        <Text style={styles.roleText}>{userData.role || 'User'}</Text>
         <Divider style={styles.divider} />
       </View>
 

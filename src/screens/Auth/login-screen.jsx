@@ -10,6 +10,7 @@ import {
 } from "native-base";
 import FastImage from "react-native-fast-image";
 import { icons } from '../../constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -47,6 +48,11 @@ export default function LoginScreen({ navigation }) {
       const data = await response.json();
 
       if (response.ok) {
+        const userData = {
+          phone_number: phoneNumber,
+          ...data.user
+        };
+        await AsyncStorage.setItem('userData', JSON.stringify(userData));
         navigation.navigate("DrawerNav");
       } else {
         Alert.alert("Login Failed", data.message || "An error occurred. Please try again.");
