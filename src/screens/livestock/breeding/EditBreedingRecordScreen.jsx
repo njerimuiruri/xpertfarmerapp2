@@ -138,7 +138,21 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
     return true;
   };
 
- 
+  const handleSaveRecord = () => {
+  
+    
+
+    Alert.alert(
+      'Success',
+      'Breeding record updated successfully',
+      [
+        {
+          text: 'OK',
+          onPress: () => navigation.goBack(),
+        },
+      ],
+    );
+  };
 
   const renderDropdownModal = () => {
     if (!dropdownField) return null;
@@ -195,7 +209,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
         <View style={styles.formCard}>
           <Text style={styles.cardTitle}>Animal Information</Text>
           
-          {/* Animal ID */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Animal ID</Text>
             <View style={styles.textInputContainer}>
@@ -209,7 +222,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
             </View>
           </View>
           
-          {/* Animal Type */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Animal Type</Text>
             <TouchableOpacity 
@@ -231,7 +243,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
         <View style={styles.formCard}>
           <Text style={styles.cardTitle}>Breeding Information</Text>
           
-          {/* Purpose */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Breeding Purpose</Text>
             <TouchableOpacity 
@@ -249,7 +260,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
             </TouchableOpacity>
           </View>
           
-          {/* Strategy */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Breeding Strategy</Text>
             <TouchableOpacity 
@@ -267,7 +277,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
             </TouchableOpacity>
           </View>
           
-          {/* Service Type */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Service Type</Text>
             <TouchableOpacity 
@@ -285,7 +294,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
             </TouchableOpacity>
           </View>
           
-          {/* Service Date */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Service Date</Text>
             <TouchableOpacity 
@@ -351,7 +359,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
           </View>
         </View>
         
-        {/* Birth Details Section (visible only if status is Delivered) */}
         {breedingRecord.status === 'Delivered' && (
           <View style={styles.formCard}>
             <Text style={styles.cardTitle}>Birth Details</Text>
@@ -383,7 +390,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
               )}
             </View>
             
-            {/* Delivery Method */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Delivery Method</Text>
               <View style={styles.textInputContainer}>
@@ -396,7 +402,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
               </View>
             </View>
             
-            {/* Number of Young Ones */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Number of Offspring</Text>
               <View style={styles.textInputContainer}>
@@ -410,7 +415,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
               </View>
             </View>
             
-            {/* Weight Fields */}
             {breedingRecord.animalType === 'Swine' ? (
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Litter Weight</Text>
@@ -439,7 +443,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
               </View>
             )}
             
-            {/* Notes */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Notes</Text>
               <View style={[styles.textInputContainer, styles.textAreaContainer]}>
@@ -456,7 +459,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
           </View>
         )}
         
-        {/* Save Button */}
         <TouchableOpacity 
           style={styles.saveButton}
           onPress={handleSaveRecord}>
@@ -464,7 +466,6 @@ const EditBreedingRecordScreen = ({route, navigation}) => {
         </TouchableOpacity>
       </ScrollView>
       
-      {/* Render the dropdown modal */}
       {renderDropdownModal()}
       </View>
   );
@@ -483,7 +484,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -504,21 +505,21 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333',
+    color: COLORS.black,
     marginBottom: 8,
   },
   textInputContainer: {
     backgroundColor:COLORS.lightGreen,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor:COLORS.lightGray1,
+    borderColor:COLORS.lightGray2,
     height: 48,
     paddingHorizontal: 12,
     justifyContent: 'center',
   },
   textInput: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.black,
   },
   readOnlyInput: {
     backgroundColor:COLORS.lightGreen,
@@ -526,38 +527,38 @@ const styles = StyleSheet.create({
   },
   readOnlyText: {
     fontSize: 16,
-    color: '#666',
+    color: COLORS.black,
     
   },
   pickerButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F9F9F9',
+    backgroundColor: COLORS.lightGray2,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: COLORS.lightGray1,
     height: 48,
     paddingHorizontal: 12,
   },
   pickerText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.black,
   },
   datePickerButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F9F9F9',
+    backgroundColor: COLORS.lightGray2,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: COLORS.lightGray1,
     height: 48,
     paddingHorizontal: 12,
   },
   dateText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.black,
   },
   inputIcon: {
     width: 20,
@@ -572,7 +573,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   saveButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -580,13 +581,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   pregnantStatus: {
-    color: COLORS.green2,
+    color: COLORS.yellow,
   },
   deliveredStatus: {
-    color: '#4CAF50',
+    color:COLORS.green3,
   },
   failedStatus: {
-    color: '#F44336',
+    color: 'red',
   },
   textAreaContainer: {
     height: 100,
@@ -605,10 +606,10 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '80%',
     maxHeight: '70%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.white,
     borderRadius: 10,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -630,14 +631,14 @@ const styles = StyleSheet.create({
   option: {
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor:COLORS.lightGray1,
   },
   selectedOption: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor:COLORS.lightGreen,
   },
   optionText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.black,
   },
   selectedOptionText: {
     color: COLORS.green2,
@@ -647,13 +648,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingVertical: 12,
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor:COLORS.green3,
     borderRadius: 8,
+    color:COLORS.white
   },
   closeButtonText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#666',
+    color: COLORS.black,
   },
 });
 

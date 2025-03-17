@@ -182,7 +182,6 @@ const RecordBirthScreen = ({route, navigation}) => {
             </View>
           )}
           
-          {/* Offspring Sex */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Offspring Sex</Text>
             <View style={styles.textInputContainer}>
@@ -195,7 +194,6 @@ const RecordBirthScreen = ({route, navigation}) => {
             </View>
           </View>
           
-          {/* Offspring IDs */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Offspring IDs</Text>
             <View style={styles.textInputContainer}>
@@ -209,7 +207,6 @@ const RecordBirthScreen = ({route, navigation}) => {
           </View>
         </View>
         
-        {/* Action Buttons */}
         <View style={styles.buttonGroup}>
           <TouchableOpacity 
             style={[styles.button, styles.cancelButton]} 
@@ -232,13 +229,12 @@ const RecordBirthScreen = ({route, navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   scrollContent: {
     padding: 16,
   },
   infoCard: {
-    backgroundColor: '#fff',
+    backgroundColor:COLORS.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -249,7 +245,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   formCard: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -262,10 +258,10 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.black,
     marginBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor:COLORS.lightGray1,
     paddingBottom: 8,
   },
   animalDetailRow: {
@@ -275,12 +271,12 @@ const styles = StyleSheet.create({
   detailLabel: {
     width: 120,
     fontSize: 14,
-    color: '#666',
+    color: COLORS.black,
   },
   detailValue: {
     flex: 1,
     fontSize: 14,
-    color: '#333',
+    color:COLORS.black,
     fontWeight: '500',
   },
   inputGroup: {
@@ -288,7 +284,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    color: '#666',
+    color: COLORS.black,
     marginBottom: 8,
   },
   datePickerButton: {
@@ -298,13 +294,13 @@ const styles = StyleSheet.create({
     height: 48,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor:COLORS.lightGray1,
     borderRadius: 8,
-    backgroundColor: '#f8f9fa',
+    backgroundColor:COLORS.lightGreen,
   },
   dateText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.black,
   },
   pickerButton: {
     flexDirection: 'row',
@@ -313,20 +309,20 @@ const styles = StyleSheet.create({
     height: 48,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.lightGray1,
     borderRadius: 8,
-    backgroundColor: '#f8f9fa',
+    backgroundColor:COLORS.lightGreen,
   },
   pickerText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.black,
   },
   pickerOptions: {
     marginTop: 4,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.lightGray1,
     borderRadius: 8,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
@@ -336,11 +332,11 @@ const styles = StyleSheet.create({
   pickerOption: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: COLORS.lightGray1,
   },
   pickerOptionText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.black,
   },
   textInputContainer: {
     flexDirection: 'row',
@@ -348,7 +344,7 @@ const styles = StyleSheet.create({
     height: 48,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.lightGray1,
     borderRadius: 8,
     backgroundColor: COLORS.lightGreen,
 
@@ -361,7 +357,7 @@ const styles = StyleSheet.create({
   },
   unitText: {
     fontSize: 16,
-    color: '#666',
+    color: COLORS.black,
     marginLeft: 8,
   },
   inputIcon: {
@@ -383,21 +379,21 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
   cancelButton: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.lightGray1,
   },
   saveButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: COLORS.green3,
   },
   buttonCancelText: {
     fontSize: 16,
-    color: '#666',
+    color: COLORS.black,
     fontWeight: '500',
   },
   buttonSaveText: {
     fontSize: 16,
-    color: '#fff',
+    color: COLORS.white,
     fontWeight: '500',
   },
 });
