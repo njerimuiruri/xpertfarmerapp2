@@ -18,7 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 const healthCategories = [
   {
     id: '1',
-    title: 'Vaccine Dosage',
+    title: 'Vaccination',
     image: require('../../assets/images/VaccinationDosage.png'),
     color: '#FFD700',
     screen: 'VaccineDetailsScreen',
@@ -39,10 +39,10 @@ const healthCategories = [
   },
   {
     id: '4',
-    title: 'Disorder',
+    title: 'Disorders',
     image: require('../../assets/images/Disorder.png'),
     color: '#8B4513',
-    screen: 'geneticdisorderscreen',
+    screen: 'Geneticdisorderscreen',
   },
   {
     id: '5',
@@ -56,7 +56,7 @@ const healthCategories = [
     title: 'Boosters',
     image: require('../../assets/images/Boosters.png'),
     color: '#808080',
-    screen: 'AllergyBoostersScreen',
+    screen: 'AllergyBoosterScreen',
   },
 ];
 
@@ -93,59 +93,7 @@ const HealthRecordsScreen = () => {
   </TouchableOpacity>
   );
 
-  const renderLastAdministered = () => (
-    <View style={styles.lastAdministeredContainer}>
-      <TouchableOpacity 
-        style={styles.seeAllLink} 
-        onPress={() => navigation.navigate('FarmHealthRecords')}
-      >
-        <Text style={styles.seeAllText}>See all</Text>
-      </TouchableOpacity>
-    
-      <View style={styles.accordionContainer}>
-        <TouchableOpacity 
-          style={styles.accordionHeader}
-          onPress={() => setIsAccordionExpanded(!isAccordionExpanded)}
-        >
-          <Text style={styles.accordionTitle}>Last administered treatment</Text>
-          <FastImage 
-            source={icons.downchevron}
-            style={styles.accordionIcon}
-            tintColor="#333"
-          />
-        </TouchableOpacity>
-
-        {isAccordionExpanded && (
-          <View style={styles.accordionContent}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Date administered:</Text>
-              <Text style={styles.infoValue}>30/09/2024</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Category:</Text>
-              <Text style={styles.infoValue}>Deworming</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Administered by:</Text>
-              <Text style={styles.infoValue}>John Doe</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Recorded by:</Text>
-              <Text style={styles.infoValue}>John Doe</Text>
-            </View>
-            
-          </View>
-          
-        )}
-      </View>
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('AddHealthRecords')}>
-        <FastImage source={icons.plus} style={styles.fabIcon} tintColor="#fff" />
-      </TouchableOpacity>
-    </View>
-    
-  );
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -168,7 +116,6 @@ const HealthRecordsScreen = () => {
             </View>
           ))}
         </View>
-        {renderLastAdministered()}
       </ScrollView>
     </SafeAreaView>
   );

@@ -227,14 +227,13 @@ export default function AddLivestockScreen({ navigation }) {
                 navigation.navigate("LivestockModuleScreen"); 
               }}
             >
-              Cancel
+              Done
             </Button>
             <Button
               backgroundColor={COLORS.green}
               style={styles.modalButton}
               onPress={() => {
                 setShowModal(false);
-                // Optionally clear form data here if needed
               }}
             >
               Add Another

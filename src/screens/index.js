@@ -26,13 +26,17 @@ import OptionLivestockGroupScreen from './livestock/OptionLivestockGroup';
 
 import BreedingModuleLandingScreen from './livestock/breeding/BreedingModuleLandingScreen';
 
+import EditBreedingRecordScreen from './livestock/breeding/EditBreedingRecordScreen';
+
+import RecordBirthScreen from './livestock/breeding/RecordBirthScreen';
+
 import LivestockModuleScreen from './livestock/LivestockModuleScreen';
 import AnimalDetailScreen from './livestock/AnimalDetailScreen';
 import BreedingRecordForm from './livestock/breeding/BreedingRecordForm';
 import LivestockFeedingScreen from './livestock/feeding/LivestockFeedingScreen';
 import AnimalFeedingProgramScreen from './livestock/feeding/AnimalFeedingProgramScreen';
 import FarmFeedsScreen from './livestock/feeding/FarmFeedsScreen';
-import FeedingManagementScreen from './livestock/feeding/FeedingManagementScreen';
+import EditFeedingRequirementScreen from './livestock/feeding/EditFeedingRequirementScreen';
 
 import FeedingModuleScreen from './livestock/feeding/FeedingModuleScreen';
 
@@ -51,7 +55,6 @@ import CurativeTreatmentScreen from './health/CurativeTreatmentScreen';
 
 
 // Home DashboardScreen
-import FarmDashboard from './Home/dashboard';
 
 //productionsScreen
 import AddDairyDetailsScreen from './production/AddDairyDetailsScreen';
@@ -107,12 +110,14 @@ export {
 
   // Breeding
   BreedingRecordForm,
+  RecordBirthScreen,
+  EditBreedingRecordScreen,
   // Feeding
   LivestockFeedingScreen,
   FarmFeedsScreen,
   AnimalFeedingProgramScreen,
   BeefDetailsScreen,
-  FeedingManagementScreen,
+  EditFeedingRequirementScreen,
 
   //health
   AddHealthRecords,
@@ -128,7 +133,6 @@ export {
 
   //home
   
-  FarmDashboard,
 
 //productionsrecord
   SwineRecordScreen,

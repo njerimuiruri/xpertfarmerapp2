@@ -22,7 +22,6 @@ import SecondaryHeader from '../../../components/headers/secondary-header';
 import {format} from 'date-fns';
 
 export default function AnimalFeedingProgramScreen({navigation}) {
-  const [selectedFeedType, setSelectedFeedType] = useState('');
   const [sourceOfFeed, setSourceOfFeed] = useState('');
   const [feedingSchedule, setFeedingSchedule] = useState([]);
   const [quantity, setQuantity] = useState('');
@@ -46,8 +45,8 @@ export default function AnimalFeedingProgramScreen({navigation}) {
     setSelectedFeeds(
       prevSelected =>
         prevSelected.includes(feedType)
-          ? prevSelected.filter(feed => feed !== feedType) // Deselect if already selected
-          : [...prevSelected, feedType], // Add if not selected
+          ? prevSelected.filter(feed => feed !== feedType) 
+          : [...prevSelected, feedType], 
     );
   };
 
@@ -110,29 +109,7 @@ export default function AnimalFeedingProgramScreen({navigation}) {
             </Checkbox>
           </VStack>
 
-          <Box mt={4}>
-            <Text style={styles.label}>Type of feed</Text>
-            <Select
-              selectedValue={selectedFeedType}
-              minWidth="100%"
-              backgroundColor={COLORS.lightGreen}
-              borderColor="gray.200"
-              placeholder="Select Type of Feed"
-              onValueChange={setSelectedFeedType}>
-              <Select.Item
-                label="Basal Feed - Wheat, Maize, Oats"
-                value="basal"
-              />
-              <Select.Item
-                label="Concentrate - Protein Supplements"
-                value="concentrate"
-              />
-              <Select.Item
-                label="Supplement - Vitamins, Minerals"
-                value="supplement"
-              />
-            </Select>
-          </Box>
+         
 
           <Box mt={4}>
             <Text style={styles.label}>Source of feed</Text>

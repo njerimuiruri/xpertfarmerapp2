@@ -21,7 +21,18 @@ export default function Allergiesrecordsscreen({navigation}) {
   const [remedy, setRemedy] = useState('');
   const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+  const handleSave = () => {
+    setShowSuccessModal(true);
+  };
+
+  const handleDone = () => {
+    navigation.navigate('AllergyBoosterScreen');
+  };
+  const handleAddAnother = () => {
+    setShowSuccessModal(false);
+  };
   const handleSelect = value => {
     setAnimalIdOrFlockId(value);
     setDropdownVisible(false);
@@ -57,7 +68,11 @@ export default function Allergiesrecordsscreen({navigation}) {
           <VStack space={5}>
             {/* Combined Input and Select */}
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Animal ID or Flock ID
               </Text>
               <View>
@@ -102,7 +117,11 @@ export default function Allergiesrecordsscreen({navigation}) {
             </Box>
 
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Date Recorded
               </Text>
               <HStack alignItems="center">
@@ -136,7 +155,11 @@ export default function Allergiesrecordsscreen({navigation}) {
 
             {/* Cause */}
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Cause
               </Text>
               <Input
@@ -151,7 +174,11 @@ export default function Allergiesrecordsscreen({navigation}) {
 
             {/* Remedy */}
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
                 Remedy
               </Text>
               <Input
@@ -186,13 +213,59 @@ export default function Allergiesrecordsscreen({navigation}) {
                 _pressed={{
                   bg: 'emerald.700',
                 }}
-                onPress={() => navigation.navigate('AllergyBoosterScreen')}>
-                Next
+                onPress={handleSave}>
+                Done
               </Button>
             </HStack>
           </VStack>
         </Box>
       </ScrollView>
+      {showSuccessModal && (
+        <Box
+          position="absolute"
+          top="0"
+          bottom="0"
+          left="0"
+          right="0"
+          bg="rgba(0,0,0,0.5)"
+          justifyContent="center"
+          alignItems="center">
+          <Box bg="white" p={6} borderRadius={8} width="80%" maxWidth="400px">
+            <VStack space={4} alignItems="center">
+              <FastImage
+                source={icons.tick}
+                style={{width: 60, height: 60}}
+                resizeMode="contain"
+              />
+              <Text fontSize="lg" fontWeight="bold" textAlign="center">
+                Allergy Record Added Successfully!
+              </Text>
+
+              <HStack space={4} mt={2}>
+                <Button
+                  flex={1}
+                  variant="outline"
+                  borderColor={COLORS.green}
+                  _text={{
+                    color: COLORS.green,
+                  }}
+                  onPress={handleDone}>
+                  OK
+                </Button>
+                <Button
+                  flex={1}
+                  bg={COLORS.green}
+                  _pressed={{
+                    bg: 'emerald.700',
+                  }}
+                  onPress={handleAddAnother}>
+                  Add Another
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        </Box>
+      )}
     </View>
   );
 }

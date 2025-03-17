@@ -30,12 +30,25 @@ export default function DewormingDetailsRecords({ navigation }) {
   const [farmerWitness, setFarmerWitness] = useState('');
   const [notes, setNotes] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleDateChange = (event, selectedDate) => {
     if (selectedDate) {
       setDateAdministered(selectedDate);
     }
     setShowDatePicker(false);
+  };
+  const handleSave = () => {
+   
+    setShowSuccessModal(true);
+  };
+
+  const handleDone = () => {
+    navigation.navigate('CurativeTreatmentScreen'); 
+  };
+  const handleAddAnother = () => {
+   
+    setShowSuccessModal(false);
   };
 
   return (
@@ -92,7 +105,7 @@ export default function DewormingDetailsRecords({ navigation }) {
 
             <Box>
               <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3} mb={1}>
-                Deworming Drug administered
+                 Drug administered
               </Text>
               <Input
                 variant="outline"
@@ -279,20 +292,68 @@ export default function DewormingDetailsRecords({ navigation }) {
                 Cancel
               </Button>
               <Button
-                backgroundColor={COLORS.green}
-                borderRadius={8}
-                px={6}
-                py={3}
-                _pressed={{
-                  bg: 'emerald.700',
-                }}
-                onPress={() => navigation.navigate('Geneticdisorderscreen')}>
-                Next
-              </Button>
+                              backgroundColor={COLORS.green}
+                              borderRadius={8}
+                              px={6}
+                              py={3}
+                              _pressed={{
+                                bg: 'emerald.700',
+                              }}
+                              onPress={handleSave}>
+                              Done
+                            </Button>
             </HStack>
           </VStack>
         </Box>
       </ScrollView>
+      {showSuccessModal && (
+        <Box 
+          position="absolute" 
+          top="0" 
+          bottom="0" 
+          left="0" 
+          right="0" 
+          bg="rgba(0,0,0,0.5)" 
+          justifyContent="center" 
+          alignItems="center"
+        >
+          <Box bg="white" p={6} borderRadius={8} width="80%" maxWidth="400px">
+            <VStack space={4} alignItems="center">
+              <FastImage
+                source={icons.tick} 
+                style={{width: 60, height: 60}}
+                resizeMode="contain"
+              />
+              <Text fontSize="lg" fontWeight="bold" textAlign="center">
+              Deworming Record Added Successfully!
+              </Text>
+              
+              <HStack space={4} mt={2}>
+                <Button
+                  flex={1}
+                  variant="outline"
+                  borderColor={COLORS.green}
+                  _text={{
+                    color: COLORS.green,
+                  }}
+                  onPress={handleDone}>
+                  OK
+                </Button>
+                <Button
+                  flex={1}
+                  bg={COLORS.green}
+                  _pressed={{
+                    bg: 'emerald.700',
+                  }}
+                  onPress={handleAddAnother}>
+                  Add Another
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        </Box>
+      )}
+
     </View>
   );
 }

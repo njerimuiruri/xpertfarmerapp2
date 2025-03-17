@@ -1,400 +1,732 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { Button, Checkbox, Divider, Input, Radio,Box,HStack } from 'native-base';
-import SecondaryHeader from '../../../components/headers/secondary-header';
+import React, {useState, useEffect} from 'react';
+import {
+  SafeAreaView,
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Image } from 'react-native';
-import { icons } from '../../../constants';
-import { COLORS } from '../../../constants/theme';
+import FastImage from 'react-native-fast-image';
+import {icons} from '../../../constants';
+import {COLORS} from '../../../constants/theme';
+import SecondaryHeader from '../../../components/headers/secondary-header';
 
-export default function BreedingRecordForm() {
-    const [purposeOfBreeding, setPurposeOfBreeding] = useState([]);
-    const [breedingStrategy, setBreedingStrategy] = useState('');
-    const [servicing, setServicing] = useState('');
-    const [showFirstHeatPicker, setShowFirstHeatPicker] = useState(false);
-    const [showServiceDatePicker, setShowServiceDatePicker] = useState(false);
-    const [showBirthDatePicker, setShowBirthDatePicker] = useState(false);
-    const [firstHeatDate, setFirstHeatDate] = useState('');
-    const [serviceDate, setServiceDate] = useState('');
-    const [numberOfServices, setNumberOfServices] = useState('');
-    const [gestationPeriod, setGestationPeriod] = useState('');
-    const [birthDate, setBirthDate] = useState('');
-    const [deliveryMethod, setDeliveryMethod] = useState('');
-    const [numberOfYoungOnes, setNumberOfYoungOnes] = useState('');
-    const [birthWeight, setBirthWeight] = useState('');
-    const [gender, setGender] = useState('');
-    const [offspringID, setOffspringID] = useState('');
-    const [firstHeatDateObj, setFirstHeatDateObj] = useState(new Date());
-    const [serviceDateObj, setServiceDateObj] = useState(new Date());
-    const [birthDateObj, setBirthDateObj] = useState(new Date());
+const BreedingRecordForm = ({navigation}) => {
+  const [animalId, setAnimalId] = useState('');
+  const [animalType, setAnimalType] = useState('Dairy Cow');
+  const [purpose, setPurpose] = useState('Improve Milk Production');
+  const [strategy, setStrategy] = useState('Cross Breeding');
+  const [serviceType, setServiceType] = useState('Natural Mating');
+  const [serviceDate, setServiceDate] = useState(new Date());
+  const [showServiceDatePicker, setShowServiceDatePicker] = useState(false);
+  const [sireCode, setSireCode] = useState('');
+  const [aiType, setAiType] = useState('Regular AI');
+  const [aiSource, setAiSource] = useState('Local');
+  const [aiCost, setAiCost] = useState('');
+  const [numServices, setNumServices] = useState('1');
+  const [firstHeatDate, setFirstHeatDate] = useState(new Date());
+  const [showFirstHeatDatePicker, setShowFirstHeatDatePicker] = useState(false);
+  const [gestationDays, setGestationDays] = useState('');
+  const [expectedBirthDate, setExpectedBirthDate] = useState('');
+  const [birthRecorded, setBirthRecorded] = useState(false);
+  const [birthDate, setBirthDate] = useState(new Date());
+  const [showBirthDatePicker, setShowBirthDatePicker] = useState(false);
+  const [deliveryMethod, setDeliveryMethod] = useState('Natural Birth');
+  const [youngOnes, setYoungOnes] = useState('1');
+  const [birthWeight, setBirthWeight] = useState('');
+  const [litterWeight, setLitterWeight] = useState('');
+  const [offspringSex, setOffspringSex] = useState('');
+  const [offspringIds, setOffspringIds] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
 
-    const handleSubmit = () => {
-        // Submit data logic here
-        const formData = {
-            purposeOfBreeding,
-            breedingStrategy,
-            servicing,
-            firstHeatDate,
-            serviceDate,
-            numberOfServices,
-            gestationPeriod,
-            birthDate,
-            deliveryMethod,
-            numberOfYoungOnes,
-            birthWeight,
-            gender,
-            offspringID,
-        };
-        console.log(formData);
-    };
-    const handleCheckboxChange = (value) => {
-        setPurposeOfBreeding((prev) =>
-            prev.includes(value)
-                ? prev.filter((item) => item !== value)
-                : [...prev, value]
-        );
-    };
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [dropdownOptions, setDropdownOptions] = useState([]);
 
-    const onFirstHeatChange = (event, selectedDate) => {
-        setShowFirstHeatPicker(false);
-        if (selectedDate) {
-            setFirstHeatDateObj(selectedDate);
-            setFirstHeatDate(selectedDate.toLocaleDateString());
-        }
-    };
+  const animalTypeOptions = [
+    'Dairy Cow',
+    'Beef Cattle',
+    'Goat',
+    'Sheep',
+    'Swine',
+  ];
+  const purposeOptions = [
+    'Improve Milk Production',
+    'Stocking Number',
+    'Immunity',
+  ];
+  const strategyOptions = [
+    'Cross Breeding',
+    'Breeding Within Breeds',
+    'Breeding Between Breeds',
+  ];
+  const serviceTypeOptions = ['Natural Mating', 'Artificial Insemination'];
+  const aiTypeOptions = ['Sex Cell Semen', 'Regular AI'];
+  const aiSourceOptions = ['Local', 'Imported'];
+  const deliveryMethodOptions = ['Natural Birth', 'Assisted', 'Cesarean'];
 
-    const onServiceDateChange = (event, selectedDate) => {
-        setShowServiceDatePicker(false);
-        if (selectedDate) {
-            setServiceDateObj(selectedDate);
-            setServiceDate(selectedDate.toLocaleDateString());
-        }
-    };
+  useEffect(() => {
+    let days = '280';
+    if (animalType === 'Goat') days = '150';
+    if (animalType === 'Swine') days = '114';
+    if (animalType === 'Sheep') days = '152';
+    setGestationDays(days);
 
-    const onBirthDateChange = (event, selectedDate) => {
-        setShowBirthDatePicker(false);
-        if (selectedDate) {
-            setBirthDateObj(selectedDate);
-            setBirthDate(selectedDate.toLocaleDateString());
-        }
-    };
+    if (serviceDate) {
+      const birthDate = new Date(serviceDate);
+      birthDate.setDate(birthDate.getDate() + parseInt(days));
+      setExpectedBirthDate(birthDate.toISOString().split('T')[0]);
+    }
+  }, [animalType, serviceDate]);
 
-    return (
-        
-        <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
+  const showDropdown = type => {
+    switch (type) {
+      case 'animalType':
+        setDropdownOptions(animalTypeOptions);
+        break;
+      case 'purpose':
+        setDropdownOptions(purposeOptions);
+        break;
+      case 'strategy':
+        setDropdownOptions(strategyOptions);
+        break;
+      case 'serviceType':
+        setDropdownOptions(serviceTypeOptions);
+        break;
+      case 'aiType':
+        setDropdownOptions(aiTypeOptions);
+        break;
+      case 'aiSource':
+        setDropdownOptions(aiSourceOptions);
+        break;
+      case 'deliveryMethod':
+        setDropdownOptions(deliveryMethodOptions);
+        break;
+      default:
+        setDropdownOptions([]);
+    }
+    setActiveDropdown(type);
+    setDropdownVisible(true);
+  };
+
+  const handleSelect = value => {
+    switch (activeDropdown) {
+      case 'animalType':
+        setAnimalType(value);
+        break;
+      case 'purpose':
+        setPurpose(value);
+        break;
+      case 'strategy':
+        setStrategy(value);
+        break;
+      case 'serviceType':
+        setServiceType(value);
+        break;
+      case 'aiType':
+        setAiType(value);
+        break;
+      case 'aiSource':
+        setAiSource(value);
+        break;
+      case 'deliveryMethod':
+        setDeliveryMethod(value);
+        break;
+    }
+    setDropdownVisible(false);
+  };
+
+  const handleServiceDateChange = (event, selectedDate) => {
+    setShowServiceDatePicker(false);
+    if (selectedDate) setServiceDate(selectedDate);
+  };
+
+  const handleFirstHeatDateChange = (event, selectedDate) => {
+    setShowFirstHeatDatePicker(false);
+    if (selectedDate) setFirstHeatDate(selectedDate);
+  };
+
+  const handleBirthDateChange = (event, selectedDate) => {
+    setShowBirthDatePicker(false);
+    if (selectedDate) setBirthDate(selectedDate);
+  };
+
+  const handleSubmit = () => {
+    setModalVisible(true);
+  };
+  const CustomDropdown = ({label, value, onPress}) => (
+    <View style={styles.inputGroup}>
+      <Text style={styles.label}>{label}</Text>
+      <TouchableOpacity style={styles.dropdownButton} onPress={onPress}>
+        <Text style={styles.dropdownButtonText}>{value}</Text>
+        <FastImage
+          source={icons.downArrow}
+          style={styles.dropdownIcon}
+          tintColor="#666"
+        />
+      </TouchableOpacity>
+    </View>
+  );
+
+  const CustomDatePicker = ({label, value, showPicker, onPress}) => (
+    <View style={styles.inputGroup}>
+      <Text style={styles.label}>{label}</Text>
+      <TouchableOpacity style={styles.dateInput} onPress={onPress}>
+        <Text style={styles.dateText}>{value.toISOString().split('T')[0]}</Text>
+        <FastImage
+          source={icons.calendar}
+          style={styles.dateIcon}
+          tintColor="#666"
+        />
+      </TouchableOpacity>
+      {showPicker && (
+        <DateTimePicker
+          value={value}
+          mode="date"
+          display="default"
+          onChange={onChange => setShowServiceDatePicker(false)}
+        />
+      )}
+    </View>
+  );
+
+  return (
+    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
       <SecondaryHeader title="Add Breeding Record" />
 
-      <ScrollView
-        contentContainerStyle={{flexGrow: 1, justifyContent: 'center', marginTop: 5}}>
-        <Box bg="white" p={4} borderRadius={8} shadow={1} mx={6} my={8}>
-         
-                <View>
-                    <Text className='text-[18px] font-semibold text-black text-center pb-2'>Breeding Purpose & Strategy</Text>
-                    <Divider orientation='horizontal' />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Animal Information</Text>
 
-                    <View className=' flex flex-row justify-between'>
-                        <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>Purpose of Breeding</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Animal ID</Text>
+            <TextInput
+              style={styles.input}
+              value={animalId}
+              onChangeText={setAnimalId}
+              placeholder="Enter Animal ID"
+              placeholderTextColor="#999"
+              backgroundColor={COLORS.lightGreen}
+            />
+          </View>
 
-                            <Checkbox.Group value={purposeOfBreeding}
-                            >
-                                <Checkbox
-                                    value="Improve Milk"
-                                    isChecked={purposeOfBreeding.includes("Improve Milk")}
-                                    onPress={() => handleCheckboxChange("Improve Milk")}
-                                    size="sm"
-                                >
-                                    Improve Milk
-                                </Checkbox>
+          <CustomDropdown
+            label="Animal Type"
+            value={animalType}
+            onPress={() => showDropdown('animalType')}
+          />
 
-                                <Checkbox
-                                    value="Stocking Number"
-                                    isChecked={purposeOfBreeding.includes("Stocking Number")}
-                                    onPress={() => handleCheckboxChange("Stocking Number")}
-                                    size="sm"
-                                >
-                                    Stocking Number
-                                </Checkbox>
+          <Text style={styles.sectionTitle}>Breeding Details</Text>
 
-                                <Checkbox
-                                    value="Immunity"
-                                    isChecked={purposeOfBreeding.includes("Immunity")}
-                                    onPress={() => handleCheckboxChange("Immunity")}
-                                    size="sm"
+          <CustomDropdown
+            label="Purpose"
+            value={purpose}
+            onPress={() => showDropdown('purpose')}
+          />
 
-                                >
-                                    Immunity
-                                </Checkbox>
-                            </Checkbox.Group>
-                        </View>
-                        <Divider orientation='vertical' />
+          <CustomDropdown
+            label="Strategy"
+            value={strategy}
+            onPress={() => showDropdown('strategy')}
+          />
 
-                        <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>Breeding Strategy</Text>
-                            <Radio.Group
-                                name="breedingStrategy"
-                                accessibilityLabel="breeding strategy"
-                                value={breedingStrategy}
-                                onChange={setBreedingStrategy}
-                            >
-                                <Radio value="Cross Breeding" my={1} size="sm">Cross Breeding</Radio>
-                                <Radio value="Within Breeds" my={1} size="sm">Within Breeds</Radio>
-                                <Radio value="Between Breeds" my={1} size="sm">Between Breeds</Radio>
-                            </Radio.Group>
-                        </View>
-                    </View>
+          {/* Service Details */}
+          <Text style={styles.sectionTitle}>Service Details</Text>
+
+          <CustomDropdown
+            label="Service Type"
+            value={serviceType}
+            onPress={() => showDropdown('serviceType')}
+          />
+
+          <CustomDatePicker
+            label="Service Date"
+            value={serviceDate}
+            onPress={() => setShowServiceDatePicker(true)}
+            showPicker={showServiceDatePicker}
+          />
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Number of Services</Text>
+            <TextInput
+              style={styles.input}
+              value={numServices}
+              onChangeText={setNumServices}
+              placeholder="Number of services"
+              placeholderTextColor="#999"
+              keyboardType="numeric"
+              backgroundColor={COLORS.lightGreen}
+            />
+          </View>
+
+          {/* AI specific fields */}
+          {serviceType === 'Artificial Insemination' && (
+            <>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Sire Code</Text>
+                <TextInput
+                  style={styles.input}
+                  value={sireCode}
+                  onChangeText={setSireCode}
+                  placeholder="Enter sire code"
+                  placeholderTextColor="#999"
+                  backgroundColor={COLORS.lightGreen}
+                />
+              </View>
+
+              <CustomDropdown
+                label="AI Type"
+                value={aiType}
+                onPress={() => showDropdown('aiType')}
+              />
+
+              {aiType === 'Regular AI' && (
+                <CustomDropdown
+                  label="AI Source"
+                  value={aiSource}
+                  onPress={() => showDropdown('aiSource')}
+                />
+              )}
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>AI Cost</Text>
+                <TextInput
+                  style={styles.input}
+                  value={aiCost}
+                  onChangeText={setAiCost}
+                  placeholder="Enter cost"
+                  placeholderTextColor="#999"
+                  keyboardType="numeric"
+                  backgroundColor={COLORS.lightGreen}
+                />
+              </View>
+            </>
+          )}
+
+          {/* Gestation Details */}
+          <Text style={styles.sectionTitle}>Gestation Details</Text>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Gestation Period (days)</Text>
+            <TextInput
+              style={[styles.input]}
+              value={gestationDays}
+              editable={false}
+              backgroundColor={COLORS.lightGreen}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Expected Birth Date</Text>
+            <TextInput
+              style={[styles.input]}
+              backgroundColor={COLORS.lightGreen}
+              value={expectedBirthDate}
+              editable={false}
+            />
+          </View>
+
+          {/* Birth Records Toggle */}
+          <TouchableOpacity
+            style={styles.toggleContainer}
+            onPress={() => setBirthRecorded(!birthRecorded)}>
+            <Text style={styles.toggleLabel}>Record Birth Details</Text>
+            <View
+              style={[
+                styles.toggleCircle,
+                birthRecorded
+                  ? styles.toggleCircleActive
+                  : styles.toggleCircleInactive,
+              ]}
+            />
+          </TouchableOpacity>
+
+          {/* Birth Details (if toggled) */}
+          {birthRecorded && (
+            <>
+              <Text style={styles.sectionTitle}>Birth Details</Text>
+
+              <CustomDatePicker
+                label="Birth Date"
+                value={birthDate}
+                onPress={() => setShowBirthDatePicker(true)}
+                showPicker={showBirthDatePicker}
+              />
+
+              <CustomDropdown
+                label="Delivery Method"
+                value={deliveryMethod}
+                onPress={() => showDropdown('deliveryMethod')}
+              />
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Number of Young Ones</Text>
+                <TextInput
+                  style={styles.input}
+                  value={youngOnes}
+                  onChangeText={setYoungOnes}
+                  placeholder="Enter number"
+                  placeholderTextColor="#999"
+                  keyboardType="numeric"
+                  backgroundColor={COLORS.lightGreen}
+                />
+              </View>
+
+              {animalType === 'Swine' ? (
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Litter Weight</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={litterWeight}
+                    onChangeText={setLitterWeight}
+                    placeholder="Total litter weight (e.g., 12 kg)"
+                    placeholderTextColor="#999"
+                    backgroundColor={COLORS.lightGreen}
+                  />
                 </View>
-                <Divider orientation='horizontal' />
-
-                <View style={styles.section} className='mt-2'>
-                    <Text style={styles.sectionTitle}>Servicing</Text>
-                    <Radio.Group
-                        name="servicing"
-                        accessibilityLabel="servicing method"
-                        value={servicing}
-                        onChange={setServicing}
-                        className='flex flex-row space-x-1'
-                    >
-                        <Radio value="Natural Mating" my={1} size="sm">Natural Mating</Radio>
-                        <Radio value="Artificial Mating" my={1} size="sm">Artificial Mating</Radio>
-                    </Radio.Group>
+              ) : (
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Birth Weight</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={birthWeight}
+                    onChangeText={setBirthWeight}
+                    placeholder="Birth weight (e.g., 3.5 kg)"
+                    placeholderTextColor="#999"
+                    backgroundColor={COLORS.lightGreen}
+                  />
                 </View>
+              )}
 
-                <View style={styles.formGroup} >
-                    <Text style={styles.label}>First Heat Date</Text>
-                    <View className="flex flex-row items-center gap-x-2 mx-0">
-                        <Input
-                            w="85%"
-                            value={firstHeatDate}
-                            placeholder="DD/MM/YY"
-                            isReadOnly
-                        />
-                        <TouchableOpacity onPress={() => setShowFirstHeatPicker(true)}>
-                            <Image
-                                source={icons.calendar}
-                                resizeMode="contain"
-                                className="w-[40px] h-[40px]"
-                                tintColor={COLORS.green2}
-                            />
-                        </TouchableOpacity>
-                    </View>
-                    {showFirstHeatPicker && (
-                        <DateTimePicker
-                            value={firstHeatDateObj}
-                            mode="date"
-                            onChange={onFirstHeatChange}
-                        />
-                    )}
-                </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Offspring Sex</Text>
+                <TextInput
+                  style={styles.input}
+                  value={offspringSex}
+                  onChangeText={setOffspringSex}
+                  placeholder="E.g., 2 Males, 3 Females"
+                  placeholderTextColor="#999"
+                  backgroundColor={COLORS.lightGreen}
+                />
+              </View>
 
-                <View style={styles.formGroup} >
-                    <Text style={styles.label}>Service Date</Text>
-                    <View className="flex flex-row items-center gap-x-2 mx-0">
-                        <Input
-                            w="85%"
-                            value={serviceDate}
-                            placeholder="DD/MM/YY"
-                            isReadOnly
-                        />
-                        <TouchableOpacity onPress={() => setShowServiceDatePicker(true)}>
-                            <Image
-                                source={icons.calendar}
-                                resizeMode="contain"
-                                className="w-[40px] h-[40px]"
-                                tintColor={COLORS.green2}
-                            />
-                        </TouchableOpacity>
-                    </View>
-                    {showServiceDatePicker && (
-                        <DateTimePicker
-                            value={serviceDateObj}
-                            mode="date"
-                            onChange={onServiceDateChange}
-                        />
-                    )}
-                </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Offspring IDs</Text>
+                <TextInput
+                  style={styles.input}
+                  value={offspringIds}
+                  onChangeText={setOffspringIds}
+                  placeholder="E.g., A101, A102, A103"
+                  placeholderTextColor="#999"
+                  backgroundColor={COLORS.lightGreen}
+                />
+              </View>
+            </>
+          )}
 
-
-                <View style={styles.formGroup} >
-                    <Text style={styles.label}>Parturition (Birth) Date</Text>
-                    <View className="flex flex-row items-center gap-x-2 mx-0">
-                        <Input
-                            w="85%"
-                            value={birthDate}
-                            placeholder="DD/MM/YY"
-                            isReadOnly
-                        />
-                        <TouchableOpacity onPress={() => setShowBirthDatePicker(true)}>
-                            <Image
-                                source={icons.calendar}
-                                resizeMode="contain"
-                                className="w-[40px] h-[40px]"
-                                tintColor={COLORS.green2}
-                            />
-                        </TouchableOpacity>
-                    </View>
-                    {showBirthDatePicker && (
-                        <DateTimePicker
-                            value={birthDateObj}
-                            mode="date"
-                            onChange={onBirthDateChange}
-                        />
-                    )}
-                </View>
-
-
-                <View style={styles.formGroup}>
-                    <Text style={styles.label}>Number of Services</Text>
-                    <Input
-                        style={styles.input}
-                        placeholder="Enter number"
-                        keyboardType="numeric"
-                        value={numberOfServices}
-                        onChangeText={setNumberOfServices}
-                    />
-                </View>
-
-                <View style={styles.formGroup}>
-                    <Text style={styles.label}>Gestation Period (days)</Text>
-                    <Input
-                        style={styles.input}
-                        placeholder="Enter period"
-                        keyboardType="numeric"
-                        value={gestationPeriod}
-                        onChangeText={setGestationPeriod}
-                        backgroundColor="#e8f5e9"
-                    />
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Method of Delivery</Text>
-                    <Radio.Group
-                        name="deliveryMethod"
-                        accessibilityLabel="delivery method"
-                        value={deliveryMethod}
-                        onChange={setDeliveryMethod}
-                    >
-                        <Radio value="Natural Birth" my={1}>Natural Birth</Radio>
-                        <Radio value="Assisted" my={1}>Assisted</Radio>
-                        <Radio value="Cesarean" my={1}>Cesarean</Radio>
-                    </Radio.Group>
-                </View>
-
-                <View style={styles.formGroup}>
-                    <Text style={styles.label}>Number of Young Ones</Text>
-                    <Input
-                        style={styles.input}
-                        placeholder="Enter number"
-                        keyboardType="numeric"
-                        value={numberOfYoungOnes}
-                        onChangeText={setNumberOfYoungOnes}
-                    />
-                </View>
-
-                <View style={styles.formGroup}>
-                    <Text style={styles.label}>Weight at Birth (kg)</Text>
-                    <Input
-                        style={styles.input}
-                        placeholder="Enter weight"
-                        keyboardType="numeric"
-                        value={birthWeight}
-                        onChangeText={setBirthWeight}
-                    />
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Gender</Text>
-                    <Radio.Group
-                        name="gender"
-                        accessibilityLabel="gender"
-                        value={gender}
-                        onChange={setGender}
-                        className='flex flex-row space-x-4'
-                    >
-                        <Radio value="Male" my={1}>Male</Radio>
-                        <Radio value="Female" my={1}>Female</Radio>
-                    </Radio.Group>
-                </View>
-
-                <HStack justifyContent="center" mt={6} space={4}>
-            <Button
-              variant="outline"
-              borderWidth={1}
-              borderColor={COLORS.green}
-              borderRadius={8}
-              px={6}
-              py={3}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.cancelButton, styles.button]}
               onPress={() => navigation.goBack()}>
-              Back
-            </Button>
-            <Button
-              backgroundColor={COLORS.green}
-              borderRadius={8}
-              px={6}
-              py={3}
-              _pressed={{
-                bg: 'emerald.700',
-              }}>
-              Submit
-            </Button>
-          </HStack>
-                </Box>
-            </ScrollView>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.submitButton, styles.button]}
+              onPress={handleSubmit}>
+              <Text style={styles.submitButtonText}>Save Record</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-    );
-}
+      </ScrollView>
+
+      <Modal
+        visible={dropdownVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setDropdownVisible(false)}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setDropdownVisible(false)}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select {activeDropdown}</Text>
+            <FlatList
+              data={dropdownOptions}
+              keyExtractor={item => item}
+              renderItem={({item}) => (
+                <TouchableOpacity
+                  style={styles.optionItem}
+                  onPress={() => handleSelect(item)}>
+                  <Text style={styles.optionText}>{item}</Text>
+                </TouchableOpacity>
+              )}
+              ItemSeparatorComponent={() => <View style={styles.separator} />}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+      <Modal
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <FastImage
+              source={icons.tick}
+              style={styles.successIcon}
+              resizeMode="contain"
+              tintColor={COLORS.green}
+            />
+           
+            <Text style={styles.modalText}>
+              Breeding record has been added successfully.
+            </Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => {
+                setModalVisible(false);
+                navigation.navigate('BreedingModuleLandingScreen');
+              }}>
+              <Text style={styles.modalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-        backgroundColor: '#F8F9FA',
-    },
-    heading: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#4A90E2',
-        marginBottom: 16,
-    },
-    section: {
-        marginBottom: 20,
-    },
-    sectionTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 8,
-    },
-    formGroup: {
-        marginBottom: 20,
-    },
-    label: {
-        fontSize: 14,
-        color: '#333',
-        marginBottom: 4,
-    },
-    input: {
-        borderRadius: 8,
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 20,
-    },
-    button: {
-        flex: 1,
-        paddingVertical: 12,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginHorizontal: 8,
-    },
-    cancelButton: {
-        backgroundColor: '#E0E0E0',
-    },
-    submitButton: {
-        backgroundColor: '#4A90E2',
-    },
-    buttonText: {
-        color: '#FFF',
-        fontWeight: '600',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  scrollContent: {
+    padding: 16,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 16,
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    paddingBottom: 8,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 6,
+  },
+  input: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    color: '#333',
+    backgroundColor: '#fff',
+  },
+  dropdownButton: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dropdownButtonText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  dropdownIcon: {
+    width: 16,
+    height: 16,
+  },
+  dateInput: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  dateIcon: {
+    width: 20,
+    height: 20,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 8,
+    marginVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    paddingTop: 16,
+  },
+  toggleLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+  },
+  toggleCircle: {
+    width: 27,
+    height: 27,
+    borderRadius: 13.5,
+    backgroundColor: 'white',
+  },
+  toggleCircleActive: {
+    backgroundColor: '#4CAF50',
+  },
+  toggleCircleInactive: {
+    backgroundColor: '#e0e0e0',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 8,
+  },
+  button: {
+    width: 140,
+    marginHorizontal: 10,
+  },
+  submitButton: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 8,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  cancelButton: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  cancelButtonText: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#333',
+    textAlign: 'center',
+  },
+  optionItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+  },
+  optionText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#eee',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    elevation: 5,
+    width: '85%',
+  },
+  // successIcon: {
+  //   width: 0,
+  //   height: 60,
+  // },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: COLORS.green,
+  },
+  modalText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#333',
+  },
+  modalButton: {
+    minWidth: 120,
+    backgroundColor: COLORS.green,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 5,
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
 });
+
+export default BreedingRecordForm;
