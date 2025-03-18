@@ -77,6 +77,13 @@ import AddGoodsInStock from './inventory/AddGoodsInStock';
 import AddUtilityDetails from './inventory/AddUtilityDetails';
 
 
+
+import EditMachinery from './inventory/EditMachinery';
+
+import EditInventoryItem from './inventory/EditInventoryItem';
+
+import EditUtility from './inventory/EditUtility';
+
 export {
   LoginScreen,
   SignupScreen,
@@ -151,4 +158,7 @@ export {
   AddMachinery,
   AddGoodsInStock,
   AddUtilityDetails,
+  EditMachinery,
+  EditInventoryItem,
+  EditUtility,
 };

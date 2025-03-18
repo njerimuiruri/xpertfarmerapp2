@@ -84,7 +84,9 @@ import {
   AddMachinery,
   AddGoodsInStock,
   AddUtilityDetails,
-  LivestockManagementScreen,
+  EditMachinery,
+  EditInventoryItem,
+  EditUtility,
 } from './src/screens/index';
 import DrawerNav from './src/navigation/drawer/DrawerNav1';
 
@@ -434,6 +436,23 @@ export default function App() {
                 component={InventoryDashboard}
                 options={{headerShown: false}}
               />
+              <Stack.Screen
+                name="EditMachinery"
+                component={EditMachinery}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="EditInventoryItem"
+                component={EditInventoryItem}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="EditUtility"
+                component={EditUtility}
+                options={{headerShown: false}}
+              />
+             
               <Stack.Screen
                 name="AddMachinery"
                 component={AddMachinery}
