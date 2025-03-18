@@ -756,16 +756,13 @@ export default function InventoryDashboard() {
                   style={styles.editButton}
                   onPress={() => {
                     setModalVisible(false);
-                    // Navigate to edit screen based on section
                     if (activeSection === 'machinery') {
                       navigation.navigate('EditMachinery', { item: selectedItem });
                     } else if (activeSection === 'goods') {
                       navigation.navigate('EditInventoryItem', { item: selectedItem });
                     } else if (activeSection === 'utilities') {
                       navigation.navigate('EditUtility', { item: selectedItem });
-                    } else if (activeSection === 'analytics') {
-                      navigation.navigate('EditAnalytics', { item: selectedItem });
-                    }
+                    } 
                   }}>
                   <Text style={styles.editButtonText}>Edit</Text>
                 </TouchableOpacity>
