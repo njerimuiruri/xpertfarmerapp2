@@ -46,8 +46,8 @@ export default function RegisterScreen({ navigation }) {
 
       <VStack width="100%" space={4}>
         <Box>
-          <Text fontSize="12" mb={1} color="black"
-            className="text-[16px] font-semibold"
+          <Text fontSize="16" fontWeight={500} mb={1} color="black"
+            
           >
             First Name
           </Text>
@@ -65,8 +65,8 @@ export default function RegisterScreen({ navigation }) {
 
 
         <Box>
-          <Text fontSize="12" mb={1} color="black"
-            className="text-[16px] font-semibold"
+          <Text fontSize="16" fontWeight={500} mb={1} color="black"
+            
           >
             Last Name
           </Text>
@@ -82,8 +82,8 @@ export default function RegisterScreen({ navigation }) {
         </Box>
 
         <Box>
-          <Text fontSize="12" mb={1} color="black"
-            className="text-[16px] font-semibold"
+          <Text fontSize="16" fontWeight={500} mb={1} color="black"
+            
           >
             Phone Number
           </Text>
@@ -100,8 +100,8 @@ export default function RegisterScreen({ navigation }) {
         </Box>
 
         <Box>
-          <Text fontSize="12" mb={1} color="black"
-            className="text-[16px] font-semibold"
+          <Text fontSize="16" fontWeight={500} mb={1} color="black"
+            
           >
             Email
           </Text>
@@ -156,13 +156,13 @@ export default function RegisterScreen({ navigation }) {
 
         <Box mt={2} flexDirection="row" justifyContent="center">
           <Text fontSize="12" color="black"
-            className="text-[16px] font-semibold"
+            
           >
             Already have an account?{" "}
           </Text>
           <Pressable onPress={() => navigation.navigate("SignInScreen")}>
             <Text fontSize="12" color="#74c474" fontWeight="bold"
-              className="text-[16px] font-semibold"
+              
             >
               Login
             </Text>
