@@ -504,16 +504,15 @@ const BreedingRecordForm = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   scrollContent: {
     padding: 16,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor:COLORS.white,
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -522,11 +521,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.black,
     marginTop: 16,
     marginBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor:COLORS.lightGray1,
     paddingBottom: 8,
   },
   inputGroup: {
@@ -534,33 +533,33 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#555',
+    color: COLORS.black,
     marginBottom: 6,
   },
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor:COLORS.lightGray2,
     borderRadius: 8,
     paddingHorizontal: 12,
     fontSize: 16,
-    color: '#333',
-    backgroundColor: '#fff',
+    color: COLORS.black,
+    backgroundColor: COLORS.white,
   },
   dropdownButton: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.gray3,
     borderRadius: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   dropdownButtonText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.black,
   },
   dropdownIcon: {
     width: 16,
@@ -569,17 +568,17 @@ const styles = StyleSheet.create({
   dateInput: {
     height: 48,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.gray3,
     borderRadius: 8,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
   },
   dateText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.black,
   },
   dateIcon: {
     width: 20,
@@ -592,25 +591,25 @@ const styles = StyleSheet.create({
     padding: 8,
     marginVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: COLORS.lightGray2,
     paddingTop: 16,
   },
   toggleLabel: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
+    color: COLORS.black,
   },
   toggleCircle: {
     width: 27,
     height: 27,
     borderRadius: 13.5,
-    backgroundColor: 'white',
+    backgroundColor: COLORS.white,
   },
   toggleCircleActive: {
-    backgroundColor: '#4CAF50',
+    backgroundColor:COLORS.green,
   },
   toggleCircleInactive: {
-    backgroundColor: '#e0e0e0',
+    backgroundColor: COLORS.lightGray1,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -624,26 +623,26 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   submitButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor:COLORS.green2,
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: 'center',
   },
   submitButtonText: {
-    color: '#fff',
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: 'bold',
   },
   cancelButton: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor:COLORS.lightGray2,
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: COLORS.gray3,
   },
   cancelButtonText: {
-    color: '#333',
+    color: COLORS.black,
     fontSize: 16,
     fontWeight: '500',
   },
@@ -658,10 +657,10 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '90%',
     maxHeight: '80%',
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -671,7 +670,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
-    color: '#333',
+    color: COLORS.black,
     textAlign: 'center',
   },
   optionItem: {
@@ -680,7 +679,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.black,
   },
   separator: {
     height: 1,
@@ -690,20 +689,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: COLORS.darkOverlayColor,
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 24,
-    alignItems: 'center',
     elevation: 5,
     width: '85%',
   },
-  // successIcon: {
-  //   width: 0,
-  //   height: 60,
-  // },
+  
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -714,7 +709,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 20,
-    color: '#333',
+    color: COLORS.black,
   },
   modalButton: {
     minWidth: 120,
@@ -724,7 +719,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   modalButtonText: {
-    color: '#fff',
+    color: COLORS.white,
     fontSize: 16,
   },
 });

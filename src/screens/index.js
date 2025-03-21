@@ -68,7 +68,6 @@ import SwineProductionListScreen from './production/SwineProductionListScreen ';
 import DairyProductionListScreen from './production/DairyProductionListScreen';
 import SheepAndGoatProductionListScreen from './production/SheepAndGoatProductionListScreen';
 import PoultryProductionListScreen from './production/PoultryFlockDetailsScreen';
-import LivestockRecordsScreen from './livestock/LivestockRecordsScreen';
 
 // inventory
 import InventoryDashboard from './inventory/InventoryDashboard';
@@ -151,7 +150,6 @@ export {
   SheepAndGoatProductionListScreen,
   PoultryProductionListScreen,
   HealthRecordsScreen,
-  LivestockRecordsScreen,
   
   //inventory
   InventoryDashboard,

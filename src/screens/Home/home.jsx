@@ -11,6 +11,7 @@ import Header from '../../components/headers/main-header';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {COLORS} from '../../constants/theme';
 
 
 
@@ -172,12 +173,12 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#fff',
+    color: COLORS.white,
     marginBottom: 12,
   },
   welcomeSubtitle: {
     fontSize: 16,
-    color: '#fff',
+    color: COLORS.white,
     lineHeight: 24,
   },
   rightContainer: {
@@ -196,7 +197,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   seeMoreText: {
-    color: '#fff',
+    color: COLORS.white,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -256,12 +257,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
+    color: COLORS.white,
     marginBottom: 8,
   },
   cardDetail: {
     fontSize: 13,
-    color: '#fff',
+    color: COLORS.white,
     marginBottom: 4,
   },
   plusButton: {

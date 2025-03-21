@@ -77,7 +77,7 @@ export default function RegisterScreen({ navigation }) {
       <VStack width="100%" space={4}>
         {["first_name", "last_name", "phone_number", "email"].map((field, index) => (
           <Box key={index}>
-            <Text fontSize="12" mb={1} color="black" className="text-[16px] font-semibold capitalize">
+            <Text fontSize="16" fontWeight={500} mb={1} color="black" className="capitalize">
               {field.replace("_", " ")}
             </Text>
             <Input
@@ -95,7 +95,7 @@ export default function RegisterScreen({ navigation }) {
 
         {["password", "confirmPassword"].map((field, index) => (
           <Box key={index}>
-            <Text fontSize="16" fontWeight={500} mb={1} color="black"className="text-[16px] font-semibold capitalize">{field === "password" ? "Password" : "Confirm Password"}</Text>
+            <Text fontSize="16" fontWeight={500} mb={1} color="black"className="capitalize">{field === "password" ? "Password" : "Confirm Password"}</Text>
             <Input
               variant="filled"
               width="100%"

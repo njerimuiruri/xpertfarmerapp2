@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,11 @@ import {
   SafeAreaView,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../constants';
-import {COLORS} from '../../constants/theme';
+import { icons } from '../../constants';
+import { COLORS } from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
-const LivestockModuleScreen = ({route, navigation}) => {
+const LivestockModuleScreen = ({ route, navigation }) => {
   const [selectedType, setSelectedType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [livestockData, setLivestockData] = useState([]);
@@ -118,13 +118,13 @@ const LivestockModuleScreen = ({route, navigation}) => {
 
   const TypeSelector = () => {
     const types = [
-      {id: 'all', label: 'All Livestock'},
-      {id: 'dairy_cows', label: 'Dairy Cows'},
-      {id: 'beef_cattle', label: 'Beef Cattle'},
-      {id: 'swine', label: 'Swine'},
-      {id: 'goats', label: 'Goats'},
-      {id: 'sheep', label: 'Sheep'},
-      {id: 'poultry', label: 'Poultry'},
+      { id: 'all', label: 'All Livestock' },
+      { id: 'dairy_cows', label: 'Dairy Cows' },
+      { id: 'beef_cattle', label: 'Beef Cattle' },
+      { id: 'swine', label: 'Swine' },
+      { id: 'goats', label: 'Goats' },
+      { id: 'sheep', label: 'Sheep' },
+      { id: 'poultry', label: 'Poultry' },
     ];
 
     return (
@@ -133,7 +133,7 @@ const LivestockModuleScreen = ({route, navigation}) => {
           data={types}
           horizontal
           showsHorizontalScrollIndicator={false}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <TouchableOpacity
               style={[
                 styles.typeButton,
@@ -178,7 +178,7 @@ const LivestockModuleScreen = ({route, navigation}) => {
             icon={icons.health}
             text="Health"
             onPress={() =>
-              navigation.navigate('HealthRecordsScreen', {type: selectedType})
+              navigation.navigate('HealthRecordsScreen', { type: selectedType })
             }
           />
           <ActionButton
@@ -202,25 +202,25 @@ const LivestockModuleScreen = ({route, navigation}) => {
           <ActionButton
             icon={icons.document}
             text="Reports"
-            // onPress={() =>
-            //   navigation.navigate('LivestockReportsScreen', {
-            //     type: selectedType,
-            //   })
-            // }
+          // onPress={() =>
+          //   navigation.navigate('LivestockReportsScreen', {
+          //     type: selectedType,
+          //   })
+          // }
           />
         </View>
       </View>
     );
   };
 
-  const ActionButton = ({icon, text, onPress}) => (
+  const ActionButton = ({ icon, text, onPress }) => (
     <TouchableOpacity style={styles.actionButton} onPress={onPress}>
       <FastImage source={icon} style={styles.actionIcon} tintColor="#333" />
       <Text style={styles.actionText}>{text}</Text>
     </TouchableOpacity>
   );
 
-  const renderAnimalCard = ({item}) => (
+  const renderAnimalCard = ({ item }) => (
     <TouchableOpacity style={styles.card} onPress={() => handleCardPress(item)}>
       <View style={styles.cardHeader}>
         <Text style={styles.moduleTitle}>{item.title}</Text>
@@ -265,9 +265,9 @@ const LivestockModuleScreen = ({route, navigation}) => {
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1},
+  container: { flex: 1 },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.green3,
@@ -280,8 +280,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 16,
   },
-  searchIcon: {width: 20, height: 20, marginRight: 8},
-  searchInput: {flex: 1, height: 40, fontSize: 16, color: '#333'},
+  searchIcon: { width: 20, height: 20, marginRight: 8 },
+  searchInput: { flex: 1, height: 40, fontSize: 16, color: '#333' },
   typeSelectorContainer: {
     marginBottom: 16,
   },
@@ -300,9 +300,9 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   selectedTypeButtonText: {
-    color: '#fff',
+    color: COLORS.white,
   },
-  actionBar: {flexDirection: 'row', justifyContent: 'flex-end', gap: 10},
+  actionBar: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10 },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -311,9 +311,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: COLORS.lightGray2,
   },
-  actionIcon: {width: 18, height: 18, marginRight: 6},
-  actionText: {fontSize: 14, color: COLORS.black},
-  listContent: {padding: 16},
+  actionIcon: { width: 18, height: 18, marginRight: 6 },
+  actionText: { fontSize: 14, color: COLORS.black },
+  listContent: { padding: 16 },
   card: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
@@ -321,11 +321,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 3,
   },
-  cardHeader: {marginBottom: 16},
-  moduleTitle: {fontSize: 18, fontWeight: 'bold', color: '#333'},
-  moduleDescription: {fontSize: 14, color: COLORS.black},
-  infoText: {fontSize: 14, color: COLORS.black},
-  cardFooter: {flexDirection: 'row', flexWrap: 'wrap', paddingTop: 12},
+  cardHeader: { marginBottom: 16 },
+  moduleTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  moduleDescription: { fontSize: 14, color: COLORS.black },
+  infoText: { fontSize: 14, color: COLORS.black },
+  cardFooter: { flexDirection: 'row', flexWrap: 'wrap', paddingTop: 12 },
   footerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -336,8 +336,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginBottom: 8,
   },
-  badgeIcon: {width: 14, height: 14, marginRight: 4},
-  badgeText: {fontSize: 12, color: COLORS.black},
+  badgeIcon: { width: 14, height: 14, marginRight: 4 },
+  badgeText: { fontSize: 12, color: COLORS.black },
   fab: {
     position: 'absolute',
     bottom: 24,
@@ -349,8 +349,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 3},
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.27,
     shadowRadius: 4.65,
   },

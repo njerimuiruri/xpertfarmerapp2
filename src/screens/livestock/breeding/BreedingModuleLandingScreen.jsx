@@ -173,12 +173,12 @@ const BreedingModuleLandingScreen = ({navigation}) => {
         <FastImage
           source={icons.search}
           style={styles.searchIcon}
-          tintColor="#666"
+          tintColor="COLORS.black"
         />
         <TextInput
           style={styles.searchInput}
           placeholder="Search by animal ID or type..."
-          placeholderTextColor="#666"
+          placeholderTextColor="COLORS.black"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -235,7 +235,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
       case 'Pregnant':
         return '#FFC107'; // Amber
       case 'Delivered':
-        return '#4CAF50'; // Green
+        return COLORS.green; // Green
       case 'Failed':
         return '#F44336'; // Red
       default:
@@ -266,7 +266,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
           <FastImage
             source={icons.account}
             style={styles.detailIcon}
-            tintColor="#666"
+            tintColor="COLORS.black"
           />
           <Text style={styles.detailLabel}>Purpose:</Text>
           <Text style={styles.detailText}>{item.purpose}</Text>
@@ -276,7 +276,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
           <FastImage
             source={icons.chart}
             style={styles.detailIcon}
-            tintColor="#666"
+            tintColor="COLORS.black"
           />
           <Text style={styles.detailLabel}>Strategy:</Text>
           <Text style={styles.detailText}>{item.strategy}</Text>
@@ -286,7 +286,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
           <FastImage
             source={icons.calendar}
             style={styles.detailIcon}
-            tintColor="#666"
+            tintColor="COLORS.black"
           />
           <Text style={styles.detailLabel}>Service:</Text>
           <Text style={styles.detailText}>
@@ -299,7 +299,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
             <FastImage
               source={icons.time}
               style={styles.detailIcon}
-              tintColor="#666"
+              tintColor="COLORS.black"
             />
             <Text style={styles.detailLabel}>Expected:</Text>
             <Text style={styles.detailText}>{item.expectedBirthDate}</Text>
@@ -312,7 +312,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
               <FastImage
                 source={icons.calendar}
                 style={styles.detailIcon}
-                tintColor="#666"
+                tintColor="COLORS.black"
               />
               <Text style={styles.detailLabel}>Birth:</Text>
               <Text style={styles.detailText}>
@@ -323,7 +323,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
               <FastImage
                 source={icons.account}
                 style={styles.detailIcon}
-                tintColor="#666"
+                tintColor="COLORS.black"
               />
               <Text style={styles.detailLabel}>Offspring:</Text>
               <Text style={styles.detailText}>
@@ -357,7 +357,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
               style={styles.actionButtonIcon}
               tintColor="#4CAF50"
             />
-            <Text style={[styles.actionButtonText, {color: '#4CAF50'}]}>
+            <Text style={[styles.actionButtonText, {color: COLORS.green}]}>
               Record Birth
             </Text>
           </TouchableOpacity>
@@ -493,18 +493,18 @@ const BreedingModuleLandingScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    
   },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: COLORS.gray3,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f1f3f4',
+    backgroundColor:COLORS.lightGray2,
     borderRadius: 8,
     paddingHorizontal: 12,
     marginBottom: 16,
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     fontSize: 16,
-    color: '#333',
+    color: COLORS.black,
   },
   actionBar: {
     flexDirection: 'row',
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 20,
-    backgroundColor: '#f1f3f4',
+    backgroundColor: COLORS.lightGray2,
   },
   actionIcon: {
     width: 18,
@@ -539,18 +539,18 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 14,
-    color: '#333',
+    color:COLORS.black,
   },
   listContent: {
     padding: 16,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -567,11 +567,11 @@ const styles = StyleSheet.create({
   animalId: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.black,
   },
   animalType: {
     fontSize: 14,
-    color: '#666',
+    color:COLORS.black,
     marginTop: 4,
   },
   statusContainer: {
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#fff',
+    color: COLORS.white,
   },
   breedingDetails: {
     marginTop: 8,
@@ -602,12 +602,12 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: '#666',
+    color: COLORS.black,
     width: 80,
   },
   detailText: {
     fontSize: 14,
-    color: '#333',
+    color: COLORS.black,
     flex: 1,
   },
   cardActions: {
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: COLORS.gray3,
   },
   cardActionButton: {
     flexDirection: 'row',
@@ -639,11 +639,11 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#4CAF50',
+    backgroundColor:COLORS.green,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.27,
     shadowRadius: 4.65,
@@ -656,10 +656,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor:COLORS.darkOverlayColor,
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 20,
     width: '80%',
@@ -668,22 +668,22 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
-    color: '#333',
+    color: COLORS.black,
   },
   filterOption: {
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: COLORS.gray3,
   },
   selectedFilterOption: {
-    backgroundColor: '#e8f5e9',
+    backgroundColor:COLORS.lightGreen,
   },
   filterOptionText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.black,
   },
   selectedFilterOptionText: {
-    color: '#4CAF50',
+    color: COLORS.green,
     fontWeight: 'bold',
   },
   closeModalButton: {
@@ -692,19 +692,19 @@ const styles = StyleSheet.create({
   },
   closeModalButtonText: {
     fontSize: 16,
-    color: '#4CAF50',
+    color: COLORS.green,
     fontWeight: 'bold',
   },
   resetButton: {
     marginTop: 16,
     padding: 12,
-    backgroundColor: '#f44336',
+    backgroundColor:COLORS.red,
     borderRadius: 8,
     alignItems: 'center',
   },
   resetButtonText: {
     fontSize: 16,
-    color: '#fff',
+    color: COLORS.white,
     fontWeight: 'bold',
   },
 });

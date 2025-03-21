@@ -73,7 +73,6 @@ import {
   SheepAndGoatProductionListScreen,
   PoultryProductionListScreen,
   HealthRecordsScreen,
-  LivestockRecordsScreen,
   LivestockModuleScreen,
   BreedingModuleLandingScreen,
   RecordBirthScreen,
@@ -425,11 +424,7 @@ export default function App() {
                 options={{headerShown: false}}
               />
 
-              <Stack.Screen
-                name="LivestockRecordsScreen"
-                component={LivestockRecordsScreen}
-                options={{headerShown: false}}
-              />
+              
               {/* inventory */}
               <Stack.Screen
                 name="InventoryDashboard"

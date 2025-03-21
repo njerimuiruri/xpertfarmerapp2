@@ -333,10 +333,10 @@ const FeedingModuleScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    
   },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
@@ -385,12 +385,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   todayCardText: {
-    color: '#fff',
+    color: COLORS.white,
     fontWeight: 'bold',
   },
   cardHeader: {
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.27,
     shadowRadius: 4.65,
@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 20,
     width: '80%',
@@ -559,7 +559,7 @@ const styles = StyleSheet.create({
   },
   resetButtonText: {
     fontSize: 16,
-    color: '#fff',
+    color: COLORS.white,
     fontWeight: 'bold',
   },
   feedStatusContainer: {
