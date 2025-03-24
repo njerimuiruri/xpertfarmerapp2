@@ -35,13 +35,14 @@ export default function CurativeTreatmentScreen({navigation}) {
 
   const [farmerWitnessName, setFarmerWitnessName] = useState('');
   const [notes, setNotes] = useState('');
+  const [treatmentDescription, setTreatmentDescription] = useState('');
 
   const [showHealthEventDatePicker, setShowHealthEventDatePicker] =
     useState(false);
   const [showDateAdministeredPicker, setShowDateAdministeredPicker] =
     useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [description, setDescription] = useState('');
+
   const handleHealthEventDateChange = (event, selectedDate) => {
     if (selectedDate) {
       setHealthEventDate(selectedDate);
@@ -55,6 +56,7 @@ export default function CurativeTreatmentScreen({navigation}) {
     }
     setShowDateAdministeredPicker(false);
   };
+
   const handleSave = () => {
     setShowSuccessModal(true);
   };
@@ -62,6 +64,7 @@ export default function CurativeTreatmentScreen({navigation}) {
   const handleDone = () => {
     navigation.navigate('Geneticdisorderscreen');
   };
+
   const handleAddAnother = () => {
     setShowSuccessModal(false);
   };
@@ -170,7 +173,6 @@ export default function CurativeTreatmentScreen({navigation}) {
               />
             </Box>
 
-            {/* Diagnosis */}
             <Box>
               <Text
                 fontSize="sm"
@@ -212,16 +214,12 @@ export default function CurativeTreatmentScreen({navigation}) {
             </Box>
 
             {/* Conditional Rendering of Curative Treatment Details */}
-
-
-            
             {treatmentType === 'Curative' && (
               <VStack space={4} pl={4} mt={2}>
                 <Text fontSize="md" fontWeight="500" color={COLORS.darkGray3}>
                   Curative Treatment Details:
                 </Text>
 
-                {/* Drug Administered */}
                 <Box>
                   <Text
                     fontSize="sm"
@@ -240,7 +238,6 @@ export default function CurativeTreatmentScreen({navigation}) {
                   />
                 </Box>
 
-                {/* Date Administered */}
                 <View style={styles.formGroup}>
                   <Text
                     fontSize="sm"
@@ -277,7 +274,6 @@ export default function CurativeTreatmentScreen({navigation}) {
                   )}
                 </View>
 
-                {/* Dosage Administered */}
                 <Box>
                   <Text
                     fontSize="sm"
@@ -346,6 +342,31 @@ export default function CurativeTreatmentScreen({navigation}) {
               </VStack>
             )}
 
+            {/* Treatment Description for Non-Curative Types */}
+            {(treatmentType === 'Preventive' || 
+              treatmentType === 'Supportive' || 
+              treatmentType === 'Behavioral and Alternative') && (
+              <Box>
+                <Text
+                  fontSize="sm"
+                  fontWeight="500"
+                  color={COLORS.darkGray3}
+                  mb={1}>
+                  Treatment Description
+                </Text>
+                <Input
+                  variant="outline"
+                  backgroundColor={COLORS.lightGreen}
+                  borderColor="gray.200"
+                  placeholder="Describe the preventive/supportive/behavioral treatment"
+                  value={treatmentDescription}
+                  onChangeText={setTreatmentDescription}
+                  multiline
+                  numberOfLines={4}
+                />
+              </Box>
+            )}
+
             {/* Medical Officer */}
             <Box mt={2}>
               <Text
@@ -374,7 +395,6 @@ export default function CurativeTreatmentScreen({navigation}) {
                   />
                 </Box>
 
-                {/* License ID */}
                 <Box>
                   <Text
                     fontSize="sm"
@@ -393,7 +413,6 @@ export default function CurativeTreatmentScreen({navigation}) {
                   />
                 </Box>
 
-                {/* Cost of Service */}
                 <Box>
                   <Text
                     fontSize="sm"
@@ -425,7 +444,6 @@ export default function CurativeTreatmentScreen({navigation}) {
                 Farmer or Witness
               </Text>
               <VStack space={3} pl={4}>
-                {/* Name */}
                 <Box>
                   <Text
                     fontSize="sm"
@@ -444,7 +462,6 @@ export default function CurativeTreatmentScreen({navigation}) {
                   />
                 </Box>
 
-                {/* Notes */}
                 <Box>
                   <Text
                     fontSize="sm"

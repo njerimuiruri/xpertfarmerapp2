@@ -98,7 +98,10 @@ export default function AddMachinery({navigation}) {
             </Box>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Purchase Date</Text>
+              <Text  fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>Purchase Date</Text>
               <View style={styles.dateContainer}>
                 <Input
                   w="85%"
@@ -170,7 +173,10 @@ export default function AddMachinery({navigation}) {
             </Box>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Last Service Date</Text>
+              <Text  fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>Last Service Date</Text>
               <View style={styles.dateContainer}>
                 <Input
                   w="85%"
@@ -203,7 +209,10 @@ export default function AddMachinery({navigation}) {
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Next Service Date</Text>
+              <Text  fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>Next Service Date</Text>
               <View style={styles.dateContainer}>
                 <Input
                   w="85%"
@@ -299,9 +308,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
+    
     fontSize: 16,
     fontWeight: '500',
-    color: COLORS.lightGray1,
+    color: COLORS.black,
     marginBottom: 8,
   },
   dateContainer: {
