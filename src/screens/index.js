@@ -52,6 +52,9 @@ import VaccineDetailsScreen from './health/VaccineDetailsScreen';
 import FarmHealthRecords from './health/health-record/record';
 import HealthRecordsScreen from './health/HealthRecordsScreen';
 import CurativeTreatmentScreen from './health/CurativeTreatmentScreen';
+import HealthRecordsLandingScreen from './health/HealthRecordsLandingScreen';
+import EditHealthRecordScreen from './health/EditHealthRecordScreen';
+
 
 
 // Home DashboardScreen
@@ -136,6 +139,9 @@ export {
   ProductionScreen,
   AddDairyDetailsScreen,
   CurativeTreatmentScreen,
+  HealthRecordsLandingScreen,
+  EditHealthRecordScreen,
+
 
   //home
   

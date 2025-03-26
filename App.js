@@ -58,6 +58,8 @@ import {
   VaccineDetailsScreen,
   FarmHealthRecords,
   CurativeTreatmentScreen,
+  HealthRecordsLandingScreen,
+  EditHealthRecordScreen,
 
 
   //Production
@@ -351,6 +353,19 @@ export default function App() {
                 options={{headerShown: false}}
               />
               <Stack.Screen
+                name="HealthRecordsLandingScreen"
+                component={HealthRecordsLandingScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="EditHealthRecordScreen"
+                component={EditHealthRecordScreen}
+                options={{headerShown: false}}
+              />
+              
+
+              <Stack.Screen
                 name="VaccineDetailsScreen"
                 component={VaccineDetailsScreen}
                 options={{headerShown: false}}
@@ -360,6 +375,7 @@ export default function App() {
                 component={FarmHealthRecords}
                 options={{headerShown: false}}
               />
+
 
               <Stack.Screen
                 name="AddDairyDetailsScreen"
