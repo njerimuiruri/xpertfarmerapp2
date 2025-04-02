@@ -13,11 +13,11 @@ import {
 import {View, TouchableOpacity, StyleSheet, Image} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../constants';
-import {COLORS} from '../../constants/theme';
-import SecondaryHeader from '../../components/headers/secondary-header';
+import {icons} from '../../../constants';
+import {COLORS} from '../../../constants/theme';
+import SecondaryHeader from '../../../components/headers/secondary-header';
 
-export default function CurativeTreatmentScreen({navigation}) {
+export default function AddCurativeTreatmentRecords({navigation}) {
   const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState('');
   const [healthEventDate, setHealthEventDate] = useState(new Date());
   const [healthEventSymptoms, setHealthEventSymptoms] = useState('');
@@ -60,9 +60,8 @@ export default function CurativeTreatmentScreen({navigation}) {
   const handleSave = () => {
     setShowSuccessModal(true);
   };
-
   const handleDone = () => {
-    navigation.navigate('Geneticdisorderscreen');
+    navigation.navigate('CurativeTreatmentRecordsScreen');
   };
 
   const handleAddAnother = () => {

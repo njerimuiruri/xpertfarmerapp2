@@ -44,16 +44,38 @@ import FeedingModuleScreen from './livestock/feeding/FeedingModuleScreen';
 
 // Health
 import AddHealthRecords from './health/AddHealthRecords';
-import Allergiesrecordsscreen from './health/Allergiesrecordsscreen';
-import AllergyBoosterScreen from './health/AllergyBoosterScreen';
-import DewormingDetailsRecords from './health/DewormingDetailsRecords';
-import Geneticdisorderscreen from './health/geneticdisorderscreen';
-import VaccineDetailsScreen from './health/VaccineDetailsScreen';
+
+// vaccination
+import VaccineRecordsScreen from './health/Vaccination/VaccineRecordsScreen';
+import VaccineEditScreen from './health/Vaccination/VaccineEditScreen';
+import AddVaccineRecords from './health/Vaccination/AddVaccineRecords';
+//deworming
+import AddDewormingRecords from './health/Deworming/AddDewormingRecords';
+import DewormingRecordsScreen from './health/Deworming/DewormingRecordsScreen';
+import DewormingEditScreen from './health/Deworming/DewormingEditScreen';
+//treatment
+import CurativeTreatmentEditScreen from './health/Treatment/CurativeTreatmentEditScreen';
+import AddCurativeTreatmentRecords from './health/Treatment/AddCurativeTreatmentRecords';
+import CurativeTreatmentRecordsScreen from './health/Treatment/CurativeTreatmentRecordsScreen';
+//Genetic Disorders
+import AddGeneticsDisorderRecords from './health/Disorders/AddGeneticsDisorderRecords';
+import GeneticDisorderRecordsScreen from './health/Disorders/GeneticDisorderRecordsScreen';
+import GeneticDisorderEditScreen from './health/Disorders/GeneticDisorderEditScreen';
+
+//Allergies
+import AddAllergiesRecords from './health/Allergies/AddAllergiesRecords';
+
+import AllergiesRecordsScreen from './health/Allergies/AllergiesRecordsScreen';
+
+
+//Boosters
+import AddBoostersRecords from './health/Boosters/AddBoostersRecords';
+
 import FarmHealthRecords from './health/health-record/record';
 import HealthRecordsScreen from './health/HealthRecordsScreen';
-import CurativeTreatmentScreen from './health/CurativeTreatmentScreen';
 import HealthRecordsLandingScreen from './health/HealthRecordsLandingScreen';
 import EditHealthRecordScreen from './health/EditHealthRecordScreen';
+
 
 
 
@@ -130,17 +152,26 @@ export {
 
   //health
   AddHealthRecords,
-  Allergiesrecordsscreen,
-  AllergyBoosterScreen,
-  DewormingDetailsRecords,
-  Geneticdisorderscreen,
-  VaccineDetailsScreen,
+  AddAllergiesRecords,
+  AddBoostersRecords,
+  AddDewormingRecords,
+  AddGeneticsDisorderRecords,
+  AddVaccineRecords,
+  VaccineRecordsScreen,
   FarmHealthRecords,
   ProductionScreen,
   AddDairyDetailsScreen,
-  CurativeTreatmentScreen,
+  AddCurativeTreatmentRecords,
   HealthRecordsLandingScreen,
   EditHealthRecordScreen,
+  VaccineEditScreen,
+  DewormingRecordsScreen,
+  DewormingEditScreen,
+  CurativeTreatmentRecordsScreen,
+  CurativeTreatmentEditScreen,
+  GeneticDisorderRecordsScreen,
+  GeneticDisorderEditScreen,
+  AllergiesRecordsScreen,
 
 
   //home

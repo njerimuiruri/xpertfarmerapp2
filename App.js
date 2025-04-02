@@ -51,16 +51,26 @@ import {
 
   //health
   AddHealthRecords,
-  Allergiesrecordsscreen,
-  AllergyBoosterScreen,
-  DewormingDetailsRecords,
-  Geneticdisorderscreen,
-  VaccineDetailsScreen,
-  FarmHealthRecords,
-  CurativeTreatmentScreen,
+  AddAllergiesRecords,
+  AddBoostersRecords,
+  AddDewormingRecords,
+  AddGeneticsDisorderRecords,
+  VaccineRecordsScreen,
+  VaccineEditScreen,
+  DewormingRecordsScreen,
+  DewormingEditScreen,
+  CurativeTreatmentRecordsScreen,
+  CurativeTreatmentEditScreen,
+  GeneticDisorderRecordsScreen,
+  GeneticDisorderEditScreen,
+  AddVaccineRecords,
+  AddCurativeTreatmentRecords,
   HealthRecordsLandingScreen,
   EditHealthRecordScreen,
+  FarmHealthRecords,
+  AllergiesRecordsScreen,
 
+  
 
   //Production
   ProductionScreen,
@@ -328,28 +338,34 @@ export default function App() {
               />
               
               <Stack.Screen
-                name="Allergiesrecordsscreen"
-                component={Allergiesrecordsscreen}
+                name="AddAllergiesRecords"
+                component={AddAllergiesRecords}
                 options={{headerShown: false}}
               />
               <Stack.Screen
-                name="AllergyBoosterScreen"
-                component={AllergyBoosterScreen}
+                name="AllergiesRecordsScreen"
+                component={AllergiesRecordsScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="AddBoostersRecords"
+                component={AddBoostersRecords}
                 options={{headerShown: false}}
               />
               <Stack.Screen
-                name="DewormingDetailsRecords"
-                component={DewormingDetailsRecords}
+                name="AddDewormingRecords"
+                component={AddDewormingRecords}
                 options={{headerShown: false}}
               />
               <Stack.Screen
-                name="Geneticdisorderscreen"
-                component={Geneticdisorderscreen}
+                name="AddGeneticsDisorderRecords"
+                component={AddGeneticsDisorderRecords}
                 options={{headerShown: false}}
               />
               <Stack.Screen
-                name="CurativeTreatmentScreen"
-                component={CurativeTreatmentScreen}
+                name="AddCurativeTreatmentRecords"
+                component={AddCurativeTreatmentRecords}
                 options={{headerShown: false}}
               />
               <Stack.Screen
@@ -366,10 +382,59 @@ export default function App() {
               
 
               <Stack.Screen
-                name="VaccineDetailsScreen"
-                component={VaccineDetailsScreen}
+                name="AddVaccineRecords"
+                component={AddVaccineRecords}
                 options={{headerShown: false}}
               />
+              <Stack.Screen
+                name="VaccineEditScreen"
+                component={VaccineEditScreen}
+                options={{headerShown: false}}
+              />
+              
+
+               <Stack.Screen
+                name="DewormingRecordsScreen"
+                component={DewormingRecordsScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="DewormingEditScreen"
+                component={DewormingEditScreen}
+                options={{headerShown: false}}
+              />
+
+              <Stack.Screen
+                name="VaccineRecordsScreen"
+                component={VaccineRecordsScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="CurativeTreatmentRecordsScreen"
+                component={CurativeTreatmentRecordsScreen}
+                options={{headerShown: false}}
+              />
+               <Stack.Screen
+                name="CurativeTreatmentEditScreen"
+                component={CurativeTreatmentEditScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="GeneticDisorderRecordsScreen"
+                component={GeneticDisorderRecordsScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="GeneticDisorderEditScreen"
+                component={GeneticDisorderEditScreen}
+                options={{headerShown: false}}
+              />
+
+              
               <Stack.Screen
                 name="FarmHealthRecords"
                 component={FarmHealthRecords}
