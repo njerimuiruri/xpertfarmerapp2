@@ -167,7 +167,10 @@ const FarmEmployeeListScreen = ({navigation}) => {
   );
 
   const renderEmployeeCard = ({item}) => (
-    <View style={styles.card}>
+<TouchableOpacity 
+    style={styles.card}
+    onPress={() => navigation.navigate('EmployeeDetailScreen', {employee: item})}>
+   
       <View style={styles.cardHeader}>
         <View style={styles.employeeInfo}>
           <Text style={styles.name}>{item.fullName}</Text>
@@ -222,7 +225,7 @@ const FarmEmployeeListScreen = ({navigation}) => {
           </Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const renderFilterModal = () => (

@@ -21,10 +21,8 @@ import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 
 export default function GeneticDisorderEditScreen({ navigation, route }) {
-  // Get the genetic disorder record from route params if provided
   const geneticDisorderRecord = route.params?.record || {};
 
-  // Initialize state with existing record data or defaults
   const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState(geneticDisorderRecord.animalIdOrFlockId || '');
   const [conditionName, setConditionName] = useState(geneticDisorderRecord.conditionName || '');
   const [remedy, setRemedy] = useState(geneticDisorderRecord.remedy || '');
@@ -33,7 +31,6 @@ export default function GeneticDisorderEditScreen({ navigation, route }) {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Common conditions for quick selection
   const commonConditions = [
     'Hereditary Cancer',
     'Chronic Kidney Disease',
@@ -49,47 +46,12 @@ export default function GeneticDisorderEditScreen({ navigation, route }) {
     setShowDatePicker(false);
   };
 
-  const validate = () => {
-    // Reset errors
-    setErrors({});
-    let isValid = true;
-
-    // Basic validation
-    if (!animalIdOrFlockId) {
-      setErrors(prev => ({ ...prev, animalIdOrFlockId: 'Animal ID is required' }));
-      isValid = false;
-    }
-
-    if (!conditionName) {
-      setErrors(prev => ({ ...prev, conditionName: 'Condition name is required' }));
-      isValid = false;
-    }
-
-    if (!remedy) {
-      setErrors(prev => ({ ...prev, remedy: 'Remedy is required' }));
-      isValid = false;
-    }
-
-    return isValid;
-  };
-
-  const handleUpdate = () => {
-    Keyboard.dismiss();
-
-    if (validate()) {
-      // In a real app, you would update the record in your database or state management
+  const handleUpdate = () => {  
       setShowUpdateModal(true);
-    } else {
-      Toast.show({
-        title: "Please fill all required fields",
-        status: "warning",
-        duration: 3000,
-      });
-    }
+   
   };
 
   const handleDone = () => {
-    // Return to the records screen
     navigation.navigate('GeneticDisorderRecordsScreen');
   };
 
@@ -106,7 +68,6 @@ export default function GeneticDisorderEditScreen({ navigation, route }) {
           <Divider mb={4} />
 
           <VStack space={4}>
-            {/* Animal Section */}
             <FormControl isRequired isInvalid={'animalIdOrFlockId' in errors}>
               <FormControl.Label _text={styles.labelText}>
                 Animal ID or Flock ID
@@ -125,7 +86,6 @@ export default function GeneticDisorderEditScreen({ navigation, route }) {
               </FormControl.ErrorMessage>
             </FormControl>
 
-            {/* Condition Name */}
             <FormControl isRequired isInvalid={'conditionName' in errors}>
               <FormControl.Label _text={styles.labelText}>
                 Condition Name
@@ -149,7 +109,6 @@ export default function GeneticDisorderEditScreen({ navigation, route }) {
               </FormControl.ErrorMessage>
             </FormControl>
 
-            {/* Remedy */}
             <FormControl isRequired isInvalid={'remedy' in errors}>
               <FormControl.Label _text={styles.labelText}>
                 Remedy
@@ -168,7 +127,6 @@ export default function GeneticDisorderEditScreen({ navigation, route }) {
               </FormControl.ErrorMessage>
             </FormControl>
 
-            {/* Date Section */}
             <FormControl>
               <FormControl.Label _text={styles.labelText}>
                 Date Recorded
@@ -206,7 +164,6 @@ export default function GeneticDisorderEditScreen({ navigation, route }) {
               </FormControl.HelperText>
             </FormControl>
 
-            {/* Update Button */}
             <HStack justifyContent="space-between" mt={6}>
               <Button
                 flex={1}

@@ -285,7 +285,7 @@ export default function AddBoostersRecords({navigation}) {
               py={2}
               onPress={() => {
                 setModalVisible(false);
-                navigation.navigate('HealthRecordsLandingScreen');
+                navigation.navigate('BoostersRecordScreen');
               }}>
               Ok
             </Button>

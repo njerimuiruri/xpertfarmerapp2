@@ -221,16 +221,82 @@ const LivestockModuleScreen = ({ route, navigation }) => {
   );
 
   const renderAnimalCard = ({ item }) => (
-    <TouchableOpacity style={styles.card} onPress={() => handleCardPress(item)}>
+    <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <Text style={styles.moduleTitle}>{item.title}</Text>
-        <Text style={styles.moduleDescription}>ID: {item.id}</Text>
-        <Text style={styles.infoText}>Farm ID: {item.farmId}</Text>
-        <Text style={styles.infoText}>Breed: {item.breed}</Text>
-        <Text style={styles.infoText}>Born: {item.dob}</Text>
-        <Text style={styles.infoText}>Sex: {item.sex}</Text>
+        <View style={styles.animalInfo}>
+          <Text style={styles.name}>{item.title}</Text>
+          <Text style={styles.breed}>{item.breed}</Text>
+        </View>
+        <View style={styles.cardActions}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('AnimalDetailScreen', {
+              id: item.id,
+              type: item.type || selectedType,
+              animalData: item,
+            })}
+            style={styles.cardActionButton}>
+            <FastImage
+              source={icons.submited}
+              style={styles.cardActionIcon}
+              tintColor="#4CAF50"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+           
+            style={styles.cardActionButton}>
+            <FastImage
+              source={icons.remove}
+              style={styles.cardActionIcon}
+              tintColor="#F44336"
+            />
+          </TouchableOpacity>
+        </View>
       </View>
-    </TouchableOpacity>
+      <View style={styles.cardDetails}>
+        <View style={styles.detailRow}>
+          <FastImage
+            source={icons.account}
+            style={styles.detailIcon}
+            tintColor="#666"
+          />
+          <Text style={styles.detailText}>ID: {item.id}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <FastImage
+            source={icons.document}
+            style={styles.detailIcon}
+            tintColor="#666"
+          />
+          <Text style={styles.detailText}>Farm: {item.farmId}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <FastImage
+            source={icons.calendar}
+            style={styles.detailIcon}
+            tintColor="#666"
+          />
+          <Text style={styles.detailText}>Born: {item.dob}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <FastImage
+            source={icons.health}
+            style={styles.detailIcon}
+            tintColor="#666"
+          />
+          <Text style={styles.detailText}>Sex: {item.sex}</Text>
+        </View>
+        {item.production && (
+          <View style={styles.detailRow}>
+            <FastImage
+              source={icons.breeding}
+              style={styles.detailIcon}
+              tintColor="#666"
+            />
+            <Text style={styles.detailText}>Production: {item.production}</Text>
+          </View>
+        )}
+      </View>
+    </View>
   );
 
   const handleCardPress = item => {
@@ -314,30 +380,8 @@ const styles = StyleSheet.create({
   actionIcon: { width: 18, height: 18, marginRight: 6 },
   actionText: { fontSize: 14, color: COLORS.black },
   listContent: { padding: 16 },
-  card: {
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 3,
-  },
-  cardHeader: { marginBottom: 16 },
-  moduleTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  moduleDescription: { fontSize: 14, color: COLORS.black },
-  infoText: { fontSize: 14, color: COLORS.black },
-  cardFooter: { flexDirection: 'row', flexWrap: 'wrap', paddingTop: 12 },
-  footerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 16,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  badgeIcon: { width: 14, height: 14, marginRight: 4 },
-  badgeText: { fontSize: 12, color: COLORS.black },
+
+
   fab: {
     position: 'absolute',
     bottom: 24,
@@ -357,6 +401,64 @@ const styles = StyleSheet.create({
   fabIcon: {
     width: 24,
     height: 24,
+  },
+  card: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  animalInfo: {
+    flex: 1,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  breed: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  cardActions: {
+    flexDirection: 'row',
+  },
+  cardActionButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  cardActionIcon: {
+    width: 20,
+    height: 20,
+  },
+  cardDetails: {
+    marginTop: 8,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  detailIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 8,
+  },
+  detailText: {
+    fontSize: 14,
+    color: '#666',
   },
 });
 

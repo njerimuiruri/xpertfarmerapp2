@@ -48,16 +48,13 @@ const GeneticDisorderRecordsScreen = ({ navigation }) => {
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [activeFilters, setActiveFilters] = useState(0);
   const [filterConditionType, setFilterConditionType] = useState('');
 
   useEffect(() => {
     setTimeout(() => {
       setGeneticDisorderRecords(initialGeneticDisorderData);
-      setIsLoading(false);
-    }, 1000);
+    });
   }, []);
 
   useEffect(() => {
@@ -91,33 +88,15 @@ const GeneticDisorderRecordsScreen = ({ navigation }) => {
       });
   }, [geneticDisorderRecords, searchQuery, sortBy, sortOrder, filterConditionType]);
 
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  }, []);
-
+ 
   const showToast = (message) => {
     ToastAndroid.show(message, ToastAndroid.SHORT);
   };
 
   const handleDelete = useCallback((id) => {
-    Alert.alert(
-      'Delete Genetic Disorder Record',
-      'Are you sure you want to delete this genetic disorder record?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            setGeneticDisorderRecords(prev => prev.filter(record => record.id !== id));
+   
             showToast('Record deleted successfully');
-          },
-        },
-      ],
-    );
+          
   }, []);
 
   const handleEdit = useCallback(
@@ -201,26 +180,6 @@ const GeneticDisorderRecordsScreen = ({ navigation }) => {
     </View>
   );
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <FastImage
-        source={icons.emptyList}
-        style={styles.emptyStateIcon}
-        tintColor={COLORS.gray}
-      />
-      <Text style={styles.emptyStateTitle}>No Records Found</Text>
-      <Text style={styles.emptyStateMessage}>
-        {activeFilters > 0
-          ? 'Try adjusting your search.'
-          : 'Start by adding your first genetic disorder record.'}
-      </Text>
-      {activeFilters > 0 && (
-        <TouchableOpacity style={styles.emptyStateButton} onPress={resetAllFilters}>
-          <Text style={styles.emptyStateButtonText}>Clear All Filters</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
 
   const renderGeneticDisorderCard = ({ item }) => (
     <TouchableOpacity style={styles.card}>
@@ -299,19 +258,7 @@ const GeneticDisorderRecordsScreen = ({ navigation }) => {
     );
   };
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <StatusBar translucent backgroundColor={COLORS.green2} animated={true} barStyle={'light-content'} />
-        <SecondaryHeader title="Genetic Disorder Records" />
-        <View style={styles.loadingContent}>
-          <ActivityIndicator size="large" color={COLORS.green} />
-          <Text style={styles.loadingText}>Loading records...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+ 
 
   return (
     <SafeAreaView style={styles.container}>
@@ -323,9 +270,7 @@ const GeneticDisorderRecordsScreen = ({ navigation }) => {
         renderItem={renderGeneticDisorderCard}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={renderEmptyState}
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
+        
       />
       <TouchableOpacity
         style={styles.fab}

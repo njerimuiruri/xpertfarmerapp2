@@ -28,7 +28,7 @@ import {
   AddEmployeeScreen,
   FarmEmployeeTableScreen,
   EditEmployeeScreen,
-  EmployeeScreen,
+  EmployeeDetailScreen,
 
   // Livestock
   AddFlockDetailsScreen,
@@ -65,10 +65,10 @@ import {
   GeneticDisorderEditScreen,
   AddVaccineRecords,
   AddCurativeTreatmentRecords,
-  HealthRecordsLandingScreen,
-  EditHealthRecordScreen,
   FarmHealthRecords,
   AllergiesRecordsScreen,
+  VaccineDetailScreen,
+  BoostersRecordScreen,
 
   
 
@@ -222,11 +222,7 @@ export default function App() {
                 options={{headerShown: false}}
               />
 
-              <Stack.Screen
-                name="EmployeeScreen"
-                component={EmployeeScreen}
-                options={{headerShown: false}}
-              />
+              
               <Stack.Screen
                 name="FarmEmployeeTableScreen"
                 component={FarmEmployeeTableScreen}
@@ -237,6 +233,13 @@ export default function App() {
                 component={EditEmployeeScreen}
                 options={{headerShown: false}}
               />
+              <Stack.Screen
+                name="EmployeeDetailScreen"
+                component={EmployeeDetailScreen}
+                options={{headerShown: false}}
+              />
+              
+
               {/* livestock */}
               <Stack.Screen
                 name="AddFlockDetailsScreen"
@@ -368,17 +371,7 @@ export default function App() {
                 component={AddCurativeTreatmentRecords}
                 options={{headerShown: false}}
               />
-              <Stack.Screen
-                name="HealthRecordsLandingScreen"
-                component={HealthRecordsLandingScreen}
-                options={{headerShown: false}}
-              />
-              
-              <Stack.Screen
-                name="EditHealthRecordScreen"
-                component={EditHealthRecordScreen}
-                options={{headerShown: false}}
-              />
+            
               
 
               <Stack.Screen
@@ -389,6 +382,11 @@ export default function App() {
               <Stack.Screen
                 name="VaccineEditScreen"
                 component={VaccineEditScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="VaccineDetailScreen"
+                component={VaccineDetailScreen}
                 options={{headerShown: false}}
               />
               
@@ -431,6 +429,12 @@ export default function App() {
               <Stack.Screen
                 name="GeneticDisorderEditScreen"
                 component={GeneticDisorderEditScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="BoostersRecordScreen"
+                component={BoostersRecordScreen}
                 options={{headerShown: false}}
               />
 

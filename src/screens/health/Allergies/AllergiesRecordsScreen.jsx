@@ -39,15 +39,14 @@ const AllergiesRecordsScreen = ({ navigation }) => {
   const [allergyRecords, setAllergyRecords] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+ 
   const [activeFilters, setActiveFilters] = useState(0);
 
   useEffect(() => {
     setTimeout(() => {
       setAllergyRecords(initialAllergyData);
-      setIsLoading(false);
-    }, 1000);
+    ;
+    });
   }, []);
 
   useEffect(() => {
@@ -65,33 +64,15 @@ const AllergiesRecordsScreen = ({ navigation }) => {
     });
   }, [allergyRecords, searchQuery]);
 
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  }, []);
-
+ 
   const showToast = message => {
     ToastAndroid.show(message, ToastAndroid.SHORT);
   };
 
   const handleDelete = useCallback(id => {
-    Alert.alert(
-      'Delete Allergy Record',
-      'Are you sure you want to delete this allergy record?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            setAllergyRecords(prev => prev.filter(record => record.id !== id));
+    
             showToast('Record deleted successfully');
-          },
-        },
-      ],
-    );
+         
   }, []);
 
   const renderHeader = () => (
@@ -115,20 +96,10 @@ const AllergiesRecordsScreen = ({ navigation }) => {
     </View>
   );
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <FastImage source={icons.emptyList} style={styles.emptyStateIcon} tintColor={COLORS.gray} />
-      <Text style={styles.emptyStateTitle}>No Records Found</Text>
-      <Text style={styles.emptyStateMessage}>
-        {activeFilters > 0
-          ? 'Try removing some filters or changing your search.'
-          : 'Start by adding your first allergy record.'}
-      </Text>
-    </View>
-  );
+  
 
   const renderAllergyCard = ({ item }) => (
-    <TouchableOpacity style={styles.card}>
+    <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.animalInfo}>
           <Text style={styles.animalId}>{item.animalIdOrFlockId}</Text>
@@ -137,40 +108,55 @@ const AllergiesRecordsScreen = ({ navigation }) => {
           <Text style={styles.dateText}>{new Date(item.dateRecorded).toLocaleDateString()}</Text>
         </View>
       </View>
-
-      <View style={styles.allergyDetails}>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Cause:</Text>
-          <Text style={styles.detailText}>{item.cause}</Text>
+  
+      <View style={styles.vaccineStatusContainer}>
+        <View style={styles.vaccineBadgeContainer}>
+          <View style={styles.vaccineBadge}>
+            <Text style={styles.vaccineBadgeText}>
+              {item.cause}
+            </Text>
+          </View>
         </View>
-
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Remedy:</Text>
-          <Text style={styles.detailText}>{item.remedy}</Text>
+        
+        <View style={styles.statusRow}>
+          <View style={styles.statusItem}>
+            <Text style={styles.statusLabel}>Remedy:</Text>
+            <Text style={styles.statusValue}>{item.remedy}</Text>
+          </View>
         </View>
       </View>
-
+  
       <View style={styles.cardActions}>
-        <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.cardActionButton}>
-          <FastImage source={icons.remove} style={styles.actionButtonIcon} tintColor="#F44336" />
-          <Text style={[styles.actionButtonText, { color: '#F44336' }]}>Delete</Text>
+        <TouchableOpacity
+          
+          style={styles.cardActionButton}>
+          <FastImage
+            source={icons.edit}
+            style={styles.actionButtonIcon}
+            tintColor="#2196F3"
+          />
+          <Text style={[styles.actionButtonText, {color: '#2196F3'}]}>
+            Edit
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          onPress={() => handleDelete(item.id)}
+          style={styles.cardActionButton}>
+          <FastImage
+            source={icons.remove}
+            style={styles.actionButtonIcon}
+            tintColor="#F44336"
+          />
+          <Text style={[styles.actionButtonText, {color: '#F44336'}]}>
+            Delete
+          </Text>
         </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <StatusBar translucent backgroundColor={COLORS.green2} animated={true} barStyle={'light-content'} />
-        <SecondaryHeader title="Allergy Records" />
-        <View style={styles.loadingContent}>
-          <ActivityIndicator size="large" color={COLORS.green} />
-          <Text style={styles.loadingText}>Loading records...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+ 
 
   return (
     <SafeAreaView style={styles.container}>
@@ -184,9 +170,6 @@ const AllergiesRecordsScreen = ({ navigation }) => {
         renderItem={renderAllergyCard}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={renderEmptyState}
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
       />
       
       <TouchableOpacity
@@ -372,6 +355,50 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
   },
+  // Add these styles to your StyleSheet
+vaccineBadgeContainer: {
+  marginBottom: 10,
+},
+vaccineBadge: {
+  alignSelf: 'flex-start',
+  backgroundColor: COLORS.green,
+  borderRadius: 20,
+  paddingVertical: 4,
+  paddingHorizontal: 12,
+},
+vaccineBadgeText: {
+  color: COLORS.white,
+  fontSize: 12,
+  fontWeight: '600',
+},
+statusRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  marginBottom: 8,
+},
+statusItem: {
+  flex: 1,
+},
+statusLabel: {
+  fontSize: 12,
+  color: COLORS.gray,
+  marginBottom: 2,
+},
+statusValue: {
+  fontSize: 14,
+  fontWeight: '500',
+  color: COLORS.black,
+},
+vaccineStatusContainer: {
+  marginTop: 8,
+  padding: 12,
+  borderRadius: 8,
+},
+animalType: {
+  fontSize: 14,
+  color: COLORS.black,
+  marginTop: 4,
+},
 });
 
 export default AllergiesRecordsScreen;

@@ -10,7 +10,6 @@ import {
   Alert,
   Modal,
   SafeAreaView,
-  ActivityIndicator,
   ToastAndroid,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
@@ -18,78 +17,87 @@ import {icons} from '../../../constants';
 import {COLORS} from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 
-const initialVaccineData = [
+const initialBoosterData = [
   {
     id: '1',
     animalIdOrFlockId: 'A001',
     animalType: 'Dairy Cow',
-    vaccinationAgainst: 'Foot and Mouth Disease',
-    drugAdministered: 'FMD Vaccine',
+    boostersOrAdditives: 'Vitamin B Complex',
+    purpose: 'Immunity',
+    quantityGiven: '2',
+    quantityUnit: 'milliliters',
     dateAdministered: '2023-05-15',
-    dosage: '3',
-    costOfVaccine: '1200',
-    administeredBy: 'Dr. John Smith',
-    practiceId: 'VET2023',
-    costOfService: '500',
+    costOfBooster: '800',
   },
   {
     id: '2',
     animalIdOrFlockId: 'A002',
     animalType: 'Dairy Cow',
-    vaccinationAgainst: 'Anthrax',
-    drugAdministered: 'Anthrax Vaccine',
+    boostersOrAdditives: 'Calcium Supplement',
+    purpose: 'Production',
+    quantityGiven: '3',
+    quantityUnit: 'kilograms',
     dateAdministered: '2023-06-20',
-    dosage: '2',
-    costOfVaccine: '800',
-    administeredBy: 'Dr. Sarah Jones',
-    practiceId: 'VET2024',
-    costOfService: '600',
+    costOfBooster: '1200',
   },
   {
     id: '3',
     animalIdOrFlockId: 'G005',
     animalType: 'Goat',
-    vaccinationAgainst: 'PPR',
-    drugAdministered: 'PPR Vaccine',
+    boostersOrAdditives: 'Selenium Supplement',
+    purpose: 'Growth',
+    quantityGiven: '1.5',
+    quantityUnit: 'grams',
     dateAdministered: '2023-07-10',
-    dosage: '1.5',
-    costOfVaccine: '500',
-    administeredBy: 'Dr. Emily Brown',
-    practiceId: 'VET2025',
-    costOfService: '400',
+    costOfBooster: '600',
   },
 ];
 
-const VaccineRecordsScreen = ({navigation}) => {
-  const [vaccineRecords, setVaccineRecords] = useState([]);
+const BoostersRecordScreen = ({navigation}) => {
+  const [boosterRecords, setBoosterRecords] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
-  
+  const [filterBoosterType, setFilterBoosterType] = useState('');
+  const [filterAnimalType, setFilterAnimalType] = useState('');
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [activeFilters, setActiveFilters] = useState(0);
 
   useEffect(() => {
     setTimeout(() => {
-      setVaccineRecords(initialVaccineData);     
+      setBoosterRecords(initialBoosterData);
     });
   }, []);
 
   useEffect(() => {
     let count = 0;
+    if (filterBoosterType) count++;
+    if (filterAnimalType) count++;
     if (searchQuery) count++;
-  }, [ searchQuery]);
+    setActiveFilters(count);
+  }, [filterBoosterType, filterAnimalType, searchQuery]);
+
+  const showToast = (message) => {
+    ToastAndroid.show(message, ToastAndroid.SHORT);
+  };
 
   const sortedAndFilteredRecords = useMemo(() => {
-    return vaccineRecords
+    return boosterRecords
       .filter(record => {
         const matchesSearch =
           searchQuery === '' ||
           record.animalIdOrFlockId.toLowerCase().includes(searchQuery.toLowerCase()) ||
           record.animalType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          record.vaccinationAgainst.toLowerCase().includes(searchQuery.toLowerCase());
+          record.boostersOrAdditives.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          record.purpose.toLowerCase().includes(searchQuery.toLowerCase());
 
-    
+        const matchesBoosterType =
+          filterBoosterType === '' || record.boostersOrAdditives === filterBoosterType;
 
-        return matchesSearch;
+        const matchesAnimalType =
+          filterAnimalType === '' || record.animalType === filterAnimalType;
+
+        return matchesSearch && matchesBoosterType && matchesAnimalType;
       })
       .sort((a, b) => {
         if (sortBy === 'date') {
@@ -103,25 +111,17 @@ const VaccineRecordsScreen = ({navigation}) => {
         }
         return 0;
       });
-  }, [vaccineRecords, searchQuery, sortBy, sortOrder]);
-
- 
- 
+  }, [boosterRecords, searchQuery, sortBy, sortOrder, filterBoosterType, filterAnimalType]);
 
   const handleDelete = useCallback(id => {
-    Alert.alert(
-      'Delete Vaccine Record',
-      'Are you sure you want to delete this vaccine record?',
-      [
-        {text: 'Cancel', style: 'cancel'},
-       
-      ],
-    );
+  
+            showToast('Record deleted successfully');
+        
   }, []);
 
   const handleEdit = useCallback(
     record => {
-      navigation.navigate('VaccineEditScreen', {record});
+      navigation.navigate('BoosterEditScreen', {record});
     },
     [navigation],
   );
@@ -134,10 +134,20 @@ const VaccineRecordsScreen = ({navigation}) => {
         setSortBy(newSortBy);
         setSortOrder('desc');
       }
-     
     },
     [sortBy, sortOrder],
   );
+
+  const resetAllFilters = () => {
+    setFilterBoosterType('');
+    setFilterAnimalType('');
+    setSearchQuery('');
+    setSortBy('date');
+    setSortOrder('desc');
+    setIsFilterModalVisible(false);
+    showToast('All filters reset');
+  };
+
   const renderHeader = () => (
     <View style={styles.header}>
       <View style={styles.searchContainer}>
@@ -148,7 +158,7 @@ const VaccineRecordsScreen = ({navigation}) => {
         />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by ID, animal type, vaccine..."
+          placeholder="Search by ID, animal type, booster..."
           placeholderTextColor={COLORS.gray}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -168,17 +178,20 @@ const VaccineRecordsScreen = ({navigation}) => {
         <TouchableOpacity
           style={[
             styles.actionButton,
+            activeFilters > 0 && styles.activeFilterButton,
           ]}
-         >
+          onPress={() => setIsFilterModalVisible(true)}>
           <FastImage
             source={icons.filter}
             style={styles.actionIcon}
+            tintColor={activeFilters > 0 ? COLORS.white : COLORS.black}
           />
           <Text 
             style={[
-              styles.actionText,              
+              styles.actionText, 
+              activeFilters > 0 && styles.activeFilterText
             ]}>
-            Filters 
+            Filters {activeFilters > 0 ? `(${activeFilters})` : ''}
           </Text>
         </TouchableOpacity>
 
@@ -202,10 +215,8 @@ const VaccineRecordsScreen = ({navigation}) => {
     </View>
   );
 
- 
-
-  const renderVaccineCard = ({item}) => (
-    <View
+  const renderBoosterCard = ({item}) => (
+    <TouchableOpacity 
       style={styles.card}      
     >
       <View style={styles.cardHeader}>
@@ -218,36 +229,30 @@ const VaccineRecordsScreen = ({navigation}) => {
         </View>
       </View>
   
-      <View style={styles.vaccineStatusContainer}>
-        <View style={styles.vaccineBadgeContainer}>
-          <View style={styles.vaccineBadge}>
-            <Text style={styles.vaccineBadgeText}>
-              {item.vaccinationAgainst}
+      <View style={styles.boosterStatusContainer}>
+        <View style={styles.boosterBadgeContainer}>
+          <View style={styles.boosterBadge}>
+            <Text style={styles.boosterBadgeText}>
+              {item.boostersOrAdditives}
             </Text>
           </View>
         </View>
         
         <View style={styles.statusRow}>
           <View style={styles.statusItem}>
-            <Text style={styles.statusLabel}>Drug:</Text>
-            <Text style={styles.statusValue}>{item.drugAdministered}</Text>
+            <Text style={styles.statusLabel}>Purpose:</Text>
+            <Text style={styles.statusValue}>{item.purpose}</Text>
           </View>
           <View style={styles.statusItem}>
-            <Text style={styles.statusLabel}>Dosage:</Text>
-            <Text style={styles.statusValue}>{item.dosage} ml</Text>
+            <Text style={styles.statusLabel}>Quantity:</Text>
+            <Text style={styles.statusValue}>{item.quantityGiven} {item.quantityUnit}</Text>
           </View>
         </View>
         
         <View style={styles.statusRow}>
-          <View style={styles.statusItem}>
-            <Text style={styles.statusLabel}>Admin By:</Text>
-            <Text style={styles.statusValue}>{item.administeredBy}</Text>
-          </View>
           <View style={styles.statusItem}>
             <Text style={styles.statusLabel}>Cost:</Text>
-            <Text style={styles.statusValue}>
-              ${(parseInt(item.costOfVaccine) + parseInt(item.costOfService)).toLocaleString()}
-            </Text>
+            <Text style={styles.statusValue}>${parseInt(item.costOfBooster).toLocaleString()}</Text>
           </View>
         </View>
       </View>
@@ -279,12 +284,116 @@ const VaccineRecordsScreen = ({navigation}) => {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
+
+  const renderFilterModal = () => {
+    const boosterTypes = [
+      'Vitamin B Complex',
+      'Calcium Supplement',
+      'Selenium Supplement',
+      'Probiotic',
+      'Growth Promoter',
+    ];
+    
+    const animalTypes = [
+      'Dairy Cow',
+      'Beef Cow',
+      'Goat',
+      'Sheep',
+      'Chicken',
+    ];
+
+    return (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isFilterModalVisible}
+        onRequestClose={() => setIsFilterModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filter Records</Text>
+              <TouchableOpacity
+                onPress={() => setIsFilterModalVisible(false)}
+                hitSlop={{top: 10, right: 10, bottom: 10, left: 10}}>
+                <FastImage
+                  source={icons.close}
+                  style={styles.modalCloseIcon}
+                  tintColor={COLORS.black}
+                />
+              </TouchableOpacity>
+            </View>
+            
+            <Text style={styles.filterSectionTitle}>Booster Type</Text>
+            <View style={styles.filterChipContainer}>
+              {boosterTypes.map(option => (
+                <TouchableOpacity
+                  key={option}
+                  style={[
+                    styles.filterChip,
+                    filterBoosterType === option && styles.selectedFilterChip,
+                  ]}
+                  onPress={() => setFilterBoosterType(prev => (prev === option ? '' : option))}>
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      filterBoosterType === option && styles.selectedFilterChipText,
+                    ]}>
+                    {option}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            
+            <Text style={styles.filterSectionTitle}>Animal Type</Text>
+            <View style={styles.filterChipContainer}>
+              {animalTypes.map(option => (
+                <TouchableOpacity
+                  key={option}
+                  style={[
+                    styles.filterChip,
+                    filterAnimalType === option && styles.selectedFilterChip,
+                  ]}
+                  onPress={() => setFilterAnimalType(prev => (prev === option ? '' : option))}>
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      filterAnimalType === option && styles.selectedFilterChipText,
+                    ]}>
+                    {option}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.filterButtonsContainer}>
+              <TouchableOpacity
+                style={styles.applyButton}
+                onPress={() => {
+                  setIsFilterModalVisible(false);
+                  if (filterBoosterType || filterAnimalType) {
+                    showToast('Filters applied');
+                  }
+                }}>
+                <Text style={styles.applyButtonText}>Apply Filters</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.resetButton}
+                onPress={resetAllFilters}>
+                <Text style={styles.resetButtonText}>Reset All</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <SecondaryHeader title="Vaccination Records" />
+      <SecondaryHeader title="Booster Records" />
 
       <StatusBar
         translucent
@@ -297,17 +406,18 @@ const VaccineRecordsScreen = ({navigation}) => {
       
       <FlatList
         data={sortedAndFilteredRecords}
-        renderItem={renderVaccineCard}
+        renderItem={renderBoosterCard}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
       />
 
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('AddVaccineRecords')}>
+        onPress={() => navigation.navigate('AddBoostersRecords')}>
         <FastImage source={icons.plus} style={styles.fabIcon} tintColor="#fff" />
       </TouchableOpacity>
       
+      {renderFilterModal()}
     </SafeAreaView>
   );
 };
@@ -379,61 +489,6 @@ const styles = StyleSheet.create({
     padding: 16,
     flexGrow: 1,
   },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-    minHeight: 300,
-  },
-  emptyStateIcon: {
-    width: 80,
-    height: 80,
-    marginBottom: 16,
-  },
-  emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.black,
-    marginBottom: 8,
-  },
-  emptyStateMessage: {
-    fontSize: 16,
-    color: COLORS.gray,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  emptyStateButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: COLORS.green,
-    borderRadius: 8,
-  },
-  emptyStateButtonText: {
-    color: COLORS.white,
-    fontWeight: '500',
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  detailIcon: {
-    width: 18,
-    height: 18,
-    marginRight: 8,
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: COLORS.gray,
-    width: 80,
-  },
-  detailText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: COLORS.black,
-    flex: 1,
-  },
   fab: {
     position: 'absolute',
     bottom: 24,
@@ -482,12 +537,81 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
   },
- 
+  filterSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.black,
+    marginBottom: 12,
+  },
+  filterChipContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 20,
+  },
+  filterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: COLORS.lightGray2,
+    marginRight: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: COLORS.gray3,
+  },
+  selectedFilterChip: {
+    backgroundColor: COLORS.green,
+    borderColor: COLORS.green,
+  },
+  filterChipText: {
+    fontSize: 14,
+    color: COLORS.black,
+  },
+  selectedFilterChipText: {
+    color: COLORS.white,
+    fontWeight: '500',
+  },
+  filterButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  applyButton: {
+    flex: 2,
+    backgroundColor: COLORS.green,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  applyButtonText: {
+    color: COLORS.white,
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  resetButton: {
+    flex: 1,
+    backgroundColor: COLORS.lightGray2,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.gray3,
+  },
+  resetButtonText: {
+    color: COLORS.black,
+    fontWeight: '500',
+    fontSize: 16,
+  },
   card: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
+    elevation: 3,
+    shadowColor: COLORS.black,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -518,23 +642,22 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: COLORS.green,
   },
-  
-  vaccineStatusContainer: {
+  boosterStatusContainer: {
     marginTop: 8,
     padding: 12,
     borderRadius: 8,
   },
-  vaccineBadgeContainer: {
+  boosterBadgeContainer: {
     marginBottom: 10,
   },
-  vaccineBadge: {
+  boosterBadge: {
     alignSelf: 'flex-start',
     backgroundColor: COLORS.green,
     borderRadius: 20,
     paddingVertical: 4,
     paddingHorizontal: 12,
   },
-  vaccineBadgeText: {
+  boosterBadgeText: {
     color: COLORS.white,
     fontSize: 12,
     fontWeight: '600',
@@ -582,4 +705,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default VaccineRecordsScreen;
+export default BoostersRecordScreen;

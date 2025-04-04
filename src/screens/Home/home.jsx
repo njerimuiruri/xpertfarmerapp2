@@ -99,8 +99,7 @@ const Dashboard = () => {
       <Header navigation={navigation} />
 
       <ScrollView style={styles.scrollView}>
-        <Text style={styles.headerTitle}>Hello, John!</Text>
-
+        
         <LinearGradient
           colors={['#8CD18C', '#A7E3A7']}
           start={{ x: 0, y: 0 }}

@@ -77,16 +77,13 @@ const CurativeTreatmentRecordsScreen = ({ navigation }) => {
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [activeFilters, setActiveFilters] = useState(0);
   const [filterTreatmentType, setFilterTreatmentType] = useState('');
 
   useEffect(() => {
     setTimeout(() => {
       setTreatmentRecords(initialTreatmentData);
-      setIsLoading(false);
-    }, 1000);
+    });
   }, []);
 
   useEffect(() => {
@@ -121,33 +118,16 @@ const CurativeTreatmentRecordsScreen = ({ navigation }) => {
       });
   }, [treatmentRecords, searchQuery, sortBy, sortOrder, filterTreatmentType]);
 
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  }, []);
+
 
   const showToast = (message) => {
     ToastAndroid.show(message, ToastAndroid.SHORT);
   };
 
   const handleDelete = useCallback((id) => {
-    Alert.alert(
-      'Delete Treatment Record',
-      'Are you sure you want to delete this treatment record?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            setTreatmentRecords(prev => prev.filter(record => record.id !== id));
-            showToast('Record deleted successfully');
-          },
-        },
-      ],
-    );
+
+    showToast('Record deleted successfully');
+
   }, []);
 
   const handleEdit = useCallback(
@@ -231,33 +211,13 @@ const CurativeTreatmentRecordsScreen = ({ navigation }) => {
     </View>
   );
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <FastImage
-        source={icons.emptyList}
-        style={styles.emptyStateIcon}
-        tintColor={COLORS.gray}
-      />
-      <Text style={styles.emptyStateTitle}>No Records Found</Text>
-      <Text style={styles.emptyStateMessage}>
-        {activeFilters > 0
-          ? 'Try adjusting your search.'
-          : 'Start by adding your first treatment record.'}
-      </Text>
-      {activeFilters > 0 && (
-        <TouchableOpacity style={styles.emptyStateButton} onPress={resetAllFilters}>
-          <Text style={styles.emptyStateButtonText}>Clear All Filters</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
 
   const renderTreatmentCard = ({ item }) => (
-    <TouchableOpacity style={styles.card}>
+    <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.animalInfo}>
           <Text style={styles.animalId}>{item.animalIdOrFlockId}</Text>
-          <Text style={styles.healthSymptoms}>{item.healthEventSymptoms}</Text>
+          <Text style={styles.animalType}>{item.healthEventSymptoms}</Text>
         </View>
         <View style={styles.dateContainer}>
           <Text style={styles.dateText}>
@@ -265,27 +225,69 @@ const CurativeTreatmentRecordsScreen = ({ navigation }) => {
           </Text>
         </View>
       </View>
-      <View style={styles.treatmentDetails}>
-        <Text style={styles.treatmentLabel}>Diagnosis:</Text>
-        <Text style={styles.treatmentText}>{item.diagnosis}</Text>
-        <Text style={styles.treatmentLabel}>Drug Administered:</Text>
-        <Text style={styles.treatmentText}>{item.drugAdministered}</Text>
-        <Text style={styles.treatmentLabel}>Dosage:</Text>
-        <Text style={styles.treatmentText}>{item.dosageAdministered} ml</Text>
-        <Text style={styles.treatmentLabel}>Administered By:</Text>
-        <Text style={styles.treatmentText}>{item.medicalOfficerName}</Text>
+
+      <View style={styles.vaccineStatusContainer}>
+        <View style={styles.vaccineBadgeContainer}>
+          <View style={styles.vaccineBadge}>
+            <Text style={styles.vaccineBadgeText}>
+              {item.diagnosis}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.statusRow}>
+          <View style={styles.statusItem}>
+            <Text style={styles.statusLabel}>Treatment:</Text>
+            <Text style={styles.statusValue}>{item.drugAdministered}</Text>
+          </View>
+          <View style={styles.statusItem}>
+            <Text style={styles.statusLabel}>Dosage:</Text>
+            <Text style={styles.statusValue}>{item.dosageAdministered} ml</Text>
+          </View>
+        </View>
+
+        <View style={styles.statusRow}>
+          <View style={styles.statusItem}>
+            <Text style={styles.statusLabel}>Admin By:</Text>
+            <Text style={styles.statusValue}>{item.medicalOfficerName}</Text>
+          </View>
+          <View style={styles.statusItem}>
+            <Text style={styles.statusLabel}>Cost:</Text>
+            <Text style={styles.statusValue}>
+              ${(parseInt(item.costOfDrugs || 0) + parseInt(item.costOfService || 0)).toLocaleString()}
+            </Text>
+          </View>
+        </View>
       </View>
+
       <View style={styles.cardActions}>
-        <TouchableOpacity onPress={() => handleEdit(item)} style={styles.cardActionButton}>
-          <FastImage source={icons.edit} style={styles.actionButtonIcon} tintColor="#2196F3" />
-          <Text style={[styles.actionButtonText, { color: '#2196F3' }]}>Edit</Text>
+        <TouchableOpacity
+          onPress={() => handleEdit(item)}
+          style={styles.cardActionButton}>
+          <FastImage
+            source={icons.edit}
+            style={styles.actionButtonIcon}
+            tintColor="#2196F3"
+          />
+          <Text style={[styles.actionButtonText, { color: '#2196F3' }]}>
+            Edit
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.cardActionButton}>
-          <FastImage source={icons.remove} style={styles.actionButtonIcon} tintColor="#F44336" />
-          <Text style={[styles.actionButtonText, { color: '#F44336' }]}>Delete</Text>
+
+        <TouchableOpacity
+          onPress={() => handleDelete(item.id)}
+          style={styles.cardActionButton}>
+          <FastImage
+            source={icons.remove}
+            style={styles.actionButtonIcon}
+            tintColor="#F44336"
+          />
+          <Text style={[styles.actionButtonText, { color: '#F44336' }]}>
+            Delete
+          </Text>
         </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   const renderFilterModal = () => {
@@ -293,7 +295,7 @@ const CurativeTreatmentRecordsScreen = ({ navigation }) => {
       'Curative',
       'Preventive',
     ];
-    
+
     return (
       <Modal
         animationType="slide"
@@ -334,19 +336,6 @@ const CurativeTreatmentRecordsScreen = ({ navigation }) => {
     );
   };
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <StatusBar translucent backgroundColor={COLORS.green2} animated={true} barStyle={'light-content'} />
-        <SecondaryHeader title="Curative Treatment Records" />
-        <View style={styles.loadingContent}>
-          <ActivityIndicator size="large" color={COLORS.green} />
-          <Text style={styles.loadingText}>Loading records...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -358,9 +347,6 @@ const CurativeTreatmentRecordsScreen = ({ navigation }) => {
         renderItem={renderTreatmentCard}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={renderEmptyState} 
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
       />
       <TouchableOpacity
         style={styles.fab}
@@ -644,6 +630,50 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     fontWeight: '500',
     fontSize: 16,
+  },
+  // Add these to your existing StyleSheet
+  animalType: {
+    fontSize: 14,
+    color: COLORS.black,
+    marginTop: 4,
+  },
+  vaccineStatusContainer: {
+    marginTop: 8,
+    padding: 12,
+    borderRadius: 8,
+  },
+  vaccineBadgeContainer: {
+    marginBottom: 10,
+  },
+  vaccineBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: COLORS.green,
+    borderRadius: 20,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+  },
+  vaccineBadgeText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  statusItem: {
+    flex: 1,
+  },
+  statusLabel: {
+    fontSize: 12,
+    color: COLORS.gray,
+    marginBottom: 2,
+  },
+  statusValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.black,
   },
 });
 

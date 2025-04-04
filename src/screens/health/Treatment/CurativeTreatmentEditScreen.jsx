@@ -186,6 +186,7 @@ export default function CurativeTreatmentEditScreen({ navigation, route }) {
               <FormControl.Label _text={styles.labelText}>
                 Dosage Administered (ml)
               </FormControl.Label>
+              
               <Input
                 variant="outline"
                 backgroundColor={COLORS.lightGreen}

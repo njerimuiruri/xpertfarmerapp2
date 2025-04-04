@@ -15,7 +15,8 @@ import OnboardingScreen from './Onboarding/OnboardingScreen';
 import FarmEmployeeTableScreen from './employee/FarmEmployeeTableScreen';
 import EditEmployeeScreen from './employee/EditEmployeeScreen';
 
-import EmployeeScreen from './employee/EmployeeScreen';
+import EmployeeDetailScreen from './employee/EmployeeDetailScreen';
+
 import AddEmployeeScreen from './employee/AddEmployeeScreen';
 import AddFlockDetailsScreen from './livestock/AddFlockDetails';
 import AddLivestockScreen from './livestock/AddLivestockDetails';
@@ -49,6 +50,9 @@ import AddHealthRecords from './health/AddHealthRecords';
 import VaccineRecordsScreen from './health/Vaccination/VaccineRecordsScreen';
 import VaccineEditScreen from './health/Vaccination/VaccineEditScreen';
 import AddVaccineRecords from './health/Vaccination/AddVaccineRecords';
+
+import VaccineDetailScreen from './health/Vaccination/VaccineDetailScreen';
+
 //deworming
 import AddDewormingRecords from './health/Deworming/AddDewormingRecords';
 import DewormingRecordsScreen from './health/Deworming/DewormingRecordsScreen';
@@ -71,10 +75,10 @@ import AllergiesRecordsScreen from './health/Allergies/AllergiesRecordsScreen';
 //Boosters
 import AddBoostersRecords from './health/Boosters/AddBoostersRecords';
 
+import BoostersRecordScreen from './health/Boosters/BoostersRecordScreen';
+
 import FarmHealthRecords from './health/health-record/record';
 import HealthRecordsScreen from './health/HealthRecordsScreen';
-import HealthRecordsLandingScreen from './health/HealthRecordsLandingScreen';
-import EditHealthRecordScreen from './health/EditHealthRecordScreen';
 
 
 
@@ -124,10 +128,9 @@ export {
 
   // Employees
   AddEmployeeScreen,
-  EmployeeScreen,
   FarmEmployeeTableScreen,
   EditEmployeeScreen,
-
+  EmployeeDetailScreen,
   // Livestock
   AddFlockDetailsScreen,
   AddLivestockScreen,
@@ -162,16 +165,16 @@ export {
   ProductionScreen,
   AddDairyDetailsScreen,
   AddCurativeTreatmentRecords,
-  HealthRecordsLandingScreen,
-  EditHealthRecordScreen,
   VaccineEditScreen,
   DewormingRecordsScreen,
   DewormingEditScreen,
   CurativeTreatmentRecordsScreen,
   CurativeTreatmentEditScreen,
+  VaccineDetailScreen,
   GeneticDisorderRecordsScreen,
   GeneticDisorderEditScreen,
   AllergiesRecordsScreen,
+  BoostersRecordScreen,
 
 
   //home

@@ -52,15 +52,12 @@ const DewormingRecordsScreen = ({ navigation }) => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [filterDewormingType, setFilterDewormingType] = useState('');
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [activeFilters, setActiveFilters] = useState(0);
 
   useEffect(() => {
     setTimeout(() => {
       setDewormingRecords(initialDewormingData);
-      setIsLoading(false);
-    }, 1000);
+    });
   }, []);
 
   useEffect(() => {
@@ -97,33 +94,15 @@ const DewormingRecordsScreen = ({ navigation }) => {
       });
   }, [dewormingRecords, searchQuery, sortBy, sortOrder, filterDewormingType]);
 
-  const handleRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  }, []);
-
+ 
   const showToast = message => {
     ToastAndroid.show(message, ToastAndroid.SHORT);
   };
 
   const handleDelete = useCallback(id => {
-    Alert.alert(
-      'Delete Deworming Record',
-      'Are you sure you want to delete this deworming record?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            setDewormingRecords(prev => prev.filter(record => record.id !== id));
+  
             showToast('Record deleted successfully');
-          },
-        },
-      ],
-    );
+        
   }, []);
 
   const handleEdit = useCallback(
@@ -192,23 +171,10 @@ const DewormingRecordsScreen = ({ navigation }) => {
     </View>
   );
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <FastImage source={icons.emptyList} style={styles.emptyStateIcon} tintColor={COLORS.gray} />
-      <Text style={styles.emptyStateTitle}>No Records Found</Text>
-      <Text style={styles.emptyStateMessage}>
-        {activeFilters > 0 ? 'Try removing some filters or changing your search.' : 'Start by adding your first deworming record.'}
-      </Text>
-      {activeFilters > 0 && (
-        <TouchableOpacity style={styles.emptyStateButton} onPress={resetAllFilters}>
-          <Text style={styles.emptyStateButtonText}>Clear All Filters</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+ 
 
   const renderDewormingCard = ({ item }) => (
-    <TouchableOpacity style={styles.card}>
+    <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.animalInfo}>
           <Text style={styles.animalId}>{item.animalIdOrFlockId}</Text>
@@ -217,39 +183,41 @@ const DewormingRecordsScreen = ({ navigation }) => {
           <Text style={styles.dateText}>{new Date(item.dateAdministered).toLocaleDateString()}</Text>
         </View>
       </View>
-
-      <View style={styles.dewormingDetails}>
-        <View style={styles.detailRow}>
-          <FastImage source={icons.medicine} style={styles.detailIcon} tintColor={COLORS.green} />
-          <Text style={styles.detailLabel}>Against:</Text>
-          <Text style={styles.detailText}>{item.dewormingAgainst}</Text>
+  
+      <View style={styles.vaccineStatusContainer}>
+        <View style={styles.vaccineBadgeContainer}>
+          <View style={styles.vaccineBadge}>
+            <Text style={styles.vaccineBadgeText}>
+              {item.dewormingAgainst}
+            </Text>
+          </View>
         </View>
-
-        <View style={styles.detailRow}>
-          <FastImage source={icons.droplet} style={styles.detailIcon} tintColor={COLORS.green} />
-          <Text style={styles.detailLabel}>Drug:</Text>
-          <Text style={styles.detailText}>{item.drugAdministered}</Text>
+        
+        <View style={styles.statusRow}>
+          <View style={styles.statusItem}>
+            <Text style={styles.statusLabel}>Drug:</Text>
+            <Text style={styles.statusValue}>{item.drugAdministered}</Text>
+          </View>
+          <View style={styles.statusItem}>
+            <Text style={styles.statusLabel}>Dosage:</Text>
+            <Text style={styles.statusValue}>{item.dosage} ml</Text>
+          </View>
         </View>
-
-        <View style={styles.detailRow}>
-          <FastImage source={icons.chart} style={styles.detailIcon} tintColor={COLORS.green} />
-          <Text style={styles.detailLabel}>Dosage:</Text>
-          <Text style={styles.detailText}>{item.dosage} ml</Text>
-        </View>
-
-        <View style={styles.detailRow}>
-          <FastImage source={icons.doctor} style={styles.detailIcon} tintColor={COLORS.green} />
-          <Text style={styles.detailLabel}>Admin By:</Text>
-          <Text style={styles.detailText}>{item.administeredBy}</Text>
-        </View>
-
-        <View style={styles.detailRow}>
-          <FastImage source={icons.money} style={styles.detailIcon} tintColor={COLORS.green} />
-          <Text style={styles.detailLabel}>Total Cost:</Text>
-          <Text style={styles.detailText}>${(parseInt(item.costOfVaccine) + parseInt(item.costOfService)).toLocaleString()}</Text>
+        
+        <View style={styles.statusRow}>
+          <View style={styles.statusItem}>
+            <Text style={styles.statusLabel}>Admin By:</Text>
+            <Text style={styles.statusValue}>{item.administeredBy}</Text>
+          </View>
+          <View style={styles.statusItem}>
+            <Text style={styles.statusLabel}>Cost:</Text>
+            <Text style={styles.statusValue}>
+              ${(parseInt(item.costOfVaccine) + parseInt(item.costOfService)).toLocaleString()}
+            </Text>
+          </View>
         </View>
       </View>
-
+  
       <View style={styles.cardActions}>
         <TouchableOpacity onPress={() => handleEdit(item)} style={styles.cardActionButton}>
           <FastImage source={icons.edit} style={styles.actionButtonIcon} tintColor="#2196F3" />
@@ -261,9 +229,8 @@ const DewormingRecordsScreen = ({ navigation }) => {
           <Text style={[styles.actionButtonText, { color: '#F44336' }]}>Delete</Text>
         </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
-
   const renderFilterModal = () => {
     const dewormingTypes = [
       'Roundworms',
@@ -313,18 +280,7 @@ const DewormingRecordsScreen = ({ navigation }) => {
     );
   };
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <StatusBar translucent backgroundColor={COLORS.green2} animated={true} barStyle={'light-content'} />
-        <SecondaryHeader title="Deworming Records" />
-        <View style={styles.loadingContent}>
-          <ActivityIndicator size="large" color={COLORS.green} />
-          <Text style={styles.loadingText}>Loading records...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -338,9 +294,7 @@ const DewormingRecordsScreen = ({ navigation }) => {
         renderItem={renderDewormingCard}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={renderEmptyState}
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
+      
       />
       
       <TouchableOpacity
@@ -359,20 +313,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.lightGreen,
   },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: COLORS.lightGreen,
-  },
-  loadingContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: COLORS.black,
-  },
+ 
   header: {
     backgroundColor: COLORS.white,
     padding: 12,
@@ -435,40 +376,9 @@ const styles = StyleSheet.create({
     padding: 16,
     flexGrow: 1,
   },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-    minHeight: 300,
-  },
-  emptyStateIcon: {
-    width: 80,
-    height: 80,
-    marginBottom: 16,
-  },
-  emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.black,
-    marginBottom: 8,
-  },
-  emptyStateMessage: {
-    fontSize: 16,
-    color: COLORS.gray,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  emptyStateButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: COLORS.green,
-    borderRadius: 8,
-  },
-  emptyStateButtonText: {
-    color: COLORS.white,
-    fontWeight: '500',
-  },
+  
+ 
+  
   card: {
     backgroundColor: COLORS.white,
     borderRadius: 16,
@@ -637,6 +547,49 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     fontWeight: '500',
     fontSize: 16,
+  },
+  animalType: {
+    fontSize: 14,
+    color: COLORS.black,
+    marginTop: 4,
+  },
+  vaccineStatusContainer: {
+    marginTop: 8,
+    padding: 12,
+    borderRadius: 8,
+  },
+  vaccineBadgeContainer: {
+    marginBottom: 10,
+  },
+  vaccineBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: COLORS.green,
+    borderRadius: 20,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+  },
+  vaccineBadgeText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  statusItem: {
+    flex: 1,
+  },
+  statusLabel: {
+    fontSize: 12,
+    color: COLORS.gray,
+    marginBottom: 2,
+  },
+  statusValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.black,
   },
 });
 

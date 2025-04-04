@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Text,
@@ -15,18 +15,16 @@ import {
   Toast,
   IconButton,
 } from 'native-base';
-import {View, TouchableOpacity, StyleSheet, Image, Keyboard} from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Image, Keyboard } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../../constants';
-import {COLORS} from '../../../constants/theme';
+import { icons } from '../../../constants';
+import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 
-export default function VaccineEditScreen({navigation, route}) {
-  // Get the vaccine record from route params if provided
+export default function VaccineEditScreen({ navigation, route }) {
   const vaccineRecord = route.params?.record || {};
-  
-  // Initialize state with existing record data or defaults
+
   const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState(vaccineRecord.animalIdOrFlockId || '');
   const [vaccinationAgainst, setVaccinationAgainst] = useState(vaccineRecord.vaccinationAgainst || '');
   const [drugAdministered, setDrugAdministered] = useState(vaccineRecord.drugAdministered || '');
@@ -42,7 +40,6 @@ export default function VaccineEditScreen({navigation, route}) {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Common animals for quick selection
   const commonAnimals = ['Cow', 'Goat', 'Sheep', 'Chicken', 'Pig'];
 
   const handleDateChange = (event, selectedDate) => {
@@ -52,52 +49,20 @@ export default function VaccineEditScreen({navigation, route}) {
     setShowDatePicker(false);
   };
 
-  const validate = () => {
-    // Reset errors
-    setErrors({});
-    let isValid = true;
-    
-    // Basic validation
-    if (!animalIdOrFlockId) {
-      setErrors(prev => ({...prev, animalIdOrFlockId: 'Animal ID is required'}));
-      isValid = false;
-    }
-    
-    if (!vaccinationAgainst) {
-      setErrors(prev => ({...prev, vaccinationAgainst: 'Vaccination type is required'}));
-      isValid = false;
-    }
-    
-    if (!drugAdministered) {
-      setErrors(prev => ({...prev, drugAdministered: 'Drug name is required'}));
-      isValid = false;
-    }
-    
-    return isValid;
-  };
+
 
   const handleUpdate = () => {
-    Keyboard.dismiss();
-    
-    if (validate()) {
-      // In a real app, you would update the record in your database or state management
-      setShowUpdateModal(true);
-    } else {
-      Toast.show({
-        title: "Please fill all required fields",
-        status: "warning",
-        duration: 3000,
-      });
-    }
+
+    setShowUpdateModal(true);
+
   };
 
   const handleDone = () => {
-    // Return to the records screen
     navigation.navigate('VaccineRecordsScreen');
   };
 
   return (
-    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
+    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
       <SecondaryHeader title="Edit Vaccine Record" />
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
@@ -107,9 +72,8 @@ export default function VaccineEditScreen({navigation, route}) {
             Vaccination Details
           </Heading>
           <Divider mb={4} />
-          
+
           <VStack space={4}>
-            {/* Animal Section */}
             <FormControl isRequired isInvalid={'animalIdOrFlockId' in errors}>
               <FormControl.Label _text={styles.labelText}>
                 Animal ID or Flock ID
@@ -118,39 +82,31 @@ export default function VaccineEditScreen({navigation, route}) {
                 selectedValue={animalIdOrFlockId}
                 minWidth="100%"
                 backgroundColor={COLORS.lightGreen}
-                borderColor={errors.animalIdOrFlockId ? "red.500" : "gray.200"}
                 borderRadius={8}
                 fontSize="md"
                 placeholder="Select Animal ID"
                 _selectedItem={{
                   bg: 'emerald.100',
-                  endIcon: (
-                    <FastImage
-                      source={icons.right_arrow}
-                      style={{width: 20, height: 20, tintColor: COLORS.green}}
-                    />
-                  ),
+
                 }}
                 accessibilityLabel="Choose Animal ID"
                 onValueChange={setAnimalIdOrFlockId}>
                 {commonAnimals.map((animal, index) => (
-                  <Select.Item 
-                    key={index} 
-                    label={`${animal} ${index + 1}`} 
-                    value={`${animal.charAt(0)}00${index + 1}`} 
+                  <Select.Item
+                    key={index}
+                    label={`${animal} ${index + 1}`}
+                    value={`${animal.charAt(0)}00${index + 1}`}
                   />
                 ))}
               </Select>
-              <FormControl.ErrorMessage>
-                {errors.animalIdOrFlockId}
-              </FormControl.ErrorMessage>
+
               <FormControl.HelperText>
                 Select an animal from your registered livestock
               </FormControl.HelperText>
             </FormControl>
 
             {/* Vaccination Type */}
-            <FormControl isRequired isInvalid={'vaccinationAgainst' in errors}>
+            <FormControl>
               <FormControl.Label _text={styles.labelText}>
                 Vaccination Against
               </FormControl.Label>
@@ -158,20 +114,13 @@ export default function VaccineEditScreen({navigation, route}) {
                 selectedValue={vaccinationAgainst}
                 minWidth="100%"
                 backgroundColor={COLORS.lightGreen}
-                borderColor={errors.vaccinationAgainst ? "red.500" : "gray.200"}
                 borderRadius={8}
                 fontSize="md"
                 placeholder="Select disease or condition"
                 _selectedItem={{
                   bg: 'emerald.100',
-                  endIcon: (
-                    <FastImage
-                      source={icons.right_arrow}
-                      style={{width: 20, height: 20, tintColor: COLORS.green}}
-                    />
-                  ),
+
                 }}
-                accessibilityLabel="Choose vaccination type"
                 onValueChange={setVaccinationAgainst}>
                 <Select.Item label="Foot and Mouth Disease" value="Foot and Mouth Disease" />
                 <Select.Item label="Anthrax" value="Anthrax" />
@@ -179,9 +128,7 @@ export default function VaccineEditScreen({navigation, route}) {
                 <Select.Item label="Brucellosis" value="Brucellosis" />
                 <Select.Item label="Newcastle Disease" value="Newcastle Disease" />
               </Select>
-              <FormControl.ErrorMessage>
-                {errors.vaccinationAgainst}
-              </FormControl.ErrorMessage>
+
             </FormControl>
 
             {/* Drug Name */}
@@ -192,7 +139,6 @@ export default function VaccineEditScreen({navigation, route}) {
               <Input
                 variant="outline"
                 backgroundColor={COLORS.lightGreen}
-                borderColor={errors.drugAdministered ? "red.500" : "gray.200"}
                 borderRadius={8}
                 height={12}
                 fontSize="md"
@@ -200,9 +146,7 @@ export default function VaccineEditScreen({navigation, route}) {
                 value={drugAdministered}
                 onChangeText={setDrugAdministered}
               />
-              <FormControl.ErrorMessage>
-                {errors.drugAdministered}
-              </FormControl.ErrorMessage>
+
             </FormControl>
 
             {/* Date Section */}
@@ -426,7 +370,7 @@ export default function VaccineEditScreen({navigation, route}) {
                 py={3}
                 _text={{
                   color: COLORS.green,
-                  fontWeight: "600", 
+                  fontWeight: "600",
                 }}
                 onPress={() => navigation.goBack()}>
                 Cancel
@@ -453,27 +397,27 @@ export default function VaccineEditScreen({navigation, route}) {
 
       {/* Success Modal */}
       {showUpdateModal && (
-        <Box 
-          position="absolute" 
-          top="0" 
-          bottom="0" 
-          left="0" 
-          right="0" 
-          bg="rgba(0,0,0,0.5)" 
-          justifyContent="center" 
+        <Box
+          position="absolute"
+          top="0"
+          bottom="0"
+          left="0"
+          right="0"
+          bg="rgba(0,0,0,0.5)"
+          justifyContent="center"
           alignItems="center"
           zIndex={999}
         >
           <Box bg="white" p={6} borderRadius={16} width="80%" maxWidth="400px" shadow={5}>
             <VStack space={4} alignItems="center">
-              <Box 
-                bg="emerald.100" 
-                p={4} 
+              <Box
+                bg="emerald.100"
+                p={4}
                 borderRadius="full"
               >
                 <FastImage
-                  source={icons.tick} 
-                  style={{width: 60, height: 60}}
+                  source={icons.tick}
+                  style={{ width: 60, height: 60 }}
                   resizeMode="contain"
                 />
               </Box>
@@ -483,7 +427,7 @@ export default function VaccineEditScreen({navigation, route}) {
               <Text fontSize="md" textAlign="center" color="gray.600">
                 Vaccine record updated successfully
               </Text>
-              
+
               <Button
                 width="100%"
                 bg={COLORS.green}

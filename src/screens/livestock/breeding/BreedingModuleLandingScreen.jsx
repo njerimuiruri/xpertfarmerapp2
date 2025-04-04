@@ -173,12 +173,12 @@ const BreedingModuleLandingScreen = ({navigation}) => {
         <FastImage
           source={icons.search}
           style={styles.searchIcon}
-          tintColor="COLORS.black"
+          tintColor={COLORS.black}
         />
         <TextInput
           style={styles.searchInput}
           placeholder="Search by animal ID or type..."
-          placeholderTextColor="COLORS.black"
+          placeholderTextColor={COLORS.black}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -266,7 +266,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
           <FastImage
             source={icons.account}
             style={styles.detailIcon}
-            tintColor="COLORS.black"
+            tintColor={COLORS.black}
           />
           <Text style={styles.detailLabel}>Purpose:</Text>
           <Text style={styles.detailText}>{item.purpose}</Text>
@@ -276,7 +276,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
           <FastImage
             source={icons.chart}
             style={styles.detailIcon}
-            tintColor="COLORS.black"
+            tintColor={COLORS.black}
           />
           <Text style={styles.detailLabel}>Strategy:</Text>
           <Text style={styles.detailText}>{item.strategy}</Text>
@@ -286,7 +286,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
           <FastImage
             source={icons.calendar}
             style={styles.detailIcon}
-            tintColor="COLORS.black"
+            tintColor={COLORS.black}
           />
           <Text style={styles.detailLabel}>Service:</Text>
           <Text style={styles.detailText}>
@@ -299,7 +299,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
             <FastImage
               source={icons.time}
               style={styles.detailIcon}
-              tintColor="COLORS.black"
+              tintColor={COLORS.black}
             />
             <Text style={styles.detailLabel}>Expected:</Text>
             <Text style={styles.detailText}>{item.expectedBirthDate}</Text>
@@ -312,7 +312,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
               <FastImage
                 source={icons.calendar}
                 style={styles.detailIcon}
-                tintColor="COLORS.black"
+                tintColor={COLORS.black}
               />
               <Text style={styles.detailLabel}>Birth:</Text>
               <Text style={styles.detailText}>
@@ -323,7 +323,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
               <FastImage
                 source={icons.account}
                 style={styles.detailIcon}
-                tintColor="COLORS.black"
+                tintColor={COLORS.black}
               />
               <Text style={styles.detailLabel}>Offspring:</Text>
               <Text style={styles.detailText}>

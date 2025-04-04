@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,14 +11,14 @@ import {
   SafeAreaView,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../../constants';
-import {COLORS} from '../../../constants/theme';
+import { icons } from '../../../constants';
+import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-const RecordBirthScreen = ({route, navigation}) => {
-  const {record} = route.params;
-  
+const RecordBirthScreen = ({ route, navigation }) => {
+  const { record } = route.params;
+
   const [birthDetails, setBirthDetails] = useState({
     id: record.id,
     birthDate: new Date(),
@@ -30,7 +30,7 @@ const RecordBirthScreen = ({route, navigation}) => {
     offspringIds: '',
     status: 'Delivered',
   });
-  
+
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [deliveryMethods] = useState(['Natural Birth', 'Assisted', 'Cesarean']);
   const [showDeliveryMethodPicker, setShowDeliveryMethodPicker] = useState(false);
@@ -45,20 +45,20 @@ const RecordBirthScreen = ({route, navigation}) => {
   const onDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      setBirthDetails({...birthDetails, birthDate: selectedDate});
+      setBirthDetails({ ...birthDetails, birthDate: selectedDate });
     }
   };
 
   const handleSelectDeliveryMethod = (method) => {
-    setBirthDetails({...birthDetails, deliveryMethod: method});
+    setBirthDetails({ ...birthDetails, deliveryMethod: method });
     setShowDeliveryMethodPicker(false);
   };
 
 
   return (
-    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
+    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
       <SecondaryHeader title="Record Birth" />
-      
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.infoCard}>
           <Text style={styles.cardTitle}>Animal Details</Text>
@@ -82,11 +82,11 @@ const RecordBirthScreen = ({route, navigation}) => {
 
         <View style={styles.formCard}>
           <Text style={styles.cardTitle}>Birth Information</Text>
-          
+
           {/* Birth Date */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Birth Date</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.datePickerButton}
               onPress={() => setShowDatePicker(true)}
             >
@@ -107,11 +107,11 @@ const RecordBirthScreen = ({route, navigation}) => {
               />
             )}
           </View>
-          
+
           {/* Delivery Method */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Delivery Method</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.pickerButton}
               onPress={() => setShowDeliveryMethodPicker(!showDeliveryMethodPicker)}
             >
@@ -125,7 +125,7 @@ const RecordBirthScreen = ({route, navigation}) => {
             {showDeliveryMethodPicker && (
               <View style={styles.pickerOptions}>
                 {deliveryMethods.map((method) => (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     key={method}
                     style={styles.pickerOption}
                     onPress={() => handleSelectDeliveryMethod(method)}
@@ -136,7 +136,7 @@ const RecordBirthScreen = ({route, navigation}) => {
               </View>
             )}
           </View>
-          
+
           {/* Number of Young Ones */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Number of Offspring</Text>
@@ -144,14 +144,16 @@ const RecordBirthScreen = ({route, navigation}) => {
               <TextInput
                 style={styles.textInput}
                 value={birthDetails.youngOnes}
-                onChangeText={(text) => setBirthDetails({...birthDetails, youngOnes: text})}
+                onChangeText={(text) => setBirthDetails({ ...birthDetails, youngOnes: text })}
                 keyboardType="numeric"
-                
+
                 placeholder="Enter number"
+                placeholderTextColor={COLORS.black}
+
               />
             </View>
           </View>
-          
+
           {record.animalType === 'Swine' ? (
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Litter Weight</Text>
@@ -159,9 +161,11 @@ const RecordBirthScreen = ({route, navigation}) => {
                 <TextInput
                   style={styles.textInput}
                   value={birthDetails.litterWeight}
-                  onChangeText={(text) => setBirthDetails({...birthDetails, litterWeight: text})}
+                  onChangeText={(text) => setBirthDetails({ ...birthDetails, litterWeight: text })}
                   keyboardType="numeric"
                   placeholder="Enter weight in kg"
+                  placeholderTextColor={COLORS.black}
+
                 />
                 <Text style={styles.unitText}>kg</Text>
               </View>
@@ -173,50 +177,56 @@ const RecordBirthScreen = ({route, navigation}) => {
                 <TextInput
                   style={styles.textInput}
                   value={birthDetails.birthWeight}
-                  onChangeText={(text) => setBirthDetails({...birthDetails, birthWeight: text})}
+                  onChangeText={(text) => setBirthDetails({ ...birthDetails, birthWeight: text })}
                   keyboardType="numeric"
                   placeholder="Enter weight in kg"
+                  placeholderTextColor={COLORS.black}
+
                 />
                 <Text style={styles.unitText}>kg</Text>
               </View>
             </View>
           )}
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Offspring Sex</Text>
             <View style={styles.textInputContainer}>
               <TextInput
                 style={styles.textInput}
                 value={birthDetails.offspringSex}
-                onChangeText={(text) => setBirthDetails({...birthDetails, offspringSex: text})}
+                onChangeText={(text) => setBirthDetails({ ...birthDetails, offspringSex: text })}
                 placeholder="e.g., 2 Males, 3 Females"
+                placeholderTextColor={COLORS.black}
+
               />
             </View>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Offspring IDs</Text>
             <View style={styles.textInputContainer}>
               <TextInput
                 style={styles.textInput}
                 value={birthDetails.offspringIds}
-                onChangeText={(text) => setBirthDetails({...birthDetails, offspringIds: text})}
+                onChangeText={(text) => setBirthDetails({ ...birthDetails, offspringIds: text })}
                 placeholder="e.g., A101, A102"
+                placeholderTextColor={COLORS.black}
+
               />
             </View>
           </View>
         </View>
-        
+
         <View style={styles.buttonGroup}>
-          <TouchableOpacity 
-            style={[styles.button, styles.cancelButton]} 
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
             onPress={() => navigation.goBack()}
           >
             <Text style={styles.buttonCancelText}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.button, styles.saveButton]} 
-           
+          <TouchableOpacity
+            style={[styles.button, styles.saveButton]}
+
           >
             <Text style={styles.buttonSaveText}>Save Record</Text>
           </TouchableOpacity>
@@ -234,13 +244,13 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   infoCard: {
-    backgroundColor:COLORS.white,
+    backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     elevation: 2,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -251,7 +261,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 2,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -261,7 +271,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     marginBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor:COLORS.lightGray1,
+    borderBottomColor: COLORS.lightGray1,
     paddingBottom: 8,
   },
   animalDetailRow: {
@@ -276,7 +286,7 @@ const styles = StyleSheet.create({
   detailValue: {
     flex: 1,
     fontSize: 14,
-    color:COLORS.black,
+    color: COLORS.black,
     fontWeight: '500',
   },
   inputGroup: {
@@ -294,9 +304,9 @@ const styles = StyleSheet.create({
     height: 48,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor:COLORS.lightGray1,
+    borderColor: COLORS.lightGray1,
     borderRadius: 8,
-    backgroundColor:COLORS.lightGreen,
+    backgroundColor: COLORS.lightGreen,
   },
   dateText: {
     fontSize: 16,
@@ -311,7 +321,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.lightGray1,
     borderRadius: 8,
-    backgroundColor:COLORS.lightGreen,
+    backgroundColor: COLORS.lightGreen,
   },
   pickerText: {
     fontSize: 16,
@@ -325,7 +335,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     elevation: 4,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -353,7 +363,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 16,
-    color:COLORS.black,
+    color: COLORS.black,
   },
   unitText: {
     fontSize: 16,

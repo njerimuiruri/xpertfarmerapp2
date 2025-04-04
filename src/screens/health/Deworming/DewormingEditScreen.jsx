@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Text,
@@ -7,9 +7,9 @@ import {
   VStack,
   Select,
   ScrollView,
+  Divider,
   HStack,
   Heading,
-  Divider,
   Toast,
 } from 'native-base';
 import { View, TouchableOpacity, StyleSheet, Image, Keyboard } from 'react-native';
@@ -20,10 +20,8 @@ import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 
 export default function DewormingEditScreen({ navigation, route }) {
-  // Get the deworming record from route params if provided
   const dewormingRecord = route.params?.record || {};
 
-  // Initialize state with existing record data or defaults
   const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState(dewormingRecord.animalIdOrFlockId || '');
   const [dewormingAgainst, setDewormingAgainst] = useState(dewormingRecord.dewormingAgainst || '');
   const [dewormingDrug, setDewormingDrug] = useState(dewormingRecord.dewormingDrug || '');
@@ -45,23 +43,13 @@ export default function DewormingEditScreen({ navigation, route }) {
     setShowDatePicker(false);
   };
 
-  const validate = () => {
-    return animalIdOrFlockId && dewormingAgainst && dewormingDrug;
-  };
+
 
   const handleSave = () => {
-    Keyboard.dismiss();
-    
-    if (validate()) {
-      // In a real app, you would update the record in your database or state management
-      setShowSuccessModal(true);
-    } else {
-      Toast.show({
-        title: "Please fill all required fields",
-        status: "warning",
-        duration: 3000,
-      });
-    }
+
+
+    setShowSuccessModal(true);
+
   };
 
   const handleDone = () => {
@@ -70,7 +58,6 @@ export default function DewormingEditScreen({ navigation, route }) {
 
   const handleAddAnother = () => {
     setShowSuccessModal(false);
-    // Reset the state to allow adding another entry
     setAnimalIdOrFlockId('');
     setDewormingAgainst('');
     setDewormingDrug('');
@@ -90,6 +77,7 @@ export default function DewormingEditScreen({ navigation, route }) {
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled">
+
         <Box bg="white" p={5} borderRadius={12} shadow={2} mx={4} my={4}>
           <Heading size="md" mb={4} color={COLORS.darkGray3}>
             Deworming Details
@@ -97,25 +85,26 @@ export default function DewormingEditScreen({ navigation, route }) {
           <Divider mb={4} />
 
           <VStack space={4}>
-            {/* Animal ID or Flock ID */}
-            <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
+            <Box >
+              <Text fontSize="md" fontWeight="500" color={COLORS.darkGray3}>
                 Animal ID or Flock ID
               </Text>
               <Select
                 selectedValue={animalIdOrFlockId}
                 minWidth="100%"
                 backgroundColor={COLORS.lightGreen}
-                onValueChange={setAnimalIdOrFlockId}>
-                {/* You'll have to replace these options with your actual IDs */}
+                onValueChange={setAnimalIdOrFlockId}
+                _selectedItem={{
+                  bg: "lightGreen",
+
+                }}>
                 <Select.Item label="ID 1" value="id1" />
                 <Select.Item label="ID 2" value="id2" />
               </Select>
             </Box>
 
-            {/* Deworming Against */}
             <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
+              <Text fontSize="md" fontWeight="500" color={COLORS.darkGray3}>
                 Deworming Against
               </Text>
               <Input
@@ -128,8 +117,8 @@ export default function DewormingEditScreen({ navigation, route }) {
             </Box>
 
             {/* Drug Administered */}
-            <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
+            <Box >
+              <Text fontSize="md" fontWeight="500" color={COLORS.darkGray3}>
                 Drug Administered
               </Text>
               <Input
@@ -142,46 +131,50 @@ export default function DewormingEditScreen({ navigation, route }) {
             </Box>
 
             {/* Date Administered */}
-            <View style={styles.formGroup}>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>Date Administered</Text>
-              <View style={styles.dateContainer}>
-                <Input
-                  w="85%"
-                  backgroundColor={COLORS.lightGreen}
-                  value={dateAdministered.toLocaleDateString('en-GB')}
-                  placeholder="DD/MM/YY"
-                  isReadOnly
+            <Box flexDirection="row" alignItems="center">
+              <Input
+                flex={1}
+                backgroundColor={COLORS.lightGreen}
+                borderRadius={8}
+                height={12}
+                fontSize="md"
+                value={dateAdministered.toLocaleDateString('en-GB')}
+                placeholder="DD/MM/YY"
+                isReadOnly
+              />
+              <TouchableOpacity
+                onPress={() => setShowDatePicker(true)}
+                style={styles.datePickerButton}>
+                <Image
+                  source={icons.calendar}
+                  resizeMode="contain"
+                  style={styles.calendarIcon}
                 />
-                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                  <Image
-                    source={icons.calendar}
-                    resizeMode="contain"
-                    style={styles.calendarIcon}
-                  />
-                </TouchableOpacity>
-              </View>
-              {showDatePicker && (
-                <DateTimePicker
-                  testID="dateTimePicker"
-                  value={dateAdministered}
-                  mode="date"
-                  is24Hour={true}
-                  onChange={handleDateChange}
-                />
-              )}
-            </View>
+              </TouchableOpacity>
+            </Box>
+
 
             {/* Dosage */}
-            <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
+            <Box >
+              <Text fontSize="md" fontWeight="500" color={COLORS.darkGray3}>
                 Dosage (ml)
               </Text>
               <HStack alignItems="center" space={2}>
                 <Button
-                  variant="outline"
                   onPress={() => {
                     const currentValue = parseFloat(dosage) || 1;
                     setDosage(Math.max(currentValue - 0.5, 0.5));
+                  }}
+                  variant="outline"
+                  borderColor={COLORS.green}
+                  borderRadius="full"
+                  p={0}
+                  height={10}
+                  width={10}
+                  _text={{
+                    fontSize: "xl",
+                    fontWeight: "bold",
+                    color: COLORS.green,
                   }}>
                   -
                 </Button>
@@ -198,10 +191,20 @@ export default function DewormingEditScreen({ navigation, route }) {
                   }}
                 />
                 <Button
-                  variant="outline"
                   onPress={() => {
                     const currentValue = parseFloat(dosage) || 1;
                     setDosage(currentValue + 0.5);
+                  }}
+                  variant="outline"
+                  borderColor={COLORS.green}
+                  borderRadius="full"
+                  p={0}
+                  height={10}
+                  width={10}
+                  _text={{
+                    fontSize: "xl",
+                    fontWeight: "bold",
+                    color: COLORS.green,
                   }}>
                   +
                 </Button>
@@ -209,8 +212,8 @@ export default function DewormingEditScreen({ navigation, route }) {
             </Box>
 
             {/* Cost of Vaccine */}
-            <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
+            <Box >
+              <Text fontSize="md" fontWeight="500" color={COLORS.darkGray3}>
                 Cost of Vaccine
               </Text>
               <Input
@@ -224,8 +227,8 @@ export default function DewormingEditScreen({ navigation, route }) {
             </Box>
 
             {/* Administered by */}
-            <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
+            <Box >
+              <Text fontSize="md" fontWeight="500" color={COLORS.darkGray3}>
                 Administered by
               </Text>
               <Input
@@ -238,8 +241,8 @@ export default function DewormingEditScreen({ navigation, route }) {
             </Box>
 
             {/* Practice ID */}
-            <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
+            <Box >
+              <Text fontSize="md" fontWeight="500" color={COLORS.darkGray3}>
                 Practice ID
               </Text>
               <Input
@@ -252,8 +255,8 @@ export default function DewormingEditScreen({ navigation, route }) {
             </Box>
 
             {/* Cost of Service */}
-            <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
+            <Box >
+              <Text fontSize="md" fontWeight="500" color={COLORS.darkGray3}>
                 Cost of Service
               </Text>
               <Input
@@ -267,8 +270,8 @@ export default function DewormingEditScreen({ navigation, route }) {
             </Box>
 
             {/* Farmer or Witness */}
-            <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
+            <Box >
+              <Text fontSize="md" fontWeight="500" color={COLORS.darkGray3}>
                 Farmer or Witness
               </Text>
               <Input
@@ -281,8 +284,8 @@ export default function DewormingEditScreen({ navigation, route }) {
             </Box>
 
             {/* Notes */}
-            <Box>
-              <Text fontSize="sm" fontWeight="500" color={COLORS.darkGray3}>
+            <Box >
+              <Text fontSize="md" fontWeight="500" color={COLORS.darkGray3}>
                 Notes
               </Text>
               <Input
@@ -320,20 +323,20 @@ export default function DewormingEditScreen({ navigation, route }) {
 
       {/* Success Modal */}
       {showSuccessModal && (
-        <Box 
-          position="absolute" 
-          top="0" 
-          bottom="0" 
-          left="0" 
-          right="0" 
-          bg="rgba(0,0,0,0.5)" 
-          justifyContent="center" 
+        <Box
+          position="absolute"
+          top="0"
+          bottom="0"
+          left="0"
+          right="0"
+          bg="rgba(0,0,0,0.5)"
+          justifyContent="center"
           alignItems="center">
           <Box bg="white" p={6} borderRadius={8} width="80%" maxWidth="400px">
             <VStack space={4} alignItems="center">
               <FastImage
-                source={icons.tick} 
-                style={{ width: 60, height: 60 }} 
+                source={icons.tick}
+                style={{ width: 60, height: 60 }}
                 resizeMode="contain"
               />
               <Text fontSize="lg" fontWeight="bold" textAlign="center">
@@ -367,13 +370,16 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingVertical: 10,
   },
-  formGroup: {
-    marginBottom: 16,
-  },
   dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  datePickerButton: {
+    marginLeft: 8,
+    padding: 6,
+    backgroundColor: COLORS.lightGreen,
+    borderRadius: 8,
   },
   calendarIcon: {
     width: 32,
