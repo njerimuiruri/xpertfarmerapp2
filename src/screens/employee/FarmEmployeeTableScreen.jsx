@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useMemo} from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,8 +12,8 @@ import {
   SafeAreaView,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../constants';
-import {COLORS} from '../../constants/theme';
+import { icons } from '../../constants';
+import { COLORS } from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
 const initialEmployeeData = [
@@ -59,7 +59,7 @@ const initialEmployeeData = [
   },
 ];
 
-const FarmEmployeeListScreen = ({navigation}) => {
+const FarmEmployeeListScreen = ({ navigation }) => {
   const [employees, setEmployees] = useState(initialEmployeeData);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('name');
@@ -93,7 +93,7 @@ const FarmEmployeeListScreen = ({navigation}) => {
       'Delete Employee',
       'Are you sure you want to delete this employee?',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
@@ -107,7 +107,7 @@ const FarmEmployeeListScreen = ({navigation}) => {
 
   const handleEdit = useCallback(
     employee => {
-      navigation.navigate('EditEmployeeScreen', {employee});
+      navigation.navigate('EditEmployeeScreen', { employee });
     },
     [navigation],
   );
@@ -166,11 +166,11 @@ const FarmEmployeeListScreen = ({navigation}) => {
     </View>
   );
 
-  const renderEmployeeCard = ({item}) => (
-<TouchableOpacity 
-    style={styles.card}
-    onPress={() => navigation.navigate('EmployeeDetailScreen', {employee: item})}>
-   
+  const renderEmployeeCard = ({ item }) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate('EmployeeDetailScreen', { employee: item })}>
+
       <View style={styles.cardHeader}>
         <View style={styles.employeeInfo}>
           <Text style={styles.name}>{item.fullName}</Text>
@@ -258,7 +258,7 @@ const FarmEmployeeListScreen = ({navigation}) => {
                 style={[
                   styles.filterOptionText,
                   filterPosition === position &&
-                    styles.selectedFilterOptionText,
+                  styles.selectedFilterOptionText,
                 ]}>
                 {position}
               </Text>
@@ -321,7 +321,6 @@ const FarmEmployeeListScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    
   },
   header: {
     backgroundColor: COLORS.white,
@@ -386,7 +385,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 2,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -449,7 +448,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 6,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.27,
     shadowRadius: 4.65,
   },
