@@ -29,9 +29,9 @@ const Header = ({navigation, title = "XpertFarmer"}) => {
           {title}
         </Text>
         <View className="flex flex-row space-x-6">
-          <TouchableOpacity>
-            <FastImage className="w-[10px] h-[10px]" source={icons.avatar} style={styles.avatar} />
-          </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+        <FastImage className="w-[10px] h-[10px]" source={icons.avatar} style={styles.avatar} />
+      </TouchableOpacity>
         </View>
       </View>
     </View>

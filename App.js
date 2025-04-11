@@ -24,6 +24,9 @@ import {
   // Farm
   FarmRecord,
   AddFarmDetailsScreen,
+  ManageFarmsScreen,
+  EditFarmScreen,
+  AddFarmScreen,
   // Employees
   AddEmployeeScreen,
   FarmEmployeeTableScreen,
@@ -42,12 +45,14 @@ import {
   // Breeding
   BreedingRecordForm,
   EditBreedingRecordScreen,
+  BreedingRecordDetailScreen,
 
   // Feeds
   LivestockFeedingScreen,
   AnimalFeedingProgramScreen,
   FarmFeedsScreen,
   EditFeedingRequirementScreen,
+  FeedingDetailsScreen,
 
   //health
   AddHealthRecords,
@@ -207,6 +212,23 @@ export default function App() {
                 options={{headerShown: false}}
               />
               <Stack.Screen
+                name="ManageFarmsScreen"
+                component={ManageFarmsScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="EditFarmScreen"
+                component={EditFarmScreen}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="AddFarmScreen"
+                component={AddFarmScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
                 name="FarmRecord"
                 component={FarmRecord}
                 options={{headerShown: false}}
@@ -273,6 +295,12 @@ export default function App() {
                 component={FeedingModuleScreen}
                 options={{headerShown: false}}
               />
+              
+              <Stack.Screen
+                name="FeedingDetailsScreen"
+                component={FeedingDetailsScreen}
+                options={{headerShown: false}}
+              />
               <Stack.Screen
                 name="AddLivestockScreen"
                 component={AddLivestockScreen}
@@ -296,6 +324,12 @@ export default function App() {
               <Stack.Screen
                 name="BreedingRecordForm"
                 component={BreedingRecordForm}
+                options={{headerShown: false}}
+              />
+              
+              <Stack.Screen
+                name="BreedingRecordDetailScreen"
+                component={BreedingRecordDetailScreen}
                 options={{headerShown: false}}
               />
               <Stack.Screen

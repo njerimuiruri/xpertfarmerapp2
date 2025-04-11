@@ -244,7 +244,10 @@ const BreedingModuleLandingScreen = ({navigation}) => {
   };
 
   const renderBreedingCard = ({item}) => (
-    <View style={styles.card}>
+    <TouchableOpacity 
+    style={styles.card}
+    onPress={() => navigation.navigate('BreedingRecordDetailScreen', { record: item })}
+  >
       <View style={styles.cardHeader}>
         <View style={styles.animalInfo}>
           <Text style={styles.animalId}>{item.animalId}</Text>
@@ -376,7 +379,7 @@ const BreedingModuleLandingScreen = ({navigation}) => {
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const renderFilterModal = () => {

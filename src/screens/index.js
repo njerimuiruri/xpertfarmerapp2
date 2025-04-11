@@ -8,7 +8,15 @@ import EmailOtpScreen from '../screens/Auth/Email-Otp-Screen';
 import HomeScreen from './Home/home';
 
 import FarmRecord from './Home/Farm-records';
+
 import ProfileScreen from './Home/profile-screen';
+
+import ManageFarmsScreen from './Home/ManageFarmsScreen';
+import EditFarmScreen from './Home/EditFarmScreen';
+
+
+import AddFarmScreen from './Home/EditFarmScreen';
+
 import AddFarmDetailsScreen from './farm/AddFarm-details';
 
 import OnboardingScreen from './Onboarding/OnboardingScreen';
@@ -31,6 +39,8 @@ import EditBreedingRecordScreen from './livestock/breeding/EditBreedingRecordScr
 
 import RecordBirthScreen from './livestock/breeding/RecordBirthScreen';
 
+import BreedingRecordDetailScreen from './livestock/breeding/BreedingRecordDetailScreen';
+
 import LivestockModuleScreen from './livestock/LivestockModuleScreen';
 import AnimalDetailScreen from './livestock/AnimalDetailScreen';
 import BreedingRecordForm from './livestock/breeding/BreedingRecordForm';
@@ -40,6 +50,7 @@ import FarmFeedsScreen from './livestock/feeding/FarmFeedsScreen';
 import EditFeedingRequirementScreen from './livestock/feeding/EditFeedingRequirementScreen';
 
 import FeedingModuleScreen from './livestock/feeding/FeedingModuleScreen';
+import FeedingDetailsScreen from './livestock/feeding/FeedingDetailsScreen';
 
 
 
@@ -125,6 +136,9 @@ export {
   // Farm Records
   FarmRecord,
   AddFarmDetailsScreen,
+  ManageFarmsScreen,
+  EditFarmScreen,
+  AddFarmScreen,
 
   // Employees
   AddEmployeeScreen,
@@ -146,12 +160,14 @@ export {
   BreedingRecordForm,
   RecordBirthScreen,
   EditBreedingRecordScreen,
+  BreedingRecordDetailScreen,
   // Feeding
   LivestockFeedingScreen,
   FarmFeedsScreen,
   AnimalFeedingProgramScreen,
   BeefDetailsScreen,
   EditFeedingRequirementScreen,
+  FeedingDetailsScreen,
 
   //health
   AddHealthRecords,

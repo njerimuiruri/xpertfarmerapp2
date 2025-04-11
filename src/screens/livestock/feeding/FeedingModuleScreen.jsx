@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useMemo} from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,8 +12,8 @@ import {
   SafeAreaView,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../../constants';
-import {COLORS} from '../../../constants/theme';
+import { icons } from '../../../constants';
+import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 
 const initialFeedingData = [
@@ -69,7 +69,7 @@ const initialFeedingData = [
   },
 ];
 
-const FeedingModuleScreen = ({navigation}) => {
+const FeedingModuleScreen = ({ navigation }) => {
   const [feedingRequirements, setFeedingRequirements] =
     useState(initialFeedingData);
   const [searchQuery, setSearchQuery] = useState('');
@@ -103,7 +103,7 @@ const FeedingModuleScreen = ({navigation}) => {
       'Delete Feeding Requirement',
       'Are you sure you want to delete this feeding requirement?',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
@@ -119,7 +119,7 @@ const FeedingModuleScreen = ({navigation}) => {
 
   const handleEdit = useCallback(
     requirement => {
-      navigation.navigate('EditFeedingRequirementScreen', {requirement});
+      navigation.navigate('EditFeedingRequirementScreen', { requirement });
     },
     [navigation],
   );
@@ -129,9 +129,12 @@ const FeedingModuleScreen = ({navigation}) => {
 
   const renderRequirementCard = ({item}) => {
     const isToday = item.nextFeeding === currentDate;
-
+  
     return (
-      <View style={styles.card}>
+      <TouchableOpacity 
+        style={styles.card}
+        onPress={() => navigation.navigate('FeedingDetailsScreen', {feedingData: item})}
+      >
         {isToday && (
           <View style={styles.todayCard}>
             <Text style={styles.todayCardText}>Feed Now</Text>
@@ -208,10 +211,9 @@ const FeedingModuleScreen = ({navigation}) => {
             </View>
           )}
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
-
   const renderFilterModal = () => (
     <Modal
       animationType="slide"
@@ -228,7 +230,7 @@ const FeedingModuleScreen = ({navigation}) => {
                 style={[
                   styles.filterOption,
                   filterAnimalType === animalType &&
-                    styles.selectedFilterOption,
+                  styles.selectedFilterOption,
                 ]}
                 onPress={() => {
                   setFilterAnimalType(prev =>
@@ -240,7 +242,7 @@ const FeedingModuleScreen = ({navigation}) => {
                   style={[
                     styles.filterOptionText,
                     filterAnimalType === animalType &&
-                      styles.selectedFilterOptionText,
+                    styles.selectedFilterOptionText,
                   ]}>
                   {animalType}
                 </Text>
@@ -333,7 +335,7 @@ const FeedingModuleScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    
+
   },
   header: {
     backgroundColor: COLORS.white,
@@ -391,7 +393,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 2,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -499,7 +501,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 6,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.27,
     shadowRadius: 4.65,
   },

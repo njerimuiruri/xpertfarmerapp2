@@ -89,17 +89,7 @@ const EmployeeDetailScreen = ({route, navigation}) => {
           <InfoRow label="Working Area" value="Section A" />
         </InfoSectionWithIcon>
 
-        <InfoSectionWithIcon icon={icons.submited} title="Qualifications & Skills">
-          <View style={styles.skillTagsContainer}>
-            <View style={styles.skillTag}><Text style={styles.skillTagText}>Agriculture</Text></View>
-            <View style={styles.skillTag}><Text style={styles.skillTagText}>Management</Text></View>
-            <View style={styles.skillTag}><Text style={styles.skillTagText}>Animal Care</Text></View>
-            <View style={styles.skillTag}><Text style={styles.skillTagText}>Record Keeping</Text></View>
-          </View>
-          <Text style={styles.qualificationsText}>
-            Bachelor's degree in Agriculture Management with 5+ years of experience in farm operations.
-          </Text>
-        </InfoSectionWithIcon>
+   
 
         <TouchableOpacity
           style={styles.editButton}
