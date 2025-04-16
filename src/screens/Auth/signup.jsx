@@ -6,18 +6,18 @@ import { icons } from "../../constants";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RegisterScreen({ navigation }) {
-  const [currentStep, setCurrentStep] = useState(4); 
+  const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     farm_name: "",
     county: "",
     administrative_location: "",
     farm_size: "",
     ownership: "Freehold",
-        farming_types: [],
-    
+    farming_types: [],
+
     first_name: "",
     middle_name: "",
     last_name: "",
@@ -25,14 +25,14 @@ export default function RegisterScreen({ navigation }) {
     age_group: "",
     residence_county: "",
     residence_administrative_county: "",
-    
+
     years_of_experience: "",
     email: "",
     phone_number: "",
     business_number: "",
     password: "",
     confirmPassword: "",
-    country: 1, 
+    country: 1,
   });
 
   const handleInputChange = (name, value) => {
@@ -107,7 +107,7 @@ export default function RegisterScreen({ navigation }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          password1: formData.confirmPassword, 
+          password1: formData.confirmPassword,
         }),
       });
 
@@ -139,10 +139,10 @@ export default function RegisterScreen({ navigation }) {
       <Box width="100%" mb={10}>
         <HStack justifyContent="space-between" mb={2}>
           {[1, 2, 3, 4].map((step) => (
-            <Box 
+            <Box
               key={step}
-              width={8} 
-              height={8} 
+              width={8}
+              height={8}
               borderRadius="full"
               backgroundColor={currentStep === step ? "#8FD28F" : "#F2F2F2"}
               justifyContent="center"
@@ -151,12 +151,12 @@ export default function RegisterScreen({ navigation }) {
             >
               <Text color={currentStep === step ? "white" : "#AAAAAA"}>{step}</Text>
               {step < 4 && (
-                <Box 
-                  position="absolute" 
-                  height={1} 
-                  backgroundColor="#DDDDDD" 
-                  width="100%" 
-                  left="100%" 
+                <Box
+                  position="absolute"
+                  height={1}
+                  backgroundColor="#DDDDDD"
+                  width="100%"
+                  left="100%"
                   top="50%"
                 />
               )}
@@ -292,7 +292,7 @@ export default function RegisterScreen({ navigation }) {
           <Text fontSize="14" color="gray.500" mb={4}>
             Select one or more types of farming
           </Text>
-          
+
           <Checkbox.Group
             colorScheme="green"
             value={formData.farming_types}
@@ -538,7 +538,7 @@ export default function RegisterScreen({ navigation }) {
             Confirm Password
           </Text>
           <Input
-            variant="outline" 
+            variant="outline"
             borderColor="#DDDDDD"
             width="100%"
             p={2}
@@ -578,11 +578,11 @@ export default function RegisterScreen({ navigation }) {
 
           <HStack width="100%" justifyContent="space-between" mt={8}>
             {currentStep > 1 ? (
-              <Button 
-                onPress={handlePrevious} 
-                width="45%" 
-                variant="outline" 
-                borderColor="#8FD28F" 
+              <Button
+                onPress={handlePrevious}
+                width="45%"
+                variant="outline"
+                borderColor="#8FD28F"
                 _text={{ color: "#8FD28F" }}
               >
                 Previous
@@ -590,18 +590,18 @@ export default function RegisterScreen({ navigation }) {
             ) : (
               <Box width="45%" />
             )}
-            
-            <Button 
-              onPress={currentStep === 4 ? handleRegister : handleNext} 
-              width="45%" 
-              backgroundColor="#8FD28F" 
+
+            <Button
+              onPress={currentStep === 4 ? handleRegister : handleNext}
+              width="45%"
+              backgroundColor="#8FD28F"
               _text={{ color: "white" }}
               isLoading={loading && currentStep === 4}
             >
               {currentStep < 4 ? "Next" : "Continue"}
             </Button>
           </HStack>
-          
+
           {currentStep === 1 && (
             <Box mt={8} flexDirection="row" justifyContent="center">
               <Text fontSize="12" color="black" className="text-[16px] font-semibold">Already have an account? </Text>
