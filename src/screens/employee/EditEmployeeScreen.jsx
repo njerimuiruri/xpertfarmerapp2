@@ -7,8 +7,12 @@ import {
   VStack,
   Select,
   HStack,
+  Radio,
   ScrollView,
   Modal,
+  Checkbox,
+  FormControl,
+  IconButton,
 } from 'native-base';
 import { View, StyleSheet } from 'react-native';
 import FastImage from 'react-native-fast-image';
@@ -16,22 +20,81 @@ import SecondaryHeader from '../../components/headers/secondary-header';
 import { COLORS } from '../../constants/theme';
 import { icons } from '../../constants';
 
-const EditEmployeeScreen = ({ navigation }) => {
-  // Initialize state with existing employee data
-  const [fullName, setFullName] = useState("John Doe");
-  const [phone, setPhone] = useState("0707");
-  const [dateOfEmployment, setDateOfEmployment] = useState("01/01/2020");
-  const [emergencyContact, setEmergencyContact] = useState("Jane Doe");
-  const [position, setPosition] = useState("Farm Manager");
-  const [employmentType, setEmploymentType] = useState("Permanent");
-  const [workingHours, setWorkingHours] = useState("full-time");
-  const [paymentRate, setPaymentRate] = useState("20.00");
-  const [farmId] = useState("Jk Farmer2"); // Read-only field
+const EditEmployeeScreen = ({ navigation, route }) => {
+  // Assuming employee data is passed as a parameter from previous screen
+  // For demonstration, initializing with sample data
+  // In a real app, you would use: const employeeData = route.params?.employeeData || {};
+  
+  const employeeData = {
+    employeeType: 'permanent',
+    firstName: 'John',
+    middleName: '',
+    lastName: 'Doe',
+    phone: '0707123456',
+    emergencyContact: '0712345678',
+    idNumber: '12345678',
+    dateOfEmployment: '01/01/2023',
+    role: 'milker',
+    customRole: '',
+    paymentSchedule: 'monthly',
+    salary: '11000',
+    workSchedule: 'full',
+    selectedBenefits: {
+      paye: true,
+      nssf: true,
+      nhif: true,
+      housingLevy: false,
+      customBenefit: false
+    },
+    customBenefitName: '',
+    customBenefitAmount: '',
+  };
+
+  // Personal Information
+  const [employeeType, setEmployeeType] = useState(employeeData.employeeType || 'permanent');
+  const [firstName, setFirstName] = useState(employeeData.firstName || '');
+  const [middleName, setMiddleName] = useState(employeeData.middleName || '');
+  const [lastName, setLastName] = useState(employeeData.lastName || '');
+  const [phone, setPhone] = useState(employeeData.phone || '');
+  const [emergencyContact, setEmergencyContact] = useState(employeeData.emergencyContact || '');
+  const [idNumber, setIdNumber] = useState(employeeData.idNumber || '');
+  
+  // Professional Information
+  const [dateOfEmployment, setDateOfEmployment] = useState(employeeData.dateOfEmployment || '');
+  const [role, setRole] = useState(employeeData.role || '');
+  const [customRole, setCustomRole] = useState(employeeData.customRole || '');
+  const [showCustomRole, setShowCustomRole] = useState(employeeData.role === 'custom');
+  const [paymentSchedule, setPaymentSchedule] = useState(employeeData.paymentSchedule || 'daily');
+  const [salary, setSalary] = useState(employeeData.salary || '');
+  const [workSchedule, setWorkSchedule] = useState(employeeData.workSchedule || '');
+  
+  // Benefits and statutory deductions
+  const [selectedBenefits, setSelectedBenefits] = useState(employeeData.selectedBenefits || {
+    paye: false,
+    nssf: false,
+    nhif: false,
+    housingLevy: false,
+    customBenefit: false
+  });
+  const [customBenefitName, setCustomBenefitName] = useState(employeeData.customBenefitName || '');
+  const [customBenefitAmount, setCustomBenefitAmount] = useState(employeeData.customBenefitAmount || '');
   
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   
+  // Handle role selection
+  const handleRoleSelect = (roleName) => {
+    if (roleName === 'custom') {
+      setShowCustomRole(true);
+      setRole('custom');
+    } else {
+      setShowCustomRole(false);
+      setRole(roleName);
+    }
+  };
+  
   const handleSubmit = () => {
     // Here you would implement the API call to update the employee data
+    // This would include all the state values collected above
     setShowSuccessModal(true);
   };
 
@@ -41,38 +104,81 @@ const EditEmployeeScreen = ({ navigation }) => {
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
-          justifyContent: 'center',
           marginTop: 5,
+          paddingBottom: 20,
         }}>
-        <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
+        <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={4}>
           <Text style={styles.titleText}>
-            Edit employee details
+            Edit Employee Details
           </Text>
 
-          <VStack space={5}>
-            <Box>
-              <Text style={styles.label}>Attached Farm ID</Text>
+          <VStack space={4} mt={4}>
+            {/* Employee Type */}
+            <FormControl>
+              <FormControl.Label>
+                <Text style={styles.label}>Employee Type</Text>
+              </FormControl.Label>
+              <Radio.Group 
+                name="employeeType" 
+                value={employeeType} 
+                onChange={value => setEmployeeType(value)}
+                mt={1}
+              >
+                <HStack space={6}>
+                  <Radio value="permanent" colorScheme="green">
+                    <Text ml={1}>Permanent</Text>
+                  </Radio>
+                  <Radio value="casual" colorScheme="green">
+                    <Text ml={1}>Casual</Text>
+                  </Radio>
+                </HStack>
+              </Radio.Group>
+            </FormControl>
+
+            {/* Personal Information */}
+            <FormControl>
+              <FormControl.Label>
+                <Text style={styles.label}>First Name</Text>
+              </FormControl.Label>
               <Input
-                value={farmId}
-                isReadOnly={true}
+                value={firstName}
+                onChangeText={setFirstName}
+                placeholder="John"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
               />
-            </Box>
+            </FormControl>
 
-            <Box>
-              <Text style={styles.label}>Full Name</Text>
+            <FormControl>
+              <FormControl.Label>
+                <Text style={styles.label}>Middle Name</Text>
+              </FormControl.Label>
               <Input
-                value={fullName}
-                onChangeText={setFullName}
-                placeholder="Full Name"
+                value={middleName}
+                onChangeText={setMiddleName}
+                placeholder="Middle Name"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
               />
-            </Box>
+            </FormControl>
 
-            <Box>
-              <Text style={styles.label}>Phone Number</Text>
+            <FormControl>
+              <FormControl.Label>
+                <Text style={styles.label}>Last Name</Text>
+              </FormControl.Label>
+              <Input
+                value={lastName}
+                onChangeText={setLastName}
+                placeholder="Doe"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormControl.Label>
+                <Text style={styles.label}>Phone Number</Text>
+              </FormControl.Label>
               <Input
                 value={phone}
                 onChangeText={setPhone}
@@ -81,21 +187,12 @@ const EditEmployeeScreen = ({ navigation }) => {
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
               />
-            </Box>
+            </FormControl>
 
-            <Box>
-              <Text style={styles.label}>Date of Employment</Text>
-              <Input
-                value={dateOfEmployment}
-                onChangeText={setDateOfEmployment}
-                placeholder="Enter Employment Date"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-              />
-            </Box>
-
-            <Box>
-              <Text style={styles.label}>Emergency Contact</Text>
+            <FormControl>
+              <FormControl.Label>
+                <Text style={styles.label}>Emergency Contact</Text>
+              </FormControl.Label>
               <Input
                 value={emergencyContact}
                 onChangeText={setEmergencyContact}
@@ -104,60 +201,241 @@ const EditEmployeeScreen = ({ navigation }) => {
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
               />
-            </Box>
+            </FormControl>
 
-            <Box>
-              <Text style={styles.label}>Position</Text>
+            <FormControl>
+              <FormControl.Label>
+                <Text style={styles.label}>ID Number</Text>
+              </FormControl.Label>
               <Input
-                value={position}
-                onChangeText={setPosition}
-                placeholder="Position"
+                value={idNumber}
+                onChangeText={setIdNumber}
+                placeholder="ID Number"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
               />
-            </Box>
-            
-            <Box>
-              <Text style={styles.label}>Employment Type</Text>
-              <Select
-                selectedValue={employmentType}
-                minWidth="100%"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-                placeholder="Choose Employment Type"
-                onValueChange={setEmploymentType}>
-                <Select.Item label="Permanent" value="Permanent" />
-                <Select.Item label="Contract" value="Contract" />
-                <Select.Item label="Casual" value="Casual" />
-              </Select>
-            </Box>
+            </FormControl>
 
-            <Box>
-              <Text style={styles.label}>Working Hours</Text>
-              <Select
-                selectedValue={workingHours}
-                minWidth="100%"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-                placeholder="Choose Working Hours"
-                onValueChange={setWorkingHours}>
-                <Select.Item label="Full-Time" value="full-time" />
-                <Select.Item label="Part-Time" value="part-time" />
-                <Select.Item label="Seasonal" value="seasonal" />
-              </Select>
-            </Box>
-
-            <Box>
-              <Text style={styles.label}>Payment Rate</Text>
+            {/* Professional Information */}
+            <FormControl>
+              <FormControl.Label>
+                <Text style={styles.label}>Date of Employment</Text>
+              </FormControl.Label>
               <Input
-                value={paymentRate}
-                onChangeText={setPaymentRate}
-                placeholder="Payment Rate"
+                value={dateOfEmployment}
+                onChangeText={setDateOfEmployment}
+                placeholder="__/__/____"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="gray.200"
+                InputRightElement={
+                  <IconButton
+                    icon={
+                      <FastImage 
+                        source={icons.calendar} 
+                        style={{ width: 24, height: 24 }} 
+                      />
+                    }
+                    onPress={() => console.log("Open date picker")}
+                  />
+                }
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormControl.Label>
+                <Text style={styles.label}>Role</Text>
+              </FormControl.Label>
+              <VStack space={2} mt={1}>
+                <Checkbox 
+                  value="cleaner" 
+                  colorScheme="green"
+                  onChange={() => handleRoleSelect('cleaner')} 
+                  isChecked={role === 'cleaner'}
+                >
+                  Cleaner
+                </Checkbox>
+                <Checkbox 
+                  value="feeder" 
+                  colorScheme="green"
+                  onChange={() => handleRoleSelect('feeder')} 
+                  isChecked={role === 'feeder'}
+                >
+                  Feeder
+                </Checkbox>
+                <Checkbox 
+                  value="milker" 
+                  colorScheme="green"
+                  onChange={() => handleRoleSelect('milker')} 
+                  isChecked={role === 'milker'}
+                >
+                  Milker
+                </Checkbox>
+                <Checkbox 
+                  value="custom" 
+                  colorScheme="green"
+                  onChange={() => handleRoleSelect('custom')} 
+                  isChecked={role === 'custom'}
+                >
+                  Create new role
+                </Checkbox>
+              </VStack>
+
+              {showCustomRole && (
+                <FormControl mt={2}>
+                  <FormControl.Label>
+                    <Text style={styles.label}>Role Name</Text>
+                  </FormControl.Label>
+                  <Input
+                    value={customRole}
+                    onChangeText={setCustomRole}
+                    placeholder="role/title"
+                    backgroundColor={COLORS.lightGreen}
+                    borderColor="gray.200"
+                  />
+                </FormControl>
+              )}
+            </FormControl>
+
+            {employeeType === 'permanent' && (
+              <FormControl>
+                <FormControl.Label>
+                  <Text style={styles.label}>Payment Schedule</Text>
+                </FormControl.Label>
+                <Radio.Group 
+                  name="paymentSchedule" 
+                  value={paymentSchedule} 
+                  onChange={value => setPaymentSchedule(value)}
+                  mt={1}
+                >
+                  <HStack space={4} flexWrap="wrap">
+                    <Radio value="daily" colorScheme="green">
+                      <Text ml={1}>Daily</Text>
+                    </Radio>
+                    <Radio value="weekly" colorScheme="green">
+                      <Text ml={1}>Weekly</Text>
+                    </Radio>
+                    <Radio value="monthly" colorScheme="green">
+                      <Text ml={1}>Monthly</Text>
+                    </Radio>
+                  </HStack>
+                </Radio.Group>
+              </FormControl>
+            )}
+
+            {employeeType === 'casual' && (
+              <FormControl>
+                <FormControl.Label>
+                  <Text style={styles.label}>Work Schedule</Text>
+                </FormControl.Label>
+                <Select
+                  selectedValue={workSchedule}
+                  minWidth="100%"
+                  backgroundColor={COLORS.lightGreen}
+                  borderColor="gray.200"
+                  placeholder="Select the hours"
+                  onValueChange={setWorkSchedule}
+                >
+                  <Select.Item label="Full Day (8 hours)" value="full" />
+                  <Select.Item label="Half Day (4 hours)" value="half" />
+                  <Select.Item label="Custom Hours" value="custom" />
+                </Select>
+              </FormControl>
+            )}
+
+            <FormControl>
+              <FormControl.Label>
+                <Text style={styles.label}>Salary (Kenya Shillings)</Text>
+              </FormControl.Label>
+              <Input
+                value={salary}
+                onChangeText={setSalary}
+                placeholder="11,000"
                 keyboardType="numeric"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
               />
-            </Box>
+            </FormControl>
+
+            {employeeType === 'permanent' && (
+              <FormControl>
+                <FormControl.Label>
+                  <Text style={styles.label}>Statutory and Benefits</Text>
+                </FormControl.Label>
+                <VStack space={2} mt={1}>
+                  <Checkbox 
+                    value="paye" 
+                    colorScheme="green"
+                    onChange={(isSelected) => setSelectedBenefits({...selectedBenefits, paye: isSelected})}
+                    isChecked={selectedBenefits.paye}
+                  >
+                    PAYE
+                  </Checkbox>
+                  <Checkbox 
+                    value="nssf" 
+                    colorScheme="green"
+                    onChange={(isSelected) => setSelectedBenefits({...selectedBenefits, nssf: isSelected})}
+                    isChecked={selectedBenefits.nssf}
+                  >
+                    NSSF
+                  </Checkbox>
+                  <Checkbox 
+                    value="nhif" 
+                    colorScheme="green"
+                    onChange={(isSelected) => setSelectedBenefits({...selectedBenefits, nhif: isSelected})}
+                    isChecked={selectedBenefits.nhif}
+                  >
+                    NHIF
+                  </Checkbox>
+                  <Checkbox 
+                    value="housingLevy" 
+                    colorScheme="green"
+                    onChange={(isSelected) => setSelectedBenefits({...selectedBenefits, housingLevy: isSelected})}
+                    isChecked={selectedBenefits.housingLevy}
+                  >
+                    Housing Levy
+                  </Checkbox>
+                  <Checkbox 
+                    value="customBenefit" 
+                    colorScheme="green"
+                    onChange={(isSelected) => setSelectedBenefits({...selectedBenefits, customBenefit: isSelected})}
+                    isChecked={selectedBenefits.customBenefit}
+                  >
+                    Add Benefit +
+                  </Checkbox>
+                </VStack>
+
+                {selectedBenefits.customBenefit && (
+                  <VStack space={3} mt={3}>
+                    <FormControl>
+                      <FormControl.Label>
+                        <Text style={styles.label}>Benefit Name</Text>
+                      </FormControl.Label>
+                      <Input
+                        value={customBenefitName}
+                        onChangeText={setCustomBenefitName}
+                        placeholder="Benefit Name"
+                        backgroundColor={COLORS.lightGreen}
+                        borderColor="gray.200"
+                      />
+                    </FormControl>
+                    
+                    <FormControl>
+                      <FormControl.Label>
+                        <Text style={styles.label}>Amount</Text>
+                      </FormControl.Label>
+                      <Input
+                        value={customBenefitAmount}
+                        onChangeText={setCustomBenefitAmount}
+                        placeholder="5,000"
+                        keyboardType="numeric"
+                        backgroundColor={COLORS.lightGreen}
+                        borderColor="gray.200"
+                      />
+                    </FormControl>
+                  </VStack>
+                )}
+              </FormControl>
+            )}
           </VStack>
 
           <HStack justifyContent="center" mt={6} space={4}>
@@ -217,14 +495,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.black,
-    marginBottom: 16,
+    marginBottom: 8,
     textAlign: "center", 
     alignSelf: "center", 
   },
   label: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: '500',
+    color: COLORS.darkGray3,
     marginBottom: 4,
   },
   modalButton: {

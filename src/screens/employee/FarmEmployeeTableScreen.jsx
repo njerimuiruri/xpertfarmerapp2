@@ -16,46 +16,106 @@ import { icons } from '../../constants';
 import { COLORS } from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
+// Updated initial data to match add employee form fields
 const initialEmployeeData = [
   {
     id: '1',
+    firstName: 'John',
+    middleName: '',
+    lastName: 'Doe',
     fullName: 'John Doe',
-    farmId: 'F001',
-    position: 'Farm Manager',
     phone: '123-456-7890',
+    emergencyContact: '123-456-0000',
+    employeeType: 'permanent',
+    idNumber: 'ID12345',
     dateOfEmployment: '2023-01-15',
+    role: 'cleaner',
+    paymentSchedule: 'monthly',
+    salary: '11,000',
+    selectedBenefits: {
+      paye: true,
+      nssf: true,
+      nhif: false,
+      housingLevy: false,
+    },
   },
   {
     id: '2',
+    firstName: 'Jane',
+    middleName: '',
+    lastName: 'Smith',
     fullName: 'Jane Smith',
-    farmId: 'F002',
-    position: 'Assistant Manager',
     phone: '098-765-4321',
+    emergencyContact: '098-765-0000',
+    employeeType: 'permanent',
+    idNumber: 'ID67890',
     dateOfEmployment: '2023-03-22',
+    role: 'milker',
+    paymentSchedule: 'weekly',
+    salary: '8,000',
+    selectedBenefits: {
+      paye: true,
+      nssf: true,
+      nhif: true,
+      housingLevy: true,
+    },
   },
   {
     id: '3',
-    fullName: 'Alice Johnson',
-    farmId: 'F003',
-    position: 'Field Supervisor',
+    firstName: 'Alice',
+    middleName: 'K',
+    lastName: 'Johnson',
+    fullName: 'Alice K Johnson',
     phone: '456-123-7890',
+    emergencyContact: '456-123-0000',
+    employeeType: 'casual',
+    idNumber: 'ID24680',
     dateOfEmployment: '2022-11-01',
+    role: 'feeder',
+    paymentSchedule: 'daily',
+    salary: '5,000',
+    workSchedule: 'full',
+    selectedBenefits: {},
   },
   {
     id: '4',
+    firstName: 'Robert',
+    middleName: '',
+    lastName: 'Brown',
     fullName: 'Robert Brown',
-    farmId: 'F004',
-    position: 'Crop Technician',
     phone: '789-456-1230',
+    emergencyContact: '789-456-0000',
+    employeeType: 'casual',
+    idNumber: 'ID13579',
     dateOfEmployment: '2023-02-10',
+    role: 'custom',
+    customRole: 'Crop Technician',
+    workSchedule: 'half',
+    paymentSchedule: 'daily',
+    salary: '4,500',
+    selectedBenefits: {},
   },
   {
     id: '5',
-    fullName: 'Sarah Wilson',
-    farmId: 'F005',
-    position: 'Livestock Specialist',
+    firstName: 'Sarah',
+    middleName: 'J',
+    lastName: 'Wilson',
+    fullName: 'Sarah J Wilson',
     phone: '321-654-0987',
+    emergencyContact: '321-654-0000',
+    employeeType: 'permanent',
+    idNumber: 'ID97531',
     dateOfEmployment: '2023-05-15',
+    role: 'custom',
+    customRole: 'Livestock Specialist',
+    paymentSchedule: 'monthly',
+    salary: '12,000',
+    selectedBenefits: {
+      paye: true,
+      nssf: true,
+      nhif: true,
+      housingLevy: false,
+    },
   },
 ];
 
@@ -64,15 +124,32 @@ const FarmEmployeeListScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
-  const [filterPosition, setFilterPosition] = useState('');
+  const [filterRole, setFilterRole] = useState('');
+  const [filterType, setFilterType] = useState('');
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+
+  // Get display role for employee
+  const getDisplayRole = (employee) => {
+    if (employee.role === 'custom' && employee.customRole) {
+      return employee.customRole;
+    }
+    return employee.role.charAt(0).toUpperCase() + employee.role.slice(1);
+  };
 
   const sortedAndFilteredEmployees = useMemo(() => {
     return employees
       .filter(
-        employee =>
-          employee.fullName.toLowerCase().includes(searchQuery.toLowerCase()) &&
-          (filterPosition === '' || employee.position === filterPosition),
+        employee => {
+          const matchesSearch = employee.fullName.toLowerCase().includes(searchQuery.toLowerCase());
+          const matchesRole = filterRole === '' || 
+            (employee.role === 'custom' ? 
+              (employee.customRole === filterRole) : 
+              (employee.role === filterRole)
+            );
+          const matchesType = filterType === '' || employee.employeeType === filterType;
+          
+          return matchesSearch && matchesRole && matchesType;
+        }
       )
       .sort((a, b) => {
         if (sortBy === 'name') {
@@ -83,10 +160,10 @@ const FarmEmployeeListScreen = ({ navigation }) => {
           return sortOrder === 'asc'
             ? new Date(a.dateOfEmployment) - new Date(b.dateOfEmployment)
             : new Date(b.dateOfEmployment) - new Date(a.dateOfEmployment);
-        }
+        } 
         return 0;
       });
-  }, [employees, searchQuery, sortBy, sortOrder, filterPosition]);
+  }, [employees, searchQuery, sortBy, sortOrder, filterRole, filterType]);
 
   const handleDelete = useCallback(id => {
     Alert.alert(
@@ -162,130 +239,199 @@ const FarmEmployeeListScreen = ({ navigation }) => {
           />
           <Text style={styles.actionText}>Sort by Date</Text>
         </TouchableOpacity>
+        
+        
       </View>
     </View>
   );
 
-  const renderEmployeeCard = ({ item }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => navigation.navigate('EmployeeDetailScreen', { employee: item })}>
-
-      <View style={styles.cardHeader}>
-        <View style={styles.employeeInfo}>
-          <Text style={styles.name}>{item.fullName}</Text>
-          <Text style={styles.position}>{item.position}</Text>
-        </View>
-        <View style={styles.cardActions}>
-          <TouchableOpacity
-            onPress={() => handleEdit(item)}
-            style={styles.cardActionButton}>
-            <FastImage
-              source={icons.submited}
-              style={styles.cardActionIcon}
-              tintColor="#4CAF50"
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleDelete(item.id)}
-            style={styles.cardActionButton}>
-            <FastImage
-              source={icons.remove}
-              style={styles.cardActionIcon}
-              tintColor="#F44336"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View style={styles.cardDetails}>
-        <View style={styles.detailRow}>
-          <FastImage
-            source={icons.account}
-            style={styles.detailIcon}
-            tintColor="#666"
-          />
-          <Text style={styles.detailText}>{item.farmId}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <FastImage
-            source={icons.call}
-            style={styles.detailIcon}
-            tintColor="#666"
-          />
-          <Text style={styles.detailText}>{item.phone}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <FastImage
-            source={icons.calendar}
-            style={styles.detailIcon}
-            tintColor="#666"
-          />
-          <Text style={styles.detailText}>
-            Employed: {item.dateOfEmployment}
-          </Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderFilterModal = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={isFilterModalVisible}
-      onRequestClose={() => setIsFilterModalVisible(false)}>
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Filter by Position</Text>
-          {[
-            'Farm Manager',
-            'Assistant Manager',
-            'Field Supervisor',
-            'Crop Technician',
-            'Livestock Specialist',
-          ].map(position => (
+  const renderEmployeeCard = ({ item }) => {
+    const displayRole = getDisplayRole(item);
+    
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => navigation.navigate('EmployeeDetailScreen', { employee: item })}>
+  
+        <View style={styles.cardHeader}>
+          <View style={styles.employeeInfo}>
+            <Text style={styles.name}>{item.fullName}</Text>
+            <View style={styles.roleContainer}>
+              <Text style={styles.position}>{displayRole}</Text>
+              {item.employeeType === 'casual' && (
+                <View style={styles.badgeCasual}>
+                  <Text style={styles.badgeText}>Casual</Text>
+                </View>
+              )}
+              {item.employeeType === 'permanent' && (
+                <View style={styles.badgePermanent}>
+                  <Text style={styles.badgeText}>Permanent</Text>
+                </View>
+              )}
+            </View>
+          </View>
+          <View style={styles.cardActions}>
             <TouchableOpacity
-              key={position}
+              onPress={() => handleEdit(item)}
+              style={styles.cardActionButton}>
+              <FastImage
+                source={icons.submited}
+                style={styles.cardActionIcon}
+                tintColor="#4CAF50"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleDelete(item.id)}
+              style={styles.cardActionButton}>
+              <FastImage
+                source={icons.remove}
+                style={styles.cardActionIcon}
+                tintColor="#F44336"
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.cardDetails}>
+          <View style={styles.detailRow}>
+            <FastImage
+              source={icons.call}
+              style={styles.detailIcon}
+              tintColor="#666"
+            />
+            <Text style={styles.detailText}>{item.phone}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <FastImage
+              source={icons.account}
+              style={styles.detailIcon}
+              tintColor="#666"
+            />
+            <Text style={styles.detailText}>ID: {item.idNumber}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <FastImage
+              source={icons.calendar}
+              style={styles.detailIcon}
+              tintColor="#666"
+            />
+            <Text style={styles.detailText}>
+              Employed: {item.dateOfEmployment}
+            </Text>
+          </View>
+          <View style={styles.detailRow}>
+            <FastImage
+              source={icons.calendar}
+              style={styles.detailIcon}
+              tintColor="#666"
+            />
+            <Text style={styles.detailText}>
+              {item.paymentSchedule.charAt(0).toUpperCase() + item.paymentSchedule.slice(1)} payment: KSh {item.salary}
+            </Text>
+          </View>
+          {item.workSchedule && (
+            <View style={styles.detailRow}>
+              <FastImage
+                source={icons.calendar}
+                style={styles.detailIcon}
+                tintColor="#666"
+              />
+              <Text style={styles.detailText}>
+                Schedule: {item.workSchedule === 'full' ? 'Full Day (8 hours)' : item.workSchedule === 'half' ? 'Half Day (4 hours)' : 'Custom'}
+              </Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderFilterModal = () => {
+    // Get unique roles from employees
+    const uniqueRoles = [...new Set(employees.map(emp => 
+      emp.role === 'custom' ? emp.customRole : emp.role
+    ))].filter(Boolean);
+    
+    return (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isFilterModalVisible}
+        onRequestClose={() => setIsFilterModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Filter Options</Text>
+            
+            {/* Filter by employee type */}
+            <Text style={styles.modalSubtitle}>Employee Type</Text>
+            <TouchableOpacity
               style={[
                 styles.filterOption,
-                filterPosition === position && styles.selectedFilterOption,
+                filterType === 'permanent' && styles.selectedFilterOption,
               ]}
-              onPress={() => {
-                setFilterPosition(prev => (prev === position ? '' : position));
-                setIsFilterModalVisible(false);
-              }}>
-              <Text
-                style={[
-                  styles.filterOptionText,
-                  filterPosition === position &&
-                  styles.selectedFilterOptionText,
-                ]}>
-                {position}
+              onPress={() => setFilterType(prev => prev === 'permanent' ? '' : 'permanent')}>
+              <Text style={[
+                styles.filterOptionText,
+                filterType === 'permanent' && styles.selectedFilterOptionText,
+              ]}>
+                Permanent
               </Text>
             </TouchableOpacity>
-          ))}
-
-          <TouchableOpacity
-            style={styles.resetButton}
-            onPress={() => {
-              setFilterPosition('');
-              setSearchQuery('');
-              setSortBy('name');
-              setSortOrder('asc');
-              setIsFilterModalVisible(false);
-            }}>
-            <Text style={styles.resetButtonText}>Reset All Filters</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.closeModalButton}
-            onPress={() => setIsFilterModalVisible(false)}>
-            <Text style={styles.closeModalButtonText}>Close</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.filterOption,
+                filterType === 'casual' && styles.selectedFilterOption,
+              ]}
+              onPress={() => setFilterType(prev => prev === 'casual' ? '' : 'casual')}>
+              <Text style={[
+                styles.filterOptionText,
+                filterType === 'casual' && styles.selectedFilterOptionText,
+              ]}>
+                Casual
+              </Text>
+            </TouchableOpacity>
+            
+            {/* Filter by role */}
+            <Text style={styles.modalSubtitle}>Role</Text>
+            {uniqueRoles.map(role => (
+              <TouchableOpacity
+                key={role}
+                style={[
+                  styles.filterOption,
+                  filterRole === role && styles.selectedFilterOption,
+                ]}
+                onPress={() => setFilterRole(prev => prev === role ? '' : role)}>
+                <Text style={[
+                  styles.filterOptionText,
+                  filterRole === role && styles.selectedFilterOptionText,
+                ]}>
+                  {role.charAt(0).toUpperCase() + role.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+  
+            <TouchableOpacity
+              style={styles.resetButton}
+              onPress={() => {
+                setFilterRole('');
+                setFilterType('');
+                setSearchQuery('');
+                setSortBy('name');
+                setSortOrder('asc');
+                setIsFilterModalVisible(false);
+              }}>
+              <Text style={styles.resetButtonText}>Reset All Filters</Text>
+            </TouchableOpacity>
+  
+            <TouchableOpacity
+              style={styles.closeModalButton}
+              onPress={() => setIsFilterModalVisible(false)}>
+              <Text style={styles.closeModalButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </Modal>
-  );
+      </Modal>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -321,6 +467,7 @@ const FarmEmployeeListScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.lightGreen,
   },
   header: {
     backgroundColor: COLORS.white,
@@ -403,10 +550,32 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+  roleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
   position: {
     fontSize: 14,
     color: '#666',
-    marginTop: 4,
+    marginRight: 8,
+  },
+  badgeCasual: {
+    backgroundColor: '#FF9800',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  badgePermanent: {
+    backgroundColor: COLORS.green,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  badgeText: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   cardActions: {
     flexDirection: 'row',
@@ -443,7 +612,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#4CAF50',
+    backgroundColor: COLORS.green,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,
@@ -467,12 +636,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     width: '80%',
+    maxHeight: '80%',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
     color: '#333',
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 12,
+    marginBottom: 8,
+    color: '#555',
   },
   filterOption: {
     paddingVertical: 12,
@@ -487,7 +664,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   selectedFilterOptionText: {
-    color: '#4CAF50',
+    color: COLORS.green,
     fontWeight: 'bold',
   },
   closeModalButton: {
@@ -496,7 +673,7 @@ const styles = StyleSheet.create({
   },
   closeModalButtonText: {
     fontSize: 16,
-    color: '#4CAF50',
+    color: COLORS.green,
     fontWeight: 'bold',
   },
   resetButton: {

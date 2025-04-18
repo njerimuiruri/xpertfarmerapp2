@@ -144,7 +144,7 @@ export default function ProfileScreen({ navigation }) {
               borderRadius={30} 
               shadow={3}
               _text={{ color: "white", fontWeight: "bold" }}
-              onPress={() => navigation.navigate('EditFarmScreen')}
+              // onPress={() => navigation.navigate('EditFarmScreen')}
             >
               Edit Farm Profile
             </Button>

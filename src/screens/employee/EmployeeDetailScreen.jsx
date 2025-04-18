@@ -16,10 +16,37 @@ import SecondaryHeader from '../../components/headers/secondary-header';
 const EmployeeDetailScreen = ({route, navigation}) => {
   const {employee} = route.params || {};
 
+  const getDisplayRole = (employee) => {
+    if (employee.role === 'custom' && employee.customRole) {
+      return employee.customRole;
+    }
+    return employee.role.charAt(0).toUpperCase() + employee.role.slice(1);
+  };
+
+  const formatBenefits = (benefits) => {
+    if (!benefits || Object.keys(benefits).length === 0) {
+      return "None";
+    }
+    
+    const activeBenefits = Object.keys(benefits)
+      .filter(key => benefits[key])
+      .map(key => {
+        switch(key) {
+          case 'paye': return 'PAYE';
+          case 'nssf': return 'NSSF';
+          case 'nhif': return 'NHIF';
+          case 'housingLevy': return 'Housing Levy';
+          default: return key.charAt(0).toUpperCase() + key.slice(1);
+        }
+      });
+    
+    return activeBenefits.join(', ') || "None";
+  };
+
   const InfoRow = ({label, value}) => (
     <View style={styles.infoRow}>
       <Text style={styles.infoLabel}>{label}:</Text>
-      <Text style={styles.infoValue}>{value}</Text>
+      <Text style={styles.infoValue}>{value || 'Not provided'}</Text>
     </View>
   );
 
@@ -59,37 +86,53 @@ const EmployeeDetailScreen = ({route, navigation}) => {
             </View>
             <View style={styles.profileInfo}>
               <Text style={styles.employeeName}>{employee.fullName}</Text>
-              <Text style={styles.employeePosition}>{employee.position}</Text>
+              <Text style={styles.employeePosition}>{getDisplayRole(employee)}</Text>
               <View style={styles.badgeContainer}>
                 <View style={styles.idBadge}>
-                  <Text style={styles.badgeText}>ID: {employee.farmId}</Text>
+                  <Text style={styles.badgeText}>ID: {employee.idNumber}</Text>
+                </View>
+                <View style={[styles.idBadge, styles.typeBadge, 
+                  employee.employeeType === 'permanent' ? styles.permanentBadge : styles.casualBadge]}>
+                  <Text style={styles.typeBadgeText}>
+                    {employee.employeeType === 'permanent' ? 'Permanent' : 'Casual'}
+                  </Text>
                 </View>
               </View>
             </View>
           </View>
         </View>
 
-        {/* Contact Information */}
+        <InfoSectionWithIcon icon={icons.account} title="Personal Information">
+          <InfoRow label="First Name" value={employee.firstName} />
+          {employee.middleName && (
+            <InfoRow label="Middle Name" value={employee.middleName} />
+          )}
+          <InfoRow label="Last Name" value={employee.lastName} />
+          <InfoRow label="ID Number" value={employee.idNumber} />
+        </InfoSectionWithIcon>
+
         <InfoSectionWithIcon icon={icons.call} title="Contact Information">
           <InfoRow label="Phone Number" value={employee.phone} />
-          <InfoRow label="Email" value={`${employee.fullName.toLowerCase().replace(' ', '.')}@farmcompany.com`} />
-          <InfoRow label="Emergency Contact" value="Not provided" />
+          <InfoRow label="Emergency Contact" value={employee.emergencyContact} />
         </InfoSectionWithIcon>
 
         <InfoSectionWithIcon icon={icons.calendar} title="Employment Details">
-          <InfoRow label="Position" value={employee.position} />
+          <InfoRow label="Role" value={getDisplayRole(employee)} />
           <InfoRow label="Date of Employment" value={employee.dateOfEmployment} />
-          <InfoRow label="Employment Type" value="Full-time" />
-          <InfoRow label="Reports To" value="Farm Director" />
+          <InfoRow label="Employment Type" value={employee.employeeType === 'permanent' ? 'Permanent' : 'Casual'} />
+          {employee.workSchedule && (
+            <InfoRow label="Work Schedule" value={
+              employee.workSchedule === 'full' ? 'Full Day (8 hours)' : 
+              employee.workSchedule === 'half' ? 'Half Day (4 hours)' : 'Custom'
+            } />
+          )}
         </InfoSectionWithIcon>
 
-        <InfoSectionWithIcon icon={icons.livestock} title="Farm Assignment">
-          <InfoRow label="Farm ID" value={employee.farmId} />
-          <InfoRow label="Location" value="Main Facility" />
-          <InfoRow label="Working Area" value="Section A" />
+        <InfoSectionWithIcon icon={icons.currency} title="Payment Information">
+          <InfoRow label="Payment Schedule" value={employee.paymentSchedule.charAt(0).toUpperCase() + employee.paymentSchedule.slice(1)} />
+          <InfoRow label="Salary" value={`KSh ${employee.salary}`} />
+          <InfoRow label="Benefits" value={formatBenefits(employee.selectedBenefits)} />
         </InfoSectionWithIcon>
-
-   
 
         <TouchableOpacity
           style={styles.editButton}
@@ -159,16 +202,33 @@ const styles = StyleSheet.create({
   },
   badgeContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
   },
   idBadge: {
     backgroundColor: '#e8f5e9',
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 4,
+    marginRight: 8,
+    marginBottom: 4,
+  },
+  typeBadge: {
+    marginLeft: 4,
+  },
+  permanentBadge: {
+    backgroundColor: COLORS.green,
+  },
+  casualBadge: {
+    backgroundColor: '#FF9800',
   },
   badgeText: {
     fontSize: 12,
     color: COLORS.green2,
+    fontWeight: '500',
+  },
+  typeBadgeText: {
+    fontSize: 12,
+    color: COLORS.white,
     fontWeight: '500',
   },
   sectionHeader: {
@@ -200,29 +260,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.black,
     fontWeight: '500',
-  },
-  skillTagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 12,
-  },
-  skillTag: {
-    backgroundColor: '#e8f5e9',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  skillTagText: {
-    fontSize: 12,
-    color: COLORS.green2,
-    fontWeight: '500',
-  },
-  qualificationsText: {
-    fontSize: 14,
-    color: COLORS.black,
-    lineHeight: 20,
   },
   editButton: {
     flexDirection: 'row',
