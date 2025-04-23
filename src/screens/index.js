@@ -7,18 +7,14 @@ import EmailOtpScreen from '../screens/Auth/Email-Otp-Screen';
 
 import HomeScreen from './Home/home';
 
-import FarmRecord from './Home/Farm-records';
 
 import ProfileScreen from './Home/profile-screen';
+import PersonalInformation from './Home/PersonalInformation';
+import AddFarm from './farm/AddFarm';
 
-import ManageFarmsScreen from './Home/ManageFarmsScreen';
-import EditFarmScreen from './Home/EditFarmScreen';
+import EditFarm from './farm/EditFarm';
 
-
-import AddFarmScreen from './Home/EditFarmScreen';
-
-import AddFarmDetailsScreen from './farm/AddFarm-details';
-
+import FarmInformation from './farm/FarmInformation';
 import OnboardingScreen from './Onboarding/OnboardingScreen';
 import FarmEmployeeTableScreen from './employee/FarmEmployeeTableScreen';
 import EditEmployeeScreen from './employee/EditEmployeeScreen';
@@ -99,7 +95,6 @@ import HealthRecordsScreen from './health/HealthRecordsScreen';
 //productionsScreen
 import AddDairyDetailsScreen from './production/AddDairyDetailsScreen';
 import BeefDetailsScreen from './production/BeefDetailsScreen';
-import ProductionScreen from './production/ProductionScreen';
 import SwineRecordScreen from './production/SwineRecordScreen';
 import SheepGoatDetailsScreen from './production/SheepGoatDetailsScreen';
 import PoultryFlockDetailsScreen from './production/PoultryFlockDetailsScreen';
@@ -108,6 +103,8 @@ import SwineProductionListScreen from './production/SwineProductionListScreen ';
 import DairyProductionListScreen from './production/DairyProductionListScreen';
 import SheepAndGoatProductionListScreen from './production/SheepAndGoatProductionListScreen';
 import PoultryProductionListScreen from './production/PoultryFlockDetailsScreen';
+
+import ProductionModuleLandingScreen from './production/ProductionModuleLandingScreen';
 
 // inventory
 import InventoryDashboard from './inventory/InventoryDashboard';
@@ -132,13 +129,14 @@ export {
   OnboardingScreen,
   ResetPassword,
   EmailOtpScreen,
+  //personal information
   ProfileScreen,
-  // Farm Records
-  FarmRecord,
-  AddFarmDetailsScreen,
-  ManageFarmsScreen,
-  EditFarmScreen,
-  AddFarmScreen,
+  PersonalInformation,
+    // Farm Records
+
+  FarmInformation,
+  AddFarm,
+  EditFarm,
 
   // Employees
   AddEmployeeScreen,
@@ -178,7 +176,6 @@ export {
   AddVaccineRecords,
   VaccineRecordsScreen,
   FarmHealthRecords,
-  ProductionScreen,
   AddDairyDetailsScreen,
   AddCurativeTreatmentRecords,
   VaccineEditScreen,
@@ -206,7 +203,7 @@ export {
   SheepAndGoatProductionListScreen,
   PoultryProductionListScreen,
   HealthRecordsScreen,
-  
+  ProductionModuleLandingScreen,
   //inventory
   InventoryDashboard,
   AddMachinery,

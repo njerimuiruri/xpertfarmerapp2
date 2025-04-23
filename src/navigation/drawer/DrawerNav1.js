@@ -18,6 +18,7 @@ import {
   FeedingModuleScreen,
   AnimalProductionListScreen,
   BreedingModuleLandingScreen,
+  ProductionModuleLandingScreen,
 } from '../../screens';
 
 const Drawer = createDrawerNavigator();
@@ -123,7 +124,7 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="ProductionRecords"
-        component={AnimalProductionListScreen}
+        component={ProductionModuleLandingScreen}
         options={{
           title: 'Production',
           drawerIcon: () => (

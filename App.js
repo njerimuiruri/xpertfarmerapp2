@@ -20,13 +20,14 @@ import {
   ResetPassword,
   EmailOtpScreen,
   ProfileScreen,
+  PersonalInformation,
+  FarmInformation,
+  AddFarm,
+  EditFarm,
 
   // Farm
-  FarmRecord,
   AddFarmDetailsScreen,
-  ManageFarmsScreen,
-  EditFarmScreen,
-  AddFarmScreen,
+
   // Employees
   AddEmployeeScreen,
   FarmEmployeeTableScreen,
@@ -78,7 +79,6 @@ import {
   
 
   //Production
-  ProductionScreen,
   AddDairyDetailsScreen,
   BeefDetailsScreen,
   SwineRecordScreen,
@@ -89,6 +89,7 @@ import {
   DairyProductionListScreen,
   SheepAndGoatProductionListScreen,
   PoultryProductionListScreen,
+  ProductionModuleLandingScreen,
   HealthRecordsScreen,
   LivestockModuleScreen,
   BreedingModuleLandingScreen,
@@ -212,32 +213,28 @@ export default function App() {
                 options={{headerShown: false}}
               />
               <Stack.Screen
-                name="ManageFarmsScreen"
-                component={ManageFarmsScreen}
+                name="PersonalInformation"
+                component={PersonalInformation}
                 options={{headerShown: false}}
               />
               
               <Stack.Screen
-                name="EditFarmScreen"
-                component={EditFarmScreen}
+                name="FarmInformation"
+                component={FarmInformation}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="AddFarm"
+                component={AddFarm}
                 options={{headerShown: false}}
               />
               
               <Stack.Screen
-                name="AddFarmScreen"
-                component={AddFarmScreen}
+                name="EditFarm"
+                component={EditFarm}
                 options={{headerShown: false}}
               />
-              <Stack.Screen
-                name="FarmRecord"
-                component={FarmRecord}
-                options={{headerShown: false}}
-              />
-              <Stack.Screen
-                name="AddFarmDetailsScreen"
-                component={AddFarmDetailsScreen}
-                options={{headerShown: false}}
-              />
+
               <Stack.Screen
                 name="AddEmployeeScreen"
                 component={AddEmployeeScreen}
@@ -406,8 +403,6 @@ export default function App() {
                 options={{headerShown: false}}
               />
             
-              
-
               <Stack.Screen
                 name="AddVaccineRecords"
                 component={AddVaccineRecords}
@@ -423,8 +418,7 @@ export default function App() {
                 component={VaccineDetailScreen}
                 options={{headerShown: false}}
               />
-              
-
+             
                <Stack.Screen
                 name="DewormingRecordsScreen"
                 component={DewormingRecordsScreen}
@@ -491,12 +485,13 @@ export default function App() {
                 component={BeefDetailsScreen}
                 options={{headerShown: false}}
               />
+              
+              
               <Stack.Screen
-                name="ProductionScreen"
-                component={ProductionScreen}
+                name="ProductionModuleLandingScreen"
+                component={ProductionModuleLandingScreen}
                 options={{headerShown: false}}
               />
-
               <Stack.Screen
                 name="SwineRecordScreen"
                 component={SwineRecordScreen}

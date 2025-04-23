@@ -23,7 +23,7 @@ const SecondaryHeader = ({ title }) => {
       </View>
 
       <View style={styles.rightSection} className="relative top-4 mr-2">
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
           <FastImage
             style={styles.icon}
             tintColor="white"

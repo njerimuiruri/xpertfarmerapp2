@@ -225,11 +225,11 @@ const RecordBirthScreen = ({ route, navigation }) => {
             <Text style={styles.buttonCancelText}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.button, styles.saveButton]}
-
-          >
-            <Text style={styles.buttonSaveText}>Save Record</Text>
-          </TouchableOpacity>
+  style={[styles.button, styles.saveButton]}
+  onPress={() => navigation.navigate('BreedingModuleLandingScreen')}
+>
+  <Text style={styles.buttonSaveText}>Save Record</Text>
+</TouchableOpacity>
         </View>
       </ScrollView>
     </View>

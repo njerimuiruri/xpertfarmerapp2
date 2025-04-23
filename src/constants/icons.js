@@ -66,8 +66,17 @@ const downchevron = require('../assets/icons/down-chevron.png');
 const breeding = require('../assets/icons/breeding.png');
 const halfstar= require('../assets/icons/half-star.png');
 const star= require('../assets/icons/star.png');
+const camera = require('../assets/icons/camera.png');
+const bell = require('../assets/icons/bell.png');
+const shield= require('../assets/icons/shield.png');
+const questionmark= require('../assets/icons/questionmark.png');
+const feedback= require('../assets/icons/feedback.png');
+const about= require('../assets/icons/about.png');
+const menu3= require('../assets/icons/menu3.png');
+const edit = require('../assets/icons/edit.png');
+const email = require('../assets/icons/email.png');
 
-
+const strategy = require('../assets/icons/strategy.png');
 
 export default {
   search,
@@ -78,6 +87,7 @@ export default {
   swine,
   filter,
   menu1,
+  menu3,
   cross,
   cross2,
   plus,
@@ -101,6 +111,7 @@ export default {
   password,
   eye,
   eye_close,
+  edit,
   menu2,
   notifications,
   home,
@@ -135,4 +146,12 @@ export default {
   call,
   beef,
   breeding,
+  bell,
+  camera,
+  questionmark,
+  shield,
+  feedback,
+  about,
+  email,
+  strategy,
 };

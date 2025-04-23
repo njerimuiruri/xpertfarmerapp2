@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,14 +11,21 @@ import Header from '../../components/headers/main-header';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import FastImage from 'react-native-fast-image';
 import {COLORS} from '../../constants/theme';
-
-
 
 const Dashboard = () => {
   const navigation = useNavigation();
   const [selectedPeriod, setSelectedPeriod] = useState('This month');
   const [showPeriodModal, setShowPeriodModal] = useState(false);
+  
+  const [activeFarm, setActiveFarm] = useState({
+    id: '1',
+    name: 'Green Valley Farm',
+    location: 'Eastern Region',
+    size: '5.2 acres',
+    animals: ['Pigs', 'Goats'],
+  });
   
   const timePeriods = ['This week', 'This month', 'This quarter', 'This year'];
   
@@ -61,15 +68,11 @@ const Dashboard = () => {
       ],
       "colors": ["#D79F91", "#4C7153"]
     },
-    
     {
       title: 'Health',
       details: ['Total: 20', 'Exits: 2'],
       colors: ['#91D79E', '#4C7153'],
     },
-   
-   
-    
   ];
 
   const renderCard = ({ title, details, colors }) => (
@@ -92,7 +95,10 @@ const Dashboard = () => {
     </LinearGradient>
   );
   
- 
+  // Function to navigate to Farm Information screen
+  const navigateToFarmInfo = () => {
+    navigation.navigate('FarmInformation');
+  };
   
   return (
     <View style={styles.container}>
@@ -131,17 +137,112 @@ const Dashboard = () => {
           </View>
         </LinearGradient>
 
+        {/* Active Farm Section */}
+        <View style={styles.activeFarmSection}>
+          <View style={styles.activeFarmHeader}>
+            <Text style={styles.activeFarmTitle}>Active Farm</Text>
+            <TouchableOpacity 
+              style={styles.viewAllButton}
+              onPress={navigateToFarmInfo}
+            >
+              <Text style={styles.viewAllText}>View All</Text>
+              <Icon name="chevron-right" size={16} color={COLORS.green} />
+            </TouchableOpacity>
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.activeFarmCard}
+            onPress={navigateToFarmInfo}
+          >
+            <View style={styles.farmIconContainer}>
+              <Icon name="warehouse" size={24} color={COLORS.white} />
+            </View>
+            
+            <View style={styles.farmInfoContainer}>
+              <Text style={styles.farmName}>{activeFarm.name}</Text>
+              
+              <View style={styles.farmDetailsRow}>
+                <View style={styles.farmDetailItem}>
+                  <Icon name="map-marker" size={14} color={COLORS.darkGray3} />
+                  <Text style={styles.farmDetailText}>{activeFarm.location}</Text>
+                </View>
+                
+                <View style={styles.farmDetailItem}>
+                  <Icon name="resize" size={14} color={COLORS.darkGray3} />
+                  <Text style={styles.farmDetailText}>{activeFarm.size}</Text>
+                </View>
+              </View>
+              
+              <View style={styles.cropTagsContainer}>
+                {activeFarm.animals.map((crop, index) => (
+                  <View key={index} style={styles.cropTag}>
+                    <Text style={styles.cropTagText}>{crop}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+            
+            <Icon name="chevron-right" size={24} color={COLORS.darkGray3} style={styles.rightArrow} />
+          </TouchableOpacity>
+        </View>
+
         {/* Farm Overview */}
         <View style={styles.overviewSection}>
           <Text style={styles.overviewTitle}>Farm Overview</Text>
-          <TouchableOpacity style={styles.monthSelector}>
-            <Text style={styles.monthText}>This month</Text>
+          <TouchableOpacity 
+            style={styles.monthSelector}
+            onPress={() => setShowPeriodModal(true)}
+          >
+            <Text style={styles.monthText}>{selectedPeriod}</Text>
             <Icon name="chevron-down" size={20} color="#666" />
           </TouchableOpacity>
         </View>
 
         <View style={styles.cardsGrid}>{cards.map(renderCard)}</View>
       </ScrollView>
+      
+      {/* Time Period Modal */}
+      <Modal
+        visible={showPeriodModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowPeriodModal(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowPeriodModal(false)}
+        >
+          <View style={styles.periodModalContainer}>
+            <Text style={styles.modalTitle}>Select Time Period</Text>
+            {timePeriods.map((period) => (
+              <TouchableOpacity
+                key={period}
+                style={[
+                  styles.periodOption,
+                  selectedPeriod === period && styles.selectedPeriodOption,
+                ]}
+                onPress={() => {
+                  setSelectedPeriod(period);
+                  setShowPeriodModal(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.periodOptionText,
+                    selectedPeriod === period && styles.selectedPeriodOptionText,
+                  ]}
+                >
+                  {period}
+                </Text>
+                {selectedPeriod === period && (
+                  <Icon name="check" size={20} color={COLORS.green} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -154,8 +255,6 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-
-
   welcomeBanner: {
     margin: 16,
     padding: 20,
@@ -214,6 +313,95 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
   },
+  // Active Farm Section Styles
+  activeFarmSection: {
+    paddingHorizontal: 16,
+    marginBottom: 20,
+  },
+  activeFarmHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  activeFarmTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewAllText: {
+    fontSize: 14,
+    color: COLORS.green,
+    marginRight: 4,
+  },
+  activeFarmCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  farmIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: COLORS.green,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  farmInfoContainer: {
+    flex: 1,
+  },
+  farmName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 6,
+  },
+  farmDetailsRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  farmDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  farmDetailText: {
+    fontSize: 13,
+    color: COLORS.darkGray3,
+    marginLeft: 4,
+  },
+  cropTagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  cropTag: {
+    backgroundColor: COLORS.lightGreen,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginRight: 8,
+    marginBottom: 4,
+  },
+  cropTagText: {
+    fontSize: 12,
+    color: COLORS.green,
+  },
+  rightArrow: {
+    marginLeft: 10,
+  },
+  // Farm Overview Section Styles
   overviewSection: {
     paddingHorizontal: 16,
     flexDirection: 'row',
@@ -269,6 +457,7 @@ const styles = StyleSheet.create({
     bottom: 12,
     right: 12,
   },
+  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -279,6 +468,12 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#333',
   },
   periodOption: {
     flexDirection: 'row',
@@ -296,9 +491,9 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   selectedPeriodOptionText: {
-    color: '#4CAF50',
+    color: COLORS.green,
     fontWeight: '500',
   },
 });
 
-export default Dashboard
+export default Dashboard;

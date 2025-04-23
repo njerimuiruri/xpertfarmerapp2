@@ -22,17 +22,6 @@ const BreedingRecordDetailScreen = ({ route, navigation }) => {
     navigation.navigate('EditBreedingRecordScreen', { record });
   };
   
-  const handleDelete = () => {
-    setConfirmDeleteVisible(true);
-  };
-  
-  const confirmDelete = () => {
-    setConfirmDeleteVisible(false);
-    // Delete logic would go here in a real app
-    Alert.alert('Success', 'Record deleted successfully');
-    navigation.goBack();
-  };
-  
   const handleRecordBirth = () => {
     navigation.navigate('RecordBirthScreen', { record });
   };
@@ -49,25 +38,24 @@ const BreedingRecordDetailScreen = ({ route, navigation }) => {
   const getStatusColor = status => {
     switch (status) {
       case 'Pregnant':
-        return '#FFC107'; // Amber
+        return COLORS.lightGreen; 
       case 'Delivered':
-        return COLORS.green; // Green
+        return COLORS.green; 
       case 'Failed':
-        return '#F44336'; // Red
+        return COLORS.red; 
       default:
-        return '#757575'; // Grey
+        return COLORS.blue; 
     }
   };
 
   const renderDetailItem = (icon, label, value) => {
-    if (!value) return null;
     
     return (
       <View style={styles.detailItem}>
         <FastImage
           source={icon}
           style={styles.detailIcon}
-          tintColor={COLORS.primary}
+          tintColor={COLORS.black}
         />
         <View style={styles.detailContent}>
           <Text style={styles.detailLabel}>{label}</Text>
@@ -82,7 +70,6 @@ const BreedingRecordDetailScreen = ({ route, navigation }) => {
       <SecondaryHeader title="Breeding Record" />
       
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Animal Info Card */}
         <View style={styles.animalCard}>
           <View style={styles.animalCardContent}>
             <Text style={styles.animalId}>{record.animalId}</Text>
@@ -93,7 +80,6 @@ const BreedingRecordDetailScreen = ({ route, navigation }) => {
           </View>
         </View>
         
-        {/* Timeline/Progress Indicator */}
         {record.status !== 'Failed' && (
           <View style={styles.timelineContainer}>
             <View style={styles.timeline}>
@@ -115,33 +101,31 @@ const BreedingRecordDetailScreen = ({ route, navigation }) => {
           </View>
         )}
         
-        {/* Details Section */}
         <View style={styles.detailsCard}>
           <Text style={styles.sectionTitle}>Breeding Information</Text>
           
-          {renderDetailItem(icons.account, 'Purpose', record.purpose)}
-          {renderDetailItem(icons.chart, 'Strategy', record.strategy)}
-          {renderDetailItem(icons.submited, 'Service Type', record.serviceType)}
-          {renderDetailItem(icons.calendar, 'Service Date', formatDate(record.serviceDate))}
-          {renderDetailItem(icons.calendar, 'First Heat', formatDate(record.firstHeatDate))}
-          {renderDetailItem(icons.time, 'Services', record.numServices)}
+          {renderDetailItem(icons.account, 'Purpose:', record.purpose)}
+          {renderDetailItem(icons.strategy, 'Strategy:', record.strategy)}
+          {renderDetailItem(icons.submited, 'Service Type:', record.serviceType)}
+          {renderDetailItem(icons.calendar, 'Service Date:', formatDate(record.serviceDate))}
+          {renderDetailItem(icons.calendar, 'First Heat:', formatDate(record.firstHeatDate))}
+          {renderDetailItem(icons.time, 'Services:', record.numServices)}
           
           {record.serviceType === 'Artificial Insemination' && (
             <>
-              {renderDetailItem(icons.account, 'Sire Code', record.sireCode)}
-              {renderDetailItem(icons.submited, 'AI Type', record.aiType)}
-              {renderDetailItem(icons.location, 'AI Source', record.aiSource)}
-              {renderDetailItem(icons.money, 'AI Cost', record.aiCost)}
+              {renderDetailItem(icons.account, 'Sire Code:', record.sireCode)}
+              {renderDetailItem(icons.submited, 'AI Type:', record.aiType)}
+              {renderDetailItem(icons.location, 'AI Source:', record.aiSource)}
+              {renderDetailItem(icons.money, 'AI Cost:', record.aiCost)}
             </>
           )}
         </View>
         
-        {/* Gestation Section */}
         <View style={styles.detailsCard}>
           <Text style={styles.sectionTitle}>Gestation Details</Text>
           
-          {renderDetailItem(icons.time, 'Gestation Period', record.gestationPeriod)}
-          {renderDetailItem(icons.calendar, 'Expected Birth', formatDate(record.expectedBirthDate))}
+          {renderDetailItem(icons.time, 'Gestation Period:', record.gestationPeriod)}
+          {renderDetailItem(icons.calendar, 'Expected Birth:', formatDate(record.expectedBirthDate))}
           
           {record.status === 'Pregnant' && (
             <View style={styles.pregnancyTimeline}>
@@ -157,22 +141,20 @@ const BreedingRecordDetailScreen = ({ route, navigation }) => {
           )}
         </View>
         
-        {/* Birth Details Section (if available) */}
         {record.status === 'Delivered' && (
           <View style={styles.detailsCard}>
             <Text style={styles.sectionTitle}>Birth Details</Text>
             
-            {renderDetailItem(icons.calendar, 'Birth Date', formatDate(record.birthDate))}
-            {renderDetailItem(icons.submited, 'Delivery Method', record.deliveryMethod)}
-            {renderDetailItem(icons.account, 'Young Ones', record.youngOnes)}
-            {renderDetailItem(icons.chart, 'Birth Weight', record.birthWeight)}
-            {renderDetailItem(icons.chart, 'Litter Weight', record.litterWeight)}
-            {renderDetailItem(icons.account, 'Offspring Sex', record.offspringSex)}
-            {renderDetailItem(icons.tag, 'Offspring IDs', record.offspringIds)}
+            {renderDetailItem(icons.calendar, 'Birth Date:', formatDate(record.birthDate))}
+            {renderDetailItem(icons.submited, 'Delivery Method:', record.deliveryMethod)}
+            {renderDetailItem(icons.account, 'Young Ones:', record.youngOnes)}
+            {renderDetailItem(icons.chart, 'Birth Weight:', record.birthWeight)}
+            {renderDetailItem(icons.chart, 'Litter Weight:', record.litterWeight)}
+            {renderDetailItem(icons.account, 'Offspring Sex:', record.offspringSex)}
+            {renderDetailItem(icons.tag, 'Offspring IDs:', record.offspringIds)}
           </View>
         )}
         
-        {/* Action Buttons */}
         <View style={styles.actionButtonsContainer}>
           {record.status === 'Pregnant' && (
             <TouchableOpacity 
@@ -193,12 +175,12 @@ const BreedingRecordDetailScreen = ({ route, navigation }) => {
               <FastImage
                 source={icons.edit}
                 style={styles.buttonIcon}
-                tintColor={COLORS.primary}
+                tintColor="#2196F3"
               />
               <Text style={styles.secondaryButtonText}>Edit</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.dangerButton} onPress={handleDelete}>
+            <TouchableOpacity style={styles.dangerButton} >
               <FastImage
                 source={icons.remove}
                 style={styles.buttonIcon}
@@ -210,33 +192,7 @@ const BreedingRecordDetailScreen = ({ route, navigation }) => {
         </View>
       </ScrollView>
       
-      {/* Delete Confirmation Modal */}
-      <Modal
-        transparent={true}
-        visible={confirmDeleteVisible}
-        animationType="fade"
-        onRequestClose={() => setConfirmDeleteVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Delete Record?</Text>
-            <Text style={styles.modalText}>
-              This breeding record will be permanently removed. This action cannot be undone.
-            </Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => setConfirmDeleteVisible(false)}>
-                <Text style={styles.modalCancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalDeleteButton}
-                onPress={confirmDelete}>
-                <Text style={styles.modalDeleteButtonText}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+    
     </SafeAreaView>
   );
 };
@@ -259,36 +215,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
     shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+   
   },
   animalCardContent: {
     flex: 1,
   },
   animalId: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.black,
     marginBottom: 4,
   },
   animalType: {
-    fontSize: 15,
-    color: COLORS.gray2,
+    fontSize: 14,
+    color: COLORS.black,
+    marginTop: 4,
   },
   statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   statusText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 'bold',
     color: COLORS.white,
   },
   
-  // Timeline styles
   timelineContainer: {
     marginBottom: 16,
   },
@@ -301,10 +254,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 16,
     shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    
   },
   timelineStep: {
     alignItems: 'center',
@@ -317,73 +267,70 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: COLORS.lightGray2,
     marginBottom: 8,
   },
   timelineDotActive: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.green,
   },
   timelineConnector: {
     height: 2,
     flex: 1,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: COLORS.lightGray2,
   },
   timelineConnectorActive: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.green,
   },
   timelineText: {
     fontSize: 12,
-    color: '#757575',
+    color: COLORS.black,
     textAlign: 'center',
   },
   timelineTextActive: {
-    color: COLORS.primary,
+    color: COLORS.green,
     fontWeight: '500',
   },
   
-  // Details card
   detailsCard: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+   
   },
   sectionTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: 'bold',
     color: COLORS.black,
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: COLORS.gray3,
   },
   detailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    marginBottom: 8,
+    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: COLORS.gray3,
   },
   detailIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 12,
+    width: 16,
+    height: 16,
+    marginRight: 8,
   },
   detailContent: {
     flex: 1,
   },
   detailLabel: {
     fontSize: 14,
-    color: COLORS.gray2,
-    marginBottom: 2,
+    color: COLORS.black,
+    width: 100,
   },
   detailValue: {
-    fontSize: 16,
+    fontSize: 14,
     color: COLORS.black,
   },
   
@@ -392,7 +339,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: COLORS.gray3,
   },
   pregnancyTimelineLabel: {
     fontSize: 14,
@@ -402,14 +349,14 @@ const styles = StyleSheet.create({
   },
   pregnancyTimelineBar: {
     height: 8,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: COLORS.lightGray2,
     borderRadius: 4,
     overflow: 'hidden',
   },
   pregnancyTimelineProgress: {
-    width: '40%', // Would be calculated dynamically in a real app
+    width: '40%', 
     height: '100%',
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.green,
     borderRadius: 4,
   },
   pregnancyTimelineDates: {
@@ -419,26 +366,30 @@ const styles = StyleSheet.create({
   },
   pregnancyTimelineDate: {
     fontSize: 12,
-    color: COLORS.gray2,
+    color: COLORS.black,
   },
   
-  // Action buttons
   actionButtonsContainer: {
     marginTop: 8,
   },
   primaryButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.green,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 14,
     marginBottom: 12,
+    elevation: 2,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   buttonText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   buttonIcon: {
     width: 18,
@@ -452,7 +403,7 @@ const styles = StyleSheet.create({
   secondaryButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderColor: '#2196F3',
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -461,8 +412,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   secondaryButtonText: {
-    color: COLORS.primary,
-    fontSize: 15,
+    color: '#2196F3',
+    fontSize: 14,
     fontWeight: '500',
   },
   dangerButton: {
@@ -478,61 +429,11 @@ const styles = StyleSheet.create({
   },
   dangerButtonText: {
     color: '#F44336',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '500',
   },
   
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 24,
-    width: '80%',
-    maxWidth: 400,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.black,
-    marginBottom: 12,
-  },
-  modalText: {
-    fontSize: 15,
-    color: COLORS.gray2,
-    marginBottom: 24,
-    lineHeight: 22,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  modalCancelButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginRight: 12,
-  },
-  modalCancelButtonText: {
-    color: COLORS.gray2,
-    fontWeight: '500',
-    fontSize: 15,
-  },
-  modalDeleteButton: {
-    backgroundColor: '#F44336',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  modalDeleteButtonText: {
-    color: COLORS.white,
-    fontWeight: '600',
-    fontSize: 15,
-  },
+  
 });
 
 export default BreedingRecordDetailScreen;

@@ -4,191 +4,236 @@ import {
   Text,
   VStack,
   HStack,
-  Center,
   Image,
-  Button,
-  Divider,
   ScrollView,
+  Pressable,
+  Divider,
+  Center,
+
 } from 'native-base';
-import FastImage from 'react-native-fast-image';
+import { StyleSheet,  TouchableOpacity} from 'react-native';
 import { COLORS } from '../../constants/theme';
 import { icons } from '../../constants';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import FastImage from 'react-native-fast-image';
 
 export default function ProfileScreen({ navigation }) {
-  const farmData = {
-    farmName: "Green Valley Farm",
-    county: "Nairobi",
-    adminLocation: "Westlands",
-    farmSize: "15",
-    ownership: "Freehold",
-    productionTypes: ["Dairy cattle", "Poultry", "Sheep"],
-    ownerName: "Jane Doe",
-    gender: "Female",
-    ageGroup: "41-50",
-    yearsOfFarming: "12",
-    phoneNumber: "0707625331",
-    businessContact: "0789123456",
-    email: "support@yahoo.com"
+  const menuItems = [
+    {
+      title: 'Personal Information',
+      subTitle: 'Chat and notifications settings',
+      icon: icons.user,
+      route: 'PersonalInformation',
+    },
+    {
+      title: 'Farm Information',
+      subTitle: 'Chat and notifications settings',
+      icon: icons.agriculture,
+      route: 'FarmInformation',
+    },
+    {
+      title: 'Admin Permission',
+      subTitle: 'Data preferences and storage settings',
+      icon: icons.settings,
+      route: 'AdminPermission',
+    },
+    {
+      title: 'Privacy & Permissions',
+      subTitle: 'Contact, My Admin and Block Contact',
+      icon: icons.shield,
+      route: 'PrivacyPermissions',
+    },
+    {
+      title: 'Help',
+      subTitle: 'Data preferences and storage settings',
+      icon: icons.help,
+      route: 'HelpScreen',
+    },
+    {
+      title: 'Feedback',
+      subTitle: 'Chat and notifications settings',
+      icon: icons.feedback,
+      route: 'FeedbackScreen',
+    },
+    {
+      title: 'About',
+      subTitle: 'Version 1.7',
+      icon: icons.about,
+      route: 'AboutScreen',
+    },
+  ];
+
+  const renderMenuItem = (item, index) => {
+    return (
+      <Pressable key={index} onPress={() => navigation.navigate(item.route)}>
+        <HStack 
+          alignItems="center" 
+          justifyContent="space-between" 
+          py={3}
+        >
+          <HStack space={3} alignItems="center">
+            <Box 
+              bg={COLORS.lightGreen} 
+              p={2} 
+              borderRadius={8}
+            >
+              <FastImage
+                source={item.icon}
+                style={styles.menuIcon}
+                resizeMode="contain"
+                tintColor={COLORS.green}
+              />
+            </Box>
+            <VStack>
+              <Text fontSize="md" fontWeight="medium" color="black">
+                {item.title}
+              </Text>
+              <Text fontSize="xs" color={COLORS.darkGray3}>
+                {item.subTitle}
+              </Text>
+            </VStack>
+          </HStack>
+          <FastImage
+            source={icons.right_arrow}
+            style={styles.arrowIcon}
+            resizeMode="contain"
+            tintColor={COLORS.darkGray3}
+          />
+        </HStack>
+        {index < menuItems.length - 1 && (
+          <Divider bg={COLORS.lightGreen} opacity={0.5} />
+        )}
+      </Pressable>
+    );
   };
 
   return (
-    <Box flex={1} bg={COLORS.lightGreen}>
+    <Box flex={1} bg="white">
       <Box 
-        bg={COLORS.green2} 
-        h={200} 
+        bg={COLORS.green} 
+        h={180} 
         borderBottomLeftRadius={200} 
-        borderBottomRightRadius={200} 
+        borderBottomRightRadius={180} 
         position="relative"
-        zIndex={1}
+        alignItems="center"
+        pt={10}
       >
-        <HStack alignItems="center" justifyContent="space-between" px={4} mt={8}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <FastImage
-              source={icons.backarrow}
-              style={styles.headerIcon}
-              resizeMode="contain"
-              tintColor="white"
-            />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
-            <FastImage
-              source={icons.settings}
-              style={styles.headerIcon}
-              resizeMode="contain"
-              tintColor="white"
-            />
-          </TouchableOpacity>
-        </HStack>
         
-        <VStack mt={6} alignItems="center" space={1}>
-          <Text fontSize="xl" fontWeight="bold" color="white">
-            {farmData.farmName}
+        <HStack width="full" justifyContent="space-between" px={4} alignItems="center">
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <FastImage 
+            source={icons.backarrow}
+            style={styles.headerIcon}
+            resizeMode="contain"
+            tintColor="white"
+          />
+          </TouchableOpacity>
+
+          <Text fontSize="md" fontWeight="bold" color="white">
+            General Details
           </Text>
-          <Text fontSize="sm" color="white" opacity={0.9}>
-            {farmData.productionTypes.join(", ")}
-          </Text>
-        </VStack>
+          <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
+          <FastImage onPress={() => navigation.navigate('Settings')}
+            source={icons.settings}
+            style={styles.headerIcon}
+            resizeMode="contain"
+            tintColor="white"
+          />
+          </TouchableOpacity>
+          
+          
+        </HStack>
+      </Box>
+      
+      <Box 
+        position="absolute" 
+        top={110} 
+        left="50%" 
+        style={{ transform: [{ translateX: -40 }] }}
+        zIndex={10}
+        alignItems="center"
+      >
+        <Box position="relative">
+          <Image
+            source={require('../../assets/images/profile-avatar.png')}
+            style={styles.profileImage}
+            alt="Profile Image"
+          />
+          <Box 
+            position="absolute" 
+            bottom={0} 
+            right={0} 
+            bg={COLORS.green} 
+            borderRadius={15}
+            p={2}
+          >
+            <FastImage
+              source={icons.camera}
+              style={styles.cameraIcon}
+              resizeMode="contain"
+              tintColor="white"
+            />
+          </Box>
+        </Box>
+        <Text fontSize="sm" color={COLORS.darkGray3} mt={2}>
+          App Settings
+        </Text>
       </Box>
       
       <ScrollView 
         showsVerticalScrollIndicator={false} 
-        contentContainerStyle={{ paddingTop: 80 }} 
-        zIndex={1}
+        contentContainerStyle={{ paddingTop: 80, paddingBottom: 20 }}
       >
-        <Box mx={4} mt={6} bg="white" borderRadius={16} p={4} shadow={2}>
-          <Text fontSize="lg" fontWeight="bold" color={COLORS.green2} mb={3}>Farm Details</Text>
-          
-          <HStack justifyContent="space-between" borderBottomWidth={1} borderBottomColor={COLORS.lightGreen} py={3}>
-            <Text fontSize="md" color={COLORS.darkGray3}>County</Text>
-            <Text fontSize="md" color="black">{farmData.county}</Text>
-          </HStack>
-          
-          <HStack justifyContent="space-between" borderBottomWidth={1} borderBottomColor={COLORS.lightGreen} py={3}>
-            <Text fontSize="md" color={COLORS.darkGray3}>Location</Text>
-            <Text fontSize="md" color="black">{farmData.adminLocation}</Text>
-          </HStack>
-          
-          <HStack justifyContent="space-between" borderBottomWidth={1} borderBottomColor={COLORS.lightGreen} py={3}>
-            <Text fontSize="md" color={COLORS.darkGray3}>Farm Size</Text>
-            <Text fontSize="md" color="black">{farmData.farmSize} acres</Text>
-          </HStack>
-          
-          <HStack justifyContent="space-between" borderBottomWidth={1} borderBottomColor={COLORS.lightGreen} py={3}>
-            <Text fontSize="md" color={COLORS.darkGray3}>Ownership</Text>
-            <Text fontSize="md" color="black">{farmData.ownership}</Text>
-          </HStack>
+        <Text fontSize="md" color={COLORS.darkGray3} ml={4} mb={2}>
+          More
+        </Text>
+        
+        <Box mx={4} bg="white" borderRadius={12} p={4} shadow={2}>
+          <VStack space={0}>
+            {menuItems.map(renderMenuItem)}
+          </VStack>
         </Box>
         
-        <Box mx={4} mt={4} bg="white" borderRadius={16} p={4} shadow={2} mb={6}>
-          <Text fontSize="lg" fontWeight="bold" color={COLORS.green2} mb={3}>Owner Details</Text>
+        <Center mt={6}>
+          <Pressable
+            bg={COLORS.green}
+            w="90%"
+            py={3}
+            borderRadius={30}
+            alignItems="center"
           
-          <HStack justifyContent="space-between" borderBottomWidth={1} borderBottomColor={COLORS.lightGreen} py={3}>
-            <Text fontSize="md" color={COLORS.darkGray3}>Name</Text>
-            <Text fontSize="md" color="black">{farmData.ownerName}</Text>
-          </HStack>
-          
-          <HStack justifyContent="space-between" borderBottomWidth={1} borderBottomColor={COLORS.lightGreen} py={3}>
-            <Text fontSize="md" color={COLORS.darkGray3}>Phone Number</Text>
-            <Text fontSize="md" color="black">{farmData.phoneNumber}</Text>
-          </HStack>
-          
-          <HStack justifyContent="space-between" borderBottomWidth={1} borderBottomColor={COLORS.lightGreen} py={3}>
-            <Text fontSize="md" color={COLORS.darkGray3}>Business Contact</Text>
-            <Text fontSize="md" color="black">{farmData.businessContact}</Text>
-          </HStack>
-          
-          <HStack justifyContent="space-between" borderBottomWidth={1} borderBottomColor={COLORS.lightGreen} py={3}>
-            <Text fontSize="md" color={COLORS.darkGray3}>Email</Text>
-            <Text fontSize="md" color="black">{farmData.email}</Text>
-          </HStack>
-          
-          <HStack justifyContent="space-between" borderBottomWidth={1} borderBottomColor={COLORS.lightGreen} py={3}>
-            <Text fontSize="md" color={COLORS.darkGray3}>Age Group</Text>
-            <Text fontSize="md" color="black">{farmData.ageGroup}</Text>
-          </HStack>
-          
-          <HStack justifyContent="space-between" borderBottomWidth={1} borderBottomColor={COLORS.lightGreen} py={3}>
-            <Text fontSize="md" color={COLORS.darkGray3}>Years of Farming</Text>
-            <Text fontSize="md" color="black">{farmData.yearsOfFarming} years</Text>
-          </HStack>
-        </Box>
-        
-       
-      </ScrollView>
-      <Center mb={6}>
-          <HStack space={4} justifyContent="center" width="80%">
-            <Button 
-              bg={COLORS.green} 
-              width="48%" 
-              borderRadius={30} 
-              shadow={3}
-              _text={{ color: "white", fontWeight: "bold" }}
-              // onPress={() => navigation.navigate('EditFarmScreen')}
-            >
-              Edit Farm Profile
-            </Button>
-            <Button 
-              variant="outline" 
-              borderColor={COLORS.green}
-              width="48%" 
-              borderRadius={30} 
-              _text={{ color: COLORS.green, fontWeight: "bold" }}
-              onPress={() => navigation.navigate('ManageFarmsScreen')}
-            >
-              Manage Farm
-            </Button>
-          </HStack>
+          >
+            <Text color="white" fontWeight="bold">
+              Log out
+            </Text>
+          </Pressable>
         </Center>
-      <Box 
-        position="absolute" 
-        top={160} 
-        left="50%" 
-        style={{ transform: [{ translateX: -60 }] }}
-        zIndex={10}
-      >
-        <Image
-          source={require('../../assets/images/profile-avatar.png')}
-          style={styles.profileImage}
-          alt="Farmer Profile Image"
-        />
-      </Box>
+      </ScrollView>
     </Box>
   );
 }
 
 const styles = StyleSheet.create({
   headerIcon: {
-    width: 35,
-    height: 35,
-    padding: 3,
+    width: 24,
+    height: 24,
   },
   profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 4,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
     borderColor: "white",
-    backgroundColor: COLORS.lightGreen,
   },
+  menuIcon: {
+    width: 20,
+    height: 20,
+  },
+  arrowIcon: {
+    width: 16,
+    height: 16,
+  },
+  cameraIcon: {
+    width: 16,
+    height: 16,
+  }
 });
