@@ -35,6 +35,13 @@ export default function RegisterScreen({ navigation }) {
     country: 1,
   });
 
+  const stepDescriptions = {
+    1: "Farm Details",
+    2: "Farm Activities",
+    3: "Personal Information",
+    4: "Professional Information"
+  };
+
   const handleInputChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -136,7 +143,7 @@ export default function RegisterScreen({ navigation }) {
 
   const renderStepIndicator = () => {
     return (
-      <Box width="100%" mb={10}>
+      <Box width="100%" mb={4}>
         <HStack justifyContent="space-between" mb={2}>
           {[1, 2, 3, 4].map((step) => (
             <Box
@@ -168,6 +175,11 @@ export default function RegisterScreen({ navigation }) {
             </Box>
           ))}
         </HStack>
+
+        {/* Step description text based on current step */}
+        <Text fontSize="14" fontWeight="500" textAlign="center" color="gray.600" mt={2} mb={4}>
+          {stepDescriptions[currentStep]}
+        </Text>
       </Box>
     );
   };
@@ -459,7 +471,7 @@ export default function RegisterScreen({ navigation }) {
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            E-mail Adress
+            E-mail Address
           </Text>
           <Input
             variant="outline"
