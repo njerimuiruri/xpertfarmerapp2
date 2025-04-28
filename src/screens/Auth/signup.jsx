@@ -24,7 +24,7 @@ export default function RegisterScreen({ navigation }) {
     gender: "",
     age_group: "",
     residence_county: "",
-    residence_administrative_county: "",
+    residence_location: "",
 
     years_of_experience: "",
     email: "",
@@ -43,7 +43,7 @@ export default function RegisterScreen({ navigation }) {
     switch (currentStep) {
       case 1:
         if (!formData.farm_name || !formData.county || !formData.administrative_location || !formData.farm_size) {
-          Alert.alert("Error", "All fields with * are required!");
+          Alert.alert("Error", "All fields with  are required!");
           return false;
         }
         return true;
@@ -55,13 +55,13 @@ export default function RegisterScreen({ navigation }) {
         return true;
       case 3:
         if (!formData.first_name || !formData.last_name || !formData.gender || !formData.age_group || !formData.residence_county) {
-          Alert.alert("Error", "All fields with * are required!");
+          Alert.alert("Error", "All fields with  are required!");
           return false;
         }
         return true;
       case 4:
         if (!formData.email || !formData.phone_number || !formData.password || !formData.confirmPassword) {
-          Alert.alert("Error", "All fields with * are required!");
+          Alert.alert("Error", "All fields with  are required!");
           return false;
         }
         if (formData.password !== formData.confirmPassword) {
@@ -92,7 +92,7 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = async () => {
     if (!formData.email || !formData.phone_number || !formData.password || !formData.confirmPassword) {
-      Alert.alert("Error", "All fields with * are required!");
+      Alert.alert("Error", "All fields with  are required!");
       return;
     }
     if (formData.password !== formData.confirmPassword) {
@@ -141,15 +141,20 @@ export default function RegisterScreen({ navigation }) {
           {[1, 2, 3, 4].map((step) => (
             <Box
               key={step}
-              width={8}
-              height={8}
+              width={currentStep === step ? 10 : 8}
+              height={currentStep === step ? 10 : 8}
               borderRadius="full"
               backgroundColor={currentStep === step ? "#8FD28F" : "#F2F2F2"}
               justifyContent="center"
               alignItems="center"
               position="relative"
             >
-              <Text color={currentStep === step ? "white" : "#AAAAAA"}>{step}</Text>
+              <Text
+                color={currentStep === step ? "white" : "#AAAAAA"}
+                fontSize={currentStep === step ? "md" : "sm"}
+              >
+                {step}
+              </Text>
               {step < 4 && (
                 <Box
                   position="absolute"
@@ -162,13 +167,6 @@ export default function RegisterScreen({ navigation }) {
               )}
             </Box>
           ))}
-        </HStack>
-
-        <HStack justifyContent="space-between">
-          <Text fontSize="xs" color={currentStep === 1 ? "#8FD28F" : "#AAAAAA"}>Farm details</Text>
-          <Text fontSize="xs" color={currentStep === 2 ? "#8FD28F" : "#AAAAAA"}>Farm Activities</Text>
-          <Text fontSize="xs" color={currentStep === 3 ? "#8FD28F" : "#AAAAAA"}>Personal Information</Text>
-          <Text fontSize="xs" color={currentStep === 4 ? "#8FD28F" : "#AAAAAA"}>Professional Information</Text>
         </HStack>
       </Box>
     );
@@ -194,7 +192,7 @@ export default function RegisterScreen({ navigation }) {
       <VStack width="100%" space={4}>
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Farm Name (Business Name) *
+            Farm Business Name
           </Text>
           <Input
             variant="outline"
@@ -211,7 +209,7 @@ export default function RegisterScreen({ navigation }) {
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            County *
+            County
           </Text>
           <Select
             borderRadius={8}
@@ -230,7 +228,7 @@ export default function RegisterScreen({ navigation }) {
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Administrative location *
+            Administrative location
           </Text>
           <Select
             borderRadius={8}
@@ -247,7 +245,7 @@ export default function RegisterScreen({ navigation }) {
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Farm Size (Acres) *
+            Farm Size (Acres)
           </Text>
           <Input
             variant="outline"
@@ -257,21 +255,21 @@ export default function RegisterScreen({ navigation }) {
             borderRadius={8}
             value={formData.farm_size}
             onChangeText={(value) => handleInputChange("farm_size", value)}
-            placeholder="500 x 300"
+            placeholder="1 Acre"
             keyboardType="numeric"
           />
         </Box>
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Ownership *
+            Ownership
           </Text>
           <Radio.Group
             name="ownership"
             value={formData.ownership}
             onChange={(value) => handleInputChange("ownership", value)}
           >
-            <HStack space={4}>
+            <HStack space={3}>
               <Radio value="Freehold" colorScheme="green">Freehold</Radio>
               <Radio value="Leasehold" colorScheme="green">Leasehold</Radio>
               <Radio value="Communal" colorScheme="green">Communal</Radio>
@@ -318,7 +316,7 @@ export default function RegisterScreen({ navigation }) {
       <VStack width="100%" space={4}>
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            First Name *
+            First Name
           </Text>
           <Input
             variant="outline"
@@ -334,7 +332,7 @@ export default function RegisterScreen({ navigation }) {
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Middle Name *
+            Middle Name
           </Text>
           <Input
             variant="outline"
@@ -350,7 +348,7 @@ export default function RegisterScreen({ navigation }) {
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Last Name *
+            Last Name
           </Text>
           <Input
             variant="outline"
@@ -366,24 +364,23 @@ export default function RegisterScreen({ navigation }) {
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Gender *
+            Gender
           </Text>
-          <Select
-            borderRadius={8}
-            borderColor="#DDDDDD"
-            width="100%"
-            selectedValue={formData.gender}
-            onValueChange={(value) => handleInputChange("gender", value)}
-            placeholder="Select Gender"
+          <Radio.Group
+            name="gender"
+            value={formData.gender}
+            onChange={(value) => handleInputChange("gender", value)}
           >
-            <Select.Item label="Male" value="Male" />
-            <Select.Item label="Female" value="Female" />
-          </Select>
+            <HStack space={6}>
+              <Radio value="Male" colorScheme="green">Male</Radio>
+              <Radio value="Female" colorScheme="green">Female</Radio>
+            </HStack>
+          </Radio.Group>
         </Box>
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Age Group *
+            Age Group
           </Text>
           <Select
             borderRadius={8}
@@ -403,7 +400,7 @@ export default function RegisterScreen({ navigation }) {
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Residence County *
+            Residence County
           </Text>
           <Select
             borderRadius={8}
@@ -422,14 +419,14 @@ export default function RegisterScreen({ navigation }) {
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Residence Administrative county *
+            Residence Location
           </Text>
           <Select
             borderRadius={8}
             borderColor="#DDDDDD"
             width="100%"
-            selectedValue={formData.residence_administrative_county}
-            onValueChange={(value) => handleInputChange("residence_administrative_county", value)}
+            selectedValue={formData.residence_location}
+            onValueChange={(value) => handleInputChange("residence_location ", value)}
             placeholder="Select Administrative County"
           >
             <Select.Item label="Siaya" value="Siaya" />
@@ -445,7 +442,7 @@ export default function RegisterScreen({ navigation }) {
       <VStack width="100%" space={4}>
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Years of Farming Practice *
+            Years of Farming Practice
           </Text>
           <Input
             variant="outline"
@@ -462,7 +459,7 @@ export default function RegisterScreen({ navigation }) {
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            E-mail Adress *
+            E-mail Adress
           </Text>
           <Input
             variant="outline"
@@ -479,7 +476,7 @@ export default function RegisterScreen({ navigation }) {
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Phone Number *
+            Additional Contact
           </Text>
           <Input
             variant="outline"
@@ -496,7 +493,7 @@ export default function RegisterScreen({ navigation }) {
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Business Number *
+            Business Number
           </Text>
           <Input
             variant="outline"
@@ -570,7 +567,7 @@ export default function RegisterScreen({ navigation }) {
 
           <Box mt={16} alignItems="center" mb={6}>
             <Text fontSize="22" fontWeight="bold" color="black">Registration</Text>
-            <Text fontSize="14" color="gray.600">Please fill out this form with the required information</Text>
+            <Text fontSize="14" color="gray.600">Set Up Your Farm</Text>
           </Box>
 
           {renderStepIndicator()}

@@ -14,9 +14,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");  
-  const [password, setPassword] = useState("");        
-  const [loading, setLoading] = useState(false);   
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const toggleShowPassword = () => {
     setShowPassword(!showPassword);
@@ -28,7 +28,7 @@ export default function LoginScreen({ navigation }) {
       return;
     }
 
-    setLoading(true); 
+    setLoading(true);
 
     try {
       const response = await fetch(
@@ -61,7 +61,7 @@ export default function LoginScreen({ navigation }) {
       console.error(error);
       Alert.alert("Error", "Something went wrong. Please try again.");
     } finally {
-      setLoading(false);  
+      setLoading(false);
     }
   };
 
@@ -102,8 +102,8 @@ export default function LoginScreen({ navigation }) {
             paddingLeft={2}
             borderRadius={8}
             keyboardType="phone-pad"
-            value={phoneNumber}        
-            onChangeText={setPhoneNumber} 
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
           />
         </Box>
 
@@ -119,13 +119,13 @@ export default function LoginScreen({ navigation }) {
             paddingLeft={2}
             borderRadius={8}
             secureTextEntry={!showPassword}
-            value={password}           
-            onChangeText={setPassword} 
+            value={password}
+            onChangeText={setPassword}
             InputRightElement={
               <Pressable onPress={toggleShowPassword} mr={2}>
-                <FastImage 
-                  source={showPassword ? icons.eye : icons.eye_close} 
-                  style={{ width: 24, height: 24 }} 
+                <FastImage
+                  source={showPassword ? icons.eye : icons.eye_close}
+                  style={{ width: 24, height: 24 }}
                 />
               </Pressable>
             }
@@ -143,13 +143,13 @@ export default function LoginScreen({ navigation }) {
         </Box>
 
         <Button
-          onPress={handleLogin}  
+          onPress={handleLogin}
           width="100%"
           mt={5}
           backgroundColor="#74c474"
           padding={3}
           borderRadius={8}
-          isLoading={loading}   
+          isLoading={loading}
         >
           <Text color="white" fontWeight="bold">
             LOGIN
