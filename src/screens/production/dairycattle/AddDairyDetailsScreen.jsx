@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Text,
@@ -11,14 +11,14 @@ import {
   Checkbox,
   Modal,
 } from 'native-base';
-import {View, TouchableOpacity, StyleSheet, Image} from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../constants';
-import {COLORS} from '../../constants/theme';
-import SecondaryHeader from '../../components/headers/secondary-header';
+import { icons } from '../../../constants';
+import { COLORS } from '../../../constants/theme';
+import SecondaryHeader from '../../../components/headers/secondary-header';
 
-export default function DairyDetailsScreen({navigation}) {
+export default function DairyDetailsScreen({ navigation }) {
   const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState('');
   const [dailyMilkYield, setDailyMilkYield] = useState('');
   const [milkQuality, setMilkQuality] = useState('');
@@ -47,7 +47,7 @@ export default function DairyDetailsScreen({navigation}) {
   };
 
   return (
-    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
+    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
       <SecondaryHeader title="Dairy Details" />
       <ScrollView
         contentContainerStyle={{
@@ -90,9 +90,9 @@ export default function DairyDetailsScreen({navigation}) {
                     borderColor="transparent"
                   />
                   <TouchableOpacity
-                    style={{padding: 10}}
+                    style={{ padding: 10 }}
                     onPress={() => setDropdownVisible(prev => !prev)}>
-                    <Text style={{fontSize: 16, color: COLORS.green}}>▼</Text>
+                    <Text style={{ fontSize: 16, color: COLORS.green }}>▼</Text>
                   </TouchableOpacity>
                 </HStack>
                 {dropdownVisible && (
@@ -499,7 +499,7 @@ export default function DairyDetailsScreen({navigation}) {
               borderRadius={8}
               px={6}
               py={3}
-              _pressed={{bg: 'emerald.700'}}
+              _pressed={{ bg: 'emerald.700' }}
               onPress={() => setShowSaveModal(true)}>
               Save
             </Button>

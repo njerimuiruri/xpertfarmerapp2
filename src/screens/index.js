@@ -7,7 +7,6 @@ import EmailOtpScreen from '../screens/Auth/Email-Otp-Screen';
 
 import HomeScreen from './Home/home';
 
-
 import ProfileScreen from './Home/profile-screen';
 import PersonalInformation from './Home/PersonalInformation';
 import AddFarm from './farm/AddFarm';
@@ -28,7 +27,6 @@ import AddLivestockGroupScreen from './livestock/AddGroupLivestock';
 import OptionDetailsScreen from './livestock/optionDetails';
 import OptionLivestockGroupScreen from './livestock/OptionLivestockGroup';
 
-
 import BreedingModuleLandingScreen from './livestock/breeding/BreedingModuleLandingScreen';
 
 import EditBreedingRecordScreen from './livestock/breeding/EditBreedingRecordScreen';
@@ -47,8 +45,6 @@ import EditFeedingRequirementScreen from './livestock/feeding/EditFeedingRequire
 
 import FeedingModuleScreen from './livestock/feeding/FeedingModuleScreen';
 import FeedingDetailsScreen from './livestock/feeding/FeedingDetailsScreen';
-
-
 
 // Health
 import AddHealthRecords from './health/AddHealthRecords';
@@ -78,7 +74,6 @@ import AddAllergiesRecords from './health/Allergies/AddAllergiesRecords';
 
 import AllergiesRecordsScreen from './health/Allergies/AllergiesRecordsScreen';
 
-
 //Boosters
 import AddBoostersRecords from './health/Boosters/AddBoostersRecords';
 
@@ -87,32 +82,36 @@ import BoostersRecordScreen from './health/Boosters/BoostersRecordScreen';
 import FarmHealthRecords from './health/health-record/record';
 import HealthRecordsScreen from './health/HealthRecordsScreen';
 
-
-
-
 // Home DashboardScreen
 
 //productionsScreen
-import AddDairyDetailsScreen from './production/AddDairyDetailsScreen';
-import BeefDetailsScreen from './production/BeefDetailsScreen';
-import SwineRecordScreen from './production/SwineRecordScreen';
-import SheepGoatDetailsScreen from './production/SheepGoatDetailsScreen';
-import PoultryFlockDetailsScreen from './production/PoultryFlockDetailsScreen';
-import AnimalProductionListScreen from './production/AnimalProductionListScreen';
-import SwineProductionListScreen from './production/SwineProductionListScreen ';
-import DairyProductionListScreen from './production/DairyProductionListScreen';
-import SheepAndGoatProductionListScreen from './production/SheepAndGoatProductionListScreen';
-import PoultryProductionListScreen from './production/PoultryFlockDetailsScreen';
-
 import ProductionModuleLandingScreen from './production/ProductionModuleLandingScreen';
+//dairy
+import DairyProductionListScreen from './production/dairycattle/DairyProductionListScreen';
+import DairyDetailsScreen from './production/dairycattle/DairyDetailsScreen';
+import AddDairyDetailsScreen from './production/dairycattle/AddDairyDetailsScreen';
+//beef
+import AddBeefDetailsScreen from './production/beefcattle/AddBeefDetailsScreen';
+import BeefCattleProductionListing from './production/beefcattle/BeefCattleProductionListing';
+
+import BeefCattleDetailsScreen from './production/beefcattle/BeefCattleDetailsScreen';
+
+//swine
+import SwineRecordScreen from './production/swine/SwineRecordScreen';
+import SwineProductionListScreen from './production/swine/SwineProductionListScreen ';
+
+//poultry
+import PoultryProductionListScreen from './production/poultry/PoultryFlockDetailsScreen';
+import PoultryFlockDetailsScreen from './production/poultry/PoultryFlockDetailsScreen';
+
+import SheepGoatDetailsScreen from './production/sheepandgoat/SheepGoatDetailsScreen';
+import SheepAndGoatProductionListScreen from './production/sheepandgoat/SheepAndGoatProductionListScreen';
 
 // inventory
 import InventoryDashboard from './inventory/InventoryDashboard';
 import AddMachinery from './inventory/AddMachinery';
 import AddGoodsInStock from './inventory/AddGoodsInStock';
 import AddUtilityDetails from './inventory/AddUtilityDetails';
-
-
 
 import EditMachinery from './inventory/EditMachinery';
 
@@ -132,8 +131,7 @@ export {
   //personal information
   ProfileScreen,
   PersonalInformation,
-    // Farm Records
-
+  // Farm Records
   FarmInformation,
   AddFarm,
   EditFarm,
@@ -163,7 +161,7 @@ export {
   LivestockFeedingScreen,
   FarmFeedsScreen,
   AnimalFeedingProgramScreen,
-  BeefDetailsScreen,
+  AddBeefDetailsScreen,
   EditFeedingRequirementScreen,
   FeedingDetailsScreen,
 
@@ -189,17 +187,17 @@ export {
   AllergiesRecordsScreen,
   BoostersRecordScreen,
 
-
   //home
-  
 
-//productionsrecord
+  //productionsrecord
   SwineRecordScreen,
   SheepGoatDetailsScreen,
   PoultryFlockDetailsScreen,
-  AnimalProductionListScreen,
+  BeefCattleProductionListing,
+  BeefCattleDetailsScreen,
   SwineProductionListScreen,
   DairyProductionListScreen,
+  DairyDetailsScreen,
   SheepAndGoatProductionListScreen,
   PoultryProductionListScreen,
   HealthRecordsScreen,

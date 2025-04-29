@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useMemo} from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,136 +12,136 @@ import {
   SafeAreaView,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../constants';
-import {COLORS} from '../../constants/theme';
-import SecondaryHeader from '../../components/headers/secondary-header';
+import { icons } from '../../../constants';
+import { COLORS } from '../../../constants/theme';
+import SecondaryHeader from '../../../components/headers/secondary-header';
 
-// Sample data for poultry
-const initialPoultryData = [
+// Sample data for sheep and goats
+const initialSheepAndGoatData = [
   {
     id: '1',
-    weightGain: 5, // in lbs
-    saleWeight: 8, // in lbs
-    saleDate: '2023-06-01',
-    marketPrice: 1.5, // price per lb
-    salePrice: 12.0, // total sale price
-    buyer: 'Poultry Farm',
-    company: 'Quality Poultry Ltd.',
-    icon: icons.poultry,
+    weightGain: 50, // in lbs
+    saleWeight: 120, // in lbs
+    saleDate: '2023-05-15',
+    marketPrice: 3.0, // price per lb
+    salePrice: 360, // total sale price
+    buyer: 'Sheep Co.',
+    company: 'Sheep Masters',
+    icon: icons.sheep,
   },
   {
     id: '2',
-    weightGain: 4.5,
-    saleWeight: 7.5,
-    saleDate: '2023-07-01',
-    marketPrice: 1.6,
-    salePrice: 12.0,
+    weightGain: 45,
+    saleWeight: 110,
+    saleDate: '2023-06-10',
+    marketPrice: 3.2,
+    salePrice: 352,
     buyer: 'Local Market',
-    company: 'Fresh Poultry Co.',
-    icon: icons.poultry,
+    company: 'Goat Co.',
+    icon: icons.goat,
   },
   {
     id: '3',
-    weightGain: 6,
-    saleWeight: 9,
-    saleDate: '2023-08-01',
-    marketPrice: 1.55,
-    salePrice: 13.95,
-    buyer: 'City Butcher',
-    company: 'Poultry Masters',
-    icon: icons.poultry,
+    weightGain: 60,
+    saleWeight: 130,
+    saleDate: '2023-07-05',
+    marketPrice: 3.1,
+    salePrice: 403,
+    buyer: 'Farm Fresh',
+    company: 'Quality Sheep',
+    icon: icons.sheep,
   },
   {
     id: '4',
-    weightGain: 5.5,
-    saleWeight: 8.5,
-    saleDate: '2023-09-01',
-    marketPrice: 1.7,
-    salePrice: 14.45,
-    buyer: 'Farm Fresh',
-    company: 'Poultry Excellence',
-    icon: icons.poultry,
+    weightGain: 55,
+    saleWeight: 125,
+    saleDate: '2023-08-01',
+    marketPrice: 3.15,
+    salePrice: 393.75,
+    buyer: 'City Butcher',
+    company: 'Premium Goat Suppliers',
+    icon: icons.goat,
   },
   {
     id: '5',
-    weightGain: 5.2, // in lbs
-    saleWeight: 8.2, // in lbs
-    saleDate: '2023-10-01',
-    marketPrice: 1.65, // price per lb
-    salePrice: 13.53, // total sale price
+    weightGain: 48, // in lbs
+    saleWeight: 118, // in lbs
+    saleDate: '2023-09-10',
+    marketPrice: 3.25, // price per lb
+    salePrice: 383.5, // total sale price
     buyer: 'Urban Grocers',
-    company: 'Prime Poultry Suppliers',
-    icon: icons.poultry,
+    company: 'Prime Sheep Co.',
+    icon: icons.sheep,
   },
   {
     id: '6',
-    weightGain: 4.8,
-    saleWeight: 7.8,
-    saleDate: '2023-11-01',
-    marketPrice: 1.6,
-    salePrice: 12.48,
-    buyer: 'Fresh Meat Market',
-    company: 'Elite Poultry Corp.',
-    icon: icons.poultry,
+    weightGain: 52,
+    saleWeight: 122,
+    saleDate: '2023-10-15',
+    marketPrice: 3.3,
+    salePrice: 402.6,
+    buyer: 'Fresh Farm Market',
+    company: 'Elite Goat Corp.',
+    icon: icons.goat,
   },
   {
     id: '7',
-    weightGain: 6.3,
-    saleWeight: 9.3,
-    saleDate: '2023-12-01',
-    marketPrice: 1.75,
-    salePrice: 16.28,
+    weightGain: 58,
+    saleWeight: 128,
+    saleDate: '2023-11-20',
+    marketPrice: 3.4,
+    salePrice: 435.2,
     buyer: 'Village Market',
-    company: 'Grassland Poultry Co.',
-    icon: icons.poultry,
+    company: 'Grassland Sheep Co.',
+    icon: icons.sheep,
   },
   {
     id: '8',
-    weightGain: 5.7,
-    saleWeight: 8.7,
-    saleDate: '2024-01-01',
-    marketPrice: 1.7,
-    salePrice: 14.79,
+    weightGain: 62,
+    saleWeight: 132,
+    saleDate: '2023-12-05',
+    marketPrice: 3.35,
+    salePrice: 442.2,
     buyer: 'Township Meat Co.',
-    company: 'Excellence Poultry Ltd.',
-    icon: icons.poultry,
+    company: 'Excellence Goat Ltd.',
+    icon: icons.goat,
   },
   {
     id: '9',
-    weightGain: 6.5,
-    saleWeight: 9.5,
-    saleDate: '2024-02-01',
-    marketPrice: 1.8,
-    salePrice: 17.1,
+    weightGain: 57,
+    saleWeight: 127,
+    saleDate: '2024-01-10',
+    marketPrice: 3.5,
+    salePrice: 444.5,
     buyer: 'Regional Farms',
-    company: 'Heritage Poultry Producers',
-    icon: icons.poultry,
+    company: 'Heritage Sheep and Goat Producers',
+    icon: icons.sheep,
   },
 ];
 
-const PoultryProductionListScreen = ({navigation}) => {
-  const [poultry, setPoultry] = useState(initialPoultryData);
+const SheepAndGoatProductionListScreen = ({ navigation }) => {
+  const [sheepAndGoats, setSheepAndGoats] = useState(initialSheepAndGoatData);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPoultry, setSelectedPoultry] = useState(null);
+  const [selectedAnimal, setSelectedAnimal] = useState(null);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
 
-  const filteredPoultry = useMemo(() => {
-    return poultry.filter(item =>
+  const filteredAnimals = useMemo(() => {
+    return sheepAndGoats.filter(item =>
       item.id.toLowerCase().includes(searchQuery.toLowerCase()),
     );
-  }, [searchQuery, poultry]);
+  }, [searchQuery, sheepAndGoats]);
 
   const handleDelete = useCallback(id => {
     Alert.alert(
-      'Delete Poultry Record',
-      'Are you sure you want to delete this poultry record?',
+      'Delete Animal Record',
+      'Are you sure you want to delete this animal record?',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            setPoultry(prev => prev.filter(item => item.id !== id));
+            setSheepAndGoats(prev => prev.filter(item => item.id !== id));
           },
         },
       ],
@@ -149,16 +149,16 @@ const PoultryProductionListScreen = ({navigation}) => {
   }, []);
 
   const handleEdit = useCallback(
-    poultry => {
-      // Navigate to edit screen with poultry data
-      navigation.navigate('EditPoultryScreen', {poultry});
+    animal => {
+      // Navigate to edit screen with animal data
+      navigation.navigate('EditSheepAndGoatScreen', { animal });
     },
     [navigation],
   );
 
-  const handleAddPoultry = () => {
-    // Navigate to add poultry screen
-    navigation.navigate('AddPoultryScreen');
+  const handleAddAnimal = () => {
+    // Navigate to add animal screen
+    navigation.navigate('AddSheepAndGoatScreen');
   };
 
   const renderHeader = () => (
@@ -171,7 +171,7 @@ const PoultryProductionListScreen = ({navigation}) => {
         />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by Poultry ID..."
+          placeholder="Search by Animal ID..."
           placeholderTextColor="#666"
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -192,18 +192,18 @@ const PoultryProductionListScreen = ({navigation}) => {
     </View>
   );
 
-  const renderPoultryCard = ({item}) => (
+  const renderAnimalCard = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
       onPress={() => {
-        setSelectedPoultry(item);
+        setSelectedAnimal(item);
       }}>
       <View style={styles.cardHeader}>
         <FastImage source={item.icon} style={styles.cardIcon} />
-        <View style={styles.poultryInfo}>
-          <Text style={styles.poultryId}>Poultry ID: {item.id}</Text>
-          <Text style={styles.poultryPrice}>Sale Price: ${item.salePrice}</Text>
-          <Text style={styles.poultryDate}>Sale Date: {item.saleDate}</Text>
+        <View style={styles.animalInfo}>
+          <Text style={styles.animalId}>Animal ID: {item.id}</Text>
+          <Text style={styles.animalPrice}>Sale Price: ${item.salePrice}</Text>
+          <Text style={styles.animalDate}>Sale Date: {item.saleDate}</Text>
         </View>
         <View style={styles.cardActions}>
           <TouchableOpacity
@@ -228,7 +228,7 @@ const PoultryProductionListScreen = ({navigation}) => {
       onRequestClose={() => setIsFilterModalVisible(false)}>
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Filter Poultry Records</Text>
+          <Text style={styles.modalTitle}>Filter Animal Records</Text>
           {/* Add filter options here if needed */}
           <TouchableOpacity
             style={styles.closeModalButton}
@@ -240,55 +240,54 @@ const PoultryProductionListScreen = ({navigation}) => {
     </Modal>
   );
 
-  const renderPoultryDetailModal = () => {
-    if (!selectedPoultry) return null;
+  const renderAnimalDetailModal = () => {
+    if (!selectedAnimal) return null;
 
     return (
       <Modal
         animationType="slide"
         transparent={true}
-        visible={!!selectedPoultry}
-        onRequestClose={() => setSelectedPoultry(null)}>
+        visible={!!selectedAnimal}
+        onRequestClose={() => setSelectedAnimal(null)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
-              {selectedPoultry.company} Details
+              {selectedAnimal.company} Details
             </Text>
             <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Poultry ID:</Text>{' '}
-              {selectedPoultry.id}
+              <Text style={styles.boldText}>Animal ID:</Text>{' '}
+              {selectedAnimal.id}
             </Text>
             <Text style={styles.modalText}>
               <Text style={styles.boldText}>Weight Gain:</Text>{' '}
-              {selectedPoultry.weightGain} lbs
+              {selectedAnimal.weightGain} lbs
             </Text>
             <Text style={styles.modalText}>
               <Text style={styles.boldText}>Sale Weight:</Text>{' '}
-              {selectedPoultry.saleWeight} lbs
+              {selectedAnimal.saleWeight} lbs
             </Text>
             <Text style={styles.modalText}>
               <Text style={styles.boldText}>Sale Date:</Text>{' '}
-              {selectedPoultry.saleDate}
+              {selectedAnimal.saleDate}
             </Text>
             <Text style={styles.modalText}>
               <Text style={styles.boldText}>Market Price:</Text> $
-              {selectedPoultry.marketPrice}/lb
+              {selectedAnimal.marketPrice}/lb
             </Text>
             <Text style={styles.modalText}>
               <Text style={styles.boldText}>Sale Price:</Text> $
-              {selectedPoultry.salePrice}
+              {selectedAnimal.salePrice}
             </Text>
             <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Buyer:</Text>{' '}
-              {selectedPoultry.buyer}
+              <Text style={styles.boldText}>Buyer:</Text> {selectedAnimal.buyer}
             </Text>
             <Text style={styles.modalText}>
               <Text style={styles.boldText}>Company:</Text>{' '}
-              {selectedPoultry.company}
+              {selectedAnimal.company}
             </Text>
             <TouchableOpacity
               style={styles.closeModalButton}
-              onPress={() => setSelectedPoultry(null)}>
+              onPress={() => setSelectedAnimal(null)}>
               <Text style={styles.closeModalButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
@@ -299,7 +298,7 @@ const PoultryProductionListScreen = ({navigation}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <SecondaryHeader title="Poultry Production Records" />
+      <SecondaryHeader title="Sheep and Goat Production Records" />
       <StatusBar
         translucent
         backgroundColor={COLORS.green2}
@@ -308,16 +307,16 @@ const PoultryProductionListScreen = ({navigation}) => {
       />
       {renderHeader()}
       <FlatList
-        data={filteredPoultry}
-        renderItem={renderPoultryCard}
+        data={filteredAnimals}
+        renderItem={renderAnimalCard}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
       />
       {renderFilterModal()}
-      {renderPoultryDetailModal()}
+      {renderAnimalDetailModal()}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('PoultryFlockDetailsScreen')}>
+        onPress={() => navigation.navigate('SheepGoatDetailsScreen')}>
         <FastImage
           source={icons.plus}
           style={styles.fabIcon}
@@ -331,7 +330,7 @@ const PoultryProductionListScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    
+
   },
   header: {
     backgroundColor: COLORS.white,
@@ -389,7 +388,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 2,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -399,20 +398,20 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 12,
   },
-  poultryInfo: {
+  animalInfo: {
     flex: 1,
     paddingHorizontal: 10,
   },
-  poultryId: {
+  animalId: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
-  poultryPrice: {
+  animalPrice: {
     fontSize: 16,
     color: '#666',
   },
-  poultryDate: {
+  animalDate: {
     fontSize: 16,
     color: '#666',
   },
@@ -448,6 +447,7 @@ const styles = StyleSheet.create({
   modalText: {
     fontSize: 16,
     marginVertical: 4,
+    color: COLORS.black,
   },
   boldText: {
     fontWeight: 'bold',
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 6,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.27,
     shadowRadius: 4.65,
   },
@@ -486,4 +486,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PoultryProductionListScreen;
+export default SheepAndGoatProductionListScreen;

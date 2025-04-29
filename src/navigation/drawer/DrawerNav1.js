@@ -8,7 +8,6 @@ import {icons} from '../../constants';
 import {COLORS} from '../../constants/theme';
 import {View} from 'react-native';
 import {
-  
   EmployeeScreen,
   FarmEmployeeTableScreen,
   ProfileScreen,
@@ -16,7 +15,7 @@ import {
   HealthRecordsScreen,
   LivestockModuleScreen,
   FeedingModuleScreen,
-  AnimalProductionListScreen,
+  BeefCattleProductionListing,
   BreedingModuleLandingScreen,
   ProductionModuleLandingScreen,
 } from '../../screens';
@@ -49,7 +48,7 @@ const DrawerNav = () => {
           ),
         }}
       />
-     
+
       <Drawer.Screen
         name="Employees"
         component={FarmEmployeeTableScreen}
@@ -92,7 +91,6 @@ const DrawerNav = () => {
           ),
         }}
       />
-      
 
       <Drawer.Screen
         name="Breeding"

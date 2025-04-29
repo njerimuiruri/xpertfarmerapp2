@@ -127,13 +127,13 @@ const FeedingModuleScreen = ({ navigation }) => {
     setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
   }, []);
 
-  const renderRequirementCard = ({item}) => {
+  const renderRequirementCard = ({ item }) => {
     const isToday = item.nextFeeding === currentDate;
-  
+
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.card}
-        onPress={() => navigation.navigate('FeedingDetailsScreen', {feedingData: item})}
+        onPress={() => navigation.navigate('FeedingDetailsScreen', { feedingData: item })}
       >
         {isToday && (
           <View style={styles.todayCard}>
@@ -341,12 +341,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: COLORS.gray3,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f1f3f4',
+    backgroundColor: COLORS.lightGray2,
     borderRadius: 8,
     paddingHorizontal: 12,
     marginBottom: 16,
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     fontSize: 16,
-    color: '#333',
+    color: COLORS.dark,
   },
   actionBar: {
     flexDirection: 'row',
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 20,
-    backgroundColor: '#f1f3f4',
+    backgroundColor: COLORS.lightGray2,
   },
   actionIcon: {
     width: 18,
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 14,
-    color: '#333',
+    color: COLORS.dark,
   },
   listContent: {
     padding: 16,
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   },
   todayCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#4CAF50',
+    borderLeftColor: COLORS.green3,
     padding: 5,
   },
   todayCardText: {
@@ -418,11 +418,11 @@ const styles = StyleSheet.create({
   animalType: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.dark,
   },
   feedName: {
     fontSize: 14,
-    color: '#666',
+    color: COLORS.black,
     marginTop: 4,
   },
   cardActions: {
@@ -451,18 +451,17 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
-    color: '#666',
+    color: COLORS.black,
   },
   feedingScheduleContainer: {
     marginTop: 12,
-    backgroundColor: '#f9f9f9',
     padding: 10,
     borderRadius: 8,
   },
   scheduleTitleText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.dark,
     marginBottom: 8,
   },
   timeSlotContainer: {
@@ -478,7 +477,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#e0e0e0',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -486,7 +484,7 @@ const styles = StyleSheet.create({
   },
   timeSlotText: {
     fontSize: 13,
-    color: '#333',
+    color: COLORS.dark,
     fontWeight: '500',
   },
   fab: {
@@ -496,7 +494,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#4CAF50',
+    backgroundColor: COLORS.green3,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,
@@ -513,7 +511,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: COLORS.darkOverlayColor,
   },
   modalContent: {
     backgroundColor: COLORS.white,
@@ -525,22 +523,22 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
-    color: '#333',
+    color: COLORS.dark,
   },
   filterOption: {
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: COLORS.gray3,
   },
   selectedFilterOption: {
     backgroundColor: '#e8f5e9',
   },
   filterOptionText: {
     fontSize: 16,
-    color: '#333',
+    color: COLORS.dark,
   },
   selectedFilterOptionText: {
-    color: '#4CAF50',
+    color: COLORS.green3,
     fontWeight: 'bold',
   },
   closeModalButton: {
@@ -549,13 +547,13 @@ const styles = StyleSheet.create({
   },
   closeModalButtonText: {
     fontSize: 16,
-    color: '#4CAF50',
+    color: COLORS.green3,
     fontWeight: 'bold',
   },
   resetButton: {
     marginTop: 16,
     padding: 12,
-    backgroundColor: '#f44336',
+    backgroundColor: COLORS.red,
     borderRadius: 8,
     alignItems: 'center',
   },
@@ -573,7 +571,7 @@ const styles = StyleSheet.create({
   feedStatusTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.dark,
     marginBottom: 4,
   },
   feedStatusRow: {
@@ -585,12 +583,12 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     fontSize: 12,
-    color: '#666',
+    color: COLORS.black,
   },
   statusValue: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#333',
+    color: COLORS.dark,
   },
 });
 

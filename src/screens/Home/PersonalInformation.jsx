@@ -38,7 +38,7 @@ export default function PersonalInformation({ navigation }) {
     phone_number: "270-0-30877457",
     emergency_contact: "4769908776565",
     id_number: "6474943",
-    birthday: "23 August 1998",
+    date_of_birth: "23 August 1998",
     email: "kimberly.mazingolo@example.com",
     years_of_experience: "5"
   });
@@ -80,9 +80,9 @@ export default function PersonalInformation({ navigation }) {
       editable: true
     },
     {
-      id: 'birthday',
-      title: 'Birthday',
-      value: userData.birthday,
+      id: 'date_of_birth',
+      title: 'Date of Birth',
+      value: userData.date_of_birth,
       icon: icons.calendar,
       editable: true
     }

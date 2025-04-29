@@ -9,11 +9,11 @@ import {
   ScrollView,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../constants';
-import {COLORS} from '../../constants/theme';
+import { icons } from '../../constants';
+import { COLORS } from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
-const ProductionModuleLandingScreen = ({navigation}) => {
+const ProductionModuleLandingScreen = ({ navigation }) => {
   const productionModules = [
     {
       id: '1',
@@ -27,7 +27,7 @@ const ProductionModuleLandingScreen = ({navigation}) => {
       title: 'Beef Cattle',
       icon: icons.beef,
       description: 'Weight gain, weaning weight, scheduled checkup weights, sales information',
-      route: 'AnimalProductionListScreen'
+      route: 'AddBeefDetailsScreen'
     },
     {
       id: '3',
@@ -61,7 +61,7 @@ const ProductionModuleLandingScreen = ({navigation}) => {
         barStyle={'light-content'}
       />
       <SecondaryHeader title="Production Module" />
-      
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.headingContainer}>
           <Text style={styles.heading}>Production Records</Text>
@@ -99,7 +99,7 @@ const ProductionModuleLandingScreen = ({navigation}) => {
           </TouchableOpacity>
         ))}
 
-       
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
   },
- 
+
 });
 
 export default ProductionModuleLandingScreen;

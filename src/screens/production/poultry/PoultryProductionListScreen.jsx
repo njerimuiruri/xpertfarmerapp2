@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useMemo} from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,117 +12,134 @@ import {
   SafeAreaView,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../constants';
-import {COLORS} from '../../constants/theme';
-import SecondaryHeader from '../../components/headers/secondary-header';
-
-const initialDairyData = [
+import { icons } from '../../../constants';
+import { COLORS } from '../../../constants/theme';
+import SecondaryHeader from '../../../components/headers/secondary-header';
+const initialPoultryData = [
   {
     id: '1',
-    dailyMilkYield: 30, // in liters
-    milkQuality: 'High',
-    lactationPeriod: '2023-01-01 to 2023-07-01',
-    salePrice: 2000,
-    buyer: 'Dairy Co.',
-    icon: icons.dairy,
+    weightGain: 5,
+    saleWeight: 8, // in lbs
+    saleDate: '2023-06-01',
+    marketPrice: 1.5, // price per lb
+    salePrice: 12.0, // total sale price
+    buyer: 'Poultry Farm',
+    company: 'Quality Poultry Ltd.',
+    icon: icons.poultry,
   },
   {
     id: '2',
-    dailyMilkYield: 25,
-    milkQuality: 'Medium',
-    lactationPeriod: '2023-02-01 to 2023-08-01',
-    salePrice: 1800,
-    buyer: 'Milk Factory',
-    icon: icons.dairy,
+    weightGain: 4.5,
+    saleWeight: 7.5,
+    saleDate: '2023-07-01',
+    marketPrice: 1.6,
+    salePrice: 12.0,
+    buyer: 'Local Market',
+    company: 'Fresh Poultry Co.',
+    icon: icons.poultry,
   },
   {
     id: '3',
-    dailyMilkYield: 28,
-    milkQuality: 'High',
-    lactationPeriod: '2023-03-01 to 2023-09-01',
-    salePrice: 2100,
-    buyer: 'Local Market',
-    icon: icons.dairy,
+    weightGain: 6,
+    saleWeight: 9,
+    saleDate: '2023-08-01',
+    marketPrice: 1.55,
+    salePrice: 13.95,
+    buyer: 'City Butcher',
+    company: 'Poultry Masters',
+    icon: icons.poultry,
   },
   {
     id: '4',
-    dailyMilkYield: 32,
-    milkQuality: 'Excellent',
-    lactationPeriod: '2023-04-01 to 2023-10-01',
-    salePrice: 2200,
-    buyer: 'Dairy Farm',
-    icon: icons.dairy,
+    weightGain: 5.5,
+    saleWeight: 8.5,
+    saleDate: '2023-09-01',
+    marketPrice: 1.7,
+    salePrice: 14.45,
+    buyer: 'Farm Fresh',
+    company: 'Poultry Excellence',
+    icon: icons.poultry,
   },
   {
     id: '5',
-    dailyMilkYield: 27, // in liters
-    milkQuality: 'Good',
-    lactationPeriod: '2023-05-01 to 2023-11-01',
-    salePrice: 1900,
-    buyer: 'Urban Dairy',
-    icon: icons.dairy,
+    weightGain: 5.2, // in lbs
+    saleWeight: 8.2, // in lbs
+    saleDate: '2023-10-01',
+    marketPrice: 1.65, // price per lb
+    salePrice: 13.53, // total sale price
+    buyer: 'Urban Grocers',
+    company: 'Prime Poultry Suppliers',
+    icon: icons.poultry,
   },
   {
     id: '6',
-    dailyMilkYield: 35,
-    milkQuality: 'Excellent',
-    lactationPeriod: '2023-06-01 to 2023-12-01',
-    salePrice: 2300,
-    buyer: 'Premium Milk Co.',
-    icon: icons.dairy,
+    weightGain: 4.8,
+    saleWeight: 7.8,
+    saleDate: '2023-11-01',
+    marketPrice: 1.6,
+    salePrice: 12.48,
+    buyer: 'Fresh Meat Market',
+    company: 'Elite Poultry Corp.',
+    icon: icons.poultry,
   },
   {
     id: '7',
-    dailyMilkYield: 24,
-    milkQuality: 'Medium',
-    lactationPeriod: '2023-07-01 to 2024-01-01',
-    salePrice: 1750,
-    buyer: 'Village Dairy',
-    icon: icons.dairy,
+    weightGain: 6.3,
+    saleWeight: 9.3,
+    saleDate: '2023-12-01',
+    marketPrice: 1.75,
+    salePrice: 16.28,
+    buyer: 'Village Market',
+    company: 'Grassland Poultry Co.',
+    icon: icons.poultry,
   },
   {
     id: '8',
-    dailyMilkYield: 29,
-    milkQuality: 'High',
-    lactationPeriod: '2023-08-01 to 2024-02-01',
-    salePrice: 2050,
-    buyer: 'Fresh Milk Supplies',
-    icon: icons.dairy,
+    weightGain: 5.7,
+    saleWeight: 8.7,
+    saleDate: '2024-01-01',
+    marketPrice: 1.7,
+    salePrice: 14.79,
+    buyer: 'Township Meat Co.',
+    company: 'Excellence Poultry Ltd.',
+    icon: icons.poultry,
   },
   {
     id: '9',
-    dailyMilkYield: 33,
-    milkQuality: 'Excellent',
-    lactationPeriod: '2023-09-01 to 2024-03-01',
-    salePrice: 2250,
-    buyer: 'Dairy Excellence',
-    icon: icons.dairy,
+    weightGain: 6.5,
+    saleWeight: 9.5,
+    saleDate: '2024-02-01',
+    marketPrice: 1.8,
+    salePrice: 17.1,
+    buyer: 'Regional Farms',
+    company: 'Heritage Poultry Producers',
+    icon: icons.poultry,
   },
 ];
 
-const DairyProductionListScreen = ({navigation}) => {
-  const [dairy, setDairy] = useState(initialDairyData);
+const PoultryProductionListScreen = ({ navigation }) => {
+  const [poultry, setPoultry] = useState(initialPoultryData);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDairy, setSelectedDairy] = useState(null);
+  const [selectedPoultry, setSelectedPoultry] = useState(null);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
 
-  const filteredDairy = useMemo(() => {
-    return dairy.filter(item =>
+  const filteredPoultry = useMemo(() => {
+    return poultry.filter(item =>
       item.id.toLowerCase().includes(searchQuery.toLowerCase()),
     );
-  }, [searchQuery, dairy]);
+  }, [searchQuery, poultry]);
 
   const handleDelete = useCallback(id => {
     Alert.alert(
-      'Delete Dairy Record',
-      'Are you sure you want to delete this dairy record?',
+      'Delete Poultry Record',
+      'Are you sure you want to delete this poultry record?',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            setDairy(prev => prev.filter(item => item.id !== id));
+            setPoultry(prev => prev.filter(item => item.id !== id));
           },
         },
       ],
@@ -130,16 +147,16 @@ const DairyProductionListScreen = ({navigation}) => {
   }, []);
 
   const handleEdit = useCallback(
-    dairy => {
-      // Navigate to edit screen with dairy data
-      navigation.navigate('EditDairyScreen', {dairy});
+    poultry => {
+      // Navigate to edit screen with poultry data
+      navigation.navigate('EditPoultryScreen', { poultry });
     },
     [navigation],
   );
 
-  const handleAddDairy = () => {
-    // Navigate to add dairy screen
-    navigation.navigate('AddDairyScreen');
+  const handleAddPoultry = () => {
+    // Navigate to add poultry screen
+    navigation.navigate('AddPoultryScreen');
   };
 
   const renderHeader = () => (
@@ -152,7 +169,7 @@ const DairyProductionListScreen = ({navigation}) => {
         />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by Dairy ID..."
+          placeholder="Search by Poultry ID..."
           placeholderTextColor="#666"
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -173,23 +190,20 @@ const DairyProductionListScreen = ({navigation}) => {
     </View>
   );
 
-  const renderDairyCard = ({item}) => (
+  const renderPoultryCard = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
       onPress={() => {
-        setSelectedDairy(item);
+        setSelectedPoultry(item);
       }}>
       <View style={styles.cardHeader}>
         <FastImage source={item.icon} style={styles.cardIcon} />
-        <View style={styles.dairyInfo}>
-          <Text style={styles.dairyId}>Dairy ID: {item.id}</Text>
-          <Text style={styles.dairyPrice}>Sale Price: ${item.salePrice}</Text>
-          <Text style={styles.dairyYield}>
-            Daily Milk Yield: {item.dailyMilkYield} L
-          </Text>
+        <View style={styles.poultryInfo}>
+          <Text style={styles.poultryId}>Poultry ID: {item.id}</Text>
+          <Text style={styles.poultryPrice}>Sale Price: ${item.salePrice}</Text>
+          <Text style={styles.poultryDate}>Sale Date: {item.saleDate}</Text>
         </View>
         <View style={styles.cardActions}>
-         
           <TouchableOpacity
             onPress={() => handleDelete(item.id)}
             style={styles.cardActionButton}>
@@ -212,7 +226,7 @@ const DairyProductionListScreen = ({navigation}) => {
       onRequestClose={() => setIsFilterModalVisible(false)}>
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Filter Dairy Records</Text>
+          <Text style={styles.modalTitle}>Filter Poultry Records</Text>
           {/* Add filter options here if needed */}
           <TouchableOpacity
             style={styles.closeModalButton}
@@ -224,43 +238,55 @@ const DairyProductionListScreen = ({navigation}) => {
     </Modal>
   );
 
-  const renderDairyDetailModal = () => {
-    if (!selectedDairy) return null;
+  const renderPoultryDetailModal = () => {
+    if (!selectedPoultry) return null;
 
     return (
       <Modal
         animationType="slide"
         transparent={true}
-        visible={!!selectedDairy}
-        onRequestClose={() => setSelectedDairy(null)}>
+        visible={!!selectedPoultry}
+        onRequestClose={() => setSelectedPoultry(null)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{selectedDairy.buyer} Details</Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Dairy ID:</Text> {selectedDairy.id}
+            <Text style={styles.modalTitle}>
+              {selectedPoultry.company} Details
             </Text>
             <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Daily Milk Yield:</Text>{' '}
-              {selectedDairy.dailyMilkYield} L
+              <Text style={styles.boldText}>Poultry ID:</Text>{' '}
+              {selectedPoultry.id}
             </Text>
             <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Milk Quality:</Text>{' '}
-              {selectedDairy.milkQuality}
+              <Text style={styles.boldText}>Weight Gain:</Text>{' '}
+              {selectedPoultry.weightGain} lbs
             </Text>
             <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Lactation Period:</Text>{' '}
-              {selectedDairy.lactationPeriod}
+              <Text style={styles.boldText}>Sale Weight:</Text>{' '}
+              {selectedPoultry.saleWeight} lbs
+            </Text>
+            <Text style={styles.modalText}>
+              <Text style={styles.boldText}>Sale Date:</Text>{' '}
+              {selectedPoultry.saleDate}
+            </Text>
+            <Text style={styles.modalText}>
+              <Text style={styles.boldText}>Market Price:</Text> $
+              {selectedPoultry.marketPrice}/lb
             </Text>
             <Text style={styles.modalText}>
               <Text style={styles.boldText}>Sale Price:</Text> $
-              {selectedDairy.salePrice}
+              {selectedPoultry.salePrice}
             </Text>
             <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Buyer:</Text> {selectedDairy.buyer}
+              <Text style={styles.boldText}>Buyer:</Text>{' '}
+              {selectedPoultry.buyer}
+            </Text>
+            <Text style={styles.modalText}>
+              <Text style={styles.boldText}>Company:</Text>{' '}
+              {selectedPoultry.company}
             </Text>
             <TouchableOpacity
               style={styles.closeModalButton}
-              onPress={() => setSelectedDairy(null)}>
+              onPress={() => setSelectedPoultry(null)}>
               <Text style={styles.closeModalButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
@@ -271,7 +297,7 @@ const DairyProductionListScreen = ({navigation}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <SecondaryHeader title="Dairy Production Records" />
+      <SecondaryHeader title="Poultry Production Records" />
       <StatusBar
         translucent
         backgroundColor={COLORS.green2}
@@ -280,16 +306,16 @@ const DairyProductionListScreen = ({navigation}) => {
       />
       {renderHeader()}
       <FlatList
-        data={filteredDairy}
-        renderItem={renderDairyCard}
+        data={filteredPoultry}
+        renderItem={renderPoultryCard}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
       />
       {renderFilterModal()}
-      {renderDairyDetailModal()}
+      {renderPoultryDetailModal()}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('AddDairyDetailsScreen')}>
+        onPress={() => navigation.navigate('PoultryFlockDetailsScreen')}>
         <FastImage
           source={icons.plus}
           style={styles.fabIcon}
@@ -303,7 +329,7 @@ const DairyProductionListScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    
+
   },
   header: {
     backgroundColor: COLORS.white,
@@ -361,7 +387,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 2,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -371,20 +397,20 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 12,
   },
-  dairyInfo: {
+  poultryInfo: {
     flex: 1,
     paddingHorizontal: 10,
   },
-  dairyId: {
+  poultryId: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
-  dairyPrice: {
+  poultryPrice: {
     fontSize: 16,
     color: '#666',
   },
-  dairyYield: {
+  poultryDate: {
     fontSize: 16,
     color: '#666',
   },
@@ -420,7 +446,6 @@ const styles = StyleSheet.create({
   modalText: {
     fontSize: 16,
     marginVertical: 4,
-    color: COLORS.black,
   },
   boldText: {
     fontWeight: 'bold',
@@ -449,7 +474,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 6,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.27,
     shadowRadius: 4.65,
   },
@@ -459,4 +484,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DairyProductionListScreen;
+export default PoultryProductionListScreen;

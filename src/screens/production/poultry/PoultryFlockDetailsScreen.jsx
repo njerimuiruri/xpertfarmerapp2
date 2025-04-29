@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Text,
@@ -11,20 +11,19 @@ import {
   Checkbox,
   Modal,
 } from 'native-base';
-import {View, TouchableOpacity, StyleSheet, Image} from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../constants';
-import {COLORS} from '../../constants/theme';
-import SecondaryHeader from '../../components/headers/secondary-header';
+import { icons } from '../../../constants';
+import { COLORS } from '../../../constants/theme';
+import SecondaryHeader from '../../../components/headers/secondary-header';
 
-export default function SheepGoatDetailsScreen({navigation}) {
-  const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState('');
-  const [shearingDate, setShearingDate] = useState(new Date());
-  const [woolWeight, setWoolWeight] = useState(0);
-  const [woolQuality, setWoolQuality] = useState('');
-  const [weaningWeight, setWeaningWeight] = useState(0);
-  const [milkYield, setMilkYield] = useState(0);
+export default function PoultryFlockDetailsScreen({ navigation }) {
+  const [flockId, setFlockId] = useState('');
+  const [dailyEggCount, setDailyEggCount] = useState(0);
+  const [eggWeight, setEggWeight] = useState(0);
+  const [numberOfLayers, setNumberOfLayers] = useState(0);
+  const [eggProductionDate, setEggProductionDate] = useState(new Date());
   const [saleWeight, setSaleWeight] = useState(0);
   const [saleDate, setSaleDate] = useState(new Date());
   const [marketPrice, setMarketPrice] = useState('');
@@ -32,8 +31,11 @@ export default function SheepGoatDetailsScreen({navigation}) {
   const [buyerName, setBuyerName] = useState('');
   const [isCompany, setIsCompany] = useState(false);
   const [isIndividual, setIsIndividual] = useState(false);
-  const [showShearingDatePicker, setShowShearingDatePicker] = useState(false);
+  const [showEggProductionDatePicker, setShowEggProductionDatePicker] =
+    useState(false);
   const [showSaleDatePicker, setShowSaleDatePicker] = useState(false);
+  const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
 
   const handleDateChange = setter => (event, selectedDate) => {
@@ -41,8 +43,8 @@ export default function SheepGoatDetailsScreen({navigation}) {
   };
 
   return (
-    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
-      <SecondaryHeader title="Add Sheep/Goat Record" />
+    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
+      <SecondaryHeader title="Add Poultry Record" />
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
@@ -57,7 +59,7 @@ export default function SheepGoatDetailsScreen({navigation}) {
               marginBottom: 16,
               textAlign: 'center',
             }}>
-            Fill in the sheep/goat details
+            Fill in the poultry flock details
           </Text>
 
           <VStack space={5}>
@@ -69,31 +71,50 @@ export default function SheepGoatDetailsScreen({navigation}) {
                 mb={1}>
                 Animal ID or Flock ID
               </Text>
-              <Select
-                selectedValue={animalIdOrFlockId}
-                minWidth="100%"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-                placeholder="Select ID"
-                _selectedItem={{
-                  bg: 'teal.600',
-                  endIcon: (
-                    <FastImage
-                      source={icons.right_arrow}
-                      className="w-[20px] h-[20px]"
-                      tintColor="white"
-                    />
-                  ),
-                }}
-                onValueChange={setAnimalIdOrFlockId}>
-                <Select.Item label="ID 1" value="id1" />
-                <Select.Item label="ID 2" value="id2" />
-              </Select>
+              <View>
+                <HStack
+                  alignItems="center"
+                  borderWidth={1}
+                  borderRadius={8}
+                  borderColor="gray.200">
+                  <Input
+                    flex={1}
+                    variant="unstyled"
+                    placeholder="Type or select ID"
+                    value={flockId}
+                    onChangeText={text => setFlockId(text)}
+                    backgroundColor="transparent"
+                    borderColor="transparent"
+                  />
+                  <TouchableOpacity
+                    style={{ padding: 10 }}
+                    onPress={() => setDropdownVisible(prev => !prev)}>
+                    <Text style={{ fontSize: 16, color: COLORS.green }}>▼</Text>
+                  </TouchableOpacity>
+                </HStack>
+                {dropdownVisible && (
+                  <Box
+                    bg="white"
+                    mt={1}
+                    borderWidth={1}
+                    borderColor="gray.200"
+                    borderRadius={8}>
+                    {availableIds.map((id, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.dropdownItem}
+                        onPress={() => handleSelect(id)}>
+                        <Text style={styles.dropdownText}>{id}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </Box>
+                )}
+              </View>
             </Box>
 
-            {/* Wool/Fiber Production */}
+            {/* Egg Production */}
             <Text fontSize="lg" fontWeight="bold" color="gray.800" mt={4}>
-              Wool/Fiber Production
+              Egg Production
             </Text>
             <Box>
               <Text
@@ -101,18 +122,140 @@ export default function SheepGoatDetailsScreen({navigation}) {
                 fontWeight="500"
                 color={COLORS.darkGray3}
                 mb={1}>
-                Shearing Date
+                Daily Egg Count
+              </Text>
+              <HStack alignItems="center" space={3}>
+                <Button
+                  onPress={() =>
+                    setDailyEggCount(dailyEggCount > 0 ? dailyEggCount - 1 : 0)
+                  }
+                  variant="outline"
+                  style={styles.incrementButton}
+                  p={2}>
+                  -
+                </Button>
+                <Input
+                  flex={1}
+                  variant="outline"
+                  backgroundColor={COLORS.lightGreen}
+                  borderColor="gray.200"
+                  placeholder="Daily egg count"
+                  keyboardType="numeric"
+                  value={dailyEggCount.toString()}
+                  onChangeText={text =>
+                    setDailyEggCount(Math.max(0, parseInt(text) || 0))
+                  }
+                />
+                <Button
+                  onPress={() => setDailyEggCount(dailyEggCount + 1)}
+                  variant="outline"
+                  style={styles.incrementButton}
+                  p={2}>
+                  +
+                </Button>
+              </HStack>
+            </Box>
+
+            <Box>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
+                Egg Weight
+              </Text>
+              <HStack alignItems="center" space={3}>
+                <Button
+                  onPress={() =>
+                    setEggWeight(eggWeight > 0 ? eggWeight - 1 : 0)
+                  }
+                  variant="outline"
+                  style={styles.incrementButton}
+                  p={2}>
+                  -
+                </Button>
+                <Input
+                  flex={1}
+                  variant="outline"
+                  backgroundColor={COLORS.lightGreen}
+                  borderColor="gray.200"
+                  placeholder="Egg weight"
+                  keyboardType="numeric"
+                  value={eggWeight.toString()}
+                  onChangeText={text =>
+                    setEggWeight(Math.max(0, parseInt(text) || 0))
+                  }
+                />
+                <Button
+                  onPress={() => setEggWeight(eggWeight + 1)}
+                  variant="outline"
+                  style={styles.incrementButton}
+                  p={2}>
+                  +
+                </Button>
+              </HStack>
+            </Box>
+
+            <Box>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
+                Number of Layers per Day
+              </Text>
+              <HStack alignItems="center" space={3}>
+                <Button
+                  onPress={() =>
+                    setNumberOfLayers(
+                      numberOfLayers > 0 ? numberOfLayers - 1 : 0,
+                    )
+                  }
+                  variant="outline"
+                  style={styles.incrementButton}
+                  p={2}>
+                  -
+                </Button>
+                <Input
+                  flex={1}
+                  variant="outline"
+                  backgroundColor={COLORS.lightGreen}
+                  borderColor="gray.200"
+                  placeholder="Number of layers"
+                  keyboardType="numeric"
+                  value={numberOfLayers.toString()}
+                  onChangeText={text =>
+                    setNumberOfLayers(Math.max(0, parseInt(text) || 0))
+                  }
+                />
+                <Button
+                  onPress={() => setNumberOfLayers(numberOfLayers + 1)}
+                  variant="outline"
+                  style={styles.incrementButton}
+                  p={2}>
+                  +
+                </Button>
+              </HStack>
+            </Box>
+
+            <Box>
+              <Text
+                fontSize="sm"
+                fontWeight="500"
+                color={COLORS.darkGray3}
+                mb={1}>
+                Egg Production Date
               </Text>
               <HStack alignItems="center" space={3}>
                 <Input
                   w="85%"
                   backgroundColor={COLORS.lightGreen}
-                  value={shearingDate.toLocaleDateString('en-GB')}
+                  value={eggProductionDate.toLocaleDateString('en-GB')}
                   placeholder="DD/MM/YY"
                   isReadOnly
                 />
                 <TouchableOpacity
-                  onPress={() => setShowShearingDatePicker(true)}>
+                  onPress={() => setShowEggProductionDatePicker(true)}>
                   <Image
                     source={icons.calendar}
                     resizeMode="contain"
@@ -120,157 +263,15 @@ export default function SheepGoatDetailsScreen({navigation}) {
                   />
                 </TouchableOpacity>
               </HStack>
-              {showShearingDatePicker && (
+              {showEggProductionDatePicker && (
                 <DateTimePicker
                   testID="dateTimePicker"
-                  value={shearingDate}
+                  value={eggProductionDate}
                   mode="date"
                   is24Hour={true}
-                  onChange={handleDateChange(setShearingDate)}
+                  onChange={handleDateChange(setEggProductionDate)}
                 />
               )}
-            </Box>
-
-            <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={1}>
-                Wool Weight
-              </Text>
-              <HStack alignItems="center" space={3}>
-                <Button
-                  onPress={() =>
-                    setWoolWeight(woolWeight > 0 ? woolWeight - 1 : 0)
-                  }
-                  variant="outline"
-                  style={styles.incrementButton}
-                  p={2}>
-                  -
-                </Button>
-                <Input
-                  flex={1}
-                  variant="outline"
-                  backgroundColor={COLORS.lightGreen}
-                  borderColor="gray.200"
-                  placeholder="Enter wool weight"
-                  keyboardType="numeric"
-                  value={woolWeight.toString()}
-                  onChangeText={text =>
-                    setWoolWeight(Math.max(0, parseInt(text) || 0))
-                  }
-                />
-                <Button
-                  onPress={() => setWoolWeight(woolWeight + 1)}
-                  variant="outline"
-                  style={styles.incrementButton}
-                  p={2}>
-                  +
-                </Button>
-              </HStack>
-            </Box>
-
-            <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={1}>
-                Wool Quality
-              </Text>
-              <Input
-                variant="outline"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-                placeholder="Enter wool quality"
-                value={woolQuality}
-                onChangeText={setWoolQuality}
-              />
-            </Box>
-
-            {/* Meat and Milk Production */}
-            <Text fontSize="lg" fontWeight="bold" color="gray.800" mt={4}>
-              Meat and Milk Production
-            </Text>
-            <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={1}>
-                Weaning Weight
-              </Text>
-              <HStack alignItems="center" space={3}>
-                <Button
-                  onPress={() =>
-                    setWeaningWeight(weaningWeight > 0 ? weaningWeight - 1 : 0)
-                  }
-                  variant="outline"
-                  style={styles.incrementButton}
-                  p={2}>
-                  -
-                </Button>
-                <Input
-                  flex={1}
-                  variant="outline"
-                  backgroundColor={COLORS.lightGreen}
-                  borderColor="gray.200"
-                  placeholder="Enter weaning weight"
-                  keyboardType="numeric"
-                  value={weaningWeight.toString()}
-                  onChangeText={text =>
-                    setWeaningWeight(Math.max(0, parseInt(text) || 0))
-                  }
-                />
-                <Button
-                  onPress={() => setWeaningWeight(weaningWeight + 1)}
-                  variant="outline"
-                  style={styles.incrementButton}
-                  p={2}>
-                  +
-                </Button>
-              </HStack>
-            </Box>
-
-            <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={1}>
-                Milk Yield
-              </Text>
-              <HStack alignItems="center" space={3}>
-                <Button
-                  onPress={() =>
-                    setMilkYield(milkYield > 0 ? milkYield - 1 : 0)
-                  }
-                  variant="outline"
-                  style={styles.incrementButton}
-                  p={2}>
-                  -
-                </Button>
-                <Input
-                  flex={1}
-                  variant="outline"
-                  backgroundColor={COLORS.lightGreen}
-                  borderColor="gray.200"
-                  placeholder="Enter milk yield"
-                  keyboardType="numeric"
-                  value={milkYield.toString()}
-                  onChangeText={text =>
-                    setMilkYield(Math.max(0, parseInt(text) || 0))
-                  }
-                />
-                <Button
-                  onPress={() => setMilkYield(milkYield + 1)}
-                  variant="outline"
-                  style={styles.incrementButton}
-                  p={2}>
-                  +
-                </Button>
-              </HStack>
             </Box>
 
             {/* Sale Information */}
@@ -446,7 +447,7 @@ export default function SheepGoatDetailsScreen({navigation}) {
               borderRadius={8}
               px={6}
               py={3}
-              _pressed={{bg: 'emerald.700'}}
+              _pressed={{ bg: 'emerald.700' }}
               onPress={() => setShowSaveModal(true)}>
               Save
             </Button>
@@ -462,7 +463,7 @@ export default function SheepGoatDetailsScreen({navigation}) {
               resizeMode="contain"
             />
             <Text style={styles.modalText}>
-              Sheep & Goat Record has been saved successfully!
+              Poultry Record has been saved successfully!
             </Text>
           </Modal.Body>
           <Modal.Footer justifyContent="center">
@@ -471,7 +472,7 @@ export default function SheepGoatDetailsScreen({navigation}) {
               style={styles.modalButton}
               onPress={() => {
                 setShowSaveModal(false);
-                navigation.navigate('SheepAndGoatProductionListScreen');
+                navigation.navigate('PoultryProductionListScreen');
               }}>
               OK
             </Button>
@@ -487,6 +488,15 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     tintColor: COLORS.green,
+  },
+  dropdownItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  dropdownText: {
+    fontSize: 14,
+    color: 'black',
   },
   incrementButton: {
     width: 45,

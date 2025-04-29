@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useMemo} from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,153 +12,148 @@ import {
   SafeAreaView,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../constants';
-import {COLORS} from '../../constants/theme';
-import SecondaryHeader from '../../components/headers/secondary-header';
+import { icons } from '../../../constants';
+import { COLORS } from '../../../constants/theme';
+import SecondaryHeader from '../../../components/headers/secondary-header';
 
-// Sample data for sheep and goats
-const initialSheepAndGoatData = [
+const initialSwineData = [
   {
     id: '1',
-    weightGain: 50, // in lbs
-    saleWeight: 120, // in lbs
-    saleDate: '2023-05-15',
-    marketPrice: 3.0, // price per lb
-    salePrice: 360, // total sale price
-    buyer: 'Sheep Co.',
-    company: 'Sheep Masters',
-    icon: icons.sheep,
+    weightGain: 200,
+    saleWeight: 300,
+    saleDate: '2023-05-20',
+    marketPrice: 2.0,
+    salePrice: 600,
+    buyer: 'Local Market',
+    company: 'Swine Co.',
+    icon: icons.swine,
   },
   {
     id: '2',
-    weightGain: 45,
-    saleWeight: 110,
-    saleDate: '2023-06-10',
-    marketPrice: 3.2,
-    salePrice: 352,
-    buyer: 'Local Market',
-    company: 'Goat Co.',
-    icon: icons.goat,
+    weightGain: 220,
+    saleWeight: 320,
+    saleDate: '2023-06-15',
+    marketPrice: 2.1,
+    salePrice: 672,
+    buyer: 'Farm Fresh',
+    company: 'Quality Swine Inc.',
+    icon: icons.swine,
   },
   {
     id: '3',
-    weightGain: 60,
-    saleWeight: 130,
-    saleDate: '2023-07-05',
-    marketPrice: 3.1,
-    salePrice: 403,
-    buyer: 'Farm Fresh',
-    company: 'Quality Sheep',
-    icon: icons.sheep,
+    weightGain: 180,
+    saleWeight: 290,
+    saleDate: '2023-07-10',
+    marketPrice: 1.95,
+    salePrice: 565,
+    buyer: 'City Butcher',
+    company: 'Premium Pork Suppliers',
+    icon: icons.swine,
   },
   {
     id: '4',
-    weightGain: 55,
-    saleWeight: 125,
+    weightGain: 210,
+    saleWeight: 310,
     saleDate: '2023-08-01',
-    marketPrice: 3.15,
-    salePrice: 393.75,
-    buyer: 'City Butcher',
-    company: 'Premium Goat Suppliers',
-    icon: icons.goat,
+    marketPrice: 2.05,
+    salePrice: 638,
+    buyer: 'Market Meats',
+    company: 'Swine Masters',
+    icon: icons.swine,
   },
   {
     id: '5',
-    weightGain: 48, // in lbs
-    saleWeight: 118, // in lbs
-    saleDate: '2023-09-10',
-    marketPrice: 3.25, // price per lb
-    salePrice: 383.5, // total sale price
+    weightGain: 195,
+    saleWeight: 305,
+    saleDate: '2023-08-20',
+    marketPrice: 2.2,
+    salePrice: 671,
     buyer: 'Urban Grocers',
-    company: 'Prime Sheep Co.',
-    icon: icons.sheep,
+    company: 'Pork Prime Suppliers',
+    icon: icons.swine,
   },
   {
     id: '6',
-    weightGain: 52,
-    saleWeight: 122,
-    saleDate: '2023-10-15',
-    marketPrice: 3.3,
-    salePrice: 402.6,
-    buyer: 'Fresh Farm Market',
-    company: 'Elite Goat Corp.',
-    icon: icons.goat,
+    weightGain: 230,
+    saleWeight: 340,
+    saleDate: '2023-09-12',
+    marketPrice: 2.15,
+    salePrice: 731,
+    buyer: 'Fresh Pork Market',
+    company: 'Elite Swine Corp.',
+    icon: icons.swine,
   },
   {
     id: '7',
-    weightGain: 58,
-    saleWeight: 128,
-    saleDate: '2023-11-20',
-    marketPrice: 3.4,
-    salePrice: 435.2,
+    weightGain: 185,
+    saleWeight: 295,
+    saleDate: '2023-09-25',
+    marketPrice: 1.98,
+    salePrice: 583,
     buyer: 'Village Market',
-    company: 'Grassland Sheep Co.',
-    icon: icons.sheep,
+    company: 'Hog Heaven Farms',
+    icon: icons.swine,
   },
   {
     id: '8',
-    weightGain: 62,
-    saleWeight: 132,
-    saleDate: '2023-12-05',
-    marketPrice: 3.35,
-    salePrice: 442.2,
+    weightGain: 205,
+    saleWeight: 315,
+    saleDate: '2023-10-05',
+    marketPrice: 2.3,
+    salePrice: 724,
     buyer: 'Township Meat Co.',
-    company: 'Excellence Goat Ltd.',
-    icon: icons.goat,
+    company: 'Swine Excellence Ltd.',
+    icon: icons.swine,
   },
   {
     id: '9',
-    weightGain: 57,
-    saleWeight: 127,
-    saleDate: '2024-01-10',
-    marketPrice: 3.5,
-    salePrice: 444.5,
+    weightGain: 215,
+    saleWeight: 330,
+    saleDate: '2023-10-30',
+    marketPrice: 2.25,
+    salePrice: 743,
     buyer: 'Regional Farms',
-    company: 'Heritage Sheep and Goat Producers',
-    icon: icons.sheep,
+    company: 'Heritage Pork Producers',
+    icon: icons.swine,
   },
 ];
 
-const SheepAndGoatProductionListScreen = ({navigation}) => {
-  const [sheepAndGoats, setSheepAndGoats] = useState(initialSheepAndGoatData);
+const SwineProductionListScreen = ({ navigation }) => {
+  const [swine, setSwine] = useState(initialSwineData);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedAnimal, setSelectedAnimal] = useState(null);
+  const [selectedSwine, setSelectedSwine] = useState(null);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
 
-  const filteredAnimals = useMemo(() => {
-    return sheepAndGoats.filter(item =>
+  const filteredSwine = useMemo(() => {
+    return swine.filter(item =>
       item.id.toLowerCase().includes(searchQuery.toLowerCase()),
     );
-  }, [searchQuery, sheepAndGoats]);
+  }, [searchQuery, swine]);
 
   const handleDelete = useCallback(id => {
-    Alert.alert(
-      'Delete Animal Record',
-      'Are you sure you want to delete this animal record?',
-      [
-        {text: 'Cancel', style: 'cancel'},
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            setSheepAndGoats(prev => prev.filter(item => item.id !== id));
-          },
+    Alert.alert('Delete Swine', 'Are you sure you want to delete this swine?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          setSwine(prev => prev.filter(item => item.id !== id));
         },
-      ],
-    );
+      },
+    ]);
   }, []);
 
   const handleEdit = useCallback(
-    animal => {
-      // Navigate to edit screen with animal data
-      navigation.navigate('EditSheepAndGoatScreen', {animal});
+    swine => {
+      // Navigate to edit screen with swine data
+      navigation.navigate('EditSwineScreen', { swine });
     },
     [navigation],
   );
 
-  const handleAddAnimal = () => {
-    // Navigate to add animal screen
-    navigation.navigate('AddSheepAndGoatScreen');
+  const handleAddSwine = () => {
+    // Navigate to add swine screen
+    navigation.navigate('AddSwineScreen');
   };
 
   const renderHeader = () => (
@@ -171,7 +166,7 @@ const SheepAndGoatProductionListScreen = ({navigation}) => {
         />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by Animal ID..."
+          placeholder="Search by Swine ID..."
           placeholderTextColor="#666"
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -192,18 +187,18 @@ const SheepAndGoatProductionListScreen = ({navigation}) => {
     </View>
   );
 
-  const renderAnimalCard = ({item}) => (
+  const renderSwineCard = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
       onPress={() => {
-        setSelectedAnimal(item);
+        setSelectedSwine(item);
       }}>
       <View style={styles.cardHeader}>
         <FastImage source={item.icon} style={styles.cardIcon} />
-        <View style={styles.animalInfo}>
-          <Text style={styles.animalId}>Animal ID: {item.id}</Text>
-          <Text style={styles.animalPrice}>Sale Price: ${item.salePrice}</Text>
-          <Text style={styles.animalDate}>Sale Date: {item.saleDate}</Text>
+        <View style={styles.swineInfo}>
+          <Text style={styles.swineId}>Swine ID: {item.id}</Text>
+          <Text style={styles.swinePrice}>Sale Price: ${item.salePrice}</Text>
+          <Text style={styles.swineDate}>Sale Date: {item.saleDate}</Text>
         </View>
         <View style={styles.cardActions}>
           <TouchableOpacity
@@ -228,7 +223,7 @@ const SheepAndGoatProductionListScreen = ({navigation}) => {
       onRequestClose={() => setIsFilterModalVisible(false)}>
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Filter Animal Records</Text>
+          <Text style={styles.modalTitle}>Filter Swine</Text>
           {/* Add filter options here if needed */}
           <TouchableOpacity
             style={styles.closeModalButton}
@@ -240,54 +235,53 @@ const SheepAndGoatProductionListScreen = ({navigation}) => {
     </Modal>
   );
 
-  const renderAnimalDetailModal = () => {
-    if (!selectedAnimal) return null;
+  const renderSwineDetailModal = () => {
+    if (!selectedSwine) return null;
 
     return (
       <Modal
         animationType="slide"
         transparent={true}
-        visible={!!selectedAnimal}
-        onRequestClose={() => setSelectedAnimal(null)}>
+        visible={!!selectedSwine}
+        onRequestClose={() => setSelectedSwine(null)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
-              {selectedAnimal.company} Details
+              {selectedSwine.company} Details
             </Text>
             <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Animal ID:</Text>{' '}
-              {selectedAnimal.id}
+              <Text style={styles.boldText}>Swine ID:</Text> {selectedSwine.id}
             </Text>
             <Text style={styles.modalText}>
               <Text style={styles.boldText}>Weight Gain:</Text>{' '}
-              {selectedAnimal.weightGain} lbs
+              {selectedSwine.weightGain} lbs
             </Text>
             <Text style={styles.modalText}>
               <Text style={styles.boldText}>Sale Weight:</Text>{' '}
-              {selectedAnimal.saleWeight} lbs
+              {selectedSwine.saleWeight} lbs
             </Text>
             <Text style={styles.modalText}>
               <Text style={styles.boldText}>Sale Date:</Text>{' '}
-              {selectedAnimal.saleDate}
+              {selectedSwine.saleDate}
             </Text>
             <Text style={styles.modalText}>
               <Text style={styles.boldText}>Market Price:</Text> $
-              {selectedAnimal.marketPrice}/lb
+              {selectedSwine.marketPrice}/lb
             </Text>
             <Text style={styles.modalText}>
               <Text style={styles.boldText}>Sale Price:</Text> $
-              {selectedAnimal.salePrice}
+              {selectedSwine.salePrice}
             </Text>
             <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Buyer:</Text> {selectedAnimal.buyer}
+              <Text style={styles.boldText}>Buyer:</Text> {selectedSwine.buyer}
             </Text>
             <Text style={styles.modalText}>
               <Text style={styles.boldText}>Company:</Text>{' '}
-              {selectedAnimal.company}
+              {selectedSwine.company}
             </Text>
             <TouchableOpacity
               style={styles.closeModalButton}
-              onPress={() => setSelectedAnimal(null)}>
+              onPress={() => setSelectedSwine(null)}>
               <Text style={styles.closeModalButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
@@ -298,7 +292,7 @@ const SheepAndGoatProductionListScreen = ({navigation}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <SecondaryHeader title="Sheep and Goat Production Records" />
+      <SecondaryHeader title="Swine Production Records" />
       <StatusBar
         translucent
         backgroundColor={COLORS.green2}
@@ -307,16 +301,16 @@ const SheepAndGoatProductionListScreen = ({navigation}) => {
       />
       {renderHeader()}
       <FlatList
-        data={filteredAnimals}
-        renderItem={renderAnimalCard}
+        data={filteredSwine}
+        renderItem={renderSwineCard}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
       />
       {renderFilterModal()}
-      {renderAnimalDetailModal()}
+      {renderSwineDetailModal()}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('SheepGoatDetailsScreen')}>
+        onPress={() => navigation.navigate('SwineRecordScreen')}>
         <FastImage
           source={icons.plus}
           style={styles.fabIcon}
@@ -330,7 +324,7 @@ const SheepAndGoatProductionListScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    
+
   },
   header: {
     backgroundColor: COLORS.white,
@@ -388,7 +382,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 2,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -398,20 +392,20 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 12,
   },
-  animalInfo: {
+  swineInfo: {
     flex: 1,
     paddingHorizontal: 10,
   },
-  animalId: {
+  swineId: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
-  animalPrice: {
+  swinePrice: {
     fontSize: 16,
     color: '#666',
   },
-  animalDate: {
+  swineDate: {
     fontSize: 16,
     color: '#666',
   },
@@ -476,7 +470,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 6,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.27,
     shadowRadius: 4.65,
   },
@@ -486,4 +480,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SheepAndGoatProductionListScreen;
+export default SwineProductionListScreen;

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,12 @@ import {
   SafeAreaView,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../../constants';
-import {COLORS} from '../../../constants/theme';
+import { icons } from '../../../constants';
+import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 
-const FeedingDetailsScreen = ({route, navigation}) => {
-  const {feedingData} = route.params;
+const FeedingDetailsScreen = ({ route, navigation }) => {
+  const { feedingData } = route.params;
   const [activeTab, setActiveTab] = useState('overview');
 
   const formatDate = dateString => {
@@ -162,84 +162,84 @@ const FeedingDetailsScreen = ({route, navigation}) => {
         </View>
       </View>
 
-      {(feedingData.feedTypeCategory === 'Basal Feed + Concentrates + Supplements' || 
+      {(feedingData.feedTypeCategory === 'Basal Feed + Concentrates + Supplements' ||
         feedingData.concentrate) && (
-        <View style={styles.infoCard}>
-          <Text style={styles.cardTitle}>Concentrate Feed</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Feed Type:</Text>
-            <Text style={styles.infoValue}>{feedingData.concentrate?.feedType || 'Protein Supplement'}</Text>
+          <View style={styles.infoCard}>
+            <Text style={styles.cardTitle}>Concentrate Feed</Text>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Feed Type:</Text>
+              <Text style={styles.infoValue}>{feedingData.concentrate?.feedType || 'Protein Supplement'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Source:</Text>
+              <Text style={styles.infoValue}>{feedingData.concentrate?.source || 'Purely Purchased'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Schedule:</Text>
+              <Text style={styles.infoValue}>{feedingData.concentrate?.schedule || 'Daily'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Quantity:</Text>
+              <Text style={styles.infoValue}>{feedingData.concentrate?.quantity || '2 kg per animal'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Date Acquired:</Text>
+              <Text style={styles.infoValue}>{formatDate(feedingData.concentrate?.date || '2025-03-01')}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Cost:</Text>
+              <Text style={styles.infoValue}>{feedingData.concentrate?.cost || '$180'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Supplier:</Text>
+              <Text style={styles.infoValue}>{feedingData.concentrate?.supplier || 'Premium Feeds Inc.'}</Text>
+            </View>
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Source:</Text>
-            <Text style={styles.infoValue}>{feedingData.concentrate?.source || 'Purely Purchased'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Schedule:</Text>
-            <Text style={styles.infoValue}>{feedingData.concentrate?.schedule || 'Daily'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Quantity:</Text>
-            <Text style={styles.infoValue}>{feedingData.concentrate?.quantity || '2 kg per animal'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Date Acquired:</Text>
-            <Text style={styles.infoValue}>{formatDate(feedingData.concentrate?.date || '2025-03-01')}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Cost:</Text>
-            <Text style={styles.infoValue}>{feedingData.concentrate?.cost || '$180'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Supplier:</Text>
-            <Text style={styles.infoValue}>{feedingData.concentrate?.supplier || 'Premium Feeds Inc.'}</Text>
-          </View>
-        </View>
-      )}
+        )}
 
-      {(feedingData.feedTypeCategory === 'Basal Feed + Concentrates + Supplements' || 
+      {(feedingData.feedTypeCategory === 'Basal Feed + Concentrates + Supplements' ||
         feedingData.supplement) && (
-        <View style={styles.infoCard}>
-          <Text style={styles.cardTitle}>Supplement Feed</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Feed Type:</Text>
-            <Text style={styles.infoValue}>{feedingData.supplement?.feedType || 'Vitamin Mix'}</Text>
+          <View style={styles.infoCard}>
+            <Text style={styles.cardTitle}>Supplement Feed</Text>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Feed Type:</Text>
+              <Text style={styles.infoValue}>{feedingData.supplement?.feedType || 'Vitamin Mix'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Source:</Text>
+              <Text style={styles.infoValue}>{feedingData.supplement?.source || 'Purely Purchased'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Schedule:</Text>
+              <Text style={styles.infoValue}>{feedingData.supplement?.schedule || 'Daily'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Quantity:</Text>
+              <Text style={styles.infoValue}>{feedingData.supplement?.quantity || '0.5 kg per animal'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Date Acquired:</Text>
+              <Text style={styles.infoValue}>{formatDate(feedingData.supplement?.date || '2025-03-01')}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Cost:</Text>
+              <Text style={styles.infoValue}>{feedingData.supplement?.cost || '$120'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Supplier:</Text>
+              <Text style={styles.infoValue}>{feedingData.supplement?.supplier || 'Animal Health Solutions'}</Text>
+            </View>
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Source:</Text>
-            <Text style={styles.infoValue}>{feedingData.supplement?.source || 'Purely Purchased'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Schedule:</Text>
-            <Text style={styles.infoValue}>{feedingData.supplement?.schedule || 'Daily'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Quantity:</Text>
-            <Text style={styles.infoValue}>{feedingData.supplement?.quantity || '0.5 kg per animal'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Date Acquired:</Text>
-            <Text style={styles.infoValue}>{formatDate(feedingData.supplement?.date || '2025-03-01')}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Cost:</Text>
-            <Text style={styles.infoValue}>{feedingData.supplement?.cost || '$120'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Supplier:</Text>
-            <Text style={styles.infoValue}>{feedingData.supplement?.supplier || 'Animal Health Solutions'}</Text>
-          </View>
-        </View>
-      )}
+        )}
     </View>
   );
 
   const renderActionButtons = () => (
     <View style={styles.actionButtonsContainer}>
-      <TouchableOpacity 
-        style={styles.actionButton} 
-        onPress={() => 
-          navigation.navigate('EditFeedingRequirementScreen', {requirement: feedingData})
+      <TouchableOpacity
+        style={styles.actionButton}
+        onPress={() =>
+          navigation.navigate('EditFeedingRequirementScreen', { requirement: feedingData })
         }
       >
         <FastImage
@@ -249,8 +249,8 @@ const FeedingDetailsScreen = ({route, navigation}) => {
         />
         <Text style={styles.actionButtonText}>Edit</Text>
       </TouchableOpacity>
-      
-      <TouchableOpacity 
+
+      <TouchableOpacity
         style={[styles.actionButton, styles.markFedButton]}
         onPress={() => {
           // Logic to mark as fed would go here
@@ -269,11 +269,11 @@ const FeedingDetailsScreen = ({route, navigation}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <SecondaryHeader 
-        title="Feeding Details" 
+      <SecondaryHeader
+        title="Feeding Details"
         onBack={() => navigation.goBack()}
       />
-      
+
       <View style={styles.feedInfoHeader}>
         <View style={styles.feedInfoContainer}>
           <Text style={styles.animalTypeHeading}>{feedingData.animalType}</Text>
@@ -321,18 +321,18 @@ const FeedingDetailsScreen = ({route, navigation}) => {
         {activeTab === 'overview' && renderOverviewTab()}
         {activeTab === 'details' && renderDetailsTab()}
         {activeTab === 'feeds' && renderFeedDetailsTab()}
-        
+
         <View style={styles.notesContainer}>
           <Text style={styles.notesSectionTitle}>Notes</Text>
           <View style={styles.notesCard}>
             <Text style={styles.notesText}>
-              {feedingData.notes || 
+              {feedingData.notes ||
                 "Ensure fresh water is always available. Monitor feed consumption and adjust quantities if necessary. Report any appetite changes immediately."}
             </Text>
           </View>
         </View>
       </ScrollView>
-      
+
       {renderActionButtons()}
     </SafeAreaView>
   );
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 2,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
     marginBottom: 80, // Extra space for action buttons
     elevation: 2,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#e0e0e0',
     elevation: 4,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: -2},
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },

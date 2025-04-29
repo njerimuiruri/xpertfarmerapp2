@@ -12,13 +12,13 @@ import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FastImage from 'react-native-fast-image';
-import {COLORS} from '../../constants/theme';
+import { COLORS } from '../../constants/theme';
 
 const Dashboard = () => {
   const navigation = useNavigation();
   const [selectedPeriod, setSelectedPeriod] = useState('This month');
   const [showPeriodModal, setShowPeriodModal] = useState(false);
-  
+
   const [activeFarm, setActiveFarm] = useState({
     id: '1',
     name: 'Green Valley Farm',
@@ -26,11 +26,11 @@ const Dashboard = () => {
     size: '5.2 acres',
     animals: ['Pigs', 'Goats'],
   });
-  
+
   const timePeriods = ['This week', 'This month', 'This quarter', 'This year'];
-  
+
   const cardScreens = {
-    'Production Analysis': 'AnimalProductionListScreen',
+    'Production Analysis': 'BeefCattleProductionListing',
     'Inventory Data': 'InventoryDashboard',
     'Health': 'AddHealthRecords',
     'Feeds': 'FarmFeedsScreen',
@@ -94,18 +94,18 @@ const Dashboard = () => {
       </TouchableOpacity>
     </LinearGradient>
   );
-  
+
   // Function to navigate to Farm Information screen
   const navigateToFarmInfo = () => {
     navigation.navigate('FarmInformation');
   };
-  
+
   return (
     <View style={styles.container}>
       <Header navigation={navigation} />
 
       <ScrollView style={styles.scrollView}>
-        
+
         <LinearGradient
           colors={['#8CD18C', '#A7E3A7']}
           start={{ x: 0, y: 0 }}
@@ -115,9 +115,9 @@ const Dashboard = () => {
           <View style={styles.welcomeTextContainer}>
             <Text style={styles.welcomeTitle}>Welcome to Xpert Farmers</Text>
             <Text style={styles.welcomeSubtitle}>
-            Data to Farm,{'\n'}
-            Data for Business,{'\n'}
-             
+              Data to Farm,{'\n'}
+              Data for Business,{'\n'}
+
             </Text>
           </View>
 
@@ -141,7 +141,7 @@ const Dashboard = () => {
         <View style={styles.activeFarmSection}>
           <View style={styles.activeFarmHeader}>
             <Text style={styles.activeFarmTitle}>Active Farm</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.viewAllButton}
               onPress={navigateToFarmInfo}
             >
@@ -149,30 +149,30 @@ const Dashboard = () => {
               <Icon name="chevron-right" size={16} color={COLORS.green} />
             </TouchableOpacity>
           </View>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.activeFarmCard}
             onPress={navigateToFarmInfo}
           >
             <View style={styles.farmIconContainer}>
               <Icon name="warehouse" size={24} color={COLORS.white} />
             </View>
-            
+
             <View style={styles.farmInfoContainer}>
               <Text style={styles.farmName}>{activeFarm.name}</Text>
-              
+
               <View style={styles.farmDetailsRow}>
                 <View style={styles.farmDetailItem}>
                   <Icon name="map-marker" size={14} color={COLORS.darkGray3} />
                   <Text style={styles.farmDetailText}>{activeFarm.location}</Text>
                 </View>
-                
+
                 <View style={styles.farmDetailItem}>
                   <Icon name="resize" size={14} color={COLORS.darkGray3} />
                   <Text style={styles.farmDetailText}>{activeFarm.size}</Text>
                 </View>
               </View>
-              
+
               <View style={styles.cropTagsContainer}>
                 {activeFarm.animals.map((crop, index) => (
                   <View key={index} style={styles.cropTag}>
@@ -181,7 +181,7 @@ const Dashboard = () => {
                 ))}
               </View>
             </View>
-            
+
             <Icon name="chevron-right" size={24} color={COLORS.darkGray3} style={styles.rightArrow} />
           </TouchableOpacity>
         </View>
@@ -189,7 +189,7 @@ const Dashboard = () => {
         {/* Farm Overview */}
         <View style={styles.overviewSection}>
           <Text style={styles.overviewTitle}>Farm Overview</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.monthSelector}
             onPress={() => setShowPeriodModal(true)}
           >
@@ -200,7 +200,7 @@ const Dashboard = () => {
 
         <View style={styles.cardsGrid}>{cards.map(renderCard)}</View>
       </ScrollView>
-      
+
       {/* Time Period Modal */}
       <Modal
         visible={showPeriodModal}
@@ -208,7 +208,7 @@ const Dashboard = () => {
         animationType="slide"
         onRequestClose={() => setShowPeriodModal(false)}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setShowPeriodModal(false)}
