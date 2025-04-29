@@ -99,13 +99,18 @@ import BeefCattleDetailsScreen from './production/beefcattle/BeefCattleDetailsSc
 //swine
 import SwineRecordScreen from './production/swine/SwineRecordScreen';
 import SwineProductionListScreen from './production/swine/SwineProductionListScreen ';
+import SwineDetailsScreen from './production/swine/SwineDetailsScreen';
 
 //poultry
-import PoultryProductionListScreen from './production/poultry/PoultryFlockDetailsScreen';
+import PoultryProductionListScreen from './production/poultry/PoultryProductionListScreen';
 import PoultryFlockDetailsScreen from './production/poultry/PoultryFlockDetailsScreen';
 
-import SheepGoatDetailsScreen from './production/sheepandgoat/SheepGoatDetailsScreen';
+import PoultryDetailsScreen from './production/poultry/PoultryDetailsScreen';
+
+import AddSheepGoatDetailsScreen from './production/sheepandgoat/AddSheepGoatDetailsScreen';
 import SheepAndGoatProductionListScreen from './production/sheepandgoat/SheepAndGoatProductionListScreen';
+
+import SheepGoatDetailsScreen from './production/sheepandgoat/SheepGoatDetailsScreen';
 
 // inventory
 import InventoryDashboard from './inventory/InventoryDashboard';
@@ -191,15 +196,18 @@ export {
 
   //productionsrecord
   SwineRecordScreen,
+  AddSheepGoatDetailsScreen,
   SheepGoatDetailsScreen,
   PoultryFlockDetailsScreen,
   BeefCattleProductionListing,
   BeefCattleDetailsScreen,
   SwineProductionListScreen,
+  SwineDetailsScreen,
   DairyProductionListScreen,
   DairyDetailsScreen,
   SheepAndGoatProductionListScreen,
   PoultryProductionListScreen,
+  PoultryDetailsScreen,
   HealthRecordsScreen,
   ProductionModuleLandingScreen,
   //inventory

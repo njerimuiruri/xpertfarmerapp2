@@ -8,126 +8,114 @@ import {
   StatusBar,
   TextInput,
   Alert,
-  Modal,
   SafeAreaView,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { icons } from '../../../constants';
 import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
+
+// Initial data for poultry records
 const initialPoultryData = [
   {
     id: '1',
-    weightGain: 5,
-    saleWeight: 8, // in lbs
-    saleDate: '2023-06-01',
-    marketPrice: 1.5, // price per lb
-    salePrice: 12.0, // total sale price
-    buyer: 'Poultry Farm',
-    company: 'Quality Poultry Ltd.',
+    flockId: 'ID 1',
+    dailyEggCount: 50,
+    eggWeight: 58,
+    numberOfLayers: 60,
+    eggProductionDate: '01/01/2023',
+    saleWeight: 55,
+    saleDate: '15/01/2023',
+    marketPrice: 3.2,
+    salePrice: 160,
+    buyer: 'Egg Co.',
+    buyerType: 'Company',
     icon: icons.poultry,
   },
   {
     id: '2',
-    weightGain: 4.5,
-    saleWeight: 7.5,
-    saleDate: '2023-07-01',
-    marketPrice: 1.6,
-    salePrice: 12.0,
-    buyer: 'Local Market',
-    company: 'Fresh Poultry Co.',
+    flockId: 'ID 2',
+    dailyEggCount: 45,
+    eggWeight: 62,
+    numberOfLayers: 55,
+    eggProductionDate: '05/02/2023',
+    saleWeight: 50,
+    saleDate: '20/02/2023',
+    marketPrice: 3.5,
+    salePrice: 175,
+    buyer: 'Farm Fresh',
+    buyerType: 'Company',
     icon: icons.poultry,
   },
   {
     id: '3',
-    weightGain: 6,
-    saleWeight: 9,
-    saleDate: '2023-08-01',
-    marketPrice: 1.55,
-    salePrice: 13.95,
-    buyer: 'City Butcher',
-    company: 'Poultry Masters',
+    flockId: 'ID 3',
+    dailyEggCount: 60,
+    eggWeight: 55,
+    numberOfLayers: 70,
+    eggProductionDate: '10/03/2023',
+    saleWeight: 58,
+    saleDate: '25/03/2023',
+    marketPrice: 3.0,
+    salePrice: 174,
+    buyer: 'Local Market',
+    buyerType: 'Individual',
     icon: icons.poultry,
   },
   {
     id: '4',
-    weightGain: 5.5,
-    saleWeight: 8.5,
-    saleDate: '2023-09-01',
-    marketPrice: 1.7,
-    salePrice: 14.45,
-    buyer: 'Farm Fresh',
-    company: 'Poultry Excellence',
+    flockId: 'ID 4',
+    dailyEggCount: 55,
+    eggWeight: 60,
+    numberOfLayers: 65,
+    eggProductionDate: '15/04/2023',
+    saleWeight: 52,
+    saleDate: '30/04/2023',
+    marketPrice: 3.3,
+    salePrice: 171.6,
+    buyer: 'Poultry Farm',
+    buyerType: 'Company',
     icon: icons.poultry,
   },
   {
     id: '5',
-    weightGain: 5.2, // in lbs
-    saleWeight: 8.2, // in lbs
-    saleDate: '2023-10-01',
-    marketPrice: 1.65, // price per lb
-    salePrice: 13.53, // total sale price
-    buyer: 'Urban Grocers',
-    company: 'Prime Poultry Suppliers',
-    icon: icons.poultry,
-  },
-  {
-    id: '6',
-    weightGain: 4.8,
-    saleWeight: 7.8,
-    saleDate: '2023-11-01',
-    marketPrice: 1.6,
-    salePrice: 12.48,
-    buyer: 'Fresh Meat Market',
-    company: 'Elite Poultry Corp.',
-    icon: icons.poultry,
-  },
-  {
-    id: '7',
-    weightGain: 6.3,
-    saleWeight: 9.3,
-    saleDate: '2023-12-01',
-    marketPrice: 1.75,
-    salePrice: 16.28,
-    buyer: 'Village Market',
-    company: 'Grassland Poultry Co.',
-    icon: icons.poultry,
-  },
-  {
-    id: '8',
-    weightGain: 5.7,
-    saleWeight: 8.7,
-    saleDate: '2024-01-01',
-    marketPrice: 1.7,
-    salePrice: 14.79,
-    buyer: 'Township Meat Co.',
-    company: 'Excellence Poultry Ltd.',
-    icon: icons.poultry,
-  },
-  {
-    id: '9',
-    weightGain: 6.5,
-    saleWeight: 9.5,
-    saleDate: '2024-02-01',
-    marketPrice: 1.8,
-    salePrice: 17.1,
-    buyer: 'Regional Farms',
-    company: 'Heritage Poultry Producers',
+    flockId: 'ID 2',
+    dailyEggCount: 48,
+    eggWeight: 59,
+    numberOfLayers: 58,
+    eggProductionDate: '20/05/2023',
+    saleWeight: 45,
+    saleDate: '05/05/2023',
+    marketPrice: 3.1,
+    salePrice: 139.5,
+    buyer: 'Urban Eggs',
+    buyerType: 'Company',
     icon: icons.poultry,
   },
 ];
 
 const PoultryProductionListScreen = ({ navigation }) => {
-  const [poultry, setPoultry] = useState(initialPoultryData);
+  const [poultryRecords, setPoultryRecords] = useState(initialPoultryData);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPoultry, setSelectedPoultry] = useState(null);
-  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('All');
 
-  const filteredPoultry = useMemo(() => {
-    return poultry.filter(item =>
-      item.id.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [searchQuery, poultry]);
+  const filteredRecords = useMemo(() => {
+    let filtered = poultryRecords;
+
+    if (searchQuery) {
+      filtered = filtered.filter(
+        item =>
+          item.flockId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.buyer.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (filterStatus !== 'All') {
+      filtered = filtered.filter(item => item.buyerType === filterStatus);
+    }
+
+    return filtered;
+  }, [poultryRecords, searchQuery, filterStatus]);
 
   const handleDelete = useCallback(id => {
     Alert.alert(
@@ -139,187 +127,197 @@ const PoultryProductionListScreen = ({ navigation }) => {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            setPoultry(prev => prev.filter(item => item.id !== id));
+            setPoultryRecords(prev => prev.filter(item => item.id !== id));
           },
         },
       ],
     );
   }, []);
 
-  const handleEdit = useCallback(
-    poultry => {
-      // Navigate to edit screen with poultry data
-      navigation.navigate('EditPoultryScreen', { poultry });
+  const handleViewDetails = useCallback(
+    (record) => {
+      navigation.navigate('PoultryDetailsScreen', { poultryRecord: record });
     },
     [navigation],
   );
 
-  const handleAddPoultry = () => {
-    // Navigate to add poultry screen
-    navigation.navigate('AddPoultryScreen');
-  };
-
   const renderHeader = () => (
     <View style={styles.header}>
-      <View style={styles.searchContainer}>
-        <FastImage
-          source={icons.search}
-          style={styles.searchIcon}
-          tintColor="#666"
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by Poultry ID..."
-          placeholderTextColor="#666"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
-      <View style={styles.actionBar}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => setIsFilterModalVisible(true)}>
+      <View style={styles.searchBarContainer}>
+        <View style={styles.searchBar}>
           <FastImage
-            source={icons.filter}
-            style={styles.actionIcon}
-            tintColor="#333"
+            source={icons.search}
+            style={styles.searchIcon}
+            tintColor={COLORS.darkGray3}
           />
-          <Text style={styles.actionText}>Filter</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by Flock ID or Buyer"
+            placeholderTextColor={COLORS.darkGray3}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery ? (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <FastImage
+                source={icons.remove}
+                style={styles.clearIcon}
+                tintColor={COLORS.darkGray3}
+              />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </View>
+
+      <View style={styles.filterChips}>
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            filterStatus === 'All' && styles.activeChip
+          ]}
+          onPress={() => setFilterStatus('All')}>
+          <Text style={[
+            styles.chipText,
+            filterStatus === 'All' && styles.activeChipText
+          ]}>All</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            filterStatus === 'Company' && styles.activeChip
+          ]}
+          onPress={() => setFilterStatus('Company')}>
+          <Text style={[
+            styles.chipText,
+            filterStatus === 'Company' && styles.activeChipText
+          ]}>Company</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            filterStatus === 'Individual' && styles.activeChip
+          ]}
+          onPress={() => setFilterStatus('Individual')}>
+          <Text style={[
+            styles.chipText,
+            filterStatus === 'Individual' && styles.activeChipText
+          ]}>Individual</Text>
         </TouchableOpacity>
       </View>
+    </View>
+  );
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <FastImage
+        source={icons.poultry}
+        style={styles.emptyIcon}
+        tintColor={COLORS.lightGray}
+      />
+      <Text style={styles.emptyTitle}>No Poultry Records Found</Text>
+      <Text style={styles.emptySubtitle}>
+        {searchQuery
+          ? "Try adjusting your search"
+          : "Add your first poultry production record"}
+      </Text>
+      <TouchableOpacity
+        style={styles.emptyButton}
+        onPress={() => navigation.navigate('PoultryFlockDetailsScreen')}>
+        <Text style={styles.emptyButtonText}>Add Record</Text>
+      </TouchableOpacity>
     </View>
   );
 
   const renderPoultryCard = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => {
-        setSelectedPoultry(item);
-      }}>
+      onPress={() => handleViewDetails(item)}
+      activeOpacity={0.7}>
       <View style={styles.cardHeader}>
-        <FastImage source={item.icon} style={styles.cardIcon} />
-        <View style={styles.poultryInfo}>
-          <Text style={styles.poultryId}>Poultry ID: {item.id}</Text>
-          <Text style={styles.poultryPrice}>Sale Price: ${item.salePrice}</Text>
-          <Text style={styles.poultryDate}>Sale Date: {item.saleDate}</Text>
+        <FastImage
+          source={icons.poultry}
+          style={styles.poultryIcon}
+          tintColor={COLORS.green}
+        />
+        <View style={styles.headerInfo}>
+          <Text style={styles.flockIdText}>Flock: {item.flockId}</Text>
+          <View style={styles.buyerTypeTag}>
+            <Text style={styles.buyerTypeText}>{item.buyerType}</Text>
+          </View>
         </View>
-        <View style={styles.cardActions}>
-          <TouchableOpacity
-            onPress={() => handleDelete(item.id)}
-            style={styles.cardActionButton}>
-            <FastImage
-              source={icons.remove}
-              style={styles.cardActionIcon}
-              tintColor="#F44336"
-            />
-          </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => handleDelete(item.id)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <FastImage
+            source={icons.remove}
+            style={styles.deleteIcon}
+            tintColor={COLORS.red}
+          />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.cardBody}>
+        <View style={styles.dataRow}>
+          <View style={styles.dataItem}>
+            <Text style={styles.dataLabel}>Daily Eggs</Text>
+            <Text style={styles.dataValue}>{item.dailyEggCount}</Text>
+          </View>
+          <View style={styles.dataItem}>
+            <Text style={styles.dataLabel}>Layers</Text>
+            <Text style={styles.dataValue}>{item.numberOfLayers}</Text>
+          </View>
+          <View style={styles.dataItem}>
+            <Text style={styles.dataLabel}>Sale</Text>
+            <Text style={styles.dataValue}>${item.salePrice}</Text>
+          </View>
         </View>
+
+        <View style={styles.buyerContainer}>
+          <Text style={styles.buyerLabel}>Buyer:</Text>
+          <Text style={styles.buyerValue}>{item.buyer}</Text>
+          <Text style={styles.saleDate}>{item.saleDate}</Text>
+        </View>
+      </View>
+
+      <View style={styles.cardFooter}>
+        <Text style={styles.viewDetailsText}>Tap to view details</Text>
       </View>
     </TouchableOpacity>
   );
 
-  const renderFilterModal = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={isFilterModalVisible}
-      onRequestClose={() => setIsFilterModalVisible(false)}>
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Filter Poultry Records</Text>
-          {/* Add filter options here if needed */}
-          <TouchableOpacity
-            style={styles.closeModalButton}
-            onPress={() => setIsFilterModalVisible(false)}>
-            <Text style={styles.closeModalButtonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-
-  const renderPoultryDetailModal = () => {
-    if (!selectedPoultry) return null;
-
-    return (
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={!!selectedPoultry}
-        onRequestClose={() => setSelectedPoultry(null)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {selectedPoultry.company} Details
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Poultry ID:</Text>{' '}
-              {selectedPoultry.id}
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Weight Gain:</Text>{' '}
-              {selectedPoultry.weightGain} lbs
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Sale Weight:</Text>{' '}
-              {selectedPoultry.saleWeight} lbs
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Sale Date:</Text>{' '}
-              {selectedPoultry.saleDate}
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Market Price:</Text> $
-              {selectedPoultry.marketPrice}/lb
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Sale Price:</Text> $
-              {selectedPoultry.salePrice}
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Buyer:</Text>{' '}
-              {selectedPoultry.buyer}
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Company:</Text>{' '}
-              {selectedPoultry.company}
-            </Text>
-            <TouchableOpacity
-              style={styles.closeModalButton}
-              onPress={() => setSelectedPoultry(null)}>
-              <Text style={styles.closeModalButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    );
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-      <SecondaryHeader title="Poultry Production Records" />
       <StatusBar
         translucent
         backgroundColor={COLORS.green2}
-        animated={true}
-        barStyle={'light-content'}
+        barStyle="light-content"
       />
+      <SecondaryHeader title="Poultry Production Records" />
+
       {renderHeader()}
+
       <FlatList
-        data={filteredPoultry}
+        data={filteredRecords}
         renderItem={renderPoultryCard}
         keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContainer,
+          filteredRecords.length === 0 && { flex: 1 }
+        ]}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={renderEmptyState}
       />
-      {renderFilterModal()}
-      {renderPoultryDetailModal()}
+
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('PoultryFlockDetailsScreen')}>
+        onPress={() => navigation.navigate('PoultryFlockDetailsScreen')}
+        activeOpacity={0.8}>
         <FastImage
           source={icons.plus}
           style={styles.fabIcon}
-          tintColor="#fff"
+          tintColor={COLORS.white}
         />
       </TouchableOpacity>
     </SafeAreaView>
@@ -329,21 +327,25 @@ const PoultryProductionListScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-
+    backgroundColor: COLORS.lightGreen,
   },
   header: {
     backgroundColor: COLORS.white,
-    padding: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
-  searchContainer: {
+  searchBarContainer: {
+    marginBottom: 12,
+  },
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f1f3f4',
+    backgroundColor: COLORS.lightGreen,
     borderRadius: 8,
     paddingHorizontal: 12,
-    marginBottom: 16,
+    height: 44,
   },
   searchIcon: {
     width: 20,
@@ -352,115 +354,142 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    height: 40,
-    fontSize: 16,
-    color: '#333',
+    fontSize: 15,
+    color: COLORS.darkGray3,
+    height: '100%',
   },
-  actionBar: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+  clearIcon: {
+    width: 16,
+    height: 16,
   },
-  actionButton: {
+  filterChips: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  chip: {
     paddingHorizontal: 12,
-    borderRadius: 20,
-    backgroundColor: '#f1f3f4',
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: COLORS.lightGreen,
+    marginRight: 8,
   },
-  actionIcon: {
-    width: 18,
-    height: 18,
-    marginRight: 6,
+  activeChip: {
+    backgroundColor: COLORS.green,
   },
-  actionText: {
+  chipText: {
     fontSize: 14,
-    color: '#333',
+    color: COLORS.darkGray3,
   },
-  listContent: {
+  activeChipText: {
+    color: COLORS.white,
+    fontWeight: '500',
+  },
+  listContainer: {
     padding: 16,
   },
   card: {
-    backgroundColor: '#fefefe',
+    backgroundColor: COLORS.white,
     borderRadius: 12,
-    padding: 16,
     marginBottom: 16,
-    elevation: 2,
-    shadowColor: COLORS.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    elevation: 3,
+    overflow: 'hidden',
   },
   cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  poultryInfo: {
+  poultryIcon: {
+    width: 28,
+    height: 28,
+    marginRight: 10,
+  },
+  headerInfo: {
     flex: 1,
-    paddingHorizontal: 10,
-  },
-  poultryId: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  poultryPrice: {
-    fontSize: 16,
-    color: '#666',
-  },
-  poultryDate: {
-    fontSize: 16,
-    color: '#666',
-  },
-  cardActions: {
     flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  cardActionButton: {
-    padding: 8,
-    marginLeft: 8,
+  flockIdText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.darkGray3,
   },
-  cardActionIcon: {
+  buyerTypeTag: {
+    backgroundColor: COLORS.lightGreen,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  buyerTypeText: {
+    fontSize: 12,
+    color: COLORS.green,
+    fontWeight: '500',
+  },
+  deleteIcon: {
     width: 20,
     height: 20,
+    marginLeft: 10,
+    color: COLORS.red,
   },
-  modalContainer: {
+  cardBody: {
+    padding: 12,
+  },
+  dataRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  dataItem: {
+    alignItems: 'center',
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalContent: {
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 20,
-    width: '80%',
+  dataLabel: {
+    fontSize: 12,
+    color: COLORS.darkGray3,
+    marginBottom: 2,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#333',
-  },
-  modalText: {
+  dataValue: {
     fontSize: 16,
-    marginVertical: 4,
+    fontWeight: '600',
+    color: COLORS.darkGray,
   },
-  boldText: {
-    fontWeight: 'bold',
-  },
-  closeModalButton: {
-    marginTop: 16,
+  buyerContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4CAF50',
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
-  closeModalButtonText: {
-    fontSize: 16,
-    color: COLORS.white,
-    fontWeight: 'bold',
+  buyerLabel: {
+    fontSize: 13,
+    color: COLORS.darkGray3,
+    marginRight: 4,
+  },
+  buyerValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.darkGray,
+    flex: 1,
+  },
+  saleDate: {
+    fontSize: 13,
+    color: COLORS.darkGray3,
+  },
+  cardFooter: {
+    backgroundColor: '#f9f9f9',
+    padding: 8,
+    alignItems: 'center',
+  },
+  viewDetailsText: {
+    fontSize: 12,
+    color: COLORS.green,
   },
   fab: {
     position: 'absolute',
@@ -469,18 +498,52 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#4CAF50',
+    backgroundColor: COLORS.green,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 6,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   fabIcon: {
     width: 24,
     height: 24,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyIcon: {
+    width: 80,
+    height: 80,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.darkGray3,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: COLORS.darkGray3,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  emptyButton: {
+    backgroundColor: COLORS.green,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  emptyButtonText: {
+    color: COLORS.white,
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
 

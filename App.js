@@ -81,10 +81,13 @@ import {
   AddBeefDetailsScreen,
   BeefCattleDetailsScreen,
   SwineRecordScreen,
+  AddSheepGoatDetailsScreen,
   SheepGoatDetailsScreen,
   PoultryFlockDetailsScreen,
+  PoultryDetailsScreen,
   BeefCattleProductionListing,
   SwineProductionListScreen,
+  SwineDetailsScreen,
   DairyProductionListScreen,
   DairyDetailsScreen,
   SheepAndGoatProductionListScreen,
@@ -464,10 +467,16 @@ export default function App() {
                 options={{headerShown: false}}
               />
               <Stack.Screen
+                name="AddSheepGoatDetailsScreen"
+                component={AddSheepGoatDetailsScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
                 name="SheepGoatDetailsScreen"
                 component={SheepGoatDetailsScreen}
                 options={{headerShown: false}}
               />
+
               <Stack.Screen
                 name="PoultryFlockDetailsScreen"
                 component={PoultryFlockDetailsScreen}
@@ -483,10 +492,14 @@ export default function App() {
                 component={BeefCattleDetailsScreen}
                 options={{headerShown: false}}
               />
-
               <Stack.Screen
                 name="SwineProductionListScreen"
                 component={SwineProductionListScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="SwineDetailsScreen"
+                component={SwineDetailsScreen}
                 options={{headerShown: false}}
               />
               <Stack.Screen
@@ -507,6 +520,11 @@ export default function App() {
               <Stack.Screen
                 name="PoultryProductionListScreen"
                 component={PoultryProductionListScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="PoultryDetailsScreen"
+                component={PoultryDetailsScreen}
                 options={{headerShown: false}}
               />
               {/* inventory */}

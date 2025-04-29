@@ -27,7 +27,7 @@ const ProductionModuleLandingScreen = ({ navigation }) => {
       title: 'Beef Cattle',
       icon: icons.beef,
       description: 'Weight gain, weaning weight, scheduled checkup weights, sales information',
-      route: 'AddBeefDetailsScreen'
+      route: 'BeefCattleProductionListing'
     },
     {
       id: '3',
@@ -48,7 +48,7 @@ const ProductionModuleLandingScreen = ({ navigation }) => {
       title: 'Poultry',
       icon: icons.poultry,
       description: 'Daily egg count, egg weight/size, number of layers per day',
-      route: 'PoultryFlockDetailsScreen'
+      route: 'PoultryProductionListScreen'
     }
   ];
 

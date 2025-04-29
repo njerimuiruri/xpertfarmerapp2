@@ -8,7 +8,6 @@ import {
   StatusBar,
   TextInput,
   Alert,
-  Modal,
   SafeAreaView,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
@@ -16,311 +15,323 @@ import { icons } from '../../../constants';
 import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 
-// Sample data for sheep and goats
-const initialSheepAndGoatData = [
+const initialSheepGoatData = [
   {
     id: '1',
-    weightGain: 50, // in lbs
-    saleWeight: 120, // in lbs
-    saleDate: '2023-05-15',
-    marketPrice: 3.0, // price per lb
-    salePrice: 360, // total sale price
-    buyer: 'Sheep Co.',
-    company: 'Sheep Masters',
-    icon: icons.sheep,
+    animalIdOrFlockId: 'ID 1',
+    woolWeight: 5,
+    woolQuality: 'High',
+    shearingDate: '01/01/2023',
+    weaningWeight: 25,
+    milkYield: 15,
+    saleWeight: 45,
+    saleDate: '15/01/2023',
+    marketPrice: 120,
+    salePrice: 5400,
+    buyerName: 'Wool Co.',
+    isCompany: true,
+    isIndividual: false,
+    buyerType: 'Company',
+    icon: icons.sheepgoat,
   },
   {
     id: '2',
-    weightGain: 45,
-    saleWeight: 110,
-    saleDate: '2023-06-10',
-    marketPrice: 3.2,
-    salePrice: 352,
-    buyer: 'Local Market',
-    company: 'Goat Co.',
-    icon: icons.goat,
+    animalIdOrFlockId: 'ID 2',
+    woolWeight: 4.2,
+    woolQuality: 'Medium',
+    shearingDate: '15/02/2023',
+    weaningWeight: 22,
+    milkYield: 12,
+    saleWeight: 42,
+    saleDate: '20/02/2023',
+    marketPrice: 110,
+    salePrice: 4620,
+    buyerName: 'Local Butcher',
+    isCompany: false,
+    isIndividual: true,
+    buyerType: 'Individual',
+    icon: icons.sheepgoat,
   },
   {
     id: '3',
-    weightGain: 60,
-    saleWeight: 130,
-    saleDate: '2023-07-05',
-    marketPrice: 3.1,
-    salePrice: 403,
-    buyer: 'Farm Fresh',
-    company: 'Quality Sheep',
-    icon: icons.sheep,
+    animalIdOrFlockId: 'ID 3',
+    woolWeight: 5.5,
+    woolQuality: 'Excellent',
+    shearingDate: '10/03/2023',
+    weaningWeight: 28,
+    milkYield: 18,
+    saleWeight: 48,
+    saleDate: '25/03/2023',
+    marketPrice: 125,
+    salePrice: 6000,
+    buyerName: 'Organic Meats',
+    isCompany: true,
+    isIndividual: false,
+    buyerType: 'Company',
+    icon: icons.sheepgoat,
   },
   {
     id: '4',
-    weightGain: 55,
-    saleWeight: 125,
-    saleDate: '2023-08-01',
-    marketPrice: 3.15,
-    salePrice: 393.75,
-    buyer: 'City Butcher',
-    company: 'Premium Goat Suppliers',
-    icon: icons.goat,
+    animalIdOrFlockId: 'ID 4',
+    woolWeight: 6.1,
+    woolQuality: 'Premium',
+    shearingDate: '05/04/2023',
+    weaningWeight: 30,
+    milkYield: 20,
+    saleWeight: 50,
+    saleDate: '20/04/2023',
+    marketPrice: 130,
+    salePrice: 6500,
+    buyerName: 'Textile Factory',
+    isCompany: true,
+    isIndividual: false,
+    buyerType: 'Company',
+    icon: icons.sheepgoat,
   },
   {
     id: '5',
-    weightGain: 48, // in lbs
-    saleWeight: 118, // in lbs
-    saleDate: '2023-09-10',
-    marketPrice: 3.25, // price per lb
-    salePrice: 383.5, // total sale price
-    buyer: 'Urban Grocers',
-    company: 'Prime Sheep Co.',
-    icon: icons.sheep,
-  },
-  {
-    id: '6',
-    weightGain: 52,
-    saleWeight: 122,
-    saleDate: '2023-10-15',
-    marketPrice: 3.3,
-    salePrice: 402.6,
-    buyer: 'Fresh Farm Market',
-    company: 'Elite Goat Corp.',
-    icon: icons.goat,
-  },
-  {
-    id: '7',
-    weightGain: 58,
-    saleWeight: 128,
-    saleDate: '2023-11-20',
-    marketPrice: 3.4,
-    salePrice: 435.2,
-    buyer: 'Village Market',
-    company: 'Grassland Sheep Co.',
-    icon: icons.sheep,
-  },
-  {
-    id: '8',
-    weightGain: 62,
-    saleWeight: 132,
-    saleDate: '2023-12-05',
-    marketPrice: 3.35,
-    salePrice: 442.2,
-    buyer: 'Township Meat Co.',
-    company: 'Excellence Goat Ltd.',
-    icon: icons.goat,
-  },
-  {
-    id: '9',
-    weightGain: 57,
-    saleWeight: 127,
-    saleDate: '2024-01-10',
-    marketPrice: 3.5,
-    salePrice: 444.5,
-    buyer: 'Regional Farms',
-    company: 'Heritage Sheep and Goat Producers',
-    icon: icons.sheep,
+    animalIdOrFlockId: 'ID 5',
+    woolWeight: 4.8,
+    woolQuality: 'Good',
+    shearingDate: '15/05/2023',
+    weaningWeight: 26,
+    milkYield: 14,
+    saleWeight: 46,
+    saleDate: '30/05/2023',
+    marketPrice: 115,
+    salePrice: 5290,
+    buyerName: 'Farm Fresh Market',
+    isCompany: false,
+    isIndividual: true,
+    buyerType: 'Individual',
+    icon: icons.sheepgoat,
   },
 ];
 
 const SheepAndGoatProductionListScreen = ({ navigation }) => {
-  const [sheepAndGoats, setSheepAndGoats] = useState(initialSheepAndGoatData);
+  const [sheepGoatRecords, setSheepGoatRecords] = useState(initialSheepGoatData);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedAnimal, setSelectedAnimal] = useState(null);
-  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('All');
 
-  const filteredAnimals = useMemo(() => {
-    return sheepAndGoats.filter(item =>
-      item.id.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [searchQuery, sheepAndGoats]);
+  const filteredRecords = useMemo(() => {
+    let filtered = sheepGoatRecords;
+
+    if (searchQuery) {
+      filtered = filtered.filter(
+        item =>
+          item.animalIdOrFlockId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.buyerName.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (filterStatus !== 'All') {
+      filtered = filtered.filter(item => item.buyerType === filterStatus);
+    }
+
+    return filtered;
+  }, [sheepGoatRecords, searchQuery, filterStatus]);
 
   const handleDelete = useCallback(id => {
     Alert.alert(
-      'Delete Animal Record',
-      'Are you sure you want to delete this animal record?',
+      'Delete Sheep/Goat Record',
+      'Are you sure you want to delete this sheep/goat record?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: () => {
-            setSheepAndGoats(prev => prev.filter(item => item.id !== id));
+            setSheepGoatRecords(prev => prev.filter(item => item.id !== id));
           },
         },
       ],
     );
   }, []);
 
-  const handleEdit = useCallback(
-    animal => {
-      // Navigate to edit screen with animal data
-      navigation.navigate('EditSheepAndGoatScreen', { animal });
+  const handleViewDetails = useCallback(
+    (record) => {
+      navigation.navigate('SheepGoatDetailsScreen', { sheepGoatRecord: record });
     },
     [navigation],
   );
 
-  const handleAddAnimal = () => {
-    // Navigate to add animal screen
-    navigation.navigate('AddSheepAndGoatScreen');
-  };
-
   const renderHeader = () => (
     <View style={styles.header}>
-      <View style={styles.searchContainer}>
-        <FastImage
-          source={icons.search}
-          style={styles.searchIcon}
-          tintColor="#666"
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by Animal ID..."
-          placeholderTextColor="#666"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
-      <View style={styles.actionBar}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => setIsFilterModalVisible(true)}>
+      <View style={styles.searchBarContainer}>
+        <View style={styles.searchBar}>
           <FastImage
-            source={icons.filter}
-            style={styles.actionIcon}
-            tintColor="#333"
+            source={icons.search}
+            style={styles.searchIcon}
+            tintColor={COLORS.darkGray3}
           />
-          <Text style={styles.actionText}>Filter</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by Animal ID or Buyer"
+            placeholderTextColor={COLORS.darkGray3}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery ? (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <FastImage
+                source={icons.remove}
+                style={styles.clearIcon}
+                tintColor={COLORS.darkGray3}
+              />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      </View>
+
+      <View style={styles.filterChips}>
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            filterStatus === 'All' && styles.activeChip
+          ]}
+          onPress={() => setFilterStatus('All')}>
+          <Text style={[
+            styles.chipText,
+            filterStatus === 'All' && styles.activeChipText
+          ]}>All</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            filterStatus === 'Company' && styles.activeChip
+          ]}
+          onPress={() => setFilterStatus('Company')}>
+          <Text style={[
+            styles.chipText,
+            filterStatus === 'Company' && styles.activeChipText
+          ]}>Company</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            filterStatus === 'Individual' && styles.activeChip
+          ]}
+          onPress={() => setFilterStatus('Individual')}>
+          <Text style={[
+            styles.chipText,
+            filterStatus === 'Individual' && styles.activeChipText
+          ]}>Individual</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 
-  const renderAnimalCard = ({ item }) => (
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <FastImage
+        source={icons.sheepgoat}
+        style={styles.emptyIcon}
+        tintColor={COLORS.lightGray}
+      />
+      <Text style={styles.emptyTitle}>No Sheep/Goat Records Found</Text>
+      <Text style={styles.emptySubtitle}>
+        {searchQuery
+          ? "Try adjusting your search"
+          : "Add your first sheep/goat production record"}
+      </Text>
+      <TouchableOpacity
+        style={styles.emptyButton}
+        onPress={() => navigation.navigate('SheepGoatDetailsScreen')}>
+        <Text style={styles.emptyButtonText}>Add Record</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderSheepGoatCard = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
-      onPress={() => {
-        setSelectedAnimal(item);
-      }}>
+      onPress={() => handleViewDetails(item)}
+      activeOpacity={0.7}>
       <View style={styles.cardHeader}>
-        <FastImage source={item.icon} style={styles.cardIcon} />
-        <View style={styles.animalInfo}>
-          <Text style={styles.animalId}>Animal ID: {item.id}</Text>
-          <Text style={styles.animalPrice}>Sale Price: ${item.salePrice}</Text>
-          <Text style={styles.animalDate}>Sale Date: {item.saleDate}</Text>
+        <FastImage
+          source={icons.sheepgoat}
+          style={styles.sheepGoatIcon}
+          tintColor={COLORS.green}
+        />
+        <View style={styles.headerInfo}>
+          <Text style={styles.animalIdText}>Animal: {item.animalIdOrFlockId}</Text>
+          <View style={styles.buyerTypeTag}>
+            <Text style={styles.buyerTypeText}>{item.buyerType}</Text>
+          </View>
         </View>
-        <View style={styles.cardActions}>
-          <TouchableOpacity
-            onPress={() => handleDelete(item.id)}
-            style={styles.cardActionButton}>
-            <FastImage
-              source={icons.remove}
-              style={styles.cardActionIcon}
-              tintColor="#F44336"
-            />
-          </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => handleDelete(item.id)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <FastImage
+            source={icons.remove}
+            style={styles.deleteIcon}
+            tintColor={COLORS.red}
+          />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.cardBody}>
+        <View style={styles.dataRow}>
+          <View style={styles.dataItem}>
+            <Text style={styles.dataLabel}>Wool Weight</Text>
+            <Text style={styles.dataValue}>{item.woolWeight} kg</Text>
+          </View>
+          <View style={styles.dataItem}>
+            <Text style={styles.dataLabel}>Quality</Text>
+            <Text style={styles.dataValue}>{item.woolQuality}</Text>
+          </View>
+          <View style={styles.dataItem}>
+            <Text style={styles.dataLabel}>Sale</Text>
+            <Text style={styles.dataValue}>${item.salePrice}</Text>
+          </View>
         </View>
+
+        <View style={styles.buyerContainer}>
+          <Text style={styles.buyerLabel}>Buyer:</Text>
+          <Text style={styles.buyerValue}>{item.buyerName}</Text>
+          <Text style={styles.saleDate}>{item.saleDate}</Text>
+        </View>
+      </View>
+
+      <View style={styles.cardFooter}>
+        <Text style={styles.viewDetailsText}>Tap to view details</Text>
       </View>
     </TouchableOpacity>
   );
 
-  const renderFilterModal = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={isFilterModalVisible}
-      onRequestClose={() => setIsFilterModalVisible(false)}>
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Filter Animal Records</Text>
-          {/* Add filter options here if needed */}
-          <TouchableOpacity
-            style={styles.closeModalButton}
-            onPress={() => setIsFilterModalVisible(false)}>
-            <Text style={styles.closeModalButtonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-
-  const renderAnimalDetailModal = () => {
-    if (!selectedAnimal) return null;
-
-    return (
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={!!selectedAnimal}
-        onRequestClose={() => setSelectedAnimal(null)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {selectedAnimal.company} Details
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Animal ID:</Text>{' '}
-              {selectedAnimal.id}
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Weight Gain:</Text>{' '}
-              {selectedAnimal.weightGain} lbs
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Sale Weight:</Text>{' '}
-              {selectedAnimal.saleWeight} lbs
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Sale Date:</Text>{' '}
-              {selectedAnimal.saleDate}
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Market Price:</Text> $
-              {selectedAnimal.marketPrice}/lb
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Sale Price:</Text> $
-              {selectedAnimal.salePrice}
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Buyer:</Text> {selectedAnimal.buyer}
-            </Text>
-            <Text style={styles.modalText}>
-              <Text style={styles.boldText}>Company:</Text>{' '}
-              {selectedAnimal.company}
-            </Text>
-            <TouchableOpacity
-              style={styles.closeModalButton}
-              onPress={() => setSelectedAnimal(null)}>
-              <Text style={styles.closeModalButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    );
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-      <SecondaryHeader title="Sheep and Goat Production Records" />
       <StatusBar
         translucent
         backgroundColor={COLORS.green2}
-        animated={true}
-        barStyle={'light-content'}
+        barStyle="light-content"
       />
+      <SecondaryHeader title="Sheep & Goat Production Records" />
+
       {renderHeader()}
+
       <FlatList
-        data={filteredAnimals}
-        renderItem={renderAnimalCard}
+        data={filteredRecords}
+        renderItem={renderSheepGoatCard}
         keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContainer,
+          filteredRecords.length === 0 && { flex: 1 }
+        ]}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={renderEmptyState}
       />
-      {renderFilterModal()}
-      {renderAnimalDetailModal()}
+
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('SheepGoatDetailsScreen')}>
+        onPress={() => navigation.navigate('SheepGoatDetailsScreen')}
+        activeOpacity={0.8}>
         <FastImage
           source={icons.plus}
           style={styles.fabIcon}
-          tintColor="#fff"
+          tintColor={COLORS.white}
         />
       </TouchableOpacity>
     </SafeAreaView>
@@ -330,21 +341,25 @@ const SheepAndGoatProductionListScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-
+    backgroundColor: COLORS.lightGreen,
   },
   header: {
     backgroundColor: COLORS.white,
-    padding: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
-  searchContainer: {
+  searchBarContainer: {
+    marginBottom: 12,
+  },
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f1f3f4',
+    backgroundColor: COLORS.lightGreen,
     borderRadius: 8,
     paddingHorizontal: 12,
-    marginBottom: 16,
+    height: 44,
   },
   searchIcon: {
     width: 20,
@@ -353,116 +368,142 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    height: 40,
-    fontSize: 16,
-    color: '#333',
+    fontSize: 15,
+    color: COLORS.darkGray3,
+    height: '100%',
   },
-  actionBar: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+  clearIcon: {
+    width: 16,
+    height: 16,
   },
-  actionButton: {
+  filterChips: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  chip: {
     paddingHorizontal: 12,
-    borderRadius: 20,
-    backgroundColor: '#f1f3f4',
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: COLORS.lightGreen,
+    marginRight: 8,
   },
-  actionIcon: {
-    width: 18,
-    height: 18,
-    marginRight: 6,
+  activeChip: {
+    backgroundColor: COLORS.green,
   },
-  actionText: {
+  chipText: {
     fontSize: 14,
-    color: '#333',
+    color: COLORS.darkGray3,
   },
-  listContent: {
+  activeChipText: {
+    color: COLORS.white,
+    fontWeight: '500',
+  },
+  listContainer: {
     padding: 16,
   },
   card: {
-    backgroundColor: '#fefefe',
+    backgroundColor: COLORS.white,
     borderRadius: 12,
-    padding: 16,
     marginBottom: 16,
-    elevation: 2,
-    shadowColor: COLORS.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    elevation: 3,
+    overflow: 'hidden',
   },
   cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  animalInfo: {
+  sheepGoatIcon: {
+    width: 28,
+    height: 28,
+    marginRight: 10,
+  },
+  headerInfo: {
     flex: 1,
-    paddingHorizontal: 10,
-  },
-  animalId: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  animalPrice: {
-    fontSize: 16,
-    color: '#666',
-  },
-  animalDate: {
-    fontSize: 16,
-    color: '#666',
-  },
-  cardActions: {
     flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  cardActionButton: {
-    padding: 8,
-    marginLeft: 8,
+  animalIdText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.darkGray3,
   },
-  cardActionIcon: {
+  buyerTypeTag: {
+    backgroundColor: COLORS.lightGreen,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  buyerTypeText: {
+    fontSize: 12,
+    color: COLORS.green,
+    fontWeight: '500',
+  },
+  deleteIcon: {
     width: 20,
     height: 20,
+    marginLeft: 10,
+    color: COLORS.red,
   },
-  modalContainer: {
+  cardBody: {
+    padding: 12,
+  },
+  dataRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  dataItem: {
+    alignItems: 'center',
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalContent: {
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 20,
-    width: '80%',
+  dataLabel: {
+    fontSize: 12,
+    color: COLORS.darkGray3,
+    marginBottom: 2,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#333',
-  },
-  modalText: {
+  dataValue: {
     fontSize: 16,
-    marginVertical: 4,
-    color: COLORS.black,
+    fontWeight: '600',
+    color: COLORS.darkGray,
   },
-  boldText: {
-    fontWeight: 'bold',
-  },
-  closeModalButton: {
-    marginTop: 16,
+  buyerContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4CAF50',
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
-  closeModalButtonText: {
-    fontSize: 16,
-    color: COLORS.white,
-    fontWeight: 'bold',
+  buyerLabel: {
+    fontSize: 13,
+    color: COLORS.darkGray3,
+    marginRight: 4,
+  },
+  buyerValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.darkGray,
+    flex: 1,
+  },
+  saleDate: {
+    fontSize: 13,
+    color: COLORS.darkGray3,
+  },
+  cardFooter: {
+    backgroundColor: '#f9f9f9',
+    padding: 8,
+    alignItems: 'center',
+  },
+  viewDetailsText: {
+    fontSize: 12,
+    color: COLORS.green,
   },
   fab: {
     position: 'absolute',
@@ -471,18 +512,52 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#4CAF50',
+    backgroundColor: COLORS.green,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 6,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   fabIcon: {
     width: 24,
     height: 24,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyIcon: {
+    width: 80,
+    height: 80,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.darkGray3,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: COLORS.darkGray3,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  emptyButton: {
+    backgroundColor: COLORS.green,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  emptyButtonText: {
+    color: COLORS.white,
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
 
