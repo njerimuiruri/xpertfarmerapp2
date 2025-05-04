@@ -20,9 +20,9 @@ const CustomDrawer1 = props => {
   const [userData, setUserData] = useState({
     first_name: '',
     last_name: '',
-    role: ''
+    role: '',
   });
-console.log(userData)
+  console.log(userData);
   useEffect(() => {
     const loadUserData = async () => {
       try {
@@ -53,7 +53,10 @@ console.log(userData)
       {/* Profile Section */}
       <View style={styles.profileSection}>
         <FastImage source={icons.avatar} style={styles.avatar} />
-        <Text style={styles.nameText}>{`${userData.first_name} ${userData.last_name}`}</Text>
+        <Text
+          style={
+            styles.nameText
+          }>{`${userData.first_name} ${userData.last_name}`}</Text>
         <Text style={styles.roleText}>{userData.role || 'User'}</Text>
         <Divider style={styles.divider} />
       </View>
@@ -64,7 +67,7 @@ console.log(userData)
       </DrawerContentScrollView>
 
       {/* Dark Mode Switch */}
-      <View style={styles.switchContainer}>
+      {/* <View style={styles.switchContainer}>
         <Text style={styles.switchLabel}>Dark Mode</Text>
         <Switch
           isChecked={isDarkMode}
@@ -73,7 +76,7 @@ console.log(userData)
           onTrackColor="#81b0ff"
           thumbColor={isDarkMode ? '#f5dd4b' : '#f4f3f4'}
         />
-      </View>
+      </View> */}
 
       {/* Logout Button */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
