@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { CodeField, Cursor } from 'react-native-confirmation-code-field';
 import { Image, Alert } from "react-native";
 import {
   Box,
@@ -13,50 +14,51 @@ import { icons } from '../../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen({ navigation }) {
-  const [showPassword, setShowPassword] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [password, setPassword] = useState("");
+  const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const toggleShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
-
   const handleLogin = async () => {
-    if (!phoneNumber || !password) {
-      Alert.alert("Error", "Please enter both phone number and password.");
+    if (!phoneNumber || !pin) {
+      Alert.alert("Error", "Please enter both phone number and PIN.");
+      return;
+    }
+    if (pin.length !== 4) {
+      Alert.alert("Error", "PIN must be 4 digits.");
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await fetch(
-        "https://xpert-farmer-bc7936403999.herokuapp.com/api/v1/user/auth/login/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            phone_number: phoneNumber,
-            password: password,
-          }),
-        }
-      );
+      // const response = await fetch(
+      //   "https://xpert-farmer-bc7936403999.herokuapp.com/api/v1/user/auth/login/",
+      //   {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({
+      //       phone_number: phoneNumber,
+      //       password: pin,
+      //     }),
+      //   }
+      // );
 
-      const data = await response.json();
+      // const data = await response.json();
 
-      if (response.ok) {
-        const userData = {
-          phone_number: phoneNumber,
-          ...data.user
-        };
-        await AsyncStorage.setItem('userData', JSON.stringify(userData));
-        navigation.navigate("DrawerNav");
-      } else {
-        Alert.alert("Login Failed", data.message || "An error occurred. Please try again.");
-      }
+      // if (response.ok) {
+      //   const userData = {
+      //     phone_number: phoneNumber,
+      //     ...data.user
+      //   };
+      //   await AsyncStorage.setItem('userData', JSON.stringify(userData));
+      //   navigation.navigate("DrawerNav");
+      // } else {
+      //   Alert.alert("Login Failed", data.message || "An error occurred. Please try again.");
+      // }
+      navigation.navigate("DrawerNav");
+
     } catch (error) {
       console.error(error);
       Alert.alert("Error", "Something went wrong. Please try again.");
@@ -109,35 +111,39 @@ export default function LoginScreen({ navigation }) {
 
         <Box>
           <Text fontSize="16" fontWeight={500} mb={1} color="black">
-            Password
+            4-digit PIN
           </Text>
-          <Input
-            variant="filled"
-            width="100%"
-            height={10}
-            backgroundColor="#e5f3e5"
-            paddingLeft={2}
-            borderRadius={8}
-            secureTextEntry={!showPassword}
-            value={password}
-            onChangeText={setPassword}
-            InputRightElement={
-              <Pressable onPress={toggleShowPassword} mr={2}>
-                <FastImage
-                  source={showPassword ? icons.eye : icons.eye_close}
-                  style={{ width: 24, height: 24 }}
-                />
-              </Pressable>
-            }
+          <CodeField
+            value={pin}
+            onChangeText={setPin}
+            cellCount={4}
+            rootStyle={{ marginBottom: 20 }}
+            keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            renderCell={({ index, symbol, isFocused }) => (
+              <Box
+                key={index}
+                width={10}
+                height={10}
+                borderWidth={1}
+                borderColor={isFocused ? '#007AFF' : '#DDDDDD'}
+                borderRadius={8}
+                justifyContent="center"
+                alignItems="center"
+                margin={1}
+                backgroundColor="#fff"
+              >
+                <Text fontSize={24}>{symbol ? '•' : isFocused ? <Cursor /> : null}</Text>
+              </Box>
+            )}
           />
-
           <Pressable
             onPress={() => navigation.navigate("ForgotPasswordScreen")}
             alignSelf="flex-end"
             mt={1}
           >
             <Text fontSize="13" color="black" className="underline">
-              Forgot Password?
+              Forgot PIN?
             </Text>
           </Pressable>
         </Box>

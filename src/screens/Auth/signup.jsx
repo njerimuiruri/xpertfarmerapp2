@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { CodeField, Cursor } from 'react-native-confirmation-code-field';
 import { Image, Alert, ActivityIndicator, ScrollView } from "react-native";
 import { Box, Text, Input, Button, VStack, HStack, Pressable, Stack, FormControl, Radio, Checkbox, Select } from "native-base";
 import FastImage from "react-native-fast-image";
@@ -8,8 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function RegisterScreen({ navigation }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-
+  // Remove showPassword for PIN
   const [formData, setFormData] = useState({
     farm_name: "",
     county: "",
@@ -30,8 +30,8 @@ export default function RegisterScreen({ navigation }) {
     email: "",
     phone_number: "",
     business_number: "",
-    password: "",
-    confirmPassword: "",
+    pin: "",
+    confirmPin: "",
     country: 1,
   });
 
@@ -67,12 +67,16 @@ export default function RegisterScreen({ navigation }) {
         }
         return true;
       case 4:
-        if (!formData.email || !formData.phone_number || !formData.password || !formData.confirmPassword) {
+        if (!formData.email || !formData.phone_number || !formData.pin || !formData.confirmPin) {
           Alert.alert("Error", "All fields with  are required!");
           return false;
         }
-        if (formData.password !== formData.confirmPassword) {
-          Alert.alert("Error", "Passwords do not match!");
+        if (formData.pin.length !== 4 || formData.confirmPin.length !== 4) {
+          Alert.alert("Error", "PIN must be 4 digits!");
+          return false;
+        }
+        if (formData.pin !== formData.confirmPin) {
+          Alert.alert("Error", "PINs do not match!");
           return false;
         }
         return true;
@@ -98,12 +102,16 @@ export default function RegisterScreen({ navigation }) {
   };
 
   const handleRegister = async () => {
-    if (!formData.email || !formData.phone_number || !formData.password || !formData.confirmPassword) {
+    if (!formData.email || !formData.phone_number || !formData.pin || !formData.confirmPin) {
       Alert.alert("Error", "All fields with  are required!");
       return;
     }
-    if (formData.password !== formData.confirmPassword) {
-      Alert.alert("Error", "Passwords do not match!");
+    if (formData.pin.length !== 4 || formData.confirmPin.length !== 4) {
+      Alert.alert("Error", "PIN must be 4 digits!");
+      return;
+    }
+    if (formData.pin !== formData.confirmPin) {
+      Alert.alert("Error", "PINs do not match!");
       return;
     }
 
@@ -114,7 +122,7 @@ export default function RegisterScreen({ navigation }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          password1: formData.confirmPassword,
+          password: formData.pin,
         }),
       });
 
@@ -520,42 +528,64 @@ export default function RegisterScreen({ navigation }) {
           />
         </Box>
 
+        {/* Modern PIN Input */}
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Set Password
+            Set 4-digit PIN
           </Text>
-          <Input
-            variant="outline"
-            borderColor="#DDDDDD"
-            width="100%"
-            p={2}
-            borderRadius={8}
-            value={formData.password}
-            onChangeText={(value) => handleInputChange("password", value)}
-            placeholder="x x x x"
-            secureTextEntry={!showPassword}
-            InputRightElement={
-              <Pressable onPress={() => setShowPassword(!showPassword)} mr={2}>
-                <FastImage source={showPassword ? icons.eye : icons.eye_close} style={{ width: 24, height: 24 }} />
-              </Pressable>
-            }
+          <CodeField
+            value={formData.pin}
+            onChangeText={value => handleInputChange("pin", value)}
+            cellCount={4}
+            rootStyle={{ marginBottom: 20 }}
+            keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            renderCell={({ index, symbol, isFocused }) => (
+              <Box
+                key={index}
+                width={10}
+                height={10}
+                borderWidth={1}
+                borderColor={isFocused ? '#007AFF' : '#DDDDDD'}
+                borderRadius={8}
+                justifyContent="center"
+                alignItems="center"
+                margin={1}
+                backgroundColor="#fff"
+              >
+                <Text fontSize={24}>{symbol ? '•' : isFocused ? <Cursor /> : null}</Text>
+              </Box>
+            )}
           />
         </Box>
 
         <Box>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Confirm Password
+            Confirm 4-digit PIN
           </Text>
-          <Input
-            variant="outline"
-            borderColor="#DDDDDD"
-            width="100%"
-            p={2}
-            borderRadius={8}
-            value={formData.confirmPassword}
-            onChangeText={(value) => handleInputChange("confirmPassword", value)}
-            placeholder="x x x x"
-            secureTextEntry={!showPassword}
+          <CodeField
+            value={formData.confirmPin}
+            onChangeText={value => handleInputChange("confirmPin", value)}
+            cellCount={4}
+            rootStyle={{ marginBottom: 20 }}
+            keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            renderCell={({ index, symbol, isFocused }) => (
+              <Box
+                key={index}
+                width={10}
+                height={10}
+                borderWidth={1}
+                borderColor={isFocused ? '#007AFF' : '#DDDDDD'}
+                borderRadius={8}
+                justifyContent="center"
+                alignItems="center"
+                margin={1}
+                backgroundColor="#fff"
+              >
+                <Text fontSize={24}>{symbol ? '•' : isFocused ? <Cursor /> : null}</Text>
+              </Box>
+            )}
           />
         </Box>
 

@@ -113,7 +113,7 @@ const Dashboard = () => {
           style={styles.welcomeBanner}
         >
           <View style={styles.welcomeTextContainer}>
-            <Text style={styles.welcomeTitle}>Welcome to Xpert Farmers</Text>
+            <Text style={styles.welcomeTitle}>Welcome to Xpert Farmer</Text>
             <Text style={styles.welcomeSubtitle}>
               Data to Farm,{'\n'}
               Data for Business,{'\n'}
