@@ -1,28 +1,15 @@
-import React, { useRef } from "react";
+import React, { useState } from "react";
 import { Image } from "react-native";
+import { CodeField, Cursor } from 'react-native-confirmation-code-field';
 import {
   Box,
   Text,
   Button,
   VStack,
-  HStack,
-  Input,
 } from "native-base";
 
 export default function EmailOtpScreen({ navigation }) {
-  const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
-
-  const handleInputChange = (index, value) => {
-    if (value) {
-      if (index < inputRefs.length - 1) {
-        inputRefs[index + 1].current.focus();
-      }
-    } else {
-      if (index > 0) {
-        inputRefs[index - 1].current.focus();
-      }
-    }
-  };
+  const [otp, setOtp] = useState("");
 
   return (
     <Box
@@ -38,9 +25,12 @@ export default function EmailOtpScreen({ navigation }) {
           style={{ width: 208, height: 144 }}
         />
       </Box>
+
       {/* <Image
         source={require("../../assets/images/xpertLogo.jpeg")}
-        style={{ width: 180, height: 180, marginBottom: 10 }} /> */}
+        style={{ width: 180, height: 180, marginBottom: 10 }}
+      /> */}
+
       <Text
         fontSize="22"
         fontWeight="bold"
@@ -54,26 +44,36 @@ export default function EmailOtpScreen({ navigation }) {
         Enter the OTP sent to your Email address
       </Text>
 
-      <HStack space={2} marginBottom={6}>
-        {[...Array(4)].map((_, index) => (
-          <Input
-            key={index}
-            ref={inputRefs[index]}
-            variant="filled"
-            width={50}
-            height={50}
-            backgroundColor="#e5f3e5"
-            textAlign="center"
-            borderRadius={8}
-            fontSize={18}
-            maxLength={1}
-            keyboardType="numeric"
-            onChangeText={(value) => {
-              handleInputChange(index, value);
-            }}
-          />
-        ))}
-      </HStack>
+      <VStack width="100%" space={2}>
+        <CodeField
+          value={otp}
+          onChangeText={setOtp}
+          cellCount={4}
+          rootStyle={{
+            marginBottom: 20,
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 8
+          }}
+          keyboardType="number-pad"
+          textContentType="oneTimeCode"
+          renderCell={({ index, symbol, isFocused }) => (
+            <Box
+              key={index}
+              width="60px"
+              height="60px"
+              borderWidth={0}
+              borderRadius={8}
+              justifyContent="center"
+              alignItems="center"
+              backgroundColor="#e5f3e5"
+            >
+              <Text fontSize={24}>{symbol ? '•' : isFocused ? <Cursor /> : null}</Text>
+            </Box>
+          )}
+        />
+      </VStack>
 
       <Button
         onPress={() => navigation.navigate('ResetPasswordScreen')}

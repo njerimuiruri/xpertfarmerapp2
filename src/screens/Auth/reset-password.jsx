@@ -1,154 +1,199 @@
 import React, { useState } from "react";
 import { Image, Modal } from "react-native";
+import { CodeField, Cursor } from 'react-native-confirmation-code-field';
 import {
-  View,
+  Box,
   Text,
   Button,
-  Input,
   VStack,
-  Pressable,
-  Center,
-  Box
+  Center
 } from "native-base";
-import CustomIcon from '../../components/CustomIcon';
 
 export default function ResetPassword({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = () => {
+
+    setModalVisible(true);
+
     if (newPassword && confirmPassword && newPassword === confirmPassword) {
-      setModalVisible(true);
+      if (newPassword.length === 4 && confirmPassword.length === 4) {
+        setModalVisible(true);
+      } else {
+        console.log("PIN length validation failed");
+      }
     } else {
+      console.log("Password validation failed");
     }
+
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20, backgroundColor: 'white' }}>
-
-      <Box position="absolute" top={0} left={0}>
+    <Box
+      flex={1}
+      justifyContent="center"
+      alignItems="center"
+      paddingX={6}
+      backgroundColor="white"
+    >
+      <Box position="absolute" top={0} left={0} width="208px" height="144px" bg="green.200" borderBottomRightRadius="full">
         <Image
           source={require("../../assets/images/top-left-decoration.png")}
           style={{ width: 208, height: 144 }}
         />
-        <CustomIcon
-          library="AntDesign"
-          name={showPassword ? "eye" : "eyeo"}
-          size={5}
-        />
       </Box>
-      {/* <Image
-        source={require("../../assets/images/xpertLogo.jpeg")}
-        style={{ width: 180, height: 180, marginBottom: 10 }} /> */}
-      <Text fontSize="22" fontWeight="bold" marginBottom={5}>
+
+      <Text
+        fontSize="22"
+        fontWeight="bold"
+        color="green.500"
+        mb={5}
+      >
         Reset Password
       </Text>
 
       <Image
         source={require("../../assets/images/teenyicons_password-outline.png")}
-        style={{ width: 40, height: 40, marginBottom: 20 }}
+        style={{ width: 40, height: 40, marginBottom: 5 }}
       />
 
-      <Text fontSize="14" marginBottom={5} textAlign="center">
+      <Text fontSize="14" mb={6} textAlign="center" color="black">
         Please enter your new password
       </Text>
 
-      <VStack space={4} width="100%">
-        <Input
-          placeholder="New password"
-          variant="filled"
-          height={12}
-          backgroundColor="#e5f3e5"
-          borderRadius={8}
-          secureTextEntry={!showPassword}
-          onChangeText={setNewPassword}
-          InputRightElement={
-            <Pressable onPress={() => setShowPassword(!showPassword)}>
-              <CustomIcon
-                library="AntDesign"
-                name={showPassword ? "eye" : "eyeo"}
-                size={5}
-              />
-            </Pressable>
-          }
-        />
-        <Input
-          placeholder="Confirm new password"
-          variant="filled"
-          height={12}
-          backgroundColor="#e5f3e5"
-          borderRadius={8}
-          secureTextEntry={!showConfirmPassword}
-          onChangeText={setConfirmPassword}
-          InputRightElement={
-            <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-              <CustomIcon
-                library="AntDesign"
-                name={showConfirmPassword ? "eye" : "eyeo"}
-                size={5}
-              />
-            </Pressable>
-          }
-        />
+      <VStack width="100%" space={4}>
+        <Box>
+          <Text fontSize="16" fontWeight={500} mb={1} color="black">
+            New 4-digit PIN
+          </Text>
+          <CodeField
+            value={newPassword}
+            onChangeText={setNewPassword}
+            cellCount={4}
+            rootStyle={{
+              marginBottom: 10,
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 8
+            }}
+            keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            renderCell={({ index, symbol, isFocused }) => (
+              <Box
+                key={index}
+                width="60px"
+                height="60px"
+                borderWidth={0}
+                borderRadius={8}
+                justifyContent="center"
+                alignItems="center"
+                backgroundColor="#e5f3e5"
+              >
+                <Text fontSize={24}>{symbol ? '•' : isFocused ? <Cursor /> : null}</Text>
+              </Box>
+            )}
+          />
+        </Box>
+
+        <Box>
+          <Text fontSize="16" fontWeight={500} mb={1} color="black">
+            Confirm 4-digit PIN
+          </Text>
+          <CodeField
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            cellCount={4}
+            rootStyle={{
+              marginBottom: 10,
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 8
+            }}
+            keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            renderCell={({ index, symbol, isFocused }) => (
+              <Box
+                key={index}
+                width="60px"
+                height="60px"
+                borderWidth={0}
+                borderRadius={8}
+                justifyContent="center"
+                alignItems="center"
+                backgroundColor="#e5f3e5"
+              >
+                <Text fontSize={24}>{symbol ? '•' : isFocused ? <Cursor /> : null}</Text>
+              </Box>
+            )}
+          />
+        </Box>
       </VStack>
 
       <Button
-        onPress={handleSubmit}
+        onPress={() => handleSubmit()}
         width="100%"
+        mt={8}
         backgroundColor="#74c474"
-        marginTop={5}
+        padding={3}
         borderRadius={8}
       >
-        <Text color="white" fontWeight="bold">Submit</Text>
+        <Text color="white" fontWeight="bold">
+          SUBMIT
+        </Text>
       </Button>
 
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(!modalVisible)}
+        onRequestClose={() => setModalVisible(false)}
       >
         <Center flex={1} backgroundColor="rgba(0,0,0,0.5)">
-          <View style={{ width: 300, padding: 20, backgroundColor: 'white', borderRadius: 10, alignItems: 'center' }}>
-            <View style={{
-              width: 60,
-              height: 60,
-              borderRadius: 30,
-              backgroundColor: "#74c474",
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 20
-            }}>
-              <CustomIcon
-                library="MaterialIcons"
-                name="shield"
-                size={30}
-                style={{ color: "white" }}
-              />
-            </View>
+          <Box
+            width="80%"
+            maxWidth="300px"
+            padding={6}
+            backgroundColor="white"
+            borderRadius={16}
+            alignItems="center"
+          >
+            <Box
+              width="60px"
+              height="60px"
+              borderRadius="full"
+              backgroundColor="#92d192"
+              justifyContent="center"
+              alignItems="center"
+              mb={4}
+            >
+              <Text fontSize="30" color="white">✓</Text>
+            </Box>
 
-            <Text fontSize="16" textAlign="center" marginBottom={5}>
+            <Text fontSize="16" textAlign="center" mb={5} color="black">
               Your new password has been updated successfully
             </Text>
 
-            <Pressable
-              backgroundColor="#74c474"
-              paddingY={2}
-              paddingX={10}
-              borderRadius={5}
+            <Button
+              backgroundColor="#8ed28e"
+              width="120px"
+              height="40px"
+              borderRadius={8}
               onPress={() => {
                 setModalVisible(false);
                 navigation.navigate('SignInScreen');
               }}
             >
-              <Text color="white" fontWeight="bold">Login</Text>
-            </Pressable>
-          </View>
+              <Text color="white" fontWeight="500">
+                Login
+              </Text>
+            </Button>
+          </Box>
         </Center>
       </Modal>
-    </View>
+    </Box>
   );
 }

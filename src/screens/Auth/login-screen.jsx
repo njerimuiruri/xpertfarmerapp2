@@ -1,17 +1,6 @@
 import React, { useState } from "react";
 import { CodeField, Cursor } from 'react-native-confirmation-code-field';
-import { Image, Alert } from "react-native";
-import {
-  Box,
-  Text,
-  Input,
-  Button,
-  VStack,
-  Pressable,
-} from "native-base";
-import FastImage from "react-native-fast-image";
-import { icons } from '../../constants';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Box, Text, Input, Button, VStack, Pressable } from "native-base";
 
 export default function LoginScreen({ navigation }) {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -67,6 +56,7 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
+
   return (
     <Box
       flex={1}
@@ -75,17 +65,13 @@ export default function LoginScreen({ navigation }) {
       paddingX={6}
       backgroundColor="white"
     >
-      <Box position="absolute" top={0} left={0}>
-        <Image
-          source={require("../../assets/images/top-left-decoration.png")}
-          style={{ width: 208, height: 144 }}
-        />
+      <Box position="absolute" top={0} left={0} width="208px" height="144px" bg="green.200" borderBottomRightRadius="full">
       </Box>
 
       <Text
         fontSize="20"
         fontWeight="bold"
-        color="#74c474"
+        color="green.500"
         mb={5}
       >
         Login
@@ -103,9 +89,9 @@ export default function LoginScreen({ navigation }) {
             backgroundColor="#e5f3e5"
             paddingLeft={2}
             borderRadius={8}
-            keyboardType="phone-pad"
             value={phoneNumber}
             onChangeText={setPhoneNumber}
+            placeholder="Enter phone number"
           />
         </Box>
 
@@ -117,21 +103,25 @@ export default function LoginScreen({ navigation }) {
             value={pin}
             onChangeText={setPin}
             cellCount={4}
-            rootStyle={{ marginBottom: 20 }}
+            rootStyle={{
+              marginBottom: 20,
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 8
+            }}
             keyboardType="number-pad"
             textContentType="oneTimeCode"
             renderCell={({ index, symbol, isFocused }) => (
               <Box
                 key={index}
-                width={10}
-                height={10}
-                borderWidth={1}
-                borderColor={isFocused ? '#007AFF' : '#DDDDDD'}
+                width="60px"
+                height="60px"
+                borderWidth={0}
                 borderRadius={8}
                 justifyContent="center"
                 alignItems="center"
-                margin={1}
-                backgroundColor="#fff"
+                backgroundColor="#e5f3e5"
               >
                 <Text fontSize={24}>{symbol ? '•' : isFocused ? <Cursor /> : null}</Text>
               </Box>
@@ -142,7 +132,7 @@ export default function LoginScreen({ navigation }) {
             alignSelf="flex-end"
             mt={1}
           >
-            <Text fontSize="13" color="black" className="underline">
+            <Text fontSize="13" color="black" textDecorationLine="underline">
               Forgot PIN?
             </Text>
           </Pressable>
@@ -157,13 +147,13 @@ export default function LoginScreen({ navigation }) {
           borderRadius={8}
           isLoading={loading}
         >
-          <Text color="white" fontWeight="bold">
+          <Text color="white" fontWeight="bold" onPress={handleLogin}>
             LOGIN
           </Text>
         </Button>
 
         <Box mt={5} flexDirection="row" justifyContent="center">
-          <Text fontSize="15" color="black">
+          <Text fontSize="15" color="black" className="text-[16px] font-semibold">
             Do not have an account?{" "}
           </Text>
           <Pressable onPress={() => navigation.navigate("SignupScreen")}>

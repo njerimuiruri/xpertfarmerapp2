@@ -9,7 +9,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function RegisterScreen({ navigation }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  // Remove showPassword for PIN
   const [formData, setFormData] = useState({
     farm_name: "",
     county: "",
@@ -543,15 +542,13 @@ export default function RegisterScreen({ navigation }) {
             renderCell={({ index, symbol, isFocused }) => (
               <Box
                 key={index}
-                width={10}
-                height={10}
-                borderWidth={1}
-                borderColor={isFocused ? '#007AFF' : '#DDDDDD'}
+                width="60px"
+                height="60px"
+                borderWidth={0}
                 borderRadius={8}
                 justifyContent="center"
                 alignItems="center"
-                margin={1}
-                backgroundColor="#fff"
+                backgroundColor="#e5f3e5"
               >
                 <Text fontSize={24}>{symbol ? '•' : isFocused ? <Cursor /> : null}</Text>
               </Box>
@@ -573,15 +570,13 @@ export default function RegisterScreen({ navigation }) {
             renderCell={({ index, symbol, isFocused }) => (
               <Box
                 key={index}
-                width={10}
-                height={10}
-                borderWidth={1}
-                borderColor={isFocused ? '#007AFF' : '#DDDDDD'}
+                width="60px"
+                height="60px"
+                borderWidth={0}
                 borderRadius={8}
                 justifyContent="center"
                 alignItems="center"
-                margin={1}
-                backgroundColor="#fff"
+                backgroundColor="#e5f3e5"
               >
                 <Text fontSize={24}>{symbol ? '•' : isFocused ? <Cursor /> : null}</Text>
               </Box>
