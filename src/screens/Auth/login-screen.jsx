@@ -20,32 +20,7 @@ export default function LoginScreen({ navigation }) {
     setLoading(true);
 
     try {
-      // const response = await fetch(
-      //   "https://xpert-farmer-bc7936403999.herokuapp.com/api/v1/user/auth/login/",
-      //   {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify({
-      //       phone_number: phoneNumber,
-      //       password: pin,
-      //     }),
-      //   }
-      // );
 
-      // const data = await response.json();
-
-      // if (response.ok) {
-      //   const userData = {
-      //     phone_number: phoneNumber,
-      //     ...data.user
-      //   };
-      //   await AsyncStorage.setItem('userData', JSON.stringify(userData));
-      //   navigation.navigate("DrawerNav");
-      // } else {
-      //   Alert.alert("Login Failed", data.message || "An error occurred. Please try again.");
-      // }
       navigation.navigate("DrawerNav");
 
     } catch (error) {

@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { CodeField, Cursor } from 'react-native-confirmation-code-field';
 import { Image, Alert, ActivityIndicator, ScrollView } from "react-native";
 import { Box, Text, Input, Button, VStack, HStack, Pressable, Stack, FormControl, Radio, Checkbox, Select } from "native-base";
-import FastImage from "react-native-fast-image";
-import { icons } from "../../constants";
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RegisterScreen({ navigation }) {
@@ -116,31 +115,7 @@ export default function RegisterScreen({ navigation }) {
 
     setLoading(true);
     try {
-      const response = await fetch("https://xpert-farmer-bc7936403999.herokuapp.com/api/v1/user/auth/register/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          password: formData.pin,
-        }),
-      });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        const userData = {
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          phone_number: formData.phone_number,
-          email: formData.email,
-          role: data.role || 'User'
-        };
-        await AsyncStorage.setItem('userData', JSON.stringify(userData));
-        Alert.alert("Success", "Registration Successful!");
-        navigation.navigate("HomeScreen");
-      } else {
-        Alert.alert("Error", data.message || "Registration failed");
-      }
     } catch (error) {
       Alert.alert("Error", "Something went wrong!");
     } finally {
