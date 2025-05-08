@@ -11,9 +11,10 @@ import {
   FormControl,
 } from "native-base";
 import { requestOtp, resetPassword } from "../../services/auth";
+import { verifyOtp } from "../../services/verify";
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from "react-native-confirmation-code-field";
 
-export default function Otp({ navigation, route }) {
+export default function VerifyOtp({ navigation, route }) {
   const phoneNumber = route?.params?.phoneNumber || "";
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,11 +36,14 @@ export default function Otp({ navigation, route }) {
     }
     setLoading(true);
     try {
-
-      navigation.navigate("ResetPasswordScreen", {
-        phoneNumber,
-        otp
-      });
+      const { data, error } = await verifyOtp(phoneNumber, otp);
+      if (error) {
+        setOtpError(error);
+        toast.show({ description: error, placement: "top", backgroundColor: "red.500" });
+        return;
+      }
+      toast.show({ description: data?.message || "Account verified! Please login.", placement: "top", backgroundColor: "green.500" });
+      navigation.navigate("SignInScreen");
     } catch (error) {
       const msg = error.response?.data?.message || "Failed to verify OTP. Please try again.";
       setOtpError(msg);
@@ -85,7 +89,7 @@ export default function Otp({ navigation, route }) {
         OTP
       </Text>
       <Text fontSize="14" marginBottom={4} color="black" textAlign="center">
-        Enter OTP sent to your phone number {phoneNumber ? `(+${phoneNumber})` : ""}
+        Enter the 6-digit OTP sent to your phone number {phoneNumber ? `(+${phoneNumber})` : ""} to verify your account.
       </Text>
       <FormControl isInvalid={!!otpError} width="100%" alignItems="center" mb={2}>
         <CodeField

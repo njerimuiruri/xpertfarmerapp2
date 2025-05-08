@@ -9,25 +9,47 @@ import {
   Center
 } from "native-base";
 
-export default function ResetPassword({ navigation }) {
+import { useToast } from "native-base";
+import { resetPassword } from "../../services/auth";
+
+export default function ResetPassword({ navigation, route }) {
   const [modalVisible, setModalVisible] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPin, setNewPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [pinError, setPinError] = useState("");
+  const toast = useToast();
 
-  const handleSubmit = () => {
+  const phoneNumber = route?.params?.phoneNumber || "";
+  const otp = route?.params?.otp || "";
 
-    setModalVisible(true);
-
-    if (newPassword && confirmPassword && newPassword === confirmPassword) {
-      if (newPassword.length === 4 && confirmPassword.length === 4) {
-        setModalVisible(true);
-      } else {
-        console.log("PIN length validation failed");
-      }
-    } else {
-      console.log("Password validation failed");
+  const handleSubmit = async () => {
+    setPinError("");
+    if (!newPin || !confirmPin) {
+      setPinError("Both fields are required");
+      return;
     }
-
+    if (newPin.length !== 4 || confirmPin.length !== 4) {
+      setPinError("PIN must be 4 digits");
+      return;
+    }
+    if (newPin !== confirmPin) {
+      setPinError("PINs do not match");
+      return;
+    }
+    setLoading(true);
+    try {
+      console.log("Resetting PIN...", phoneNumber, otp, newPin);
+      await resetPassword(phoneNumber, otp, newPin);
+      setModalVisible(true);
+      toast.show({ description: "Your new PIN has been set!", placement: "top", backgroundColor: "green.500" });
+    } catch (error) {
+      const msg = error.response?.data?.message || "Failed to reset PIN. Please try again.";
+      setPinError(msg);
+      toast.show({ description: msg, placement: "top", backgroundColor: "red.500" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,7 +82,7 @@ export default function ResetPassword({ navigation }) {
       />
 
       <Text fontSize="14" mb={6} textAlign="center" color="black">
-        Please enter your new password
+        Please enter your new 4-digit PIN
       </Text>
 
       <VStack width="100%" space={4}>
@@ -69,8 +91,8 @@ export default function ResetPassword({ navigation }) {
             New 4-digit PIN
           </Text>
           <CodeField
-            value={newPassword}
-            onChangeText={setNewPassword}
+            value={newPin}
+            onChangeText={setNewPin}
             cellCount={4}
             rootStyle={{
               marginBottom: 10,
@@ -103,8 +125,8 @@ export default function ResetPassword({ navigation }) {
             Confirm 4-digit PIN
           </Text>
           <CodeField
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
+            value={confirmPin}
+            onChangeText={setConfirmPin}
             cellCount={4}
             rootStyle={{
               marginBottom: 10,
@@ -131,15 +153,19 @@ export default function ResetPassword({ navigation }) {
             )}
           />
         </Box>
+        {pinError ? (
+          <Text color="red.500" fontSize={13} mt={1}>{pinError}</Text>
+        ) : null}
       </VStack>
 
       <Button
-        onPress={() => handleSubmit()}
+        onPress={handleSubmit}
         width="100%"
         mt={8}
         backgroundColor="#74c474"
         padding={3}
         borderRadius={8}
+        isLoading={loading}
       >
         <Text color="white" fontWeight="bold">
           SUBMIT
@@ -174,7 +200,7 @@ export default function ResetPassword({ navigation }) {
             </Box>
 
             <Text fontSize="16" textAlign="center" mb={5} color="black">
-              Your new password has been updated successfully
+              Your new 4-digit PIN has been updated successfully
             </Text>
 
             <Button

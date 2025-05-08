@@ -124,9 +124,12 @@ import EditInventoryItem from './inventory/EditInventoryItem';
 
 import EditUtility from './inventory/EditUtility';
 
+import VerifyOtp from './Auth/verify';
+
 export {
   LoginScreen,
   SignupScreen,
+  VerifyOtp,
   ForgotPasswordScreen,
   HomeScreen,
   Otp,

@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { CodeField, Cursor } from 'react-native-confirmation-code-field';
-import { Image, Alert, ActivityIndicator, ScrollView } from "react-native";
-import { Box, Text, Input, Button, VStack, HStack, Pressable, Stack, FormControl, Radio, Checkbox, Select } from "native-base";
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image, ScrollView } from "react-native";
+import { Box, Text, Input, Button, VStack, HStack, Pressable, Radio, Checkbox, Select, useToast } from "native-base";
+import { register } from '../../services/user';
 
 export default function RegisterScreen({ navigation }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -32,6 +31,7 @@ export default function RegisterScreen({ navigation }) {
     confirmPin: "",
     country: 1,
   });
+  const toast = useToast();
 
   const stepDescriptions = {
     1: "Farm Details",
@@ -48,33 +48,33 @@ export default function RegisterScreen({ navigation }) {
     switch (currentStep) {
       case 1:
         if (!formData.farm_name || !formData.county || !formData.administrative_location || !formData.farm_size) {
-          Alert.alert("Error", "All fields with  are required!");
+          toast.show({ description: "All fields with * are required!", placement: "top", backgroundColor: "red.500" });
           return false;
         }
         return true;
       case 2:
         if (formData.farming_types.length === 0) {
-          Alert.alert("Error", "Please select at least one farming type!");
+          toast.show({ description: "Please select at least one farming type!", placement: "top", backgroundColor: "red.500" });
           return false;
         }
         return true;
       case 3:
         if (!formData.first_name || !formData.last_name || !formData.gender || !formData.age_group || !formData.residence_county) {
-          Alert.alert("Error", "All fields with  are required!");
+          toast.show({ description: "All fields with * are required!", placement: "top", backgroundColor: "red.500" });
           return false;
         }
         return true;
       case 4:
         if (!formData.email || !formData.phone_number || !formData.pin || !formData.confirmPin) {
-          Alert.alert("Error", "All fields with  are required!");
+          toast.show({ description: "All fields with * are required!", placement: "top", backgroundColor: "red.500" });
           return false;
         }
         if (formData.pin.length !== 4 || formData.confirmPin.length !== 4) {
-          Alert.alert("Error", "PIN must be 4 digits!");
+          toast.show({ description: "PIN must be 4 digits!", placement: "top", backgroundColor: "red.500" });
           return false;
         }
         if (formData.pin !== formData.confirmPin) {
-          Alert.alert("Error", "PINs do not match!");
+          toast.show({ description: "PINs do not match!", placement: "top", backgroundColor: "red.500" });
           return false;
         }
         return true;
@@ -101,23 +101,60 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = async () => {
     if (!formData.email || !formData.phone_number || !formData.pin || !formData.confirmPin) {
-      Alert.alert("Error", "All fields with  are required!");
+      toast.show({ description: "All fields with * are required!", placement: "top", backgroundColor: "red.500" });
       return;
     }
     if (formData.pin.length !== 4 || formData.confirmPin.length !== 4) {
-      Alert.alert("Error", "PIN must be 4 digits!");
+      toast.show({ description: "PIN must be 4 digits!", placement: "top", backgroundColor: "red.500" });
       return;
     }
     if (formData.pin !== formData.confirmPin) {
-      Alert.alert("Error", "PINs do not match!");
+      toast.show({ description: "PINs do not match!", placement: "top", backgroundColor: "red.500" });
       return;
     }
 
     setLoading(true);
     try {
+      const sanitizePhoneNumber = (input) => {
+        let phone = (input || '').replace(/[^\d]/g, '');
+        if (phone.startsWith('0')) phone = '254' + phone.slice(1);
+        if (phone.startsWith('7') && phone.length === 9) phone = '254' + phone;
+        if (!phone.startsWith('254') && phone.length >= 9 && phone[0] !== '+') phone = '254' + phone;
+        return phone;
+      };
 
+      const payload = {
+        firstName: formData.first_name,
+        middleName: formData.middle_name,
+        lastName: formData.last_name,
+        gender: formData.gender,
+        ageGroup: formData.age_group,
+        residenceCounty: formData.residence_county,
+        residenceLocation: formData.residence_location,
+        email: formData.email,
+        phoneNumber: sanitizePhoneNumber(formData.phone_number),
+        businessNumber: sanitizePhoneNumber(formData.business_number),
+        pin: formData.pin,
+        yearsOfExperience: formData.years_of_experience ? parseInt(formData.years_of_experience) : undefined,
+        country: formData.country,
+        farmName: formData.farm_name,
+        county: formData.county,
+        administrativeLocation: formData.administrative_location,
+        farmSize: formData.farm_size ? parseFloat(formData.farm_size) : undefined,
+        ownership: formData.ownership,
+        farmingTypes: Array.isArray(formData.farming_types) ? formData.farming_types : [],
+      };
+
+      const { data, error } = await register(payload);
+      if (error) {
+        toast.show({ description: error, placement: "top", backgroundColor: "red.500" });
+        return;
+      }
+      toast.show({ description: data?.message || "Account created. Please verify OTP.", placement: "top", backgroundColor: "green.500" });
+      navigation.navigate("VerifyOtp", { phoneNumber: payload.phoneNumber });
     } catch (error) {
-      Alert.alert("Error", "Something went wrong!");
+      const msg = error?.response?.data?.message || "Registration failed. Please try again.";
+      toast.show({ description: msg, placement: "top", backgroundColor: "red.500" });
     } finally {
       setLoading(false);
     }

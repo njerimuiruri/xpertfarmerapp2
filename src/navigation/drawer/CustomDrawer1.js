@@ -1,32 +1,32 @@
-import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import {
   DrawerContentScrollView,
   DrawerItemList,
 } from '@react-navigation/drawer';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../constants';
-import {Divider} from 'native-base';
-import {COLORS} from '../../constants/theme';
+import { icons } from '../../constants';
+import { Divider } from 'native-base';
+import { COLORS } from '../../constants/theme';
 import AppVersion from '../../components/AppVersion';
 import CopyRight from '../../components/CopyRight';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useNavigation} from '@react-navigation/native';
-import {Switch} from 'native-base';
-import {useState, useEffect} from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { Switch } from 'native-base';
+import { useState, useEffect } from 'react';
 
 const CustomDrawer1 = props => {
   const navigation = useNavigation();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [userData, setUserData] = useState({
-    first_name: '',
-    last_name: '',
+    firstName: '',
+    lastName: '',
     role: '',
   });
-  console.log(userData);
+
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        const storedData = await AsyncStorage.getItem('userData');
+        const storedData = await AsyncStorage.getItem('user');
         if (storedData) {
           setUserData(JSON.parse(storedData));
         }
@@ -56,7 +56,7 @@ const CustomDrawer1 = props => {
         <Text
           style={
             styles.nameText
-          }>{`${userData.first_name} ${userData.last_name}`}</Text>
+          }>{`${userData.firstName} ${userData.lastName}`}</Text>
         <Text style={styles.roleText}>{userData.role || 'User'}</Text>
         <Divider style={styles.divider} />
       </View>
