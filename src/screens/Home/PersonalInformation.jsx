@@ -4,7 +4,6 @@ import {
   Text,
   VStack,
   HStack,
-  Image,
   ScrollView,
   Pressable,
   Modal,
@@ -12,13 +11,13 @@ import {
   Button,
   IconButton,
   useToast,
-  Divider
+  Divider,
+  Select
 } from 'native-base';
 import { StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { COLORS } from '../../constants/theme';
 import { icons } from '../../constants';
-import { LinearGradient } from 'expo-linear-gradient';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
 export default function PersonalInformation({ navigation }) {
@@ -26,89 +25,93 @@ export default function PersonalInformation({ navigation }) {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [currentField, setCurrentField] = useState(null);
   const [editValue, setEditValue] = useState('');
+  const [selectOptions, setSelectOptions] = useState([]);
 
+  // Initial user data - should ideally come from API or context
   const [userData, setUserData] = useState({
-    first_name: "Kimberly",
-    middle_name: "Ann",
-    last_name: "Mazingolo",
-    gender: "Female",
+    first_name: "John",
+    middle_name: "Doe",
+    last_name: "Smith",
+    gender: "Male",
     age_group: "25-34",
     residence_county: "Nairobi",
-    residence_administrative_county: "Nairobi",
-    phone_number: "270-0-30877457",
-    emergency_contact: "4769908776565",
-    id_number: "6474943",
-    date_of_birth: "23 August 1998",
-    email: "kimberly.mazingolo@example.com",
+    residence_location: "Nairobi",
+    email: "john.smith@example.com",
+    phone_number: "254712345678",
+    business_number: "254787654321",
     years_of_experience: "5"
   });
 
+  // Fields aligned with registration form
   const personalInfoFields = [
     {
       id: 'first_name',
       title: 'First Name',
       value: userData.first_name,
       icon: icons.user,
-      editable: true
+      editable: true,
+      type: 'text'
     },
     {
       id: 'middle_name',
       title: 'Middle Name',
       value: userData.middle_name,
       icon: icons.user,
-      editable: true
+      editable: true,
+      type: 'text'
     },
     {
       id: 'last_name',
       title: 'Last Name',
       value: userData.last_name,
       icon: icons.user,
-      editable: true
+      editable: true,
+      type: 'text'
     },
     {
       id: 'gender',
       title: 'Gender',
       value: userData.gender,
       icon: icons.people,
-      editable: true
+      editable: true,
+      type: 'select',
+      options: ['Male', 'Female']
     },
     {
       id: 'age_group',
       title: 'Age Group',
       value: userData.age_group,
-      icon: icons.user,
-      editable: true
-    },
-    {
-      id: 'date_of_birth',
-      title: 'Date of Birth',
-      value: userData.date_of_birth,
       icon: icons.calendar,
-      editable: true
+      editable: true,
+      type: 'select',
+      options: ['15-24', '25-34', '35-44', '45-54', '55+']
     }
   ];
 
   const contactInfoFields = [
     {
-      id: 'phone_number',
-      title: 'Phone Number',
-      value: userData.phone_number,
-      icon: icons.call,
-      editable: true
-    },
-    {
-      id: 'emergency_contact',
-      title: 'Emergency Contact',
-      value: userData.emergency_contact,
-      icon: icons.call,
-      editable: true
-    },
-    {
       id: 'email',
       title: 'Email Address',
       value: userData.email,
       icon: icons.email,
-      editable: true
+      editable: true,
+      type: 'text'
+    },
+    {
+      id: 'phone_number',
+      title: 'Phone Number',
+      value: userData.phone_number,
+      icon: icons.call,
+      editable: true,
+      type: 'text'
+    },
+    {
+      id: 'business_number',
+      title: 'Business Number',
+      value: userData.business_number,
+      icon: icons.call,
+      editable: true,
+      type: 'text'
     }
   ];
 
@@ -118,34 +121,35 @@ export default function PersonalInformation({ navigation }) {
       title: 'Residence County',
       value: userData.residence_county,
       icon: icons.addressbook,
-      editable: true
+      editable: true,
+      type: 'select',
+      options: ['Nairobi', 'Mombasa', 'Siaya', 'Turkana']
     },
     {
-      id: 'residence_administrative_county',
-      title: 'Administrative County',
-      value: userData.residence_administrative_county,
+      id: 'residence_location',
+      title: 'Residence Location',
+      value: userData.residence_location,
       icon: icons.addressbook,
-      editable: true
-    },
-    {
-      id: 'id_number',
-      title: 'ID Number',
-      value: userData.id_number,
-      icon: icons.addressbook,
-      editable: true
+      editable: true,
+      type: 'select',
+      options: ['Siaya', 'Turkana']
     },
     {
       id: 'years_of_experience',
-      title: 'Years of Experience',
+      title: 'Years of Farming Practice',
       value: userData.years_of_experience,
       icon: icons.calendar,
-      editable: true
+      editable: true,
+      type: 'text'
     }
   ];
 
   const handleEdit = (field) => {
     setCurrentField(field);
     setEditValue(userData[field.id]);
+    if (field.type === 'select') {
+      setSelectOptions(field.options || []);
+    }
     setEditModalVisible(true);
   };
 
@@ -250,6 +254,56 @@ export default function PersonalInformation({ navigation }) {
       <Box flex={1} height="1px" bg="#E0E0E0" />
     </HStack>
   );
+
+  const renderEditField = () => {
+    if (!currentField) return null;
+
+    if (currentField.type === 'select') {
+      return (
+        <Select
+          selectedValue={editValue}
+          onValueChange={setEditValue}
+          fontSize="16"
+          py={3}
+          px={4}
+          borderColor="gray.300"
+          borderWidth={1}
+          borderRadius={10}
+          bg="white"
+          _focus={{
+            borderColor: COLORS.green,
+            backgroundColor: "white"
+          }}
+        >
+          {selectOptions.map((option) => (
+            <Select.Item key={option} label={option} value={option} />
+          ))}
+        </Select>
+      );
+    }
+
+    return (
+      <Input
+        value={editValue}
+        onChangeText={setEditValue}
+        fontSize="16"
+        py={3}
+        px={4}
+        borderColor="gray.300"
+        borderWidth={1}
+        borderRadius={10}
+        bg="white"
+        autoFocus
+        keyboardType={currentField.id === 'years_of_experience' ||
+          currentField.id === 'phone_number' ||
+          currentField.id === 'business_number' ? 'numeric' : 'default'}
+        _focus={{
+          borderColor: COLORS.green,
+          backgroundColor: "white"
+        }}
+      />
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -398,22 +452,7 @@ export default function PersonalInformation({ navigation }) {
               <Text fontSize="14" color="gray.600">
                 Enter new {currentField?.title.toLowerCase()}:
               </Text>
-              <Input
-                value={editValue}
-                onChangeText={setEditValue}
-                fontSize="16"
-                py={3}
-                px={4}
-                borderColor="gray.300"
-                borderWidth={1}
-                borderRadius={10}
-                bg="white"
-                autoFocus
-                _focus={{
-                  borderColor: COLORS.green,
-                  backgroundColor: "white"
-                }}
-              />
+              {renderEditField()}
             </VStack>
           </Modal.Body>
 
@@ -446,11 +485,14 @@ export default function PersonalInformation({ navigation }) {
         </Modal.Content>
       </Modal>
     </SafeAreaView>
-
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f7f7f7'
+  },
   headerIcon: {
     width: 24,
     height: 24,
