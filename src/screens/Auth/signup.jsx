@@ -650,7 +650,7 @@ export default function RegisterScreen({ navigation }) {
 
           {currentStep === 1 && (
             <Box mt={8} flexDirection="row" justifyContent="center">
-              <Text fontSize="12" color="black" className="text-[16px] font-semibold">Already have an account? </Text>
+              <Text fontSize="12" color="black" className="text-[16px]">Already have an account? </Text>
               <Pressable onPress={() => navigation.navigate("SignInScreen")}>
                 <Text fontSize="12" color="#74c474" fontWeight="bold" className="text-[16px] font-semibold">Login</Text>
               </Pressable>
