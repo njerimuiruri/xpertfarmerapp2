@@ -590,7 +590,6 @@ export default function RegisterScreen({ navigation }) {
           />
         </Box>
 
-        {/* Modern PIN Input */}
         <FormControl isInvalid={!!errors.pin}>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
             Set 4-digit PIN *
