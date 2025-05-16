@@ -13,6 +13,7 @@ import { Box, Text, Input, Button, VStack, HStack, Pressable, FormControl, Check
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { login } from "../../services/auth"
+import { COLORS } from "../../constants/theme";
 
 const { width } = Dimensions.get("window")
 const CELL_COUNT = 4
@@ -270,6 +271,8 @@ export default function LoginScreen({ navigation }) {
                     <Box
                       key={index}
                       onLayout={getCellOnLayoutHandler(index)}
+                      backgroundColor={COLORS.lightGreen}
+
                       style={[styles.cell, isFocused && styles.focusCell, !!pinError && styles.errorCell]}
                     >
                       <Text fontSize={24}>{symbol ? "•" : isFocused ? <Cursor /> : null}</Text>
@@ -366,7 +369,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
+    backgroundColor: COLORS.lightGreen,
     textAlign: "center",
     borderRadius: 8,
     justifyContent: "center",

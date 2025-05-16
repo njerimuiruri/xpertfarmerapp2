@@ -3,6 +3,9 @@ import { CodeField, Cursor } from 'react-native-confirmation-code-field';
 import { Image, ScrollView } from "react-native";
 import { Box, Text, Input, Button, VStack, HStack, Pressable, Radio, Checkbox, Select, useToast, FormControl } from "native-base";
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { COLORS } from '../../constants/theme';
+
 import CustomIcon from '../../components/CustomIcon';
 import { register } from '../../services/user';
 
@@ -10,6 +13,9 @@ export default function RegisterScreen({ navigation }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
+
+
   const [formData, setFormData] = useState({
     farm_name: "",
     county: "",
@@ -23,6 +29,7 @@ export default function RegisterScreen({ navigation }) {
     last_name: "",
     gender: "",
     age_group: "",
+    // date_of_birth: null,
     residence_county: "",
     residence_location: "",
 
@@ -73,7 +80,8 @@ export default function RegisterScreen({ navigation }) {
         if (!formData.first_name) newErrors.first_name = "First name is required.";
         if (!formData.last_name) newErrors.last_name = "Last name is required.";
         if (!formData.gender) newErrors.gender = "Gender is required.";
-        if (!formData.age_group) newErrors.age_group = "Age group is required.";
+        // if (!formData.age_group) newErrors.age_group = "Age group is required.";
+        if (!formData.date_of_birth) newErrors.date_of_birth = "Date of birth is required.";
         if (!formData.residence_county) newErrors.residence_county = "Residence county is required.";
         if (Object.keys(newErrors).length > 0) isValid = false;
         break;
@@ -235,6 +243,7 @@ export default function RegisterScreen({ navigation }) {
           <Input
             variant="outline"
             bg="white"
+            backgroundColor={COLORS.lightGreen}
             borderColor={'farm_name' in errors ? "red.500" : "#DDDDDD"}
             width="100%"
             p={2}
@@ -254,6 +263,7 @@ export default function RegisterScreen({ navigation }) {
           </Text>
           <Select
             borderRadius={8}
+            backgroundColor={COLORS.lightGreen}
             borderColor={'county' in errors ? "red.500" : "#DDDDDD"}
             width="100%"
             selectedValue={formData.county}
@@ -276,6 +286,7 @@ export default function RegisterScreen({ navigation }) {
           </Text>
           <Select
             borderRadius={8}
+            backgroundColor={COLORS.lightGreen}
             borderColor={'administrative_location' in errors ? "red.500" : "#DDDDDD"}
             width="100%"
             selectedValue={formData.administrative_location}
@@ -298,6 +309,7 @@ export default function RegisterScreen({ navigation }) {
             variant="outline"
             borderColor={'farm_size' in errors ? "red.500" : "#DDDDDD"}
             width="100%"
+            backgroundColor={COLORS.lightGreen}
             p={2}
             borderRadius={8}
             value={formData.farm_size}
@@ -382,6 +394,7 @@ export default function RegisterScreen({ navigation }) {
             variant="outline"
             borderColor={'first_name' in errors ? "red.500" : "#DDDDDD"}
             width="100%"
+            backgroundColor={COLORS.lightGreen}
             p={2}
             borderRadius={8}
             value={formData.first_name}
@@ -400,6 +413,7 @@ export default function RegisterScreen({ navigation }) {
           <Input
             variant="outline"
             borderColor="#DDDDDD"
+            backgroundColor={COLORS.lightGreen}
             width="100%"
             p={2}
             borderRadius={8}
@@ -417,6 +431,7 @@ export default function RegisterScreen({ navigation }) {
             variant="outline"
             borderColor={'last_name' in errors ? "red.500" : "#DDDDDD"}
             width="100%"
+            backgroundColor={COLORS.lightGreen}
             p={2}
             borderRadius={8}
             value={formData.last_name}
@@ -447,26 +462,43 @@ export default function RegisterScreen({ navigation }) {
           </FormControl.ErrorMessage>
         </FormControl>
 
-        <FormControl isInvalid={'age_group' in errors}>
+        <FormControl isInvalid={'date_of_birth' in errors}>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Age Group *
+            Date of Birth *
           </Text>
-          <Select
-            borderRadius={8}
-            borderColor={'age_group' in errors ? "red.500" : "#DDDDDD"}
-            width="100%"
-            selectedValue={formData.age_group}
-            onValueChange={(value) => handleInputChange("age_group", value)}
-            placeholder="Select Age Group"
-          >
-            <Select.Item label="15-24" value="15-24" />
-            <Select.Item label="25-34" value="25-34" />
-            <Select.Item label="35-44" value="35-44" />
-            <Select.Item label="45-54" value="45-54" />
-            <Select.Item label="55+" value="55+" />
-          </Select>
+          <HStack alignItems="center" space={2}>
+            <Input
+              flex={1}
+              backgroundColor={COLORS.lightGreen}
+              variant="outline"
+              borderColor={'date_of_birth' in errors ? "red.500" : "#DDDDDD"}
+              borderRadius={8}
+              value={formData.date_of_birth ? formData.date_of_birth.toLocaleDateString('en-GB') : ''}
+              isReadOnly
+              placeholder="DD/MM/YYYY"
+            />
+            <Pressable
+              onPress={() => setDatePickerVisible(true)}
+              p={2}
+            >
+              <Icon name="calendar" size={24} color="#74c474" />
+            </Pressable>
+          </HStack>
+          {datePickerVisible && (
+            <DateTimePicker
+              value={formData.date_of_birth || new Date()}
+              mode="date"
+              display="default"
+              onChange={(event, date) => {
+                setDatePickerVisible(false);
+                if (date && event.type !== 'dismissed') {
+                  handleInputChange("date_of_birth", date);
+                }
+              }}
+            />
+          )}
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
-            {errors.age_group}
+            {errors.date_of_birth}
           </FormControl.ErrorMessage>
         </FormControl>
 
@@ -478,6 +510,7 @@ export default function RegisterScreen({ navigation }) {
             borderRadius={8}
             borderColor={'residence_county' in errors ? "red.500" : "#DDDDDD"}
             width="100%"
+            backgroundColor={COLORS.lightGreen}
             selectedValue={formData.residence_county}
             onValueChange={(value) => handleInputChange("residence_county", value)}
             placeholder="Select County"
@@ -499,6 +532,7 @@ export default function RegisterScreen({ navigation }) {
           <Select
             borderRadius={8}
             borderColor="#DDDDDD"
+            backgroundColor={COLORS.lightGreen}
             width="100%"
             selectedValue={formData.residence_location}
             onValueChange={(value) => handleInputChange("residence_location", value)}
@@ -523,6 +557,7 @@ export default function RegisterScreen({ navigation }) {
             variant="outline"
             borderColor="#DDDDDD"
             width="100%"
+            backgroundColor={COLORS.lightGreen}
             p={2}
             borderRadius={8}
             value={formData.years_of_experience}
@@ -540,6 +575,7 @@ export default function RegisterScreen({ navigation }) {
             variant="outline"
             borderColor={'email' in errors ? "red.500" : "#DDDDDD"}
             width="100%"
+            backgroundColor={COLORS.lightGreen}
             p={2}
             borderRadius={8}
             value={formData.email}
@@ -562,6 +598,7 @@ export default function RegisterScreen({ navigation }) {
             borderColor={'phone_number' in errors ? "red.500" : "#DDDDDD"}
             width="100%"
             p={2}
+            backgroundColor={COLORS.lightGreen}
             borderRadius={8}
             value={formData.phone_number}
             onChangeText={(value) => handleInputChange("phone_number", value)}
@@ -581,6 +618,7 @@ export default function RegisterScreen({ navigation }) {
             variant="outline"
             borderColor="#DDDDDD"
             width="100%"
+            backgroundColor={COLORS.lightGreen}
             p={2}
             borderRadius={8}
             value={formData.business_number}

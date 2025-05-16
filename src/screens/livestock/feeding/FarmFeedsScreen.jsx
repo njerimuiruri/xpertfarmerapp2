@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,11 +22,11 @@ import {
 } from 'native-base';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../../constants';
-import {COLORS} from '../../../constants/theme';
+import { icons } from '../../../constants';
+import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 
-const FarmFeedsScreen = ({navigation}) => {
+const FarmFeedsScreen = ({ navigation }) => {
   // Main state
   const [currentStep, setCurrentStep] = useState(1);
   const [programType, setProgramType] = useState('');
@@ -82,9 +82,9 @@ const FarmFeedsScreen = ({navigation}) => {
 
   useEffect(() => {
     if (animalData.type)
-      setAnimalData(prev => ({...prev, lifecycleStages: []}));
+      setAnimalData(prev => ({ ...prev, lifecycleStages: [] }));
     if (animalData.groupType)
-      setAnimalData(prev => ({...prev, groupLifecycleStages: []}));
+      setAnimalData(prev => ({ ...prev, groupLifecycleStages: [] }));
   }, [animalData.type, animalData.groupType]);
 
   const getLifecycleOptions = (type, isGroup = false) => {
@@ -122,11 +122,11 @@ const FarmFeedsScreen = ({navigation}) => {
   };
 
   const handleDateChange = (feedKey, selectedDate) => {
-    setDatePickerVisible({...datePickerVisible, [feedKey]: false});
+    setDatePickerVisible({ ...datePickerVisible, [feedKey]: false });
     if (selectedDate) {
       setFeedData(prev => ({
         ...prev,
-        [feedKey]: {...prev[feedKey], date: selectedDate},
+        [feedKey]: { ...prev[feedKey], date: selectedDate },
       }));
     }
   };
@@ -135,12 +135,12 @@ const FarmFeedsScreen = ({navigation}) => {
   const updateFeedData = (feedKey, field, value) => {
     setFeedData(prev => ({
       ...prev,
-      [feedKey]: {...prev[feedKey], [field]: value},
+      [feedKey]: { ...prev[feedKey], [field]: value },
     }));
   };
 
   const updateAnimalData = (field, value) => {
-    setAnimalData(prev => ({...prev, [field]: value}));
+    setAnimalData(prev => ({ ...prev, [field]: value }));
   };
 
   const validateStep1 = () => {
@@ -231,7 +231,7 @@ const FarmFeedsScreen = ({navigation}) => {
           />
           <TouchableOpacity
             onPress={() =>
-              setDatePickerVisible({...datePickerVisible, [feedKey]: true})
+              setDatePickerVisible({ ...datePickerVisible, [feedKey]: true })
             }>
             <FastImage
               source={icons.calendar}
@@ -297,7 +297,7 @@ const FarmFeedsScreen = ({navigation}) => {
 
   // Render step 1 content
   const renderStep1 = () => (
-    <ScrollView contentContainerStyle={{padding: 16}}>
+    <ScrollView contentContainerStyle={{ padding: 16 }}>
       <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
         <Text style={styles.sectionTitle}>Feeding Program Selection</Text>
 
@@ -363,7 +363,7 @@ const FarmFeedsScreen = ({navigation}) => {
               <Button
                 variant="outline"
                 borderColor={COLORS.green}
-                _text={{color: COLORS.green}}
+                _text={{ color: COLORS.green }}
                 borderRadius={8}
                 onPress={() => navigation.goBack()}>
                 Cancel
@@ -425,7 +425,7 @@ const FarmFeedsScreen = ({navigation}) => {
               <Button
                 variant="outline"
                 borderColor={COLORS.green}
-                _text={{color: COLORS.green}}
+                _text={{ color: COLORS.green }}
                 borderRadius={8}
                 onPress={() => navigation.goBack()}>
                 Cancel
@@ -445,7 +445,7 @@ const FarmFeedsScreen = ({navigation}) => {
 
   // Render step 2 content
   const renderStep2 = () => (
-    <ScrollView contentContainerStyle={{padding: 16}}>
+    <ScrollView contentContainerStyle={{ padding: 16 }}>
       <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
         <Text style={styles.sectionTitle}>Feeding Types</Text>
 
@@ -501,7 +501,7 @@ const FarmFeedsScreen = ({navigation}) => {
             <Button
               variant="outline"
               borderColor={COLORS.green}
-              _text={{color: COLORS.green}}
+              _text={{ color: COLORS.green }}
               borderRadius={8}
               onPress={prevStep}>
               Back
@@ -509,7 +509,7 @@ const FarmFeedsScreen = ({navigation}) => {
             <Button
               variant="outline"
               borderColor={COLORS.green}
-              _text={{color: COLORS.green}}
+              _text={{ color: COLORS.green }}
               borderRadius={8}
               onPress={() => navigation.goBack()}>
               Cancel
@@ -590,7 +590,7 @@ const FarmFeedsScreen = ({navigation}) => {
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#F5F5F5'},
+  container: { flex: 1, backgroundColor: '#F5F5F5' },
   stepIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -606,10 +606,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  activeStep: {backgroundColor: COLORS.green},
-  stepText: {fontSize: 16, fontWeight: 'bold', color: '#777'},
-  activeStepText: {color: 'white'},
-  stepLine: {flex: 0.2, height: 2, backgroundColor: '#E0E0E0'},
+  activeStep: { backgroundColor: COLORS.green },
+  stepText: { fontSize: 16, fontWeight: 'bold', color: '#777' },
+  activeStepText: { color: 'white' },
+  stepLine: { flex: 0.2, height: 2, backgroundColor: '#E0E0E0' },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -622,10 +622,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 8,
   },
-  selectedButton: {backgroundColor: COLORS.green},
-  selectionText: {color: COLORS.green2},
-  selectedText: {color: 'white'},
-  calendarIcon: {width: 24, height: 24},
+  selectedButton: { backgroundColor: COLORS.green },
+  selectionText: { color: COLORS.green2 },
+  selectedText: { color: 'white' },
+  calendarIcon: { width: 24, height: 24 },
   centeredView: {
     flex: 1,
     justifyContent: 'center',
