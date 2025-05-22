@@ -15,7 +15,6 @@ export default function RegisterScreen({ navigation }) {
   const [errors, setErrors] = useState({});
   const [datePickerVisible, setDatePickerVisible] = useState(false);
 
-
   const [formData, setFormData] = useState({
     farm_name: "",
     county: "",
@@ -28,8 +27,7 @@ export default function RegisterScreen({ navigation }) {
     middle_name: "",
     last_name: "",
     gender: "",
-    age_group: "",
-    // date_of_birth: null,
+    date_of_birth: null,
     residence_county: "",
     residence_location: "",
 
@@ -47,7 +45,8 @@ export default function RegisterScreen({ navigation }) {
     1: "Farm Details",
     2: "Farm Activities",
     3: "Personal Information",
-    4: "Professional Information"
+    4: "Professional Information",
+    5: "Security Setup"
   };
 
   const handleInputChange = (name, value) => {
@@ -80,7 +79,6 @@ export default function RegisterScreen({ navigation }) {
         if (!formData.first_name) newErrors.first_name = "First name is required.";
         if (!formData.last_name) newErrors.last_name = "Last name is required.";
         if (!formData.gender) newErrors.gender = "Gender is required.";
-        // if (!formData.age_group) newErrors.age_group = "Age group is required.";
         if (!formData.date_of_birth) newErrors.date_of_birth = "Date of birth is required.";
         if (!formData.residence_county) newErrors.residence_county = "Residence county is required.";
         if (Object.keys(newErrors).length > 0) isValid = false;
@@ -89,6 +87,9 @@ export default function RegisterScreen({ navigation }) {
         if (!formData.email) newErrors.email = "Email is required.";
         else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email address is invalid.";
         if (!formData.phone_number) newErrors.phone_number = "Phone number is required.";
+        if (Object.keys(newErrors).length > 0) isValid = false;
+        break;
+      case 5:
         if (!formData.pin) newErrors.pin = "PIN is required.";
         else if (formData.pin.length !== 4) newErrors.pin = "PIN must be 4 digits.";
         if (!formData.confirmPin) newErrors.confirmPin = "Confirm PIN is required.";
@@ -109,7 +110,7 @@ export default function RegisterScreen({ navigation }) {
 
   const handleNext = () => {
     if (validateCurrentStep()) {
-      if (currentStep < 4) {
+      if (currentStep < 5) {
         setCurrentStep(currentStep + 1);
       } else {
         handleRegister();
@@ -123,9 +124,13 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
+  const formatDateForAPI = (date) => {
+    if (!date) return null;
+    return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  };
+
   const handleRegister = async () => {
-    // Final validation before submitting
-    if (!validateCurrentStep()) { // Reuse validation for the final step
+    if (!validateCurrentStep()) {
       return;
     }
     setLoading(true);
@@ -143,7 +148,7 @@ export default function RegisterScreen({ navigation }) {
         middleName: formData.middle_name,
         lastName: formData.last_name,
         gender: formData.gender,
-        ageGroup: formData.age_group,
+        dob: formatDateForAPI(formData.date_of_birth),
         residenceCounty: formData.residence_county,
         residenceLocation: formData.residence_location,
         email: formData.email,
@@ -151,7 +156,6 @@ export default function RegisterScreen({ navigation }) {
         businessNumber: sanitizePhoneNumber(formData.business_number),
         pin: formData.pin,
         yearsOfExperience: formData.years_of_experience ? parseInt(formData.years_of_experience) : undefined,
-        country: formData.country,
         farmName: formData.farm_name,
         county: formData.county,
         administrativeLocation: formData.administrative_location,
@@ -179,7 +183,7 @@ export default function RegisterScreen({ navigation }) {
     return (
       <Box width="100%" mb={4}>
         <HStack justifyContent="space-between" mb={2}>
-          {[1, 2, 3, 4].map((step) => (
+          {[1, 2, 3, 4, 5].map((step) => (
             <Box
               key={step}
               width={currentStep === step ? 10 : 8}
@@ -196,7 +200,7 @@ export default function RegisterScreen({ navigation }) {
               >
                 {step}
               </Text>
-              {step < 4 && (
+              {step < 5 && (
                 <Box
                   position="absolute"
                   height={1}
@@ -210,7 +214,6 @@ export default function RegisterScreen({ navigation }) {
           ))}
         </HStack>
 
-        {/* Step description text based on current step */}
         <Text fontSize="14" fontWeight="500" textAlign="center" color="gray.600" mt={2} mb={4}>
           {stepDescriptions[currentStep]}
         </Text>
@@ -228,6 +231,8 @@ export default function RegisterScreen({ navigation }) {
         return renderPersonalInfoForm();
       case 4:
         return renderProfessionalInfoForm();
+      case 5:
+        return renderSecuritySetupForm();
       default:
         return null;
     }
@@ -627,7 +632,13 @@ export default function RegisterScreen({ navigation }) {
             keyboardType="phone-pad"
           />
         </Box>
+      </VStack>
+    );
+  };
 
+  const renderSecuritySetupForm = () => {
+    return (
+      <VStack width="100%" space={4}>
         <FormControl isInvalid={!!errors.pin}>
           <Text fontSize="16" fontWeight="500" mb={1} color="black">
             Set 4-digit PIN *
@@ -728,13 +739,13 @@ export default function RegisterScreen({ navigation }) {
             )}
 
             <Button
-              onPress={currentStep === 4 ? handleRegister : handleNext}
+              onPress={currentStep === 5 ? handleRegister : handleNext}
               width="45%"
               backgroundColor="#8FD28F"
               _text={{ color: "white" }}
-              isLoading={loading && currentStep === 4}
+              isLoading={loading && currentStep === 5}
             >
-              {currentStep < 4 ? "Next" : "Continue"}
+              {currentStep < 5 ? "Next" : "Continue"}
             </Button>
           </HStack>
 

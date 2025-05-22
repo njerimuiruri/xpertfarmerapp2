@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Text,
@@ -12,13 +12,15 @@ import {
   IconButton,
   useToast,
   Divider,
-  Select
+  Select,
+  Spinner
 } from 'native-base';
 import { StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { COLORS } from '../../constants/theme';
 import { icons } from '../../constants';
 import SecondaryHeader from '../../components/headers/secondary-header';
+import { fetchUserProfile, updateUserProfile } from '../../services/personalInfo';
 
 export default function PersonalInformation({ navigation }) {
   const toast = useToast();
@@ -26,44 +28,76 @@ export default function PersonalInformation({ navigation }) {
   const [currentField, setCurrentField] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [selectOptions, setSelectOptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
 
-  // Initial user data - should ideally come from API or context
   const [userData, setUserData] = useState({
-    first_name: "John",
-    middle_name: "Doe",
-    last_name: "Smith",
-    gender: "Male",
-    age_group: "25-34",
-    residence_county: "Nairobi",
-    residence_location: "Nairobi",
-    email: "john.smith@example.com",
-    phone_number: "254712345678",
-    business_number: "254787654321",
-    years_of_experience: "5"
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    gender: "",
+    dob: "",
+    residenceCounty: "",
+    residenceLocation: "",
+    email: "",
+    businessNumber: ""
   });
 
-  // Fields aligned with registration form
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    setLoading(true);
+    const { data, error } = await fetchUserProfile();
+    if (data) {
+      setUserData({
+        firstName: data.firstName || "",
+        middleName: data.middleName || "",
+        lastName: data.lastName || "",
+        gender: data.gender || "",
+        dob: data.dob || "",
+        residenceCounty: data.residenceCounty || "",
+        residenceLocation: data.residenceLocation || "",
+        email: data.email || "",
+        businessNumber: data.businessNumber || ""
+      });
+    } else if (error) {
+      toast.show({
+        description: error,
+        placement: "top",
+        duration: 3000,
+        render: () => (
+          <Box bg="red.500" px={6} py={3} rounded="md" mb={5}>
+            <Text color="white" fontWeight="medium">Failed to load profile</Text>
+          </Box>
+        )
+      });
+    }
+    setLoading(false);
+  };
+
   const personalInfoFields = [
     {
-      id: 'first_name',
+      id: 'firstName',
       title: 'First Name',
-      value: userData.first_name,
+      value: userData.firstName,
       icon: icons.user,
       editable: true,
       type: 'text'
     },
     {
-      id: 'middle_name',
+      id: 'middleName',
       title: 'Middle Name',
-      value: userData.middle_name,
+      value: userData.middleName,
       icon: icons.user,
       editable: true,
       type: 'text'
     },
     {
-      id: 'last_name',
+      id: 'lastName',
       title: 'Last Name',
-      value: userData.last_name,
+      value: userData.lastName,
       icon: icons.user,
       editable: true,
       type: 'text'
@@ -78,13 +112,12 @@ export default function PersonalInformation({ navigation }) {
       options: ['Male', 'Female']
     },
     {
-      id: 'age_group',
-      title: 'Age Group',
-      value: userData.age_group,
+      id: 'dob',
+      title: 'Date of Birth',
+      value: userData.dob,
       icon: icons.calendar,
       editable: true,
-      type: 'select',
-      options: ['15-24', '25-34', '35-44', '45-54', '55+']
+      type: 'date'
     }
   ];
 
@@ -98,17 +131,9 @@ export default function PersonalInformation({ navigation }) {
       type: 'text'
     },
     {
-      id: 'phone_number',
-      title: 'Phone Number',
-      value: userData.phone_number,
-      icon: icons.call,
-      editable: true,
-      type: 'text'
-    },
-    {
-      id: 'business_number',
+      id: 'businessNumber',
       title: 'Business Number',
-      value: userData.business_number,
+      value: userData.businessNumber,
       icon: icons.call,
       editable: true,
       type: 'text'
@@ -117,30 +142,22 @@ export default function PersonalInformation({ navigation }) {
 
   const locationInfoFields = [
     {
-      id: 'residence_county',
+      id: 'residenceCounty',
       title: 'Residence County',
-      value: userData.residence_county,
+      value: userData.residenceCounty,
       icon: icons.addressbook,
       editable: true,
       type: 'select',
       options: ['Nairobi', 'Mombasa', 'Siaya', 'Turkana']
     },
     {
-      id: 'residence_location',
+      id: 'residenceLocation',
       title: 'Residence Location',
-      value: userData.residence_location,
+      value: userData.residenceLocation,
       icon: icons.addressbook,
       editable: true,
       type: 'select',
       options: ['Siaya', 'Turkana']
-    },
-    {
-      id: 'years_of_experience',
-      title: 'Years of Farming Practice',
-      value: userData.years_of_experience,
-      icon: icons.calendar,
-      editable: true,
-      type: 'text'
     }
   ];
 
@@ -153,34 +170,63 @@ export default function PersonalInformation({ navigation }) {
     setEditModalVisible(true);
   };
 
-  const saveChanges = () => {
-    setUserData({
-      ...userData,
+  const saveChanges = async () => {
+    setUpdating(true);
+    const updates = {
       [currentField.id]: editValue
-    });
+    };
 
-    setEditModalVisible(false);
+    const { data, error } = await updateUserProfile(updates);
 
-    toast.show({
-      description: "Information updated successfully",
-      placement: "top",
-      duration: 2000,
-      render: () => (
-        <Box bg={COLORS.green} px={6} py={3} rounded="md" mb={5}>
-          <HStack space={3} alignItems="center">
-            <FastImage
-              source={icons.check}
-              style={{ width: 24, height: 24 }}
-              tintColor="white"
-            />
-            <Text color="white" fontWeight="medium">Updated successfully</Text>
-          </HStack>
-        </Box>
-      )
-    });
+    if (data) {
+      setUserData({
+        ...userData,
+        [currentField.id]: editValue
+      });
+
+      setEditModalVisible(false);
+
+      toast.show({
+        description: "Information updated successfully",
+        placement: "top",
+        duration: 2000,
+        render: () => (
+          <Box bg={COLORS.green} px={6} py={3} rounded="md" mb={5}>
+            <HStack space={3} alignItems="center">
+              <FastImage
+                source={icons.check}
+                style={{ width: 24, height: 24 }}
+                tintColor="white"
+              />
+              <Text color="white" fontWeight="medium">Updated successfully</Text>
+            </HStack>
+          </Box>
+        )
+      });
+    } else if (error) {
+      toast.show({
+        description: error,
+        placement: "top",
+        duration: 3000,
+        render: () => (
+          <Box bg="red.500" px={6} py={3} rounded="md" mb={5}>
+            <Text color="white" fontWeight="medium">Update failed</Text>
+          </Box>
+        )
+      });
+    }
+    setUpdating(false);
+  };
+
+  const formatDateDisplay = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
   };
 
   const renderInfoCard = (field, index) => {
+    const displayValue = field.type === 'date' ? formatDateDisplay(field.value) : field.value;
+
     return (
       <Pressable
         key={index}
@@ -218,7 +264,7 @@ export default function PersonalInformation({ navigation }) {
                   {field.title}
                 </Text>
                 <Text fontSize="16" fontWeight="600" color="black" mt={0.5}>
-                  {field.value}
+                  {displayValue || 'Not set'}
                 </Text>
               </VStack>
             </HStack>
@@ -294,9 +340,8 @@ export default function PersonalInformation({ navigation }) {
         borderRadius={10}
         bg="white"
         autoFocus
-        keyboardType={currentField.id === 'years_of_experience' ||
-          currentField.id === 'phone_number' ||
-          currentField.id === 'business_number' ? 'numeric' : 'default'}
+        keyboardType={currentField.id === 'businessNumber' ? 'phone-pad' :
+          currentField.id === 'email' ? 'email-address' : 'default'}
         _focus={{
           borderColor: COLORS.green,
           backgroundColor: "white"
@@ -304,6 +349,18 @@ export default function PersonalInformation({ navigation }) {
       />
     );
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SecondaryHeader title="Personal Information" />
+        <Box flex={1} justifyContent="center" alignItems="center">
+          <Spinner size="lg" color={COLORS.green} />
+          <Text mt={4} fontSize="16" color="gray.500">Loading profile...</Text>
+        </Box>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -364,7 +421,7 @@ export default function PersonalInformation({ navigation }) {
             </Box>
 
             <Text fontSize="22" fontWeight="700" mb={1}>
-              {userData.first_name} {userData.last_name}
+              {userData.firstName} {userData.lastName}
             </Text>
 
             <HStack space={2} mb={4} alignItems="center">
@@ -374,16 +431,16 @@ export default function PersonalInformation({ navigation }) {
                 tintColor={COLORS.green}
               />
               <Text fontSize="14" color="gray.500">
-                {userData.residence_county} County
+                {userData.residenceCounty} County
               </Text>
             </HStack>
 
             <HStack space={4}>
               <VStack alignItems="center">
                 <Text fontSize="20" fontWeight="700" color={COLORS.green}>
-                  {userData.years_of_experience}
+                  {userData.gender || 'N/A'}
                 </Text>
-                <Text fontSize="12" color="gray.500">Years Experience</Text>
+                <Text fontSize="12" color="gray.500">Gender</Text>
               </VStack>
 
               <Divider orientation="vertical" mx={2} bg="gray.200" />
@@ -408,7 +465,7 @@ export default function PersonalInformation({ navigation }) {
           {contactInfoFields.map(renderInfoCard)}
         </VStack>
 
-        {renderSectionTitle('LOCATION & OTHER DETAILS')}
+        {renderSectionTitle('LOCATION DETAILS')}
         <VStack space={0}>
           {locationInfoFields.map(renderInfoCard)}
         </VStack>
@@ -466,6 +523,7 @@ export default function PersonalInformation({ navigation }) {
                 onPress={() => setEditModalVisible(false)}
                 borderRadius={10}
                 py={3}
+                disabled={updating}
               >
                 Cancel
               </Button>
@@ -477,6 +535,9 @@ export default function PersonalInformation({ navigation }) {
                 borderRadius={10}
                 py={3}
                 _pressed={{ bg: COLORS.green + "E6" }}
+                disabled={updating}
+                isLoading={updating}
+                isLoadingText="Saving..."
               >
                 Save
               </Button>
