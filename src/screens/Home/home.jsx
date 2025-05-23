@@ -8,7 +8,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getUserFarms } from '../../services/farm';
+import { getUserFarms, getFarmById } from '../../services/farm';
 
 const Dashboard = () => {
   const navigation = useNavigation();
@@ -63,7 +63,21 @@ const Dashboard = () => {
   const fetchActiveFarm = async () => {
     const storedFarm = await AsyncStorage.getItem('activeFarm');
     if (storedFarm) {
-      setActiveFarm(JSON.parse(storedFarm));
+      const parsed = JSON.parse(storedFarm);
+      try {
+        const updatedFarm = await getFarmById(parsed.id);
+        const newActive = {
+          id: updatedFarm.id,
+          name: updatedFarm.name,
+          location: updatedFarm.administrativeLocation,
+          size: `${updatedFarm.size} acres`,
+          animals: Array.isArray(updatedFarm.farmingTypes) ? updatedFarm.farmingTypes : [],
+        };
+        setActiveFarm(newActive);
+        await AsyncStorage.setItem('activeFarm', JSON.stringify(newActive));
+      } catch (error) {
+        setActiveFarm(parsed);
+      }
     } else {
       const { data } = await getUserFarms();
       if (data && data.length === 1) {
@@ -269,5 +283,4 @@ const styles = StyleSheet.create({
   periodOptionText: { fontSize: 16, color: '#333' },
   selectedPeriodOptionText: { color: COLORS.green, fontWeight: '500' },
 });
-
 export default Dashboard;
