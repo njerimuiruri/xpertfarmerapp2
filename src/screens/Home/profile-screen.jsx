@@ -11,10 +11,11 @@ import {
   Center,
 
 } from 'native-base';
-import { StyleSheet,  TouchableOpacity} from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import { COLORS } from '../../constants/theme';
 import { icons } from '../../constants';
 import FastImage from 'react-native-fast-image';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ProfileScreen({ navigation }) {
   const menuItems = [
@@ -61,19 +62,26 @@ export default function ProfileScreen({ navigation }) {
       route: 'AboutScreen',
     },
   ];
-
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.clear();
+      navigation.navigate('SignInScreen');
+    } catch (error) {
+      console.error('Failed to clear AsyncStorage:', error);
+    }
+  };
   const renderMenuItem = (item, index) => {
     return (
       <Pressable key={index} onPress={() => navigation.navigate(item.route)}>
-        <HStack 
-          alignItems="center" 
-          justifyContent="space-between" 
+        <HStack
+          alignItems="center"
+          justifyContent="space-between"
           py={3}
         >
           <HStack space={3} alignItems="center">
-            <Box 
-              bg={COLORS.lightGreen} 
-              p={2} 
+            <Box
+              bg={COLORS.lightGreen}
+              p={2}
               borderRadius={8}
             >
               <FastImage
@@ -108,46 +116,46 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <Box flex={1} bg="white">
-      <Box 
-        bg={COLORS.green} 
-        h={180} 
-        borderBottomLeftRadius={200} 
-        borderBottomRightRadius={180} 
+      <Box
+        bg={COLORS.green}
+        h={180}
+        borderBottomLeftRadius={200}
+        borderBottomRightRadius={180}
         position="relative"
         alignItems="center"
         pt={10}
       >
-        
+
         <HStack width="full" justifyContent="space-between" px={4} alignItems="center">
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <FastImage 
-            source={icons.backarrow}
-            style={styles.headerIcon}
-            resizeMode="contain"
-            tintColor="white"
-          />
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <FastImage
+              source={icons.backarrow}
+              style={styles.headerIcon}
+              resizeMode="contain"
+              tintColor="white"
+            />
           </TouchableOpacity>
 
           <Text fontSize="md" fontWeight="bold" color="white">
             General Details
           </Text>
           <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
-          <FastImage onPress={() => navigation.navigate('Settings')}
-            source={icons.settings}
-            style={styles.headerIcon}
-            resizeMode="contain"
-            tintColor="white"
-          />
+            <FastImage onPress={() => navigation.navigate('Settings')}
+              source={icons.settings}
+              style={styles.headerIcon}
+              resizeMode="contain"
+              tintColor="white"
+            />
           </TouchableOpacity>
-          
-          
+
+
         </HStack>
       </Box>
-      
-      <Box 
-        position="absolute" 
-        top={110} 
-        left="50%" 
+
+      <Box
+        position="absolute"
+        top={110}
+        left="50%"
         style={{ transform: [{ translateX: -40 }] }}
         zIndex={10}
         alignItems="center"
@@ -158,11 +166,11 @@ export default function ProfileScreen({ navigation }) {
             style={styles.profileImage}
             alt="Profile Image"
           />
-          <Box 
-            position="absolute" 
-            bottom={0} 
-            right={0} 
-            bg={COLORS.green} 
+          <Box
+            position="absolute"
+            bottom={0}
+            right={0}
+            bg={COLORS.green}
             borderRadius={15}
             p={2}
           >
@@ -178,33 +186,38 @@ export default function ProfileScreen({ navigation }) {
           App Settings
         </Text>
       </Box>
-      
-      <ScrollView 
-        showsVerticalScrollIndicator={false} 
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingTop: 80, paddingBottom: 20 }}
       >
         <Text fontSize="md" color={COLORS.darkGray3} ml={4} mb={2}>
           More
         </Text>
-        
+
         <Box mx={4} bg="white" borderRadius={12} p={4} shadow={2}>
           <VStack space={0}>
             {menuItems.map(renderMenuItem)}
           </VStack>
         </Box>
-        
+
         <Center mt={6}>
           <Pressable
             bg={COLORS.green}
-            w="90%"
-            py={3}
+            w="60%"
+            py={2}
             borderRadius={30}
             alignItems="center"
-          
+
           >
-            <Text color="white" fontWeight="bold">
-              Log out
-            </Text>
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <FastImage
+                source={icons.logout}
+                style={styles.logoutIcon}
+                tintColor={'white'}
+              />
+              <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
           </Pressable>
         </Center>
       </ScrollView>
@@ -235,5 +248,24 @@ const styles = StyleSheet.create({
   cameraIcon: {
     width: 16,
     height: 16,
-  }
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 6,
+    backgroundColor: COLORS.green,
+    marginVertical: 4,
+    borderRadius: 4,
+  },
+  logoutIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 6,
+  },
+  logoutText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
 });
