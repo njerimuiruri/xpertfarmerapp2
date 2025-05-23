@@ -8,6 +8,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { COLORS } from '../../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserFarms } from '../../services/farm';
 
 const Dashboard = () => {
   const navigation = useNavigation();
@@ -62,10 +63,22 @@ const Dashboard = () => {
   const fetchActiveFarm = async () => {
     const storedFarm = await AsyncStorage.getItem('activeFarm');
     if (storedFarm) {
-      const farm = JSON.parse(storedFarm);
-      setActiveFarm(farm);
+      setActiveFarm(JSON.parse(storedFarm));
     } else {
-      setActiveFarm(null);
+      const { data } = await getUserFarms();
+      if (data && data.length === 1) {
+        const singleFarm = {
+          id: data[0].id,
+          name: data[0].name,
+          location: data[0].administrativeLocation,
+          size: `${data[0].size} acres`,
+          animals: Array.isArray(data[0].farmingTypes) ? data[0].farmingTypes : [],
+        };
+        setActiveFarm(singleFarm);
+        await AsyncStorage.setItem('activeFarm', JSON.stringify(singleFarm));
+      } else {
+        setActiveFarm(null);
+      }
     }
   };
 
@@ -74,6 +87,10 @@ const Dashboard = () => {
       fetchActiveFarm();
     }, [])
   );
+
+  const navigateToFarmInfo = () => {
+    navigation.navigate('FarmInformation');
+  };
 
   const renderCard = ({ title, details, colors }) => (
     <LinearGradient colors={colors} style={styles.card} key={title}>
@@ -92,10 +109,6 @@ const Dashboard = () => {
     </LinearGradient>
   );
 
-  const navigateToFarmInfo = () => {
-    navigation.navigate('FarmInformation');
-  };
-
   return (
     <View style={styles.container}>
       <Header navigation={navigation} />
@@ -108,18 +121,7 @@ const Dashboard = () => {
         >
           <View style={styles.welcomeTextContainer}>
             <Text style={styles.welcomeTitle}>Welcome to Xpert Farmer</Text>
-            <Text style={styles.welcomeSubtitle}>
-              Data to Farm,{'\n'}
-              Data for Business,{'\n'}
-            </Text>
-          </View>
-          <View style={styles.rightContainer}>
-            <View style={[styles.circle, styles.circleSmall, { top: 10, right: 10 }]} />
-            <View style={[styles.circle, styles.circleMedium, { top: '40%', right: 40 }]} />
-            <View style={[styles.circle, styles.circleSmall, { bottom: 30, right: 20 }]} />
-            <TouchableOpacity style={styles.seeMoreButton}>
-              <Text style={styles.seeMoreText}>See more</Text>
-            </TouchableOpacity>
+            <Text style={styles.welcomeSubtitle}>Data to Farm,{"\n"}Data for Business,{"\n"}</Text>
           </View>
         </LinearGradient>
 
@@ -134,33 +136,13 @@ const Dashboard = () => {
 
           {activeFarm ? (
             <TouchableOpacity style={styles.activeFarmCard} onPress={navigateToFarmInfo}>
-              <View style={styles.farmIconContainer}>
-                <Icon name="warehouse" size={24} color={COLORS.white} />
-              </View>
-              <View style={styles.farmInfoContainer}>
-                <Text style={styles.farmName}>{activeFarm.name}</Text>
-                <View style={styles.farmDetailsRow}>
-                  <View style={styles.farmDetailItem}>
-                    <Icon name="map-marker" size={14} color={COLORS.darkGray3} />
-                    <Text style={styles.farmDetailText}>{activeFarm.location}</Text>
-                  </View>
-                  <View style={styles.farmDetailItem}>
-                    <Icon name="resize" size={14} color={COLORS.darkGray3} />
-                    <Text style={styles.farmDetailText}>{activeFarm.size}</Text>
-                  </View>
-                </View>
-                <View style={styles.cropTagsContainer}>
-                  {activeFarm.animals.map((a, i) => (
-                    <View key={i} style={styles.cropTag}>
-                      <Text style={styles.cropTagText}>{a}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-              <Icon name="chevron-right" size={24} color={COLORS.darkGray3} style={styles.rightArrow} />
+              <Text style={styles.farmName}>{activeFarm.name}</Text>
+              <Text style={styles.farmDetail}>Location: {activeFarm.location}</Text>
+              <Text style={styles.farmDetail}>Size: {activeFarm.size}</Text>
+              <Text style={styles.farmDetail}>Animals: {activeFarm.animals.join(', ')}</Text>
             </TouchableOpacity>
           ) : (
-            <Text style={{ marginLeft: 16, color: '#666' }}>No active farm selected.</Text>
+            <Text style={styles.noFarm}>No active farm selected.</Text>
           )}
         </View>
 
@@ -191,26 +173,16 @@ const Dashboard = () => {
             {timePeriods.map((period) => (
               <TouchableOpacity
                 key={period}
-                style={[
-                  styles.periodOption,
-                  selectedPeriod === period && styles.selectedPeriodOption,
-                ]}
+                style={[styles.periodOption, selectedPeriod === period && styles.selectedPeriodOption]}
                 onPress={() => {
                   setSelectedPeriod(period);
                   setShowPeriodModal(false);
                 }}
               >
-                <Text
-                  style={[
-                    styles.periodOptionText,
-                    selectedPeriod === period && styles.selectedPeriodOptionText,
-                  ]}
-                >
+                <Text style={[styles.periodOptionText, selectedPeriod === period && styles.selectedPeriodOptionText]}>
                   {period}
                 </Text>
-                {selectedPeriod === period && (
-                  <Icon name="check" size={20} color={COLORS.green} />
-                )}
+                {selectedPeriod === period && <Icon name="check" size={20} color={COLORS.green} />}
               </TouchableOpacity>
             ))}
           </View>
@@ -221,10 +193,7 @@ const Dashboard = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F7FA',
-  },
+  container: { flex: 1, backgroundColor: '#F5F7FA' },
   scrollView: { flex: 1 },
   welcomeBanner: {
     margin: 16,
@@ -235,138 +204,28 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     minHeight: 160,
   },
-  welcomeTextContainer: {
-    flex: 1,
-    paddingRight: 20,
-  },
-  welcomeTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: COLORS.white,
-    marginBottom: 12,
-  },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: COLORS.white,
-    lineHeight: 24,
-  },
-  rightContainer: {
-    width: 100,
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  seeMoreButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    alignSelf: 'flex-end',
-    marginTop: 'auto',
-    marginBottom: 10,
-  },
-  seeMoreText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  circle: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  circleSmall: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  circleMedium: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  activeFarmSection: {
-    paddingHorizontal: 16,
-    marginBottom: 20,
-  },
+  welcomeTextContainer: { flex: 1, paddingRight: 20 },
+  welcomeTitle: { fontSize: 20, fontWeight: '600', color: COLORS.white, marginBottom: 12 },
+  welcomeSubtitle: { fontSize: 16, color: COLORS.white, lineHeight: 24 },
+  activeFarmSection: { paddingHorizontal: 16, marginBottom: 20 },
   activeFarmHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
-  activeFarmTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  viewAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  viewAllText: {
-    fontSize: 14,
-    color: COLORS.green,
-    marginRight: 4,
-  },
+  activeFarmTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  viewAllButton: { flexDirection: 'row', alignItems: 'center' },
+  viewAllText: { fontSize: 14, color: COLORS.green, marginRight: 4 },
   activeFarmCard: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
     elevation: 3,
   },
-  farmIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: COLORS.green,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  farmInfoContainer: {
-    flex: 1,
-  },
-  farmName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 6,
-  },
-  farmDetailsRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  farmDetailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  farmDetailText: {
-    fontSize: 13,
-    color: COLORS.darkGray3,
-    marginLeft: 4,
-  },
-  cropTagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  cropTag: {
-    backgroundColor: COLORS.lightGreen,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 8,
-    marginBottom: 4,
-  },
-  cropTagText: {
-    fontSize: 12,
-    color: COLORS.green,
-  },
-  rightArrow: {
-    marginLeft: 10,
-  },
+  farmName: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 6 },
+  farmDetail: { fontSize: 13, color: COLORS.darkGray3, marginBottom: 4 },
+  noFarm: { color: '#666', marginLeft: 16 },
   overviewSection: {
     paddingHorizontal: 16,
     flexDirection: 'row',
@@ -374,11 +233,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  overviewTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
+  overviewTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   monthSelector: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -387,58 +242,21 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
   },
-  monthText: {
-    marginRight: 4,
-    color: '#666',
-  },
-  cardsGrid: {
-    padding: 16,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  card: {
-    width: '47%',
-    padding: 16,
-    borderRadius: 16,
-    minHeight: 140,
-  },
-  cardContent: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.white,
-    marginBottom: 8,
-  },
-  cardDetail: {
-    fontSize: 13,
-    color: COLORS.white,
-    marginBottom: 4,
-  },
-  plusButton: {
-    position: 'absolute',
-    bottom: 12,
-    right: 12,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
+  monthText: { marginRight: 4, color: '#666' },
+  cardsGrid: { padding: 16, flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
+  card: { width: '47%', padding: 16, borderRadius: 16, minHeight: 140 },
+  cardContent: { flex: 1 },
+  cardTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.white, marginBottom: 8 },
+  cardDetail: { fontSize: 13, color: COLORS.white, marginBottom: 4 },
+  plusButton: { position: 'absolute', bottom: 12, right: 12 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'flex-end' },
   periodModalContainer: {
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 16,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#333',
-  },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16, color: '#333' },
   periodOption: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -447,17 +265,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  selectedPeriodOption: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-  },
-  priodOptionText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  selectedPeriodOptionText: {
-    color: COLORS.green,
-    fontWeight: '500',
-  },
+  selectedPeriodOption: { backgroundColor: 'rgba(76, 175, 80, 0.1)' },
+  periodOptionText: { fontSize: 16, color: '#333' },
+  selectedPeriodOptionText: { color: COLORS.green, fontWeight: '500' },
 });
 
 export default Dashboard;

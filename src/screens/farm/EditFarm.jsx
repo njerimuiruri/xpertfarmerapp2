@@ -220,18 +220,29 @@ export default function EditFarm({ navigation, route }) {
         </Box>
 
         <HStack mt={6} justifyContent="space-around">
-          <Button onPress={handleSave} isLoading={saving} isDisabled={deleting}>
+          <Button
+            onPress={handleSave}
+            width="45%"
+            backgroundColor="#8FD28F"
+            _text={{ color: "white" }}
+            isLoading={saving}
+            isDisabled={deleting}
+          >
             {saving ? 'Saving...' : 'Save'}
           </Button>
+
           <Button
-            variant="outline"
-            colorScheme="danger"
             onPress={() => setIsDeleteOpen(true)}
+            width="45%"
+            variant="outline"
+            borderColor="#8FD28F"
+            _text={{ color: "#8FD28F" }}
             isLoading={deleting}
             isDisabled={saving}
           >
             Delete
           </Button>
+
         </HStack>
       </ScrollView>
 

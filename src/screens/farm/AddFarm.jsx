@@ -64,7 +64,13 @@ export default function AddFarm({ navigation }) {
       if (result.error) {
         toast.show({ title: 'Error', description: result.error, status: 'error' });
       } else {
-        toast.show({ title: 'Success', description: 'Farm created!', status: 'success' });
+        toast.show({
+          title: 'Success',
+          description: 'Farm created!',
+          status: 'success',
+          placement: 'top',
+          duration: 3000,
+        });
         navigation.navigate('FarmInformation', { refresh: true });
       }
     } catch (error) {
