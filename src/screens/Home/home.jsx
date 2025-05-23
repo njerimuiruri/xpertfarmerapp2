@@ -1,31 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Modal,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal,
 } from 'react-native';
 import Header from '../../components/headers/main-header';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import FastImage from 'react-native-fast-image';
 import { COLORS } from '../../constants/theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Dashboard = () => {
   const navigation = useNavigation();
   const [selectedPeriod, setSelectedPeriod] = useState('This month');
   const [showPeriodModal, setShowPeriodModal] = useState(false);
-
-  const [activeFarm, setActiveFarm] = useState({
-    id: '1',
-    name: 'Green Valley Farm',
-    location: 'Eastern Region',
-    size: '5.2 acres',
-    animals: ['Pigs', 'Goats'],
-  });
+  const [activeFarm, setActiveFarm] = useState(null);
 
   const timePeriods = ['This week', 'This month', 'This quarter', 'This year'];
 
@@ -60,13 +48,9 @@ const Dashboard = () => {
       colors: ['#CDD9CD', '#4C7153'],
     },
     {
-      "title": "Inventory Data",
-      "details": [
-        "Goods in Stock: 500 units",
-        "Utilities: Water - 1,000L",
-        "Machines: 5 active"
-      ],
-      "colors": ["#D79F91", "#4C7153"]
+      title: 'Inventory Data',
+      details: ['Goods in Stock: 500 units', 'Utilities: Water - 1,000L', 'Machines: 5 active'],
+      colors: ['#D79F91', '#4C7153'],
     },
     {
       title: 'Health',
@@ -75,17 +59,30 @@ const Dashboard = () => {
     },
   ];
 
+  const fetchActiveFarm = async () => {
+    const storedFarm = await AsyncStorage.getItem('activeFarm');
+    if (storedFarm) {
+      const farm = JSON.parse(storedFarm);
+      setActiveFarm(farm);
+    } else {
+      setActiveFarm(null);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchActiveFarm();
+    }, [])
+  );
+
   const renderCard = ({ title, details, colors }) => (
     <LinearGradient colors={colors} style={styles.card} key={title}>
       <View style={styles.cardContent}>
         <Text style={styles.cardTitle}>{title}</Text>
         {details.map((detail, index) => (
-          <Text key={index} style={styles.cardDetail}>
-            {detail}
-          </Text>
+          <Text key={index} style={styles.cardDetail}>{detail}</Text>
         ))}
       </View>
-
       <TouchableOpacity
         onPress={() => navigation.navigate(cardScreens[title])}
         style={styles.plusButton}
@@ -95,7 +92,6 @@ const Dashboard = () => {
     </LinearGradient>
   );
 
-  // Function to navigate to Farm Information screen
   const navigateToFarmInfo = () => {
     navigation.navigate('FarmInformation');
   };
@@ -103,9 +99,7 @@ const Dashboard = () => {
   return (
     <View style={styles.container}>
       <Header navigation={navigation} />
-
       <ScrollView style={styles.scrollView}>
-
         <LinearGradient
           colors={['#8CD18C', '#A7E3A7']}
           start={{ x: 0, y: 0 }}
@@ -117,82 +111,62 @@ const Dashboard = () => {
             <Text style={styles.welcomeSubtitle}>
               Data to Farm,{'\n'}
               Data for Business,{'\n'}
-
             </Text>
           </View>
-
           <View style={styles.rightContainer}>
-            <View
-              style={[styles.circle, styles.circleSmall, { top: 10, right: 10 }]}
-            />
-            <View
-              style={[styles.circle, styles.circleMedium, { top: '40%', right: 40 }]}
-            />
-            <View
-              style={[styles.circle, styles.circleSmall, { bottom: 30, right: 20 }]}
-            />
+            <View style={[styles.circle, styles.circleSmall, { top: 10, right: 10 }]} />
+            <View style={[styles.circle, styles.circleMedium, { top: '40%', right: 40 }]} />
+            <View style={[styles.circle, styles.circleSmall, { bottom: 30, right: 20 }]} />
             <TouchableOpacity style={styles.seeMoreButton}>
               <Text style={styles.seeMoreText}>See more</Text>
             </TouchableOpacity>
           </View>
         </LinearGradient>
 
-        {/* Active Farm Section */}
         <View style={styles.activeFarmSection}>
           <View style={styles.activeFarmHeader}>
             <Text style={styles.activeFarmTitle}>Active Farm</Text>
-            <TouchableOpacity
-              style={styles.viewAllButton}
-              onPress={navigateToFarmInfo}
-            >
+            <TouchableOpacity style={styles.viewAllButton} onPress={navigateToFarmInfo}>
               <Text style={styles.viewAllText}>View All</Text>
               <Icon name="chevron-right" size={16} color={COLORS.green} />
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={styles.activeFarmCard}
-            onPress={navigateToFarmInfo}
-          >
-            <View style={styles.farmIconContainer}>
-              <Icon name="warehouse" size={24} color={COLORS.white} />
-            </View>
-
-            <View style={styles.farmInfoContainer}>
-              <Text style={styles.farmName}>{activeFarm.name}</Text>
-
-              <View style={styles.farmDetailsRow}>
-                <View style={styles.farmDetailItem}>
-                  <Icon name="map-marker" size={14} color={COLORS.darkGray3} />
-                  <Text style={styles.farmDetailText}>{activeFarm.location}</Text>
-                </View>
-
-                <View style={styles.farmDetailItem}>
-                  <Icon name="resize" size={14} color={COLORS.darkGray3} />
-                  <Text style={styles.farmDetailText}>{activeFarm.size}</Text>
-                </View>
+          {activeFarm ? (
+            <TouchableOpacity style={styles.activeFarmCard} onPress={navigateToFarmInfo}>
+              <View style={styles.farmIconContainer}>
+                <Icon name="warehouse" size={24} color={COLORS.white} />
               </View>
-
-              <View style={styles.cropTagsContainer}>
-                {activeFarm.animals.map((crop, index) => (
-                  <View key={index} style={styles.cropTag}>
-                    <Text style={styles.cropTagText}>{crop}</Text>
+              <View style={styles.farmInfoContainer}>
+                <Text style={styles.farmName}>{activeFarm.name}</Text>
+                <View style={styles.farmDetailsRow}>
+                  <View style={styles.farmDetailItem}>
+                    <Icon name="map-marker" size={14} color={COLORS.darkGray3} />
+                    <Text style={styles.farmDetailText}>{activeFarm.location}</Text>
                   </View>
-                ))}
+                  <View style={styles.farmDetailItem}>
+                    <Icon name="resize" size={14} color={COLORS.darkGray3} />
+                    <Text style={styles.farmDetailText}>{activeFarm.size}</Text>
+                  </View>
+                </View>
+                <View style={styles.cropTagsContainer}>
+                  {activeFarm.animals.map((a, i) => (
+                    <View key={i} style={styles.cropTag}>
+                      <Text style={styles.cropTagText}>{a}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
-            </View>
-
-            <Icon name="chevron-right" size={24} color={COLORS.darkGray3} style={styles.rightArrow} />
-          </TouchableOpacity>
+              <Icon name="chevron-right" size={24} color={COLORS.darkGray3} style={styles.rightArrow} />
+            </TouchableOpacity>
+          ) : (
+            <Text style={{ marginLeft: 16, color: '#666' }}>No active farm selected.</Text>
+          )}
         </View>
 
-        {/* Farm Overview */}
         <View style={styles.overviewSection}>
           <Text style={styles.overviewTitle}>Farm Overview</Text>
-          <TouchableOpacity
-            style={styles.monthSelector}
-            onPress={() => setShowPeriodModal(true)}
-          >
+          <TouchableOpacity style={styles.monthSelector} onPress={() => setShowPeriodModal(true)}>
             <Text style={styles.monthText}>{selectedPeriod}</Text>
             <Icon name="chevron-down" size={20} color="#666" />
           </TouchableOpacity>
@@ -201,10 +175,9 @@ const Dashboard = () => {
         <View style={styles.cardsGrid}>{cards.map(renderCard)}</View>
       </ScrollView>
 
-      {/* Time Period Modal */}
       <Modal
         visible={showPeriodModal}
-        transparent={true}
+        transparent
         animationType="slide"
         onRequestClose={() => setShowPeriodModal(false)}
       >
@@ -252,9 +225,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F7FA',
   },
-  scrollView: {
-    flex: 1,
-  },
+  scrollView: { flex: 1 },
   welcomeBanner: {
     margin: 16,
     padding: 20,
@@ -313,7 +284,6 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
   },
-  // Active Farm Section Styles
   activeFarmSection: {
     paddingHorizontal: 16,
     marginBottom: 20,
@@ -344,10 +314,6 @@ const styles = StyleSheet.create({
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 3,
   },
   farmIconContainer: {
@@ -401,7 +367,6 @@ const styles = StyleSheet.create({
   rightArrow: {
     marginLeft: 10,
   },
-  // Farm Overview Section Styles
   overviewSection: {
     paddingHorizontal: 16,
     flexDirection: 'row',
@@ -457,7 +422,6 @@ const styles = StyleSheet.create({
     bottom: 12,
     right: 12,
   },
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -486,7 +450,7 @@ const styles = StyleSheet.create({
   selectedPeriodOption: {
     backgroundColor: 'rgba(76, 175, 80, 0.1)',
   },
-  periodOptionText: {
+  priodOptionText: {
     fontSize: 16,
     color: '#333',
   },

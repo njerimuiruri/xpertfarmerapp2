@@ -31,8 +31,9 @@ export async function updateUserProfile(updates) {
   try {
     const token = await AsyncStorage.getItem('token');
     const user = JSON.parse((await AsyncStorage.getItem('user')) || '{}');
-
+    console.log(updates);
     if (!user?.id) throw new Error('User not found in storage');
+
     const response = await api.patch(`/users/${user.id}`, updates, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -45,7 +46,7 @@ export async function updateUserProfile(updates) {
 
     return {data: response.data, error: null};
   } catch (error) {
-    console.error('Error updating user profile:', error);
+    console.error('Error updating user profile:', error.response);
     return {
       data: null,
       error:

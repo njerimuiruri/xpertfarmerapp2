@@ -1,67 +1,78 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
-  Box,
-  Text,
-  VStack,
-  HStack,
-  ScrollView,
-  Pressable,
-  Divider,
-  IconButton,
-  Heading,
-  Button,
-  FlatList,
+  Box, Text, VStack, HStack, ScrollView, Pressable,
+  IconButton, Heading, Button, FlatList, Spinner, Center
 } from 'native-base';
 import { StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import { COLORS } from '../../constants/theme';
 import { icons } from '../../constants';
 import FastImage from 'react-native-fast-image';
 import SecondaryHeader from '../../components/headers/secondary-header';
+import { getUserFarms, deleteFarm } from '../../services/farm';
+import { useFocusEffect, useRoute, useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function FarmInformation({ navigation }) {
-  const [farms, setFarms] = useState([
-    {
-      id: '1',
-      name: 'Green Valley Farm',
-      location: 'Eastern Region',
-      size: '5.2 acres',
-      animals: ['Pigs', 'Goats'],
-      isActive: true,
-    },
-    {
-      id: '2',
-      name: 'Sunrise Plantation',
-      location: 'Western Region',
-      size: '3.7 acres',
-      animals: ['Poultry', 'Dairy Cattle'],
-      isActive: false,
-    },
-    {
-      id: '3',
-      name: 'Riverside Fields',
-      location: 'Central Region',
-      size: '8.1 acres',
-      animals: ['Beef Goats', 'Sheep'],
-      isActive: false,
-    },
-  ]);
+export default function FarmInformation() {
+  const [farms, setFarms] = useState([]);
+  const [activeFarm, setActiveFarm] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const [activeFarm, setActiveFarm] = useState(farms.find(farm => farm.isActive) || farms[0]);
+  const route = useRoute();
+  const navigation = useNavigation();
 
-  const handleFarmSelect = (farm) => {
-    if (farm.id === activeFarm.id) return;
+  const fetchFarms = async () => {
+    setLoading(true);
+    const { data } = await getUserFarms();
 
-    const updatedFarms = farms.map(f => ({
-      ...f,
-      isActive: f.id === farm.id
-    }));
+    if (data) {
+      const storedActive = JSON.parse(await AsyncStorage.getItem('activeFarm') || '{}');
+      const formatted = data.map((f) => ({
+        id: f.id,
+        name: f.name,
+        location: f.administrativeLocation,
+        size: `${f.size} acres`,
+        animals: Array.isArray(f.farmingTypes) ? f.farmingTypes : [],
+        isActive: f.id === storedActive?.id,
+      }));
 
-    setFarms(updatedFarms);
+      setFarms(formatted);
+      setActiveFarm(formatted.find(f => f.isActive) || formatted[0]);
+    }
+    setLoading(false);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchFarms();
+    }, [route.params?.refresh])
+  );
+
+  useEffect(() => {
+    if (route.params?.refresh) {
+      navigation.setParams({ refresh: false });
+    }
+  }, [route.params]);
+
+  const handleFarmSelect = async (farm) => {
+    if (farm.id === activeFarm?.id) return;
+
+    setFarms(prev => prev.map(f => ({ ...f, isActive: f.id === farm.id })));
     setActiveFarm(farm);
+
+    await AsyncStorage.setItem('activeFarm', JSON.stringify(farm));
+  };
+
+  const handleDeleteFarm = async (farmId) => {
+    await deleteFarm(farmId);
+    const currentActive = JSON.parse(await AsyncStorage.getItem('activeFarm'));
+    if (currentActive?.id === farmId) {
+      await AsyncStorage.removeItem('activeFarm');
+    }
+    fetchFarms();
   };
 
   const navigateToEditFarm = (farm) => {
-    navigation.navigate('EditFarm', { farm });
+    navigation.navigate('EditFarm', { farm, refresh: true });
   };
 
   const navigateToAddFarm = () => {
@@ -69,10 +80,7 @@ export default function FarmInformation({ navigation }) {
   };
 
   const renderFarmItem = ({ item }) => (
-    <Pressable
-      onPress={() => handleFarmSelect(item)}
-      mb={3}
-    >
+    <Pressable onPress={() => handleFarmSelect(item)} mb={3}>
       <Box
         bg={item.isActive ? COLORS.lightGreen : 'white'}
         borderWidth={1}
@@ -101,7 +109,7 @@ export default function FarmInformation({ navigation }) {
               Size: {item.size}
             </Text>
             <Text fontSize="sm" color={COLORS.darkGray3}>
-              animals: {item.animals.join(', ')}
+              Animals: {Array.isArray(item.animals) ? item.animals.join(', ') : 'N/A'}
             </Text>
           </VStack>
 
@@ -111,7 +119,6 @@ export default function FarmInformation({ navigation }) {
                 <Text fontSize="xs" color="white">Active</Text>
               </Box>
             )}
-
             <IconButton
               icon={
                 <FastImage
@@ -130,26 +137,28 @@ export default function FarmInformation({ navigation }) {
     </Pressable>
   );
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SecondaryHeader title="Farm Information" />
+        <StatusBar translucent backgroundColor={COLORS.green2} animated barStyle={'light-content'} />
+        <Center flex={1}>
+          <Spinner size="lg" color={COLORS.green} />
+        </Center>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    < SafeAreaView style={styles.container} >
+    <SafeAreaView style={styles.container}>
       <SecondaryHeader title="Farm Information" />
-      <StatusBar
-        translucent
-        backgroundColor={COLORS.green2}
-        animated={true}
-        barStyle={'light-content'}
-      />
+      <StatusBar translucent backgroundColor={COLORS.green2} animated barStyle={'light-content'} />
 
       <ScrollView flex={1} contentContainerStyle={{ padding: 16 }}>
         <Box mb={6}>
           <Heading size="md" mb={4}>Active Farm</Heading>
           {activeFarm ? (
-            <Box
-              bg={COLORS.lightGreen}
-              borderRadius={10}
-              p={4}
-              shadow={2}
-            >
+            <Box bg={COLORS.lightGreen} borderRadius={10} p={4} shadow={2}>
               <HStack justifyContent="space-between" mb={2}>
                 <Text fontSize="lg" fontWeight="bold" color="black">
                   {activeFarm.name}
@@ -167,43 +176,12 @@ export default function FarmInformation({ navigation }) {
                   onPress={() => navigateToEditFarm(activeFarm)}
                 />
               </HStack>
-
               <VStack space={2}>
-                <HStack alignItems="center" space={2}>
-                  <FastImage
-                    source={icons.location}
-                    style={styles.smallIcon}
-                    resizeMode="contain"
-                    tintColor={COLORS.green}
-                  />
-                  <Text fontSize="sm" color={COLORS.darkGray3}>
-                    Location: {activeFarm.location}
-                  </Text>
-                </HStack>
-
-                <HStack alignItems="center" space={2}>
-                  <FastImage
-                    source={icons.size}
-                    style={styles.smallIcon}
-                    resizeMode="contain"
-                    tintColor={COLORS.green}
-                  />
-                  <Text fontSize="sm" color={COLORS.darkGray3}>
-                    Size: {activeFarm.size}
-                  </Text>
-                </HStack>
-
-                <HStack alignItems="center" space={2}>
-                  <FastImage
-                    source={icons.plant}
-                    style={styles.smallIcon}
-                    resizeMode="contain"
-                    tintColor={COLORS.green}
-                  />
-                  <Text fontSize="sm" color={COLORS.darkGray3}>
-                    animals: {activeFarm.animals.join(', ')}
-                  </Text>
-                </HStack>
+                <Text fontSize="sm" color={COLORS.darkGray3}>Location: {activeFarm.location}</Text>
+                <Text fontSize="sm" color={COLORS.darkGray3}>Size: {activeFarm.size}</Text>
+                <Text fontSize="sm" color={COLORS.darkGray3}>
+                  Animals: {Array.isArray(activeFarm.animals) ? activeFarm.animals.join(', ') : 'N/A'}
+                </Text>
               </VStack>
             </Box>
           ) : (
@@ -218,19 +196,13 @@ export default function FarmInformation({ navigation }) {
           renderItem={renderFarmItem}
           keyExtractor={item => item.id}
           scrollEnabled={false}
+          refreshing={loading}
+          onRefresh={fetchFarms}
           ListFooterComponent={
             <Button
               mt={4}
               bg={COLORS.green}
               borderRadius={10}
-              leftIcon={
-                <FastImage
-                  source={icons.plus}
-                  style={styles.smallIcon}
-                  resizeMode="contain"
-                  tintColor="white"
-                />
-              }
               onPress={navigateToAddFarm}
             >
               Add New Farm
@@ -245,11 +217,6 @@ export default function FarmInformation({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-
-  },
-  headerIcon: {
-    width: 24,
-    height: 24,
   },
   smallIcon: {
     width: 16,

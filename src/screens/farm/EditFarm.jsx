@@ -1,281 +1,263 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Box,
-  Text,
-  VStack,
-  HStack,
-  ScrollView,
-  IconButton,
-  FormControl,
-  Input,
-  Button,
-  TextArea,
-  Select,
-  CheckIcon,
-  Radio,
-  Checkbox,
-  Heading,
-  Divider,
-  Icon,
-  AlertDialog,
+  Box, Text, VStack, HStack, ScrollView, IconButton, FormControl, Input,
+  Button, Select, CheckIcon, Radio, Checkbox, Heading, Divider, AlertDialog,
+  Spinner, Center
 } from 'native-base';
 import { StyleSheet, SafeAreaView, StatusBar, Alert } from 'react-native';
 import { COLORS } from '../../constants/theme';
 import { icons } from '../../constants';
 import FastImage from 'react-native-fast-image';
 import SecondaryHeader from '../../components/headers/secondary-header';
+import { getFarmById, updateFarm, deleteFarm } from '../../services/farm';
 
 export default function EditFarm({ navigation, route }) {
   const { farm } = route.params;
+  const cancelRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [error, setError] = useState(null);
 
   const [formData, setFormData] = useState({
-    farm_name: farm.farm_name || '',
-    county: farm.county || '',
-    administrative_location: farm.administrative_location || '',
-    farm_size: farm.farm_size || '',
-    ownership: farm.ownership || 'Freehold',
-    farming_types: farm.farming_types || [],
-    crops: farm.crops ? farm.crops.join(', ') : '',
-    isActive: farm.isActive || false,
+    farm_name: '',
+    county: '',
+    administrative_location: '',
+    farm_size: '',
+    ownership: 'Freehold',
+    farming_types: [],
+    isActive: false,
   });
+
+  useEffect(() => {
+    fetchFarmData();
+  }, []);
+
+  const fetchFarmData = async () => {
+    try {
+      setLoading(true);
+      const data = await getFarmById(farm.id);
+
+      setFormData({
+        farm_name: data.name || '',
+        county: data.county || '',
+        administrative_location: data.administrativeLocation || '',
+        farm_size: data.size?.toString() || '',
+        ownership: data.ownership || 'Freehold',
+        farming_types: Array.isArray(data.farmingTypes) ? data.farmingTypes : [],
+        isActive: data.isActive || false,
+      });
+    } catch (err) {
+      setError(typeof err === 'string' ? err : 'Failed to load farm data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-
-  const handleSave = () => {
-
-    navigation.goBack();
-
+  const validateForm = () => {
+    if (!formData.farm_name.trim()) return Alert.alert('Validation', 'Farm name is required');
+    if (!formData.county) return Alert.alert('Validation', 'County is required');
+    if (!formData.administrative_location) return Alert.alert('Validation', 'Location is required');
+    if (!formData.farm_size.trim()) return Alert.alert('Validation', 'Size is required');
+    if (formData.farming_types.length === 0) return Alert.alert('Validation', 'Select at least one type of farming');
+    return true;
   };
 
+  const handleSave = async () => {
+    if (!validateForm()) return;
 
+    try {
+      setSaving(true);
+      const payload = {
+        name: formData.farm_name.trim(),
+        county: formData.county,
+        administrativeLocation: formData.administrative_location,
+        size: parseFloat(formData.farm_size),
+        ownership: formData.ownership,
+        farmingTypes: formData.farming_types,
+        // isActive: formData.isActive,
+      };
+      await updateFarm(farm.id, payload);
+      Alert.alert('Success', 'Farm updated successfully!', [
+        {
+          text: 'OK',
+          onPress: () => navigation.navigate('FarmInformation', { refresh: true })
+        }
+      ]);
+    } catch (err) {
+      Alert.alert('Error', typeof err === 'string' ? err : 'Failed to update farm');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      setDeleting(true);
+      await deleteFarm(farm.id);
+      Alert.alert('Deleted', 'Farm deleted successfully', [
+        {
+          text: 'OK',
+          onPress: () => navigation.navigate('FarmInformation', { refresh: true })
+        }
+      ]);
+    } catch (err) {
+      Alert.alert('Error', typeof err === 'string' ? err : 'Failed to delete farm');
+    } finally {
+      setDeleting(false);
+      setIsDeleteOpen(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SecondaryHeader title="Edit Farm" />
+        <StatusBar translucent backgroundColor={COLORS.green2} barStyle={'light-content'} />
+        <Center flex={1}><Spinner size="lg" color={COLORS.green} /></Center>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <SecondaryHeader title="Edit Farm" />
-      <StatusBar
-        translucent
-        backgroundColor={COLORS.green2}
-        animated={true}
-        barStyle={'light-content'}
-      />
+      <StatusBar translucent backgroundColor={COLORS.green2} barStyle={'light-content'} />
 
-      <ScrollView flex={1} showsVerticalScrollIndicator={false}>
-        <Box bg="white" borderRadius={16} m={4} p={6} shadow={2}>
-          <Heading size="md" mb={4} color={COLORS.green}>Farm Information</Heading>
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <Box bg="white" borderRadius={16} p={6} shadow={2}>
+          <Heading size="md" mb={4} color={COLORS.green}>Farm Details</Heading>
           <Divider mb={4} />
 
-          <VStack space={5}>
+          <VStack space={4}>
             <FormControl isRequired>
-              <FormControl.Label _text={{ fontWeight: "bold" }}>Farm Name (Business Name)</FormControl.Label>
+              <FormControl.Label>Farm Name</FormControl.Label>
               <Input
                 value={formData.farm_name}
                 onChangeText={(value) => handleInputChange("farm_name", value)}
                 placeholder="Enter farm name"
-                borderRadius={10}
-                borderColor={COLORS.gray3}
-                backgroundColor={COLORS.lightGreen}
-                fontSize="md"
-                bg="white"
-                shadow={1}
               />
             </FormControl>
 
             <FormControl isRequired>
-              <FormControl.Label _text={{ fontWeight: "bold" }}>County</FormControl.Label>
+              <FormControl.Label>County</FormControl.Label>
               <Select
                 selectedValue={formData.county}
-                borderRadius={10}
-                borderColor={COLORS.gray3}
-                backgroundColor={COLORS.lightGreen}
-
-                fontSize="md"
-                placeholder="Select County"
                 onValueChange={(value) => handleInputChange("county", value)}
-                _selectedItem={{
-                  bg: COLORS.lightGreen,
-                  endIcon: <CheckIcon size={5} color={COLORS.green} />
-                }}
-                bg="white"
-                shadow={1}
+                placeholder="Select County"
+                _selectedItem={{ bg: COLORS.lightGreen, endIcon: <CheckIcon size="5" /> }}
               >
                 <Select.Item label="Turkana" value="Turkana" />
                 <Select.Item label="Nairobi" value="Nairobi" />
                 <Select.Item label="Mombasa" value="Mombasa" />
-                <Select.Item label="Siaya" value="Siaya" />
               </Select>
             </FormControl>
 
             <FormControl isRequired>
-              <FormControl.Label _text={{ fontWeight: "bold" }}>Administrative Location</FormControl.Label>
-              <Select
-                selectedValue={formData.administrative_location}
-                borderRadius={10}
-                borderColor={COLORS.gray3}
-                backgroundColor={COLORS.lightGreen}
-                fontSize="md"
-                placeholder="Select Location"
-                onValueChange={(value) => handleInputChange("administrative_location", value)}
-                _selectedItem={{
-                  bg: COLORS.lightGreen,
-                  endIcon: <CheckIcon size={5} color={COLORS.green} />
-                }}
-                bg="white"
-                shadow={1}
-              >
-                <Select.Item label="Turkana" value="Turkana" />
-                <Select.Item label="Siaya" value="Siaya" />
-              </Select>
-            </FormControl>
-
-            <FormControl isRequired>
-              <FormControl.Label _text={{ fontWeight: "bold" }}>Farm Size (Acres)</FormControl.Label>
+              <FormControl.Label>Administrative Location</FormControl.Label>
               <Input
-                value={formData.farm_size}
-                onChangeText={(value) => handleInputChange("farm_size", value)}
-                placeholder="Enter farm size (e.g. 5.2)"
-                borderRadius={10}
-                borderColor={COLORS.gray3}
-                backgroundColor={COLORS.lightGreen}
-
-                fontSize="md"
-                bg="white"
-                shadow={1}
-                InputRightElement={
-                  <Text mr={4} color="gray.500">acres</Text>
-                }
+                value={formData.administrative_location}
+                onChangeText={(value) => handleInputChange("administrative_location", value)}
+                placeholder="Enter location"
               />
             </FormControl>
 
             <FormControl isRequired>
-              <FormControl.Label _text={{ fontWeight: "bold" }}>Ownership</FormControl.Label>
+              <FormControl.Label>Size (Acres)</FormControl.Label>
+              <Input
+                keyboardType="numeric"
+                value={formData.farm_size}
+                onChangeText={(value) => handleInputChange("farm_size", value)}
+              />
+            </FormControl>
+
+            <FormControl isRequired>
+              <FormControl.Label>Ownership</FormControl.Label>
               <Radio.Group
                 name="ownership"
                 value={formData.ownership}
                 onChange={(value) => handleInputChange("ownership", value)}
               >
-                <HStack space={4} flexWrap="wrap">
-                  <Radio value="Freehold" colorScheme="green" my={1}>
-                    <Text ml={2}>Freehold</Text>
-                  </Radio>
-                  <Radio value="Leasehold" colorScheme="green" my={1}>
-                    <Text ml={2}>Leasehold</Text>
-                  </Radio>
-                  <Radio value="Communal" colorScheme="green" my={1}>
-                    <Text ml={2}>Communal</Text>
-                  </Radio>
+                <HStack space={4}>
+                  <Radio value="Freehold">Freehold</Radio>
+                  <Radio value="Leasehold">Leasehold</Radio>
                 </HStack>
               </Radio.Group>
             </FormControl>
-          </VStack>
-        </Box>
 
-        <Box bg="white" borderRadius={16} m={4} mt={0} p={6} shadow={2}>
-          <Heading size="md" mb={4} color={COLORS.green}>Farming Activities</Heading>
-          <Divider mb={4} />
-
-          <VStack space={5}>
             <FormControl isRequired>
-              <FormControl.Label _text={{ fontWeight: "bold" }}>Types of Farming</FormControl.Label>
-              <Text fontSize="14" color="gray.500" mb={2}>
-                Select one or more types of farming
-              </Text>
-
-              <Box bg="white" p={4} borderRadius={10} borderWidth={1} borderColor={COLORS.gray3} shadow={1}>
-                <Checkbox.Group
-                  colorScheme="green"
-                  value={formData.farming_types}
-                  onChange={(values) => setFormData(prev => ({ ...prev, farming_types: values }))}
-                >
-                  <VStack space={3}>
-                    <Checkbox value="Dairy cattle">
-                      <Text ml={2}>Dairy cattle</Text>
-                    </Checkbox>
-                    <Checkbox value="Beef cattle">
-                      <Text ml={2}>Beef cattle</Text>
-                    </Checkbox>
-                    <Checkbox value="Dairy and Meat goat">
-                      <Text ml={2}>Dairy and Meat goat</Text>
-                    </Checkbox>
-                    <Checkbox value="Sheep and Goats">
-                      <Text ml={2}>Sheep and Goats</Text>
-                    </Checkbox>
-                    <Checkbox value="Poultry">
-                      <Text ml={2}>Poultry</Text>
-                    </Checkbox>
-                    <Checkbox value="Rabbit">
-                      <Text ml={2}>Rabbit</Text>
-                    </Checkbox>
-                    <Checkbox value="Pigs (Swine)">
-                      <Text ml={2}>Pigs (Swine)</Text>
-                    </Checkbox>
-                  </VStack>
-                </Checkbox.Group>
-              </Box>
+              <FormControl.Label>Farming Types</FormControl.Label>
+              <Checkbox.Group
+                value={formData.farming_types}
+                onChange={(values) => handleInputChange("farming_types", values)}
+              >
+                <VStack space={2}>
+                  <Checkbox value="Dairy cattle">Dairy cattle</Checkbox>
+                  <Checkbox value="Beef cattle">Beef cattle</Checkbox>
+                  <Checkbox value="Poultry">Poultry</Checkbox>
+                  <Checkbox value="Crops">Crops</Checkbox>
+                  <Checkbox value="Goats">Goats</Checkbox>
+                </VStack>
+              </Checkbox.Group>
             </FormControl>
 
-
-
-            <FormControl>
-              <FormControl.Label _text={{ fontWeight: "bold" }}>Status</FormControl.Label>
+            {/* <FormControl>
+              <FormControl.Label>Status</FormControl.Label>
               <Select
-                selectedValue={formData.isActive ? "active" : "inactive"}
-                borderRadius={10}
-                borderColor={COLORS.gray3}
-                py={3}
-                px={4}
-                fontSize="md"
-                onValueChange={(value) =>
-                  setFormData({ ...formData, isActive: value === "active" })
-                }
-                _selectedItem={{
-                  bg: COLORS.lightGreen,
-                  endIcon: <CheckIcon size={5} color={COLORS.green} />
-                }}
-                bg="white"
-                shadow={1}
+                selectedValue={formData.isActive ? 'active' : 'inactive'}
+                onValueChange={(val) => handleInputChange('isActive', val === 'active')}
               >
                 <Select.Item label="Active" value="active" />
                 <Select.Item label="Inactive" value="inactive" />
               </Select>
-            </FormControl>
+            </FormControl> */}
           </VStack>
         </Box>
 
-        <Box p={4} pb={8} alignItems="center">
-          <HStack space={4} justifyContent="center">
-            <Button
-              bg={COLORS.green}
-              borderRadius={10}
-              onPress={handleSave}
-              py={3}
-              px={6}
-              _text={{ fontWeight: "bold", fontSize: "sm" }}
-              shadow={2}
-              leftIcon={<FastImage source={icons.save} style={styles.buttonIcon} />}
-            >
-              Save
-            </Button>
-
-            <Button
-              variant="outline"
-              borderColor={COLORS.red}
-              borderRadius={10}
-              px={6}
-              py={3}
-              _text={{ color: COLORS.red, fontWeight: "bold", fontSize: "sm" }}
-              leftIcon={<FastImage source={icons.delete} style={styles.buttonIcon} />}
-            >
-              Delete
-            </Button>
-          </HStack>
-        </Box>
-
+        <HStack mt={6} justifyContent="space-around">
+          <Button onPress={handleSave} isLoading={saving} isDisabled={deleting}>
+            {saving ? 'Saving...' : 'Save'}
+          </Button>
+          <Button
+            variant="outline"
+            colorScheme="danger"
+            onPress={() => setIsDeleteOpen(true)}
+            isLoading={deleting}
+            isDisabled={saving}
+          >
+            Delete
+          </Button>
+        </HStack>
       </ScrollView>
 
-
+      <AlertDialog
+        leastDestructiveRef={cancelRef}
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+      >
+        <AlertDialog.Content>
+          <AlertDialog.CloseButton />
+          <AlertDialog.Header>Delete Farm</AlertDialog.Header>
+          <AlertDialog.Body>
+            Are you sure you want to delete "{formData.farm_name}"? This action cannot be undone.
+          </AlertDialog.Body>
+          <AlertDialog.Footer>
+            <Button.Group space={2}>
+              <Button variant="ghost" onPress={() => setIsDeleteOpen(false)} ref={cancelRef}>
+                Cancel
+              </Button>
+              <Button colorScheme="danger" onPress={handleDelete} isLoading={deleting}>
+                Delete
+              </Button>
+            </Button.Group>
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
+      </AlertDialog>
     </SafeAreaView>
   );
 }
@@ -284,13 +266,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.lightGreen,
-  },
-  headerIcon: {
-    width: 24,
-    height: 24,
-  },
-  buttonIcon: {
-    width: 20,
-    height: 20,
   },
 });
