@@ -61,38 +61,48 @@ const Dashboard = () => {
   ];
 
   const fetchActiveFarm = async () => {
-    const storedFarm = await AsyncStorage.getItem('activeFarm');
-    if (storedFarm) {
-      const parsed = JSON.parse(storedFarm);
-      try {
-        const updatedFarm = await getFarmById(parsed.id);
-        const newActive = {
-          id: updatedFarm.id,
-          name: updatedFarm.name,
-          location: updatedFarm.administrativeLocation,
-          size: `${updatedFarm.size} acres`,
-          animals: Array.isArray(updatedFarm.farmingTypes) ? updatedFarm.farmingTypes : [],
-        };
-        setActiveFarm(newActive);
-        await AsyncStorage.setItem('activeFarm', JSON.stringify(newActive));
-      } catch (error) {
-        setActiveFarm(parsed);
+    try {
+      const storedFarm = await AsyncStorage.getItem('activeFarm');
+
+      if (storedFarm) {
+        const parsed = JSON.parse(storedFarm);
+        try {
+          const updatedFarm = await getFarmById(parsed.id);
+          const newActive = {
+            id: updatedFarm.id,
+            name: updatedFarm.name,
+            location: updatedFarm.administrativeLocation,
+            size: `${updatedFarm.size} acres`,
+            animals: Array.isArray(updatedFarm.farmingTypes) ? updatedFarm.farmingTypes : [],
+          };
+          setActiveFarm(newActive);
+          await AsyncStorage.setItem('activeFarm', JSON.stringify(newActive));
+          return;
+        } catch (error) {
+          console.log('Error fetching stored farm, using cached data:', error);
+          setActiveFarm(parsed);
+          return;
+        }
       }
-    } else {
+
       const { data } = await getUserFarms();
-      if (data && data.length === 1) {
-        const singleFarm = {
-          id: data[0].id,
-          name: data[0].name,
-          location: data[0].administrativeLocation,
-          size: `${data[0].size} acres`,
-          animals: Array.isArray(data[0].farmingTypes) ? data[0].farmingTypes : [],
+      if (data && data.length > 0) {
+        const firstFarm = data[0];
+        const activeFarmData = {
+          id: firstFarm.id,
+          name: firstFarm.name,
+          location: firstFarm.administrativeLocation,
+          size: `${firstFarm.size} acres`,
+          animals: Array.isArray(firstFarm.farmingTypes) ? firstFarm.farmingTypes : [],
         };
-        setActiveFarm(singleFarm);
-        await AsyncStorage.setItem('activeFarm', JSON.stringify(singleFarm));
+        setActiveFarm(activeFarmData);
+        await AsyncStorage.setItem('activeFarm', JSON.stringify(activeFarmData));
       } else {
         setActiveFarm(null);
       }
+    } catch (error) {
+      console.error('Error fetching active farm:', error);
+      setActiveFarm(null);
     }
   };
 
@@ -153,10 +163,17 @@ const Dashboard = () => {
               <Text style={styles.farmName}>{activeFarm.name}</Text>
               <Text style={styles.farmDetail}>Location: {activeFarm.location}</Text>
               <Text style={styles.farmDetail}>Size: {activeFarm.size}</Text>
-              <Text style={styles.farmDetail}>Animals: {activeFarm.animals.join(', ')}</Text>
+              <Text style={styles.farmDetail}>
+                Animals: {Array.isArray(activeFarm.animals) && activeFarm.animals.length > 0
+                  ? activeFarm.animals.join(', ')
+                  : 'N/A'}
+              </Text>
             </TouchableOpacity>
           ) : (
-            <Text style={styles.noFarm}>No active farm selected.</Text>
+            <TouchableOpacity style={styles.noFarmCard} onPress={navigateToFarmInfo}>
+              <Text style={styles.noFarm}>No active farm selected.</Text>
+              <Text style={styles.noFarmSubtext}>Tap to add or select a farm</Text>
+            </TouchableOpacity>
           )}
         </View>
 
@@ -236,10 +253,26 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   farmName: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 6 },
   farmDetail: { fontSize: 13, color: COLORS.darkGray3, marginBottom: 4 },
-  noFarm: { color: '#666', marginLeft: 16 },
+  noFarmCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    alignItems: 'center',
+  },
+  noFarm: { color: '#666', fontSize: 16, fontWeight: '500' },
+  noFarmSubtext: { color: '#999', fontSize: 12, marginTop: 4 },
   overviewSection: {
     paddingHorizontal: 16,
     flexDirection: 'row',
@@ -283,4 +316,5 @@ const styles = StyleSheet.create({
   periodOptionText: { fontSize: 16, color: '#333' },
   selectedPeriodOptionText: { color: COLORS.green, fontWeight: '500' },
 });
+
 export default Dashboard;

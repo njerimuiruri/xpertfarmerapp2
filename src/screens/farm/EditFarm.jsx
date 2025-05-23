@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Box, Text, VStack, HStack, ScrollView, IconButton, FormControl, Input,
   Button, Select, CheckIcon, Radio, Checkbox, Heading, Divider, AlertDialog,
-  Spinner, Center
+  Spinner, Center, useToast
 } from 'native-base';
 import { StyleSheet, SafeAreaView, StatusBar, Alert } from 'react-native';
 import { COLORS } from '../../constants/theme';
@@ -14,6 +14,7 @@ import { getFarmById, updateFarm, deleteFarm } from '../../services/farm';
 export default function EditFarm({ navigation, route }) {
   const { farm } = route.params;
   const cancelRef = useRef(null);
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -50,6 +51,12 @@ export default function EditFarm({ navigation, route }) {
       });
     } catch (err) {
       setError(typeof err === 'string' ? err : 'Failed to load farm data');
+      toast.show({
+        description: typeof err === 'string' ? err : 'Failed to load farm data',
+        placement: "top",
+        duration: 3000,
+        backgroundColor: "red.500",
+      });
     } finally {
       setLoading(false);
     }
@@ -60,11 +67,51 @@ export default function EditFarm({ navigation, route }) {
   };
 
   const validateForm = () => {
-    if (!formData.farm_name.trim()) return Alert.alert('Validation', 'Farm name is required');
-    if (!formData.county) return Alert.alert('Validation', 'County is required');
-    if (!formData.administrative_location) return Alert.alert('Validation', 'Location is required');
-    if (!formData.farm_size.trim()) return Alert.alert('Validation', 'Size is required');
-    if (formData.farming_types.length === 0) return Alert.alert('Validation', 'Select at least one type of farming');
+    if (!formData.farm_name.trim()) {
+      toast.show({
+        description: "Farm name is required",
+        placement: "top",
+        duration: 2000,
+        backgroundColor: "orange.500",
+      });
+      return false;
+    }
+    if (!formData.county) {
+      toast.show({
+        description: "County is required",
+        placement: "top",
+        duration: 2000,
+        backgroundColor: "orange.500",
+      });
+      return false;
+    }
+    if (!formData.administrative_location) {
+      toast.show({
+        description: "Location is required",
+        placement: "top",
+        duration: 2000,
+        backgroundColor: "orange.500",
+      });
+      return false;
+    }
+    if (!formData.farm_size.trim()) {
+      toast.show({
+        description: "Size is required",
+        placement: "top",
+        duration: 2000,
+        backgroundColor: "orange.500",
+      });
+      return false;
+    }
+    if (formData.farming_types.length === 0) {
+      toast.show({
+        description: "Select at least one type of farming",
+        placement: "top",
+        duration: 2000,
+        backgroundColor: "orange.500",
+      });
+      return false;
+    }
     return true;
   };
 
@@ -83,14 +130,25 @@ export default function EditFarm({ navigation, route }) {
         // isActive: formData.isActive,
       };
       await updateFarm(farm.id, payload);
-      Alert.alert('Success', 'Farm updated successfully!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('FarmInformation', { refresh: true })
-        }
-      ]);
+
+      toast.show({
+        description: "Farm updated successfully!",
+        placement: "top",
+        duration: 2000,
+        backgroundColor: "green.500",
+      });
+
+      // Navigate back after a short delay to let the toast show
+      setTimeout(() => {
+        navigation.navigate('FarmInformation', { refresh: true });
+      }, 500);
     } catch (err) {
-      Alert.alert('Error', typeof err === 'string' ? err : 'Failed to update farm');
+      toast.show({
+        description: typeof err === 'string' ? err : 'Failed to update farm',
+        placement: "top",
+        duration: 3000,
+        backgroundColor: "red.500",
+      });
     } finally {
       setSaving(false);
     }
@@ -100,14 +158,25 @@ export default function EditFarm({ navigation, route }) {
     try {
       setDeleting(true);
       await deleteFarm(farm.id);
-      Alert.alert('Deleted', 'Farm deleted successfully', [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('FarmInformation', { refresh: true })
-        }
-      ]);
+
+      toast.show({
+        description: "Farm deleted successfully",
+        placement: "top",
+        duration: 2000,
+        backgroundColor: "green.500",
+      });
+
+      // Navigate back after a short delay to let the toast show
+      setTimeout(() => {
+        navigation.navigate('FarmInformation', { refresh: true });
+      }, 500);
     } catch (err) {
-      Alert.alert('Error', typeof err === 'string' ? err : 'Failed to delete farm');
+      toast.show({
+        description: typeof err === 'string' ? err : 'Failed to delete farm',
+        placement: "top",
+        duration: 3000,
+        backgroundColor: "red.500",
+      });
     } finally {
       setDeleting(false);
       setIsDeleteOpen(false);
