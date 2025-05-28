@@ -253,8 +253,26 @@ export default function EditFarm({ navigation, route }) {
                 onChange={(value) => handleInputChange("ownership", value)}
               >
                 <HStack space={4}>
-                  <Radio value="Freehold">Freehold</Radio>
-                  <Radio value="Leasehold">Leasehold</Radio>
+                  {["Freehold", "Leasehold"].map((option) => (
+                    <Radio
+                      key={option}
+                      value={option}
+                      colorScheme="emerald"
+                      _checked={{
+                        borderColor: COLORS.green,
+                        backgroundColor: COLORS.green,
+                      }}
+                      _icon={{
+                        color: "white",
+                      }}
+                      _text={{
+                        color: "#1F2937",
+                        fontSize: "md",
+                      }}
+                    >
+                      {option}
+                    </Radio>
+                  ))}
                 </HStack>
               </Radio.Group>
             </FormControl>
@@ -266,14 +284,30 @@ export default function EditFarm({ navigation, route }) {
                 onChange={(values) => handleInputChange("farming_types", values)}
               >
                 <VStack space={2}>
-                  <Checkbox value="Dairy cattle">Dairy cattle</Checkbox>
-                  <Checkbox value="Beef cattle">Beef cattle</Checkbox>
-                  <Checkbox value="Poultry">Poultry</Checkbox>
-                  <Checkbox value="Crops">Crops</Checkbox>
-                  <Checkbox value="Goats">Goats</Checkbox>
+                  {["Dairy cattle", "Beef cattle", "Poultry", "Crops", "Goats"].map((type) => (
+                    <Checkbox
+                      key={type}
+                      value={type}
+                      colorScheme="emerald"
+                      _checked={{
+                        backgroundColor: COLORS.green,
+                        borderColor: COLORS.green,
+                      }}
+                      _icon={{
+                        color: "white",
+                      }}
+                      _text={{
+                        color: "#1F2937",
+                        fontSize: "md",
+                      }}
+                    >
+                      {type}
+                    </Checkbox>
+                  ))}
                 </VStack>
               </Checkbox.Group>
             </FormControl>
+
 
             {/* <FormControl>
               <FormControl.Label>Status</FormControl.Label>

@@ -202,7 +202,6 @@ export default function FarmInformation() {
               </Box>
             )}
 
-            {/* Action Buttons */}
             <HStack space={1}>
               <IconButton
                 icon={
@@ -222,7 +221,7 @@ export default function FarmInformation() {
               <IconButton
                 icon={
                   <FastImage
-                    source={icons.delete || icons.trash}
+                    source={icons.remove || icons.trash}
                     style={styles.actionIcon}
                     resizeMode="contain"
                     tintColor="#FF4444"
@@ -286,7 +285,7 @@ export default function FarmInformation() {
                   <IconButton
                     icon={
                       <FastImage
-                        source={icons.delete || icons.trash}
+                        source={icons.remove || icons.trash}
                         style={styles.smallIcon}
                         resizeMode="contain"
                         tintColor="#FF4444"
@@ -414,12 +413,16 @@ export default function FarmInformation() {
           onPress={navigateToAddFarm}
           _text={{ fontSize: "md", fontWeight: "bold" }}
           py={4}
+          _pressed={{
+            bg: COLORS.green3,
+            opacity: 0.9
+          }}
         >
           Add New Farm
         </Button>
+
       </ScrollView>
 
-      {/* Enhanced Delete Confirmation Dialog */}
       <AlertDialog
         leastDestructiveRef={cancelRef}
         isOpen={isDeleteOpen}
@@ -454,7 +457,7 @@ export default function FarmInformation() {
               {farmToDelete?.isActive && (
                 <Box bg="orange.100" p={3} borderRadius={8}>
                   <Text fontSize="sm" color="orange.700" textAlign="center">
-                    ⚠️ This is your active farm. Deleting it will require you to select a new active farm.
+                    This is your active farm. Deleting it will require you to select a new active farm.
                   </Text>
                 </Box>
               )}

@@ -49,7 +49,6 @@ export default function AddFarm({ navigation }) {
 
     setIsLoading(true);
     try {
-      // 🔥 Removed isActive
       const payload = {
         name: formData.farm_name,
         county: formData.county,
@@ -145,9 +144,26 @@ export default function AddFarm({ navigation }) {
                 onChange={val => handleInputChange('ownership', val)}
               >
                 <HStack space={4}>
-                  <Radio value="Freehold">Freehold</Radio>
-                  <Radio value="Leasehold">Leasehold</Radio>
-                  <Radio value="Communal">Communal</Radio>
+                  {['Freehold', 'Leasehold', 'Communal'].map(option => (
+                    <Radio
+                      key={option}
+                      value={option}
+                      colorScheme="emerald"
+                      _checked={{
+                        borderColor: COLORS.green,
+                        backgroundColor: COLORS.green,
+                      }}
+                      _icon={{
+                        color: 'white',
+                      }}
+                      _text={{
+                        color: '#1F2937',
+                        fontSize: 'md',
+                      }}
+                    >
+                      {option}
+                    </Radio>
+                  ))}
                 </HStack>
               </Radio.Group>
             </FormControl>
@@ -159,14 +175,31 @@ export default function AddFarm({ navigation }) {
                 onChange={vals => handleInputChange('farming_types', vals)}
               >
                 <VStack space={2}>
-                  <Checkbox value="Dairy cattle">Dairy cattle</Checkbox>
-                  <Checkbox value="Beef cattle">Beef cattle</Checkbox>
-                  <Checkbox value="Poultry">Poultry</Checkbox>
-                  <Checkbox value="Crops">Crops</Checkbox>
+                  {['Dairy cattle', 'Beef cattle', 'Poultry', 'Crops'].map(type => (
+                    <Checkbox
+                      key={type}
+                      value={type}
+                      colorScheme="emerald"
+                      _checked={{
+                        backgroundColor: COLORS.green,
+                        borderColor: COLORS.green,
+                      }}
+                      _icon={{
+                        color: 'white',
+                      }}
+                      _text={{
+                        color: '#1F2937',
+                        fontSize: 'md',
+                      }}
+                    >
+                      {type}
+                    </Checkbox>
+                  ))}
                 </VStack>
               </Checkbox.Group>
               <FormControl.ErrorMessage>{errors.farming_types}</FormControl.ErrorMessage>
             </FormControl>
+
 
             {/* <FormControl>
               <FormControl.Label>Status</FormControl.Label>

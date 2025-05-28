@@ -1,20 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CodeField, Cursor } from 'react-native-confirmation-code-field';
-import { Image, ScrollView } from "react-native";
+import { Image, ScrollView, Dimensions, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { Box, Text, Input, Button, VStack, HStack, Pressable, Radio, Checkbox, Select, useToast, FormControl } from "native-base";
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { COLORS } from '../../constants/theme';
+import countyData from '../../assets/data/county_constituencies.json'; // Adjust path as needed
+import { Dropdown } from 'react-native-element-dropdown';
 
 import CustomIcon from '../../components/CustomIcon';
 import { register } from '../../services/user';
+
+const { width } = Dimensions.get("window");
 
 export default function RegisterScreen({ navigation }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [datePickerVisible, setDatePickerVisible] = useState(false);
-
+  const [countyList, setCountyList] = useState([]);
+  const [constituencyList, setConstituencyList] = useState([]);
+  const [residenceCountyList, setResidenceCountyList] = useState([]);
+  const [residenceLocationList, setResidenceLocationList] = useState([]);
   const [formData, setFormData] = useState({
     farm_name: "",
     county: "",
@@ -48,6 +55,11 @@ export default function RegisterScreen({ navigation }) {
     4: "Professional Information",
     5: "Security Setup"
   };
+  useEffect(() => {
+    const counties = countyData.map(item => item.County);
+    setCountyList(counties);
+    setResidenceCountyList(counties);
+  }, []);
 
   const handleInputChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -126,7 +138,7 @@ export default function RegisterScreen({ navigation }) {
 
   const formatDateForAPI = (date) => {
     if (!date) return null;
-    return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    return date.toISOString().split('T')[0];
   };
 
   const handleRegister = async () => {
@@ -181,7 +193,7 @@ export default function RegisterScreen({ navigation }) {
 
   const renderStepIndicator = () => {
     return (
-      <Box width="100%" mb={4}>
+      <Box width="100%" mb={6}>
         <HStack justifyContent="space-between" mb={2}>
           {[1, 2, 3, 4, 5].map((step) => (
             <Box
@@ -189,14 +201,15 @@ export default function RegisterScreen({ navigation }) {
               width={currentStep === step ? 10 : 8}
               height={currentStep === step ? 10 : 8}
               borderRadius="full"
-              backgroundColor={currentStep === step ? "#8FD28F" : "#F2F2F2"}
+              backgroundColor={currentStep === step ? "green.500" : "gray.200"}
               justifyContent="center"
               alignItems="center"
               position="relative"
             >
               <Text
-                color={currentStep === step ? "white" : "#AAAAAA"}
+                color={currentStep === step ? "white" : "gray.400"}
                 fontSize={currentStep === step ? "md" : "sm"}
+                fontWeight="bold"
               >
                 {step}
               </Text>
@@ -204,7 +217,7 @@ export default function RegisterScreen({ navigation }) {
                 <Box
                   position="absolute"
                   height={1}
-                  backgroundColor="#DDDDDD"
+                  backgroundColor="gray.300"
                   width="100%"
                   left="100%"
                   top="50%"
@@ -214,7 +227,7 @@ export default function RegisterScreen({ navigation }) {
           ))}
         </HStack>
 
-        <Text fontSize="14" fontWeight="500" textAlign="center" color="gray.600" mt={2} mb={4}>
+        <Text fontSize="16" fontWeight="600" textAlign="center" color="green.600" mt={2}>
           {stepDescriptions[currentStep]}
         </Text>
       </Box>
@@ -242,20 +255,23 @@ export default function RegisterScreen({ navigation }) {
     return (
       <VStack width="100%" space={4}>
         <FormControl isInvalid={'farm_name' in errors}>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Farm Business Name *
-          </Text>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Farm Business Name *
+            </Text>
+          </FormControl.Label>
           <Input
-            variant="outline"
-            bg="white"
-            backgroundColor={COLORS.lightGreen}
-            borderColor={'farm_name' in errors ? "red.500" : "#DDDDDD"}
+            variant="filled"
+            backgroundColor="green.50"
+            borderColor={'farm_name' in errors ? "red.500" : "green.100"}
+            borderWidth={1}
             width="100%"
-            p={2}
+            height={12}
             borderRadius={8}
             value={formData.farm_name}
             onChangeText={(value) => handleInputChange("farm_name", value)}
             placeholder="John Farm"
+            fontSize="16"
           />
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.farm_name}
@@ -263,64 +279,99 @@ export default function RegisterScreen({ navigation }) {
         </FormControl>
 
         <FormControl isInvalid={'county' in errors}>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            County *
-          </Text>
-          <Select
-            borderRadius={8}
-            backgroundColor={COLORS.lightGreen}
-            borderColor={'county' in errors ? "red.500" : "#DDDDDD"}
-            width="100%"
-            selectedValue={formData.county}
-            onValueChange={(value) => handleInputChange("county", value)}
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              County *
+            </Text>
+          </FormControl.Label>
+          <Dropdown
+            style={{
+              height: 50,
+              borderColor: errors.county ? 'red' : '#D1FAE5',
+              borderWidth: 1,
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              backgroundColor: '#F0FDF4'
+            }}
+            placeholderStyle={{ fontSize: 16, color: '#1F2937' }}
+            selectedTextStyle={{ fontSize: 16, color: '#1F2937' }}
+            inputSearchStyle={{ fontSize: 14, color: '#1F2937' }}
+            itemTextStyle={{ color: '#000', fontSize: 16 }}
+            itemContainerStyle={{ backgroundColor: '#F0FDF4' }}
+            data={countyList.map(name => ({ label: name, value: name }))}
+            search
+            maxHeight={300}
+            labelField="label"
+            valueField="value"
             placeholder="Select County"
-          >
-            <Select.Item label="Turkana" value="Turkana" />
-            <Select.Item label="Nairobi" value="Nairobi" />
-            <Select.Item label="Mombasa" value="Mombasa" />
-            <Select.Item label="Siaya" value="Siaya" />
-          </Select>
+            searchPlaceholder="Search county..."
+            value={formData.county}
+            onChange={item => {
+              handleInputChange("county", item.value);
+              const match = countyData.find(c => c.County === item.value);
+              setConstituencyList(match ? match.Constituency : []);
+              handleInputChange("administrative_location", "");
+            }}
+          />
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.county}
           </FormControl.ErrorMessage>
         </FormControl>
 
         <FormControl isInvalid={'administrative_location' in errors}>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Administrative location *
-          </Text>
-          <Select
-            borderRadius={8}
-            backgroundColor={COLORS.lightGreen}
-            borderColor={'administrative_location' in errors ? "red.500" : "#DDDDDD"}
-            width="100%"
-            selectedValue={formData.administrative_location}
-            onValueChange={(value) => handleInputChange("administrative_location", value)}
-            placeholder="Select Location"
-          >
-            <Select.Item label="Turkana" value="Turkana" />
-            <Select.Item label="Siaya" value="Siaya" />
-          </Select>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Administrative location *
+            </Text>
+          </FormControl.Label>
+          <Dropdown
+            style={{
+              height: 50,
+              borderColor: errors.administrative_location ? 'red' : '#D1FAE5',
+              borderWidth: 1,
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              backgroundColor: '#F0FDF4'
+            }}
+            placeholderStyle={{ fontSize: 16, color: '#1F2937' }}
+            selectedTextStyle={{ fontSize: 16, color: '#1F2937' }}
+            inputSearchStyle={{ fontSize: 14, color: '#1F2937' }}
+            itemTextStyle={{ color: '#000', fontSize: 16 }}
+            itemContainerStyle={{ backgroundColor: '#F0FDF4' }}
+            data={constituencyList.map(name => ({ label: name, value: name }))}
+            search
+            maxHeight={300}
+            labelField="label"
+            valueField="value"
+            placeholder="Select Administrative Location"
+            searchPlaceholder="Search location..."
+            value={formData.administrative_location}
+            onChange={item => handleInputChange("administrative_location", item.value)}
+          />
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.administrative_location}
           </FormControl.ErrorMessage>
         </FormControl>
 
         <FormControl isInvalid={'farm_size' in errors}>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Farm Size (Acres) *
-          </Text>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Farm Size (Acres) *
+            </Text>
+          </FormControl.Label>
           <Input
-            variant="outline"
-            borderColor={'farm_size' in errors ? "red.500" : "#DDDDDD"}
+            variant="filled"
+            borderColor={'farm_size' in errors ? "red.500" : "green.100"}
+            borderWidth={1}
             width="100%"
-            backgroundColor={COLORS.lightGreen}
-            p={2}
+            backgroundColor="green.50"
+            height={12}
             borderRadius={8}
             value={formData.farm_size}
             onChangeText={(value) => handleInputChange("farm_size", value)}
             placeholder="1 Acre"
             keyboardType="numeric"
+            fontSize="16"
           />
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.farm_size}
@@ -328,18 +379,26 @@ export default function RegisterScreen({ navigation }) {
         </FormControl>
 
         <Box>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Ownership
-          </Text>
+          <FormControl.Label mb={2}>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Ownership
+            </Text>
+          </FormControl.Label>
           <Radio.Group
             name="ownership"
             value={formData.ownership}
             onChange={(value) => handleInputChange("ownership", value)}
           >
-            <HStack space={3}>
-              <Radio value="Freehold" colorScheme="green">Freehold</Radio>
-              <Radio value="Leasehold" colorScheme="green">Leasehold</Radio>
-              <Radio value="Communal" colorScheme="green">Communal</Radio>
+            <HStack space={4} flexWrap="wrap">
+              <Radio value="Freehold" colorScheme="green" size="sm">
+                <Text fontSize="14">Freehold</Text>
+              </Radio>
+              <Radio value="Leasehold" colorScheme="green" size="sm">
+                <Text fontSize="14">Leasehold</Text>
+              </Radio>
+              <Radio value="Communal" colorScheme="green" size="sm">
+                <Text fontSize="14">Communal</Text>
+              </Radio>
             </HStack>
           </Radio.Group>
         </Box>
@@ -351,10 +410,12 @@ export default function RegisterScreen({ navigation }) {
     return (
       <VStack width="100%" space={4}>
         <FormControl isInvalid={'farming_types' in errors}>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Types of Farming *
-          </Text>
-          <Text fontSize="14" color="gray.500" mb={4}>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Types of Farming *
+            </Text>
+          </FormControl.Label>
+          <Text fontSize="14" color="gray.500" mb={3}>
             Select one or more types of farming
           </Text>
           <Checkbox.Group
@@ -368,20 +429,33 @@ export default function RegisterScreen({ navigation }) {
             }}
           >
             <VStack space={3}>
-              <Checkbox value="Dairy cattle">Dairy cattle</Checkbox>
-              <Checkbox value="Beef cattle">Beef cattle</Checkbox>
-              <Checkbox value="Dairy and Meat goat">Dairy and Meat goat</Checkbox>
-              <Checkbox value="Sheep and Goats">Sheep and Goats</Checkbox>
-              <Checkbox value="Poultry">Poultry</Checkbox>
-              <Checkbox value="Rabbit">Rabbit</Checkbox>
-              <Checkbox value="Pigs (Swine)">Pigs (Swine)</Checkbox>
+              <Checkbox value="Dairy cattle" size="sm">
+                <Text fontSize="14">Dairy cattle</Text>
+              </Checkbox>
+              <Checkbox value="Beef cattle" size="sm">
+                <Text fontSize="14">Beef cattle</Text>
+              </Checkbox>
+              <Checkbox value="Dairy and Meat goat" size="sm">
+                <Text fontSize="14">Dairy and Meat goat</Text>
+              </Checkbox>
+              <Checkbox value="Sheep and Goats" size="sm">
+                <Text fontSize="14">Sheep and Goats</Text>
+              </Checkbox>
+              <Checkbox value="Poultry" size="sm">
+                <Text fontSize="14">Poultry</Text>
+              </Checkbox>
+              <Checkbox value="Rabbit" size="sm">
+                <Text fontSize="14">Rabbit</Text>
+              </Checkbox>
+              <Checkbox value="Pigs (Swine)" size="sm">
+                <Text fontSize="14">Pigs (Swine)</Text>
+              </Checkbox>
             </VStack>
           </Checkbox.Group>
           {'farming_types' in errors && (
-            <HStack alignItems="center" space={1} mt={1}>
-              <Icon name="alert-circle-outline" size={16} color="#EF4444" />
-              <Text color="red.500" fontSize="xs">{errors.farming_types}</Text>
-            </HStack>
+            <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
+              {errors.farming_types}
+            </FormControl.ErrorMessage>
           )}
         </FormControl>
       </VStack>
@@ -392,56 +466,68 @@ export default function RegisterScreen({ navigation }) {
     return (
       <VStack width="100%" space={4}>
         <FormControl isInvalid={'first_name' in errors}>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            First Name *
-          </Text>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              First Name *
+            </Text>
+          </FormControl.Label>
           <Input
-            variant="outline"
-            borderColor={'first_name' in errors ? "red.500" : "#DDDDDD"}
+            variant="filled"
+            borderColor={'first_name' in errors ? "red.500" : "green.100"}
+            borderWidth={1}
             width="100%"
-            backgroundColor={COLORS.lightGreen}
-            p={2}
+            backgroundColor="green.50"
+            height={12}
             borderRadius={8}
             value={formData.first_name}
             onChangeText={(value) => handleInputChange("first_name", value)}
             placeholder="John"
+            fontSize="16"
           />
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.first_name}
           </FormControl.ErrorMessage>
         </FormControl>
 
-        <Box>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Middle Name
-          </Text>
+        <FormControl>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Middle Name
+            </Text>
+          </FormControl.Label>
           <Input
-            variant="outline"
-            borderColor="#DDDDDD"
-            backgroundColor={COLORS.lightGreen}
+            variant="filled"
+            borderColor="green.100"
+            backgroundColor="green.50"
+            borderWidth={1}
             width="100%"
-            p={2}
+            height={12}
             borderRadius={8}
             value={formData.middle_name}
             onChangeText={(value) => handleInputChange("middle_name", value)}
             placeholder="Doe"
+            fontSize="16"
           />
-        </Box>
+        </FormControl>
 
         <FormControl isInvalid={'last_name' in errors}>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Last Name *
-          </Text>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Last Name *
+            </Text>
+          </FormControl.Label>
           <Input
-            variant="outline"
-            borderColor={'last_name' in errors ? "red.500" : "#DDDDDD"}
+            variant="filled"
+            borderColor={'last_name' in errors ? "red.500" : "green.100"}
+            borderWidth={1}
             width="100%"
-            backgroundColor={COLORS.lightGreen}
-            p={2}
+            backgroundColor="green.50"
+            height={12}
             borderRadius={8}
             value={formData.last_name}
             onChangeText={(value) => handleInputChange("last_name", value)}
             placeholder="Doe"
+            fontSize="16"
           />
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.last_name}
@@ -449,17 +535,23 @@ export default function RegisterScreen({ navigation }) {
         </FormControl>
 
         <FormControl isInvalid={'gender' in errors}>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Gender *
-          </Text>
+          <FormControl.Label mb={2}>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Gender *
+            </Text>
+          </FormControl.Label>
           <Radio.Group
             name="gender"
             value={formData.gender}
             onChange={(value) => handleInputChange("gender", value)}
           >
             <HStack space={6}>
-              <Radio value="Male" colorScheme="green">Male</Radio>
-              <Radio value="Female" colorScheme="green">Female</Radio>
+              <Radio value="Male" colorScheme="green" size="sm">
+                <Text fontSize="14">Male</Text>
+              </Radio>
+              <Radio value="Female" colorScheme="green" size="sm">
+                <Text fontSize="14">Female</Text>
+              </Radio>
             </HStack>
           </Radio.Group>
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
@@ -468,25 +560,30 @@ export default function RegisterScreen({ navigation }) {
         </FormControl>
 
         <FormControl isInvalid={'date_of_birth' in errors}>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Date of Birth *
-          </Text>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Date of Birth *
+            </Text>
+          </FormControl.Label>
           <HStack alignItems="center" space={2}>
             <Input
               flex={1}
-              backgroundColor={COLORS.lightGreen}
-              variant="outline"
-              borderColor={'date_of_birth' in errors ? "red.500" : "#DDDDDD"}
+              backgroundColor="green.50"
+              variant="filled"
+              borderColor={'date_of_birth' in errors ? "red.500" : "green.100"}
+              borderWidth={1}
+              height={12}
               borderRadius={8}
               value={formData.date_of_birth ? formData.date_of_birth.toLocaleDateString('en-GB') : ''}
               isReadOnly
               placeholder="DD/MM/YYYY"
+              fontSize="16"
             />
             <Pressable
               onPress={() => setDatePickerVisible(true)}
               p={2}
             >
-              <Icon name="calendar" size={24} color="#74c474" />
+              <Icon name="calendar" size={24} color="#059669" />
             </Pressable>
           </HStack>
           {datePickerVisible && (
@@ -508,45 +605,76 @@ export default function RegisterScreen({ navigation }) {
         </FormControl>
 
         <FormControl isInvalid={'residence_county' in errors}>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Residence County *
-          </Text>
-          <Select
-            borderRadius={8}
-            borderColor={'residence_county' in errors ? "red.500" : "#DDDDDD"}
-            width="100%"
-            backgroundColor={COLORS.lightGreen}
-            selectedValue={formData.residence_county}
-            onValueChange={(value) => handleInputChange("residence_county", value)}
-            placeholder="Select County"
-          >
-            <Select.Item label="Siaya" value="Siaya" />
-            <Select.Item label="Nairobi" value="Nairobi" />
-            <Select.Item label="Mombasa" value="Mombasa" />
-            <Select.Item label="Turkana" value="Turkana" />
-          </Select>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Residence County *
+            </Text>
+          </FormControl.Label>
+          <Dropdown
+            style={{
+              height: 50,
+              borderColor: errors.residence_county ? 'red' : '#D1FAE5',
+              borderWidth: 1,
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              backgroundColor: '#F0FDF4'
+            }}
+            placeholderStyle={{ fontSize: 16, color: '#1F2937' }}
+            selectedTextStyle={{ fontSize: 16, color: '#1F2937' }}
+            inputSearchStyle={{ fontSize: 14, color: '#1F2937' }}
+            itemTextStyle={{ color: '#000', fontSize: 16 }}
+            itemContainerStyle={{ backgroundColor: '#F0FDF4' }}
+            data={residenceCountyList.map(name => ({ label: name, value: name }))}
+            search
+            maxHeight={300}
+            labelField="label"
+            valueField="value"
+            placeholder="Select Residence County"
+            searchPlaceholder="Search county..."
+            value={formData.residence_county}
+            onChange={item => {
+              handleInputChange("residence_county", item.value);
+              const match = countyData.find(c => c.County === item.value);
+              setResidenceLocationList(match ? match.Constituency : []);
+              handleInputChange("residence_location", "");
+            }}
+          />
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.residence_county}
           </FormControl.ErrorMessage>
         </FormControl>
 
-        <Box>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Residence Location
-          </Text>
-          <Select
-            borderRadius={8}
-            borderColor="#DDDDDD"
-            backgroundColor={COLORS.lightGreen}
-            width="100%"
-            selectedValue={formData.residence_location}
-            onValueChange={(value) => handleInputChange("residence_location", value)}
-            placeholder="Select Administrative County"
-          >
-            <Select.Item label="Siaya" value="Siaya" />
-            <Select.Item label="Turkana" value="Turkana" />
-          </Select>
-        </Box>
+        <FormControl>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Residence Location
+            </Text>
+          </FormControl.Label>
+          <Dropdown
+            style={{
+              height: 50,
+              borderColor: errors.residence_location ? 'red' : '#D1FAE5',
+              borderWidth: 1,
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              backgroundColor: '#F0FDF4'
+            }}
+            placeholderStyle={{ fontSize: 16, color: '#1F2937' }}
+            selectedTextStyle={{ fontSize: 16, color: '#1F2937' }}
+            inputSearchStyle={{ fontSize: 14, color: '#1F2937' }}
+            itemTextStyle={{ color: '#000', fontSize: 16 }}
+            itemContainerStyle={{ backgroundColor: '#F0FDF4' }}
+            data={residenceLocationList.map(name => ({ label: name, value: name }))}
+            search
+            maxHeight={300}
+            labelField="label"
+            valueField="value"
+            placeholder="Select Residence Location"
+            searchPlaceholder="Search location..."
+            value={formData.residence_location}
+            onChange={item => handleInputChange("residence_location", item.value)}
+          />
+        </FormControl>
       </VStack>
     );
   };
@@ -554,153 +682,165 @@ export default function RegisterScreen({ navigation }) {
   const renderProfessionalInfoForm = () => {
     return (
       <VStack width="100%" space={4}>
-        <Box>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Years of Farming Practice
-          </Text>
+        <FormControl>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Years of Farming Practice
+            </Text>
+          </FormControl.Label>
           <Input
-            variant="outline"
-            borderColor="#DDDDDD"
+            variant="filled"
+            borderColor="green.100"
+            borderWidth={1}
             width="100%"
-            backgroundColor={COLORS.lightGreen}
-            p={2}
+            backgroundColor="green.50"
+            height={12}
             borderRadius={8}
             value={formData.years_of_experience}
             onChangeText={(value) => handleInputChange("years_of_experience", value)}
-            placeholder=""
+            placeholder="Enter years"
             keyboardType="numeric"
+            fontSize="16"
           />
-        </Box>
+        </FormControl>
 
         <FormControl isInvalid={'email' in errors}>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            E-mail Address *
-          </Text>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              E-mail Address *
+            </Text>
+          </FormControl.Label>
           <Input
-            variant="outline"
-            borderColor={'email' in errors ? "red.500" : "#DDDDDD"}
+            variant="filled"
+            borderColor={'email' in errors ? "red.500" : "green.100"}
+            borderWidth={1}
             width="100%"
-            backgroundColor={COLORS.lightGreen}
-            p={2}
+            backgroundColor="green.50"
+            height={12}
             borderRadius={8}
             value={formData.email}
             onChangeText={(value) => handleInputChange("email", value)}
             placeholder="your_email@example.com"
             keyboardType="email-address"
             autoCapitalize="none"
+            fontSize="16"
           />
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.email}
           </FormControl.ErrorMessage>
         </FormControl>
 
-        <FormControl isInvalid={'phone_number' in errors}>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Additional Contact *
-          </Text>
+        <FormControl>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Business Number
+            </Text>
+          </FormControl.Label>
           <Input
-            variant="outline"
-            borderColor={'phone_number' in errors ? "red.500" : "#DDDDDD"}
+            variant="filled"
+            borderColor="green.100"
+            borderWidth={1}
             width="100%"
-            p={2}
-            backgroundColor={COLORS.lightGreen}
+            backgroundColor="green.50"
+            height={12}
+            borderRadius={8}
+            value={formData.business_number}
+            onChangeText={(value) => handleInputChange("business_number", value)}
+            placeholder="0712345678"
+            keyboardType="phone-pad"
+            fontSize="16"
+          />
+        </FormControl>
+
+        <FormControl isInvalid={'phone_number' in errors}>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Additional Contact *
+            </Text>
+          </FormControl.Label>
+          <Input
+            variant="filled"
+            borderColor={'phone_number' in errors ? "red.500" : "green.100"}
+            borderWidth={1}
+            width="100%"
+            height={12}
+            backgroundColor="green.50"
             borderRadius={8}
             value={formData.phone_number}
             onChangeText={(value) => handleInputChange("phone_number", value)}
             placeholder="0712345678"
             keyboardType="phone-pad"
+            fontSize="16"
           />
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.phone_number}
           </FormControl.ErrorMessage>
         </FormControl>
-
-        <Box>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Business Number
-          </Text>
-          <Input
-            variant="outline"
-            borderColor="#DDDDDD"
-            width="100%"
-            backgroundColor={COLORS.lightGreen}
-            p={2}
-            borderRadius={8}
-            value={formData.business_number}
-            onChangeText={(value) => handleInputChange("business_number", value)}
-            placeholder="(___) ___-____"
-            keyboardType="phone-pad"
-          />
-        </Box>
       </VStack>
     );
   };
 
   const renderSecuritySetupForm = () => {
     return (
-      <VStack width="100%" space={4}>
+      <VStack width="100%" space={6}>
         <FormControl isInvalid={!!errors.pin}>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Set 4-digit PIN *
-          </Text>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Set 4-digit PIN *
+            </Text>
+          </FormControl.Label>
           <CodeField
             value={formData.pin}
             onChangeText={value => handleInputChange("pin", value)}
             cellCount={4}
-            rootStyle={{ marginBottom: ('pin' in errors) ? 0 : 20 }}
+            rootStyle={styles.codeFieldRoot}
             keyboardType="number-pad"
             textContentType="oneTimeCode"
             renderCell={({ index, symbol, isFocused }) => (
               <Box
                 key={index}
-                width="60px"
-                height="60px"
-                borderWidth={0}
-                borderRadius={8}
-                justifyContent="center"
-                alignItems="center"
-                backgroundColor="#e5f3e5"
+                style={[styles.cell, isFocused && styles.focusCell, !!errors.pin && styles.errorCell]}
               >
                 <Text fontSize={24}>{symbol ? '•' : isFocused ? <Cursor /> : null}</Text>
               </Box>
             )}
           />
-          <FormControl.ErrorMessage leftIcon={<CustomIcon library="MaterialCommunityIcons" name="alert-circle-outline" size={20} color="#EF4444" />}>{errors.pin}</FormControl.ErrorMessage>
+          <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={20} color="#EF4444" />}>
+            {errors.pin}
+          </FormControl.ErrorMessage>
         </FormControl>
 
         <FormControl isInvalid={!!errors.confirmPin}>
-          <Text fontSize="16" fontWeight="500" mb={1} color="black">
-            Confirm 4-digit PIN *
-          </Text>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Confirm 4-digit PIN *
+            </Text>
+          </FormControl.Label>
           <CodeField
             value={formData.confirmPin}
             onChangeText={value => handleInputChange("confirmPin", value)}
             cellCount={4}
-            rootStyle={{ marginBottom: ('confirmPin' in errors) ? 0 : 20 }}
+            rootStyle={styles.codeFieldRoot}
             keyboardType="number-pad"
             textContentType="oneTimeCode"
             renderCell={({ index, symbol, isFocused }) => (
               <Box
                 key={index}
-                width="60px"
-                height="60px"
-                borderWidth={0}
-                borderRadius={8}
-                justifyContent="center"
-                alignItems="center"
-                backgroundColor="#e5f3e5"
+                style={[styles.cell, isFocused && styles.focusCell, !!errors.confirmPin && styles.errorCell]}
               >
                 <Text fontSize={24}>{symbol ? '•' : isFocused ? <Cursor /> : null}</Text>
               </Box>
             )}
           />
-          <FormControl.ErrorMessage leftIcon={<CustomIcon library="MaterialCommunityIcons" name="alert-circle-outline" size={20} color="#EF4444" />}>{errors.confirmPin}</FormControl.ErrorMessage>
+          <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={20} color="#EF4444" />}>
+            {errors.confirmPin}
+          </FormControl.ErrorMessage>
         </FormControl>
 
         <Box mt={2}>
-          <Text fontSize="12" textAlign="center" color="black">
+          <Text fontSize="12" textAlign="center" color="gray.600">
             By tapping "Continue" you acknowledge that you have read and agreed to the{" "}
-            <Text color="#74c474">Terms and Conditions</Text>
+            <Text color="green.600" fontWeight="500">Terms and Conditions</Text>
           </Text>
         </Box>
       </VStack>
@@ -708,57 +848,154 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <Box flex={1} backgroundColor="white">
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <Box flex={1} paddingX={6} paddingY={8}>
-          <Box position="absolute" top={0} left={0}>
-            <Image source={require("../../assets/images/top-left-decoration.png")} style={{ width: 208, height: 144 }} />
-          </Box>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <Box flex={1} justifyContent="center" alignItems="center" backgroundColor="white">
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          width={width * 0.3}
+          height={width * 0.3}
+          backgroundColor="green.100"
+          borderBottomRightRadius={width * 0.15}
+          opacity={0.6}
+        />
 
-          <Box mt={16} alignItems="center" mb={6}>
-            <Text fontSize="22" fontWeight="bold" color="black">Registration</Text>
-            <Text fontSize="14" color="gray.600">Set Up Your Farm</Text>
-          </Box>
-
-          {renderStepIndicator()}
-          {renderForm()}
-
-          <HStack width="100%" justifyContent="space-between" mt={8}>
-            {currentStep > 1 ? (
-              <Button
-                onPress={handlePrevious}
-                width="45%"
-                variant="outline"
-                borderColor="#8FD28F"
-                _text={{ color: "#8FD28F" }}
-              >
-                Previous
-              </Button>
-            ) : (
-              <Box width="45%" />
-            )}
-
-            <Button
-              onPress={currentStep === 5 ? handleRegister : handleNext}
-              width="45%"
-              backgroundColor="#8FD28F"
-              _text={{ color: "white" }}
-              isLoading={loading && currentStep === 5}
-            >
-              {currentStep < 5 ? "Next" : "Continue"}
-            </Button>
-          </HStack>
-
-          {currentStep === 1 && (
-            <Box mt={8} flexDirection="row" justifyContent="center">
-              <Text fontSize="12" color="black" className="text-[16px]">Already have an account? </Text>
-              <Pressable onPress={() => navigation.navigate("SignInScreen")}>
-                <Text fontSize="12" color="#74c474" fontWeight="bold" className="text-[16px] font-semibold">Login</Text>
-              </Pressable>
-            </Box>
-          )}
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          width="50%"
+          height="20%"
+          bg="green.100"
+          borderBottomRightRadius="full"
+        >
+          <Box
+            position="absolute"
+            top={0}
+            left={0}
+            width="80%"
+            height="80%"
+            bg="green.200"
+            borderBottomRightRadius="full"
+          />
         </Box>
-      </ScrollView>
-    </Box>
+
+
+        <Box
+          position="absolute"
+          bottom={0}
+          right={0}
+          width="30%"
+          height="15%"
+          bg="green.50"
+          borderTopLeftRadius="full"
+        />
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center", paddingVertical: 40 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <VStack space={6} alignItems="center" width="100%" maxWidth="400px">
+            <Box alignItems="center" mb={4}>
+              <CustomIcon name="logo" size={80} color="#059669" />
+              <Text fontSize="24" fontWeight="bold" color="green.600" mt={2}>
+                Xpert Farmers
+              </Text>
+              <Text fontSize="14" color="gray.500" textAlign="center" mt={1}>
+                Join our farming community
+              </Text>
+            </Box>
+
+            {renderStepIndicator()}
+
+            <Box
+              width="100%"
+              backgroundColor="white"
+              borderRadius={16}
+              padding={6}
+              shadow={2}
+              borderWidth={1}
+              borderColor="gray.100"
+            >
+              {renderForm()}
+            </Box>
+
+            <HStack width="100%" justifyContent="space-between" space={4} mt={4}>
+              {currentStep > 1 && (
+                <Button
+                  variant="outline"
+                  borderColor="green.500"
+                  borderWidth={1}
+                  flex={1}
+                  height={12}
+                  borderRadius={8}
+                  onPress={handlePrevious}
+                  _text={{ color: "green.600", fontSize: "16", fontWeight: "500" }}
+                >
+                  Previous
+                </Button>
+              )}
+
+              <Button
+                backgroundColor="green.500"
+                flex={currentStep > 1 ? 1 : undefined}
+                width={currentStep === 1 ? "100%" : undefined}
+                height={12}
+                borderRadius={8}
+                onPress={handleNext}
+                isLoading={loading}
+                isLoadingText={currentStep === 5 ? "Creating Account..." : "Please wait..."}
+                _text={{ fontSize: "16", fontWeight: "500" }}
+                _pressed={{ backgroundColor: "green.600" }}
+              >
+                {currentStep === 5 ? "Create Account" : "Continue"}
+              </Button>
+            </HStack>
+
+            <HStack justifyContent="center" alignItems="center" mt={6}>
+              <Text fontSize="14" color="gray.600">
+                Already have an account?{" "}
+              </Text>
+              <Pressable onPress={() => navigation.navigate("SignInScreen")}>
+                <Text fontSize="14" color="green.600" fontWeight="500">
+                  Sign In
+                </Text>
+              </Pressable>
+            </HStack>
+          </VStack>
+        </ScrollView>
+      </Box>
+    </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  codeFieldRoot: {
+    marginTop: 10,
+    marginBottom: 10,
+    paddingHorizontal: 20,
+  },
+  cell: {
+    width: 50,
+    height: 50,
+    lineHeight: 50,
+    fontSize: 24,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F9FDF9',
+    borderRadius: 8,
+    textAlign: 'center',
+    marginHorizontal: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  focusCell: {
+    borderColor: '#059669',
+    backgroundColor: '#ECFDF5',
+  },
+  errorCell: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
+  },
+});
