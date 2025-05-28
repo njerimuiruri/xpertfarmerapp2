@@ -5,7 +5,7 @@ import { Box, Text, Input, Button, VStack, HStack, Pressable, Radio, Checkbox, S
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { COLORS } from '../../constants/theme';
-import countyData from '../../assets/data/county_constituencies.json'; // Adjust path as needed
+import countyData from '../../assets/data/county_constituencies.json';
 import { Dropdown } from 'react-native-element-dropdown';
 
 import CustomIcon from '../../components/CustomIcon';
@@ -192,38 +192,67 @@ export default function RegisterScreen({ navigation }) {
   };
 
   const renderStepIndicator = () => {
+    const handleStepClick = (step) => {
+      if (step <= currentStep) {
+        setCurrentStep(step);
+      } else {
+        toast.show({
+          description: "Please complete the current step first",
+          placement: "top",
+          backgroundColor: "orange.500"
+        });
+      }
+    };
+
     return (
       <Box width="100%" mb={6}>
         <HStack justifyContent="space-between" mb={2}>
           {[1, 2, 3, 4, 5].map((step) => (
-            <Box
+            <Pressable
               key={step}
-              width={currentStep === step ? 10 : 8}
-              height={currentStep === step ? 10 : 8}
-              borderRadius="full"
-              backgroundColor={currentStep === step ? "green.500" : "gray.200"}
-              justifyContent="center"
-              alignItems="center"
-              position="relative"
+              onPress={() => handleStepClick(step)}
+              _pressed={{ opacity: 0.6, transform: [{ scale: 0.95 }] }}
+              hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
             >
-              <Text
-                color={currentStep === step ? "white" : "gray.400"}
-                fontSize={currentStep === step ? "md" : "sm"}
-                fontWeight="bold"
+              <Box
+                width={currentStep === step ? 10 : 8}
+                height={currentStep === step ? 10 : 8}
+                borderRadius="full"
+                backgroundColor={
+                  currentStep === step
+                    ? "green.500"
+                    : step < currentStep
+                      ? "green.400"
+                      : "gray.200"
+                }
+                justifyContent="center"
+                alignItems="center"
+                position="relative"
+                shadow={currentStep === step ? 2 : 0}
               >
-                {step}
-              </Text>
-              {step < 5 && (
-                <Box
-                  position="absolute"
-                  height={1}
-                  backgroundColor="gray.300"
-                  width="100%"
-                  left="100%"
-                  top="50%"
-                />
-              )}
-            </Box>
+                <Text
+                  color={
+                    currentStep === step || step < currentStep
+                      ? "white"
+                      : "gray.400"
+                  }
+                  fontSize={currentStep === step ? "md" : "sm"}
+                  fontWeight="bold"
+                >
+                  {step}
+                </Text>
+                {step < 5 && (
+                  <Box
+                    position="absolute"
+                    height={1}
+                    backgroundColor={step < currentStep ? "green.300" : "gray.300"}
+                    width="100%"
+                    left="100%"
+                    top="50%"
+                  />
+                )}
+              </Box>
+            </Pressable>
           ))}
         </HStack>
 
@@ -233,7 +262,6 @@ export default function RegisterScreen({ navigation }) {
       </Box>
     );
   };
-
   const renderForm = () => {
     switch (currentStep) {
       case 1:
@@ -565,32 +593,51 @@ export default function RegisterScreen({ navigation }) {
               Date of Birth *
             </Text>
           </FormControl.Label>
-          <HStack alignItems="center" space={2}>
-            <Input
-              flex={1}
+
+          <Pressable onPress={() => setDatePickerVisible(true)}>
+            <Box
               backgroundColor="green.50"
-              variant="filled"
               borderColor={'date_of_birth' in errors ? "red.500" : "green.100"}
               borderWidth={1}
               height={12}
               borderRadius={8}
-              value={formData.date_of_birth ? formData.date_of_birth.toLocaleDateString('en-GB') : ''}
-              isReadOnly
-              placeholder="DD/MM/YYYY"
-              fontSize="16"
-            />
-            <Pressable
-              onPress={() => setDatePickerVisible(true)}
-              p={2}
+              flexDirection="row"
+              alignItems="center"
+              paddingX={4}
+              justifyContent="space-between"
             >
-              <Icon name="calendar" size={24} color="#059669" />
-            </Pressable>
-          </HStack>
+              <Text
+                fontSize="16"
+                color={formData.date_of_birth ? "gray.800" : "gray.400"}
+                flex={1}
+              >
+                {formData.date_of_birth
+                  ? formData.date_of_birth.toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                  })
+                  : 'Select Date of Birth'
+                }
+              </Text>
+
+              <Box
+                backgroundColor="green.100"
+                borderRadius={6}
+                padding={2}
+                marginLeft={2}
+              >
+                <Icon name="calendar" size={20} color="#059669" />
+              </Box>
+            </Box>
+          </Pressable>
+
           {datePickerVisible && (
             <DateTimePicker
               value={formData.date_of_birth || new Date()}
               mode="date"
               display="default"
+              maximumDate={new Date()}
               onChange={(event, date) => {
                 setDatePickerVisible(false);
                 if (date && event.type !== 'dismissed') {
@@ -599,6 +646,7 @@ export default function RegisterScreen({ navigation }) {
               }}
             />
           )}
+
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.date_of_birth}
           </FormControl.ErrorMessage>
