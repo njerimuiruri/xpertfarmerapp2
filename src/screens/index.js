@@ -6,33 +6,32 @@ import ResetPassword from '../screens/Auth/reset-password';
 import EmailOtpScreen from '../screens/Auth/Email-Otp-Screen';
 
 import HomeScreen from './Home/home';
-
+// personal information
 import ProfileScreen from './Home/profile-screen';
 import PersonalInformation from './Home/PersonalInformation';
+// Farm details
 import AddFarm from './farm/AddFarm';
-
 import EditFarm from './farm/EditFarm';
-
 import FarmInformation from './farm/FarmInformation';
+import FarmDetailsModal from './farm/FarmDetailsModal';
+
 import OnboardingScreen from './Onboarding/OnboardingScreen';
+// employees
 import FarmEmployeeTableScreen from './employee/FarmEmployeeTableScreen';
 import EditEmployeeScreen from './employee/EditEmployeeScreen';
-
 import EmployeeDetailScreen from './employee/EmployeeDetailScreen';
-
 import AddEmployeeScreen from './employee/AddEmployeeScreen';
+// Flocks /Livestocks
 import AddFlockDetailsScreen from './livestock/AddFlockDetails';
 import AddLivestockScreen from './livestock/AddLivestockDetails';
 import AddLivestockGroupScreen from './livestock/AddGroupLivestock';
 import OptionDetailsScreen from './livestock/optionDetails';
 import OptionLivestockGroupScreen from './livestock/OptionLivestockGroup';
 
+// Breeding screens
 import BreedingModuleLandingScreen from './livestock/breeding/BreedingModuleLandingScreen';
-
 import EditBreedingRecordScreen from './livestock/breeding/EditBreedingRecordScreen';
-
 import RecordBirthScreen from './livestock/breeding/RecordBirthScreen';
-
 import BreedingRecordDetailScreen from './livestock/breeding/BreedingRecordDetailScreen';
 
 import LivestockModuleScreen from './livestock/LivestockModuleScreen';
@@ -143,6 +142,7 @@ export {
   FarmInformation,
   AddFarm,
   EditFarm,
+  FarmDetailsModal,
 
   // Employees
   AddEmployeeScreen,

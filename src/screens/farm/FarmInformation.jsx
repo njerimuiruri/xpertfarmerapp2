@@ -12,6 +12,7 @@ import SecondaryHeader from '../../components/headers/secondary-header';
 import { getUserFarms, deleteFarm } from '../../services/farm';
 import { useFocusEffect, useRoute, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import FarmDetailsModal from './FarmDetailsModal';
 
 export default function FarmInformation() {
   const [farms, setFarms] = useState([]);
@@ -24,6 +25,10 @@ export default function FarmInformation() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [filterBy, setFilterBy] = useState('all');
+
+  // New state for details modal
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedFarm, setSelectedFarm] = useState(null);
 
   const route = useRoute();
   const navigation = useNavigation();
@@ -40,6 +45,8 @@ export default function FarmInformation() {
         id: f.id,
         name: f.name,
         location: f.administrativeLocation,
+        county: f.county,
+        ownership: f.ownership,
         size: `${f.size} acres`,
         sizeNumber: f.size,
         animals: Array.isArray(f.farmingTypes) ? f.farmingTypes : [],
@@ -106,6 +113,17 @@ export default function FarmInformation() {
     setActiveFarm(farm);
 
     await AsyncStorage.setItem('activeFarm', JSON.stringify(farm));
+  };
+
+  // New function to handle showing farm details
+  const handleShowDetails = (farm) => {
+    setSelectedFarm(farm);
+    setShowDetailsModal(true);
+  };
+
+  // New function to handle setting active farm from modal
+  const handleSetActiveFarmFromModal = async (farm) => {
+    await handleFarmSelect(farm);
   };
 
   const handleDeleteConfirm = (farm) => {
@@ -202,38 +220,61 @@ export default function FarmInformation() {
               </Box>
             )}
 
-            <HStack space={1}>
-              <IconButton
-                icon={
-                  <FastImage
-                    source={icons.edit}
-                    style={styles.actionIcon}
-                    resizeMode="contain"
-                    tintColor={COLORS.green}
-                  />
-                }
-                borderRadius="full"
-                bg="green.50"
-                _pressed={{ bg: "green.100" }}
-                onPress={() => navigateToEditFarm(item)}
-                size="sm"
-              />
-              <IconButton
-                icon={
-                  <FastImage
-                    source={icons.remove || icons.trash}
-                    style={styles.actionIcon}
-                    resizeMode="contain"
-                    tintColor="#FF4444"
-                  />
-                }
-                borderRadius="full"
-                bg="red.50"
-                _pressed={{ bg: "red.100" }}
-                onPress={() => handleDeleteConfirm(item)}
-                size="sm"
-              />
-            </HStack>
+            {/* Updated Action Buttons */}
+            <VStack space={1}>
+              {/* First Row of Buttons */}
+              <HStack space={1}>
+                <IconButton
+                  icon={
+                    <FastImage
+                      source={icons.eye || icons.agriculture}
+                      style={styles.actionIcon}
+                      resizeMode="contain"
+                      tintColor={COLORS.blue || COLORS.green}
+                    />
+                  }
+                  borderRadius="full"
+                  bg="blue.50"
+                  _pressed={{ bg: "blue.100" }}
+                  onPress={() => handleShowDetails(item)}
+                  size="sm"
+                />
+                <IconButton
+                  icon={
+                    <FastImage
+                      source={icons.edit}
+                      style={styles.actionIcon}
+                      resizeMode="contain"
+                      tintColor={COLORS.green}
+                    />
+                  }
+                  borderRadius="full"
+                  bg="green.50"
+                  _pressed={{ bg: "green.100" }}
+                  onPress={() => navigateToEditFarm(item)}
+                  size="sm"
+                />
+              </HStack>
+
+              {/* Second Row */}
+              <HStack space={1} justifyContent="center">
+                <IconButton
+                  icon={
+                    <FastImage
+                      source={icons.remove || icons.trash}
+                      style={styles.actionIcon}
+                      resizeMode="contain"
+                      tintColor="#FF4444"
+                    />
+                  }
+                  borderRadius="full"
+                  bg="red.50"
+                  _pressed={{ bg: "red.100" }}
+                  onPress={() => handleDeleteConfirm(item)}
+                  size="sm"
+                />
+              </HStack>
+            </VStack>
           </VStack>
         </HStack>
       </Box>
@@ -267,6 +308,21 @@ export default function FarmInformation() {
                   {activeFarm.name}
                 </Text>
                 <HStack space={2}>
+                  <IconButton
+                    icon={
+                      <FastImage
+                        source={icons.eye || icons.agriculture}
+                        style={styles.smallIcon}
+                        resizeMode="contain"
+                        tintColor={COLORS.blue || COLORS.green}
+                      />
+                    }
+                    borderRadius="full"
+                    bg="blue.50"
+                    _pressed={{ bg: "blue.100" }}
+                    onPress={() => handleShowDetails(activeFarm)}
+                    size="sm"
+                  />
                   <IconButton
                     icon={
                       <FastImage
@@ -423,6 +479,7 @@ export default function FarmInformation() {
 
       </ScrollView>
 
+      {/* Delete Confirmation AlertDialog */}
       <AlertDialog
         leastDestructiveRef={cancelRef}
         isOpen={isDeleteOpen}
@@ -490,10 +547,19 @@ export default function FarmInformation() {
           </AlertDialog.Footer>
         </AlertDialog.Content>
       </AlertDialog>
+
+      {/* Farm Details Modal */}
+      <FarmDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+        farm={selectedFarm}
+        onEdit={navigateToEditFarm}
+        onDelete={handleDeleteConfirm}
+        onSetActive={handleSetActiveFarmFromModal}
+      />
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -509,5 +575,17 @@ const styles = StyleSheet.create({
   warningIcon: {
     width: 24,
     height: 24,
+  },
+  headerIcon: {
+    width: 20,
+    height: 20,
+  },
+  detailIcon: {
+    width: 16,
+    height: 16,
+  },
+  buttonIcon: {
+    width: 14,
+    height: 14,
   },
 });

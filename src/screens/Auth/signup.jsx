@@ -5,7 +5,7 @@ import { Box, Text, Input, Button, VStack, HStack, Pressable, Radio, Checkbox, S
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { COLORS } from '../../constants/theme';
-import countyData from '../../assets/data/county_constituencies.json';
+import countyData from '../../assets/data/county_with_titled_wards.json';
 import { Dropdown } from 'react-native-element-dropdown';
 
 import CustomIcon from '../../components/CustomIcon';
@@ -19,7 +19,7 @@ export default function RegisterScreen({ navigation }) {
   const [errors, setErrors] = useState({});
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [countyList, setCountyList] = useState([]);
-  const [constituencyList, setConstituencyList] = useState([]);
+  const [WardsList, setWardsList] = useState([]);
   const [residenceCountyList, setResidenceCountyList] = useState([]);
   const [residenceLocationList, setResidenceLocationList] = useState([]);
   const [formData, setFormData] = useState({
@@ -337,7 +337,7 @@ export default function RegisterScreen({ navigation }) {
             onChange={item => {
               handleInputChange("county", item.value);
               const match = countyData.find(c => c.County === item.value);
-              setConstituencyList(match ? match.Constituency : []);
+              setWardsList(match ? match.Wards : []);
               handleInputChange("administrative_location", "");
             }}
           />
@@ -366,7 +366,7 @@ export default function RegisterScreen({ navigation }) {
             inputSearchStyle={{ fontSize: 14, color: '#1F2937' }}
             itemTextStyle={{ color: '#000', fontSize: 16 }}
             itemContainerStyle={{ backgroundColor: '#F0FDF4' }}
-            data={constituencyList.map(name => ({ label: name, value: name }))}
+            data={WardsList.map(name => ({ label: name, value: name }))}
             search
             maxHeight={300}
             labelField="label"
@@ -683,7 +683,7 @@ export default function RegisterScreen({ navigation }) {
             onChange={item => {
               handleInputChange("residence_county", item.value);
               const match = countyData.find(c => c.County === item.value);
-              setResidenceLocationList(match ? match.Constituency : []);
+              setResidenceLocationList(match ? match.Wards : []);
               handleInputChange("residence_location", "");
             }}
           />
