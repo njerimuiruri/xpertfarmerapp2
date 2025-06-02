@@ -24,6 +24,9 @@ import AddEmployeeScreen from './employee/AddEmployeeScreen';
 // Flocks /Livestocks
 import AddFlockDetailsScreen from './livestock/AddFlockDetails';
 import AddLivestockScreen from './livestock/AddLivestockDetails';
+
+import EditLivestockScreen from './livestock/EditLivestockScreen';
+
 import AddLivestockGroupScreen from './livestock/AddGroupLivestock';
 import OptionDetailsScreen from './livestock/optionDetails';
 import OptionLivestockGroupScreen from './livestock/OptionLivestockGroup';
@@ -152,6 +155,7 @@ export {
   // Livestock
   AddFlockDetailsScreen,
   AddLivestockScreen,
+  EditLivestockScreen,
   AddLivestockGroupScreen,
   OptionDetailsScreen,
   OptionLivestockGroupScreen,

@@ -5,7 +5,7 @@ import { Box, Text, Input, Button, VStack, HStack, Pressable, Radio, Checkbox, S
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { COLORS } from '../../constants/theme';
-import countyData from '../../assets/data/county_with_titled_wards.json';
+import countyData from '../../assets/data/county_constituency_wards.json';
 import { Dropdown } from 'react-native-element-dropdown';
 
 import CustomIcon from '../../components/CustomIcon';
@@ -18,26 +18,37 @@ export default function RegisterScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [datePickerVisible, setDatePickerVisible] = useState(false);
+
+  // Location data states
   const [countyList, setCountyList] = useState([]);
-  const [WardsList, setWardsList] = useState([]);
+  const [constituencyList, setConstituencyList] = useState([]);
+  const [wardsList, setWardsList] = useState([]);
   const [residenceCountyList, setResidenceCountyList] = useState([]);
-  const [residenceLocationList, setResidenceLocationList] = useState([]);
+  const [residenceConstituencyList, setResidenceConstituencyList] = useState([]);
+  const [residenceWardsList, setResidenceWardsList] = useState([]);
+
   const [formData, setFormData] = useState({
+    // Farm Details
     farm_name: "",
     county: "",
+    constituency: "",
     administrative_location: "",
     farm_size: "",
     ownership: "Freehold",
     farming_types: [],
 
+    // Personal Information
+    national_id: "",
     first_name: "",
     middle_name: "",
     last_name: "",
     gender: "",
     date_of_birth: null,
     residence_county: "",
+    residence_constituency: "",
     residence_location: "",
 
+    // Professional Information
     years_of_experience: "",
     email: "",
     phone_number: "",
@@ -55,6 +66,7 @@ export default function RegisterScreen({ navigation }) {
     4: "Professional Information",
     5: "Security Setup"
   };
+
   useEffect(() => {
     const counties = countyData.map(item => item.County);
     setCountyList(counties);
@@ -68,6 +80,72 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
+  const handleCountyChange = (countyName) => {
+    handleInputChange("county", countyName);
+    const selectedCounty = countyData.find(c => c.County === countyName);
+
+    if (selectedCounty) {
+      const constituencies = selectedCounty.Constituencies.map(c => c.Constituency);
+      setConstituencyList(constituencies);
+    } else {
+      setConstituencyList([]);
+    }
+
+    // Reset dependent fields
+    handleInputChange("constituency", "");
+    handleInputChange("administrative_location", "");
+    setWardsList([]);
+  };
+
+  // Handle constituency selection for farm location
+  const handleConstituencyChange = (constituencyName) => {
+    handleInputChange("constituency", constituencyName);
+    const selectedCounty = countyData.find(c => c.County === formData.county);
+
+    if (selectedCounty) {
+      const selectedConstituency = selectedCounty.Constituencies.find(c => c.Constituency === constituencyName);
+      if (selectedConstituency) {
+        setWardsList(selectedConstituency.Wards);
+      } else {
+        setWardsList([]);
+      }
+    }
+
+    handleInputChange("administrative_location", "");
+  };
+
+  const handleResidenceCountyChange = (countyName) => {
+    handleInputChange("residence_county", countyName);
+    const selectedCounty = countyData.find(c => c.County === countyName);
+
+    if (selectedCounty) {
+      const constituencies = selectedCounty.Constituencies.map(c => c.Constituency);
+      setResidenceConstituencyList(constituencies);
+    } else {
+      setResidenceConstituencyList([]);
+    }
+
+    handleInputChange("residence_constituency", "");
+    handleInputChange("residence_location", "");
+    setResidenceWardsList([]);
+  };
+
+  const handleResidenceConstituencyChange = (constituencyName) => {
+    handleInputChange("residence_constituency", constituencyName);
+    const selectedCounty = countyData.find(c => c.County === formData.residence_county);
+
+    if (selectedCounty) {
+      const selectedConstituency = selectedCounty.Constituencies.find(c => c.Constituency === constituencyName);
+      if (selectedConstituency) {
+        setResidenceWardsList(selectedConstituency.Wards);
+      } else {
+        setResidenceWardsList([]);
+      }
+    }
+
+    handleInputChange("residence_location", "");
+  };
+
   const validateCurrentStep = () => {
     let newErrors = {};
     let isValid = true;
@@ -77,7 +155,8 @@ export default function RegisterScreen({ navigation }) {
       case 1:
         if (!formData.farm_name) newErrors.farm_name = "Farm name is required.";
         if (!formData.county) newErrors.county = "County is required.";
-        if (!formData.administrative_location) newErrors.administrative_location = "Administrative location is required.";
+        if (!formData.constituency) newErrors.constituency = "Constituency is required.";
+        if (!formData.administrative_location) newErrors.administrative_location = "Ward is required.";
         if (!formData.farm_size) newErrors.farm_size = "Farm size is required.";
         if (Object.keys(newErrors).length > 0) isValid = false;
         break;
@@ -88,11 +167,15 @@ export default function RegisterScreen({ navigation }) {
         }
         break;
       case 3:
+        if (!formData.national_id) newErrors.national_id = "National ID is required.";
+        else if (!/^\d{8,9}$/.test(formData.national_id)) newErrors.national_id = "National ID must be 8 or 9 digits.";
         if (!formData.first_name) newErrors.first_name = "First name is required.";
         if (!formData.last_name) newErrors.last_name = "Last name is required.";
         if (!formData.gender) newErrors.gender = "Gender is required.";
         if (!formData.date_of_birth) newErrors.date_of_birth = "Date of birth is required.";
         if (!formData.residence_county) newErrors.residence_county = "Residence county is required.";
+        if (!formData.residence_constituency) newErrors.residence_constituency = "Residence constituency is required.";
+        if (!formData.residence_location) newErrors.residence_location = "Residence ward is required.";
         if (Object.keys(newErrors).length > 0) isValid = false;
         break;
       case 4:
@@ -156,12 +239,14 @@ export default function RegisterScreen({ navigation }) {
       };
 
       const payload = {
+        nationalId: formData.national_id,
         firstName: formData.first_name,
         middleName: formData.middle_name,
         lastName: formData.last_name,
         gender: formData.gender,
         dob: formatDateForAPI(formData.date_of_birth),
         residenceCounty: formData.residence_county,
+        residenceConstituency: formData.residence_constituency, // Updated mapping
         residenceLocation: formData.residence_location,
         email: formData.email,
         phoneNumber: sanitizePhoneNumber(formData.phone_number),
@@ -170,6 +255,7 @@ export default function RegisterScreen({ navigation }) {
         yearsOfExperience: formData.years_of_experience ? parseInt(formData.years_of_experience) : undefined,
         farmName: formData.farm_name,
         county: formData.county,
+        constituency: formData.constituency, // Updated mapping
         administrativeLocation: formData.administrative_location,
         farmSize: formData.farm_size ? parseFloat(formData.farm_size) : undefined,
         ownership: formData.ownership,
@@ -262,6 +348,7 @@ export default function RegisterScreen({ navigation }) {
       </Box>
     );
   };
+
   const renderForm = () => {
     switch (currentStep) {
       case 1:
@@ -334,22 +421,53 @@ export default function RegisterScreen({ navigation }) {
             placeholder="Select County"
             searchPlaceholder="Search county..."
             value={formData.county}
-            onChange={item => {
-              handleInputChange("county", item.value);
-              const match = countyData.find(c => c.County === item.value);
-              setWardsList(match ? match.Wards : []);
-              handleInputChange("administrative_location", "");
-            }}
+            onChange={item => handleCountyChange(item.value)}
           />
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.county}
           </FormControl.ErrorMessage>
         </FormControl>
 
+        <FormControl isInvalid={'constituency' in errors}>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Constituency *
+            </Text>
+          </FormControl.Label>
+          <Dropdown
+            style={{
+              height: 50,
+              borderColor: errors.constituency ? 'red' : '#D1FAE5',
+              borderWidth: 1,
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              backgroundColor: '#F0FDF4'
+            }}
+            placeholderStyle={{ fontSize: 16, color: '#1F2937' }}
+            selectedTextStyle={{ fontSize: 16, color: '#1F2937' }}
+            inputSearchStyle={{ fontSize: 14, color: '#1F2937' }}
+            itemTextStyle={{ color: '#000', fontSize: 16 }}
+            itemContainerStyle={{ backgroundColor: '#F0FDF4' }}
+            data={constituencyList.map(name => ({ label: name, value: name }))}
+            search
+            maxHeight={300}
+            labelField="label"
+            valueField="value"
+            placeholder="Select Constituency"
+            searchPlaceholder="Search constituency..."
+            value={formData.constituency}
+            onChange={item => handleConstituencyChange(item.value)}
+            disable={!formData.county}
+          />
+          <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
+            {errors.constituency}
+          </FormControl.ErrorMessage>
+        </FormControl>
+
         <FormControl isInvalid={'administrative_location' in errors}>
           <FormControl.Label>
             <Text fontSize="16" fontWeight="500" color="gray.700">
-              Administrative location *
+              Ward *
             </Text>
           </FormControl.Label>
           <Dropdown
@@ -366,15 +484,16 @@ export default function RegisterScreen({ navigation }) {
             inputSearchStyle={{ fontSize: 14, color: '#1F2937' }}
             itemTextStyle={{ color: '#000', fontSize: 16 }}
             itemContainerStyle={{ backgroundColor: '#F0FDF4' }}
-            data={WardsList.map(name => ({ label: name, value: name }))}
+            data={wardsList.map(name => ({ label: name, value: name }))}
             search
             maxHeight={300}
             labelField="label"
             valueField="value"
-            placeholder="Select Administrative Location"
-            searchPlaceholder="Search location..."
+            placeholder="Select Ward"
+            searchPlaceholder="Search ward..."
             value={formData.administrative_location}
             onChange={item => handleInputChange("administrative_location", item.value)}
+            disable={!formData.constituency}
           />
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.administrative_location}
@@ -493,6 +612,32 @@ export default function RegisterScreen({ navigation }) {
   const renderPersonalInfoForm = () => {
     return (
       <VStack width="100%" space={4}>
+        <FormControl isInvalid={'national_id' in errors}>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              National ID *
+            </Text>
+          </FormControl.Label>
+          <Input
+            variant="filled"
+            borderColor={'national_id' in errors ? "red.500" : "green.100"}
+            borderWidth={1}
+            width="100%"
+            backgroundColor="green.50"
+            height={12}
+            borderRadius={8}
+            value={formData.national_id}
+            onChangeText={(value) => handleInputChange("national_id", value)}
+            placeholder="123456789"
+            keyboardType="numeric"
+            maxLength={9}
+            fontSize="16"
+          />
+          <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
+            {errors.national_id}
+          </FormControl.ErrorMessage>
+        </FormControl>
+
         <FormControl isInvalid={'first_name' in errors}>
           <FormControl.Label>
             <Text fontSize="16" fontWeight="500" color="gray.700">
@@ -632,18 +777,19 @@ export default function RegisterScreen({ navigation }) {
             </Box>
           </Pressable>
 
+
           {datePickerVisible && (
             <DateTimePicker
               value={formData.date_of_birth || new Date()}
               mode="date"
               display="default"
-              maximumDate={new Date()}
-              onChange={(event, date) => {
+              onChange={(event, selectedDate) => {
                 setDatePickerVisible(false);
-                if (date && event.type !== 'dismissed') {
-                  handleInputChange("date_of_birth", date);
+                if (selectedDate) {
+                  handleInputChange("date_of_birth", selectedDate);
                 }
               }}
+              maximumDate={new Date()}
             />
           )}
 
@@ -680,22 +826,53 @@ export default function RegisterScreen({ navigation }) {
             placeholder="Select Residence County"
             searchPlaceholder="Search county..."
             value={formData.residence_county}
-            onChange={item => {
-              handleInputChange("residence_county", item.value);
-              const match = countyData.find(c => c.County === item.value);
-              setResidenceLocationList(match ? match.Wards : []);
-              handleInputChange("residence_location", "");
-            }}
+            onChange={item => handleResidenceCountyChange(item.value)}
           />
           <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.residence_county}
           </FormControl.ErrorMessage>
         </FormControl>
 
-        <FormControl>
+        <FormControl isInvalid={'residence_constituency' in errors}>
           <FormControl.Label>
             <Text fontSize="16" fontWeight="500" color="gray.700">
-              Residence Location
+              Residence Constituency *
+            </Text>
+          </FormControl.Label>
+          <Dropdown
+            style={{
+              height: 50,
+              borderColor: errors.residence_constituency ? 'red' : '#D1FAE5',
+              borderWidth: 1,
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              backgroundColor: '#F0FDF4'
+            }}
+            placeholderStyle={{ fontSize: 16, color: '#1F2937' }}
+            selectedTextStyle={{ fontSize: 16, color: '#1F2937' }}
+            inputSearchStyle={{ fontSize: 14, color: '#1F2937' }}
+            itemTextStyle={{ color: '#000', fontSize: 16 }}
+            itemContainerStyle={{ backgroundColor: '#F0FDF4' }}
+            data={residenceConstituencyList.map(name => ({ label: name, value: name }))}
+            search
+            maxHeight={300}
+            labelField="label"
+            valueField="value"
+            placeholder="Select Residence Constituency"
+            searchPlaceholder="Search constituency..."
+            value={formData.residence_constituency}
+            onChange={item => handleResidenceConstituencyChange(item.value)}
+            disable={!formData.residence_county}
+          />
+          <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
+            {errors.residence_constituency}
+          </FormControl.ErrorMessage>
+        </FormControl>
+
+        <FormControl isInvalid={'residence_location' in errors}>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Residence Ward *
             </Text>
           </FormControl.Label>
           <Dropdown
@@ -712,16 +889,20 @@ export default function RegisterScreen({ navigation }) {
             inputSearchStyle={{ fontSize: 14, color: '#1F2937' }}
             itemTextStyle={{ color: '#000', fontSize: 16 }}
             itemContainerStyle={{ backgroundColor: '#F0FDF4' }}
-            data={residenceLocationList.map(name => ({ label: name, value: name }))}
+            data={residenceWardsList.map(name => ({ label: name, value: name }))}
             search
             maxHeight={300}
             labelField="label"
             valueField="value"
-            placeholder="Select Residence Location"
-            searchPlaceholder="Search location..."
+            placeholder="Select Residence Ward"
+            searchPlaceholder="Search ward..."
             value={formData.residence_location}
             onChange={item => handleInputChange("residence_location", item.value)}
+            disable={!formData.residence_constituency}
           />
+          <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
+            {errors.residence_location}
+          </FormControl.ErrorMessage>
         </FormControl>
       </VStack>
     );
@@ -733,20 +914,20 @@ export default function RegisterScreen({ navigation }) {
         <FormControl>
           <FormControl.Label>
             <Text fontSize="16" fontWeight="500" color="gray.700">
-              Years of Farming Practice
+              Years of Experience
             </Text>
           </FormControl.Label>
           <Input
             variant="filled"
             borderColor="green.100"
+            backgroundColor="green.50"
             borderWidth={1}
             width="100%"
-            backgroundColor="green.50"
             height={12}
             borderRadius={8}
             value={formData.years_of_experience}
             onChangeText={(value) => handleInputChange("years_of_experience", value)}
-            placeholder="Enter years"
+            placeholder="5"
             keyboardType="numeric"
             fontSize="16"
           />
@@ -755,7 +936,7 @@ export default function RegisterScreen({ navigation }) {
         <FormControl isInvalid={'email' in errors}>
           <FormControl.Label>
             <Text fontSize="16" fontWeight="500" color="gray.700">
-              E-mail Address *
+              Email Address *
             </Text>
           </FormControl.Label>
           <Input
@@ -768,7 +949,7 @@ export default function RegisterScreen({ navigation }) {
             borderRadius={8}
             value={formData.email}
             onChangeText={(value) => handleInputChange("email", value)}
-            placeholder="your_email@example.com"
+            placeholder="john@example.com"
             keyboardType="email-address"
             autoCapitalize="none"
             fontSize="16"
@@ -778,32 +959,10 @@ export default function RegisterScreen({ navigation }) {
           </FormControl.ErrorMessage>
         </FormControl>
 
-        <FormControl>
-          <FormControl.Label>
-            <Text fontSize="16" fontWeight="500" color="gray.700">
-              Business Number
-            </Text>
-          </FormControl.Label>
-          <Input
-            variant="filled"
-            borderColor="green.100"
-            borderWidth={1}
-            width="100%"
-            backgroundColor="green.50"
-            height={12}
-            borderRadius={8}
-            value={formData.business_number}
-            onChangeText={(value) => handleInputChange("business_number", value)}
-            placeholder="0712345678"
-            keyboardType="phone-pad"
-            fontSize="16"
-          />
-        </FormControl>
-
         <FormControl isInvalid={'phone_number' in errors}>
           <FormControl.Label>
             <Text fontSize="16" fontWeight="500" color="gray.700">
-              Additional Contact *
+              Business Phone Number *
             </Text>
           </FormControl.Label>
           <Input
@@ -811,8 +970,8 @@ export default function RegisterScreen({ navigation }) {
             borderColor={'phone_number' in errors ? "red.500" : "green.100"}
             borderWidth={1}
             width="100%"
-            height={12}
             backgroundColor="green.50"
+            height={12}
             borderRadius={8}
             value={formData.phone_number}
             onChangeText={(value) => handleInputChange("phone_number", value)}
@@ -824,196 +983,160 @@ export default function RegisterScreen({ navigation }) {
             {errors.phone_number}
           </FormControl.ErrorMessage>
         </FormControl>
+
+        <FormControl>
+          <FormControl.Label>
+            <Text fontSize="16" fontWeight="500" color="gray.700">
+              Additional Contact Number
+            </Text>
+          </FormControl.Label>
+          <Input
+            variant="filled"
+            borderColor="green.100"
+            backgroundColor="green.50"
+            borderWidth={1}
+            width="100%"
+            height={12}
+            borderRadius={8}
+            value={formData.business_number}
+            onChangeText={(value) => handleInputChange("business_number", value)}
+            placeholder="0712345678"
+            keyboardType="phone-pad"
+            fontSize="16"
+          />
+        </FormControl>
       </VStack>
     );
   };
 
   const renderSecuritySetupForm = () => {
     return (
-      <VStack width="100%" space={6}>
-        <FormControl isInvalid={!!errors.pin}>
+      <VStack width="100%" space={4}>
+        <Text fontSize="16" fontWeight="600" color="gray.700" mb={2}>
+          Create a 4-digit PIN for secure access
+        </Text>
+
+        <FormControl isInvalid={'pin' in errors}>
           <FormControl.Label>
             <Text fontSize="16" fontWeight="500" color="gray.700">
-              Set 4-digit PIN *
+              PIN *
             </Text>
           </FormControl.Label>
-          <CodeField
+          <Input
+            variant="filled"
+            borderColor={'pin' in errors ? "red.500" : "green.100"}
+            borderWidth={1}
+            width="100%"
+            backgroundColor="green.50"
+            height={12}
+            borderRadius={8}
             value={formData.pin}
-            onChangeText={value => handleInputChange("pin", value)}
-            cellCount={4}
-            rootStyle={styles.codeFieldRoot}
-            keyboardType="number-pad"
-            textContentType="oneTimeCode"
-            renderCell={({ index, symbol, isFocused }) => (
-              <Box
-                key={index}
-                style={[styles.cell, isFocused && styles.focusCell, !!errors.pin && styles.errorCell]}
-              >
-                <Text fontSize={24}>{symbol ? '•' : isFocused ? <Cursor /> : null}</Text>
-              </Box>
-            )}
+            onChangeText={(value) => handleInputChange("pin", value)}
+            placeholder="••••"
+            keyboardType="numeric"
+            maxLength={4}
+            secureTextEntry
+            fontSize="16"
           />
-          <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={20} color="#EF4444" />}>
+          <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.pin}
           </FormControl.ErrorMessage>
         </FormControl>
 
-        <FormControl isInvalid={!!errors.confirmPin}>
+        <FormControl isInvalid={'confirmPin' in errors}>
           <FormControl.Label>
             <Text fontSize="16" fontWeight="500" color="gray.700">
-              Confirm 4-digit PIN *
+              Confirm PIN *
             </Text>
           </FormControl.Label>
-          <CodeField
+          <Input
+            variant="filled"
+            borderColor={'confirmPin' in errors ? "red.500" : "green.100"}
+            borderWidth={1}
+            width="100%"
+            backgroundColor="green.50"
+            height={12}
+            borderRadius={8}
             value={formData.confirmPin}
-            onChangeText={value => handleInputChange("confirmPin", value)}
-            cellCount={4}
-            rootStyle={styles.codeFieldRoot}
-            keyboardType="number-pad"
-            textContentType="oneTimeCode"
-            renderCell={({ index, symbol, isFocused }) => (
-              <Box
-                key={index}
-                style={[styles.cell, isFocused && styles.focusCell, !!errors.confirmPin && styles.errorCell]}
-              >
-                <Text fontSize={24}>{symbol ? '•' : isFocused ? <Cursor /> : null}</Text>
-              </Box>
-            )}
+            onChangeText={(value) => handleInputChange("confirmPin", value)}
+            placeholder="••••"
+            keyboardType="numeric"
+            maxLength={4}
+            secureTextEntry
+            fontSize="16"
           />
-          <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={20} color="#EF4444" />}>
+          <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
             {errors.confirmPin}
           </FormControl.ErrorMessage>
         </FormControl>
-
-        <Box mt={2}>
-          <Text fontSize="12" textAlign="center" color="gray.600">
-            By tapping "Continue" you acknowledge that you have read and agreed to the{" "}
-            <Text color="green.600" fontWeight="500">Terms and Conditions</Text>
-          </Text>
-        </Box>
       </VStack>
     );
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
-      <Box flex={1} justifyContent="center" alignItems="center" backgroundColor="white">
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          width={width * 0.3}
-          height={width * 0.3}
-          backgroundColor="green.100"
-          borderBottomRightRadius={width * 0.15}
-          opacity={0.6}
-        />
-
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          width="50%"
-          height="20%"
-          bg="green.100"
-          borderBottomRightRadius="full"
-        >
-          <Box
-            position="absolute"
-            top={0}
-            left={0}
-            width="80%"
-            height="80%"
-            bg="green.200"
-            borderBottomRightRadius="full"
-          />
-        </Box>
-
-
-        <Box
-          position="absolute"
-          bottom={0}
-          right={0}
-          width="30%"
-          height="15%"
-          bg="green.50"
-          borderTopLeftRadius="full"
-        />
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center", paddingVertical: 40 }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <VStack space={6} alignItems="center" width="100%" maxWidth="400px">
-            <Box alignItems="center" mb={4}>
-              <CustomIcon name="logo" size={80} color="#059669" />
-              <Text fontSize="24" fontWeight="bold" color="green.600" mt={2}>
-                Xpert Farmers
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Box flex={1} backgroundColor="white" safeArea>
+          <Box paddingX={6} paddingY={4}>
+            {/* Header */}
+            <HStack alignItems="center" justifyContent="space-between" mb={6}>
+              <Pressable onPress={() => navigation.goBack()}>
+                <Icon name="arrow-left" size={24} color="#059669" />
+              </Pressable>
+              <Text fontSize="20" fontWeight="600" color="gray.800">
+                Create Account
               </Text>
-              <Text fontSize="14" color="gray.500" textAlign="center" mt={1}>
-                Join our farming community
-              </Text>
-            </Box>
+              <Box width={6} />
+            </HStack>
 
+            {/* Step Indicator */}
             {renderStepIndicator()}
 
-            <Box
-              width="100%"
-              backgroundColor="white"
-              borderRadius={16}
-              padding={6}
-              shadow={2}
-              borderWidth={1}
-              borderColor="gray.100"
-            >
-              {renderForm()}
-            </Box>
+            {/* Form */}
+            {renderForm()}
 
-            <HStack width="100%" justifyContent="space-between" space={4} mt={4}>
+            {/* Navigation Buttons */}
+            <HStack justifyContent="space-between" mt={8} space={4}>
               {currentStep > 1 && (
                 <Button
                   variant="outline"
                   borderColor="green.500"
-                  borderWidth={1}
                   flex={1}
                   height={12}
-                  borderRadius={8}
                   onPress={handlePrevious}
-                  _text={{ color: "green.600", fontSize: "16", fontWeight: "500" }}
+                  borderRadius={8}
                 >
-                  Previous
+                  <Text color="green.600" fontSize="16" fontWeight="500">
+                    Previous
+                  </Text>
                 </Button>
               )}
 
               <Button
                 backgroundColor="green.500"
-                flex={currentStep > 1 ? 1 : undefined}
-                width={currentStep === 1 ? "100%" : undefined}
+                flex={currentStep === 1 ? 1 : 1}
                 height={12}
-                borderRadius={8}
                 onPress={handleNext}
                 isLoading={loading}
-                isLoadingText={currentStep === 5 ? "Creating Account..." : "Please wait..."}
-                _text={{ fontSize: "16", fontWeight: "500" }}
+                isLoadingText="Processing..."
+                borderRadius={8}
                 _pressed={{ backgroundColor: "green.600" }}
               >
-                {currentStep === 5 ? "Create Account" : "Continue"}
+                <Text color="white" fontSize="16" fontWeight="500">
+                  {currentStep === 5 ? "Create Account" : "Next"}
+                </Text>
               </Button>
             </HStack>
-
-            <HStack justifyContent="center" alignItems="center" mt={6}>
-              <Text fontSize="14" color="gray.600">
-                Already have an account?{" "}
-              </Text>
-              <Pressable onPress={() => navigation.navigate("SignInScreen")}>
-                <Text fontSize="14" color="green.600" fontWeight="500">
-                  Sign In
-                </Text>
-              </Pressable>
-            </HStack>
-          </VStack>
-        </ScrollView>
-      </Box>
+          </Box>
+        </Box>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -1030,20 +1153,20 @@ const styles = StyleSheet.create({
     lineHeight: 50,
     fontSize: 24,
     borderWidth: 2,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#F9FDF9',
+    borderColor: "#E5E7EB",
+    backgroundColor: "#F9FDF9",
     borderRadius: 8,
-    textAlign: 'center',
+    textAlign: "center",
     marginHorizontal: 5,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   focusCell: {
-    borderColor: '#059669',
-    backgroundColor: '#ECFDF5',
+    borderColor: "#059669",
+    backgroundColor: "#ECFDF5",
   },
   errorCell: {
-    borderColor: '#EF4444',
-    backgroundColor: '#FEF2F2',
+    borderColor: "#EF4444",
+    backgroundColor: "#FEF2F2",
   },
 });

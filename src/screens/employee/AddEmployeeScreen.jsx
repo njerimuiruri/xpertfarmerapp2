@@ -53,8 +53,6 @@ export default function AddEmployeeScreen({ navigation }) {
   const [customBenefitName, setCustomBenefitName] = useState('');
   const [customBenefitAmount, setCustomBenefitAmount] = useState('');
 
-  const [idPhoto, setIdPhoto] = useState(null);
-  const [showUploadIDScreen, setShowUploadIDScreen] = useState(false);
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
@@ -82,17 +80,12 @@ export default function AddEmployeeScreen({ navigation }) {
     }
   };
 
-  const handleOpenUploadIDScreen = () => {
-    setShowUploadIDScreen(true);
-  };
 
   const handleSubmit = () => {
     setShowSuccessModal(true);
   };
 
-  const handleUploadID = () => {
-    console.log("Upload ID photo triggered");
-  };
+
 
   const renderStepIndicator = () => {
     return (
@@ -275,17 +268,7 @@ export default function AddEmployeeScreen({ navigation }) {
           />
         </FormControl>
 
-        <FormControl>
-          <FormControl.Label>
-            <Text style={styles.label}>ID Picture</Text>
-          </FormControl.Label>
-          <Pressable
-            style={styles.uploadBox}
-            onPress={handleOpenUploadIDScreen}
-          >
-            <Text color="gray.400">Click here to proceed</Text>
-          </Pressable>
-        </FormControl>
+
 
         <Button
           mt={4}
@@ -810,84 +793,6 @@ export default function AddEmployeeScreen({ navigation }) {
       </VStack>
     );
   };
-
-  const renderUploadIDScreen = () => {
-    return (
-      <View style={{ flex: 1, backgroundColor: COLORS.white }}>
-        <SecondaryHeader title="Add Employee ID Picture" />
-
-        <Box bg="white" p={6} flex={1}>
-          <Text style={styles.uploadText}>Fill in the employee details</Text>
-
-          <VStack space={4} alignItems="center" mt={6} justifyContent="center" flex={1}>
-            <Text style={styles.uploadText}>Upload a photo of your National ID Card 📇</Text>
-            <Text style={styles.uploadSubtext}>
-              Regulations require you to upload a national identity card. Don't worry, your data will stay safe and private.
-            </Text>
-
-            <Pressable
-              style={styles.uploadIDBox}
-              onPress={handleUploadID}
-            >
-              <FastImage
-                source={icons.download}
-                style={{ width: 40, height: 40, tintColor: "#9CA3AF" }}
-                resizeMode="contain"
-              />
-              <Text color="gray.400" mt={2}>Select file</Text>
-            </Pressable>
-
-            <Text mt={2}>or</Text>
-
-            <Button
-              leftIcon={
-                <FastImage
-                  source={icons.camera}
-                  style={{ width: 24, height: 24, marginRight: 8 }}
-                  resizeMode="contain"
-                />
-              }
-              backgroundColor={COLORS.lightGreen}
-              _text={{ color: COLORS.green }}
-              variant="outline"
-              borderRadius="full"
-              p={3}
-              width="60%"
-            >
-              Open Camera & Take Photo
-            </Button>
-          </VStack>
-
-          <HStack justifyContent="space-between" mb={4}>
-            <Button
-              variant="outline"
-              borderColor={COLORS.green}
-              onPress={() => setShowUploadIDScreen(false)}
-              borderRadius="md"
-              width="120px"
-            >
-              Back
-            </Button>
-            <Button
-              backgroundColor={COLORS.green}
-              onPress={() => {
-                setIdPhoto('photo_captured');
-                setShowUploadIDScreen(false);
-              }}
-              borderRadius="md"
-              width="120px"
-            >
-              Submit
-            </Button>
-          </HStack>
-        </Box>
-      </View>
-    );
-  };
-
-  if (showUploadIDScreen) {
-    return renderUploadIDScreen();
-  }
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>

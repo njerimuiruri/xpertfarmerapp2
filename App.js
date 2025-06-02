@@ -37,6 +37,7 @@ import {
   // Livestock
   AddFlockDetailsScreen,
   AddLivestockScreen,
+  EditLivestockScreen,
   AddLivestockGroupScreen,
   OptionDetailsScreen,
   OptionLivestockGroupScreen,
@@ -245,7 +246,6 @@ export default function App() {
                 component={FarmDetailsModal}
                 options={{headerShown: false}}
               />
-
               <Stack.Screen
                 name="AddEmployeeScreen"
                 component={AddEmployeeScreen}
@@ -307,6 +307,12 @@ export default function App() {
                 component={AddLivestockScreen}
                 options={{headerShown: false}}
               />
+              <Stack.Screen
+                name="EditLivestockScreen"
+                component={EditLivestockScreen}
+                options={{headerShown: false}}
+              />
+
               <Stack.Screen
                 name="AddLivestockGroupScreen"
                 component={AddLivestockGroupScreen}

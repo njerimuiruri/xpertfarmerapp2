@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,22 +7,85 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../constants';
-import {COLORS} from '../../constants/theme';
+import { icons } from '../../constants';
+import { COLORS } from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
+import { deleteLivestock } from '../../services/livestock';
 
-const AnimalDetailScreen = ({route, navigation}) => {
-  const {animalData} = route.params || {};
+const AnimalDetailScreen = ({ route, navigation }) => {
+  const { animalData } = route.params || {};
   const [activeTab, setActiveTab] = useState('overview');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleEdit = () => {
+    navigation.navigate('EditLivestockScreen', {
+      livestockData: animalData,
+      isEditing: true
+    });
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Livestock',
+      `Are you sure you want to delete ${animalData.title || 'this animal'}? This action cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: confirmDelete,
+        },
+      ]
+    );
+  };
+
+  const confirmDelete = async () => {
+    try {
+      setIsDeleting(true);
+
+      const livestockId = animalData.rawData?.id || animalData.id;
+
+      if (!livestockId) {
+        throw new Error('Livestock ID not found');
+      }
+
+      console.log('Deleting livestock with ID:', livestockId);
+      await deleteLivestock(livestockId);
+
+      Alert.alert(
+        'Success',
+        'Livestock deleted successfully',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Delete error:', error.message);
+      Alert.alert(
+        'Error',
+        error.message || 'Failed to delete livestock. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const renderTabs = () => {
     const tabs = [
-      {id: 'overview', label: 'Overview'},
-      {id: 'health', label: 'Health Records'},
-      {id: 'breeding', label: 'Breeding'},
-      {id: 'feeding', label: 'Feeding'},
+      { id: 'overview', label: 'Overview' },
+      { id: 'health', label: 'Health Records' },
+      { id: 'breeding', label: 'Breeding' },
+      { id: 'feeding', label: 'Feeding' },
     ];
 
     return (
@@ -47,6 +110,35 @@ const AnimalDetailScreen = ({route, navigation}) => {
     );
   };
 
+  const renderActionButtons = () => (
+    <View style={styles.actionButtonsContainer}>
+      <TouchableOpacity
+        style={[styles.actionButton, styles.editButton]}
+        onPress={handleEdit}>
+        <FastImage
+          source={icons.edit}
+          style={styles.actionIcon}
+          tintColor={COLORS.white}
+        />
+        <Text style={styles.actionButtonText}>Edit</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.actionButton, styles.deleteButton]}
+        onPress={handleDelete}
+        disabled={isDeleting}>
+        <FastImage
+          source={icons.delete}
+          style={styles.actionIcon}
+          tintColor={COLORS.white}
+        />
+        <Text style={styles.actionButtonText}>
+          {isDeleting ? 'Deleting...' : 'Delete'}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   const renderOverview = () => (
     <View style={styles.contentSection}>
       <View style={styles.infoCard}>
@@ -59,25 +151,40 @@ const AnimalDetailScreen = ({route, navigation}) => {
         </View>
         <View style={styles.basicInfoContainer}>
           <Text style={styles.infoTitle}>Basic Information</Text>
-          <InfoRow label="ID" value={animalData.id} />
-          <InfoRow label="Breed" value={animalData.breed} />
-          <InfoRow label="Sex" value={animalData.sex} />
-          <InfoRow label="Date of Birth" value={animalData.dob} />
-          <InfoRow label="Farm ID" value={animalData.farmId} />
+          <InfoRow label="ID" value={animalData.id || animalData.idNumber} />
+          <InfoRow label="Type" value={animalData.type || animalData.livestockType} />
+          <InfoRow label="Breed" value={animalData.breedType || animalData.breed} />
+          <InfoRow label="Gender" value={animalData.gender || animalData.sex} />
+          <InfoRow label="Date of Birth" value={animalData.dateOfBirth || animalData.dob} />
+          {/* <InfoRow label="Farm ID" value={animalData.farmId} /> */}
+
+          {animalData.type === 'poultry' && (
+            <>
+              <InfoRow label="Flock ID" value={animalData.poultry?.flockId} />
+              <InfoRow label="Initial Quantity" value={animalData.poultry?.initialQuantity} />
+              <InfoRow label="Date of Stocking" value={animalData.poultry?.dateOfStocking} />
+              <InfoRow label="Source of Birds" value={animalData.poultry?.sourceOfBirds} />
+              <InfoRow label="Initial Avg Weight" value={animalData.poultry?.initialAverageWeight} />
+            </>
+          )}
+
+          {animalData.type !== 'poultry' && animalData.mammal && (
+            <>
+              <InfoRow label="Phenotype" value={animalData.mammal.phenotype} />
+              <InfoRow label="Birth Weight" value={animalData.mammal.birthWeight} />
+              <InfoRow label="Sire ID" value={animalData.mammal.sireId} />
+              <InfoRow label="Sire Code" value={animalData.mammal.sireCode} />
+              <InfoRow label="Dam ID" value={animalData.mammal.damId} />
+              <InfoRow label="Dam Code" value={animalData.mammal.damCode} />
+            </>
+          )}
         </View>
       </View>
-      <View style={styles.infoCard}>
-        <Text style={styles.infoTitle}>Description</Text>
-        <Text style={styles.descriptionText}>
-          {animalData.title} ({animalData.breed}) is a{' '}
-          {animalData.sex.toLowerCase()} animal born on {animalData.dob}. This
-          animal is registered under farm {animalData.farmId}. Currently
-          producing approximately {animalData.production}.
-        </Text>
-      </View>
+
       <View style={styles.infoCard}>
         <Text style={styles.infoTitle}>Current Status</Text>
-        <InfoRow label="Health Status" value={animalData.health || 'Healthy'} />
+        <InfoRow label="Health Status" value={animalData.healthStatus || 'Healthy'} />
+        <InfoRow label="Status" value={animalData.status || 'Active'} />
         <InfoRow label="Production" value={animalData.production || 'N/A'} />
         <InfoRow label="Last Check" value={animalData.lastCheck || 'N/A'} />
       </View>
@@ -89,13 +196,13 @@ const AnimalDetailScreen = ({route, navigation}) => {
       <View style={styles.infoCard}>
         <Text style={styles.infoTitle}>Health Summary</Text>
         <Text style={styles.healthStatus}>
-          {animalData.health || 'Healthy'}
+          {animalData.healthStatus || 'Healthy'}
         </Text>
         <View style={styles.addRecordContainer}>
           <TouchableOpacity
             style={styles.addRecordButton}
             onPress={() =>
-              navigation.navigate('AddHealthRecords', {animalId: animalData.id})
+              navigation.navigate('AddHealthRecords', { animalId: animalData.id })
             }>
             <FastImage
               source={icons.add}
@@ -203,7 +310,7 @@ const AnimalDetailScreen = ({route, navigation}) => {
           <TouchableOpacity
             style={styles.addRecordButton}
             onPress={() =>
-              navigation.navigate('FarmFeedsScreen', {animalId: animalData.id})
+              navigation.navigate('FarmFeedsScreen', { animalId: animalData.id })
             }>
             <FastImage
               source={icons.edit}
@@ -244,10 +351,10 @@ const AnimalDetailScreen = ({route, navigation}) => {
     );
   };
 
-  const InfoRow = ({label, value}) => (
+  const InfoRow = ({ label, value }) => (
     <View style={styles.infoRow}>
       <Text style={styles.infoLabel}>{label}:</Text>
-      <Text style={styles.infoValue}>{value}</Text>
+      <Text style={styles.infoValue}>{value || 'N/A'}</Text>
     </View>
   );
 
@@ -259,7 +366,7 @@ const AnimalDetailScreen = ({route, navigation}) => {
         animated={true}
         barStyle={'light-content'}
       />
-      <SecondaryHeader title={animalData.title} showBackButton={true} />
+      <SecondaryHeader title={animalData.title || `${animalData.type} Details`} showBackButton={true} />
       {renderTabs()}
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {activeTab === 'overview' && renderOverview()}
@@ -267,6 +374,7 @@ const AnimalDetailScreen = ({route, navigation}) => {
         {activeTab === 'breeding' && renderBreeding()}
         {activeTab === 'feeding' && renderFeeding()}
       </ScrollView>
+      {renderActionButtons()}
     </SafeAreaView>
   );
 };
@@ -277,7 +385,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 100,
   },
   tabContainer: {
     backgroundColor: COLORS.white,
@@ -343,11 +451,6 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     fontWeight: '500',
   },
-  descriptionText: {
-    fontSize: 14,
-    color: COLORS.black,
-    lineHeight: 20,
-  },
   healthStatus: {
     fontSize: 16,
     color: COLORS.black,
@@ -410,11 +513,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
   },
-  productionData: {
-    fontSize: 16,
-    color: COLORS.black,
-    marginBottom: 16,
-  },
   breedingStatus: {
     fontSize: 16,
     color: COLORS.black,
@@ -437,6 +535,44 @@ const styles = StyleSheet.create({
     padding: 8,
     fontSize: 14,
     color: COLORS.black,
+  },
+  actionButtonsContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.gray3,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginHorizontal: 4,
+  },
+  editButton: {
+    backgroundColor: COLORS.green2,
+  },
+  deleteButton: {
+    backgroundColor: '#FF4444',
+  },
+  actionIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 8,
+  },
+  actionButtonText: {
+    color: COLORS.white,
+    fontWeight: '500',
+    fontSize: 14,
   },
 });
 

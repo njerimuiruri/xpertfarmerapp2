@@ -101,7 +101,6 @@ const FarmDetailsModal = ({
 
                 <Modal.Body px={0} py={0}>
                     <ScrollView showsVerticalScrollIndicator={false}>
-                        {/* Active Status Banner */}
                         {farm.isActive && (
                             <Box bg={COLORS.green} mx={4} mt={4} p={3} borderRadius={8}>
                                 <HStack alignItems="center" space={2} justifyContent="center">
@@ -118,7 +117,6 @@ const FarmDetailsModal = ({
                             </Box>
                         )}
 
-                        {/* Farm Details Section */}
                         <Box mx={4} mt={4} mb={4}>
                             <VStack space={4}>
                                 {farmDetails.map((detail, index) => (
@@ -164,7 +162,6 @@ const FarmDetailsModal = ({
                             </VStack>
                         </Box>
 
-                        {/* Farming Types Section */}
                         <Box mx={4} mb={4}>
                             <Divider bg={COLORS.gray3} mb={4} />
                             <Heading size="sm" mb={3} color={COLORS.green}>

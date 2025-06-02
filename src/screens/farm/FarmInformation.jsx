@@ -370,7 +370,6 @@ export default function FarmInformation() {
           )}
         </Box>
 
-        {/* Search and Filter Section */}
         <VStack space={4} mb={4}>
           <HStack justifyContent="space-between" alignItems="center">
             <Heading size="md">My Farms ({filteredFarms.length})</Heading>

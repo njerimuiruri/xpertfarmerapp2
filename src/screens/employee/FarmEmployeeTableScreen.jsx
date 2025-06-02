@@ -141,13 +141,13 @@ const FarmEmployeeListScreen = ({ navigation }) => {
       .filter(
         employee => {
           const matchesSearch = employee.fullName.toLowerCase().includes(searchQuery.toLowerCase());
-          const matchesRole = filterRole === '' || 
-            (employee.role === 'custom' ? 
-              (employee.customRole === filterRole) : 
+          const matchesRole = filterRole === '' ||
+            (employee.role === 'custom' ?
+              (employee.customRole === filterRole) :
               (employee.role === filterRole)
             );
           const matchesType = filterType === '' || employee.employeeType === filterType;
-          
+
           return matchesSearch && matchesRole && matchesType;
         }
       )
@@ -160,7 +160,7 @@ const FarmEmployeeListScreen = ({ navigation }) => {
           return sortOrder === 'asc'
             ? new Date(a.dateOfEmployment) - new Date(b.dateOfEmployment)
             : new Date(b.dateOfEmployment) - new Date(a.dateOfEmployment);
-        } 
+        }
         return 0;
       });
   }, [employees, searchQuery, sortBy, sortOrder, filterRole, filterType]);
@@ -239,20 +239,20 @@ const FarmEmployeeListScreen = ({ navigation }) => {
           />
           <Text style={styles.actionText}>Sort by Date</Text>
         </TouchableOpacity>
-        
-        
+
+
       </View>
     </View>
   );
 
   const renderEmployeeCard = ({ item }) => {
     const displayRole = getDisplayRole(item);
-    
+
     return (
       <TouchableOpacity
         style={styles.card}
         onPress={() => navigation.navigate('EmployeeDetailScreen', { employee: item })}>
-  
+
         <View style={styles.cardHeader}>
           <View style={styles.employeeInfo}>
             <Text style={styles.name}>{item.fullName}</Text>
@@ -347,10 +347,10 @@ const FarmEmployeeListScreen = ({ navigation }) => {
 
   const renderFilterModal = () => {
     // Get unique roles from employees
-    const uniqueRoles = [...new Set(employees.map(emp => 
+    const uniqueRoles = [...new Set(employees.map(emp =>
       emp.role === 'custom' ? emp.customRole : emp.role
     ))].filter(Boolean);
-    
+
     return (
       <Modal
         animationType="slide"
@@ -360,7 +360,7 @@ const FarmEmployeeListScreen = ({ navigation }) => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Filter Options</Text>
-            
+
             {/* Filter by employee type */}
             <Text style={styles.modalSubtitle}>Employee Type</Text>
             <TouchableOpacity
@@ -389,7 +389,7 @@ const FarmEmployeeListScreen = ({ navigation }) => {
                 Casual
               </Text>
             </TouchableOpacity>
-            
+
             {/* Filter by role */}
             <Text style={styles.modalSubtitle}>Role</Text>
             {uniqueRoles.map(role => (
@@ -408,7 +408,7 @@ const FarmEmployeeListScreen = ({ navigation }) => {
                 </Text>
               </TouchableOpacity>
             ))}
-  
+
             <TouchableOpacity
               style={styles.resetButton}
               onPress={() => {
@@ -421,7 +421,7 @@ const FarmEmployeeListScreen = ({ navigation }) => {
               }}>
               <Text style={styles.resetButtonText}>Reset All Filters</Text>
             </TouchableOpacity>
-  
+
             <TouchableOpacity
               style={styles.closeModalButton}
               onPress={() => setIsFilterModalVisible(false)}>

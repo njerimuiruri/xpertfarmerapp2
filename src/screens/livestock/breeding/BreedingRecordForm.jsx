@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
   View,
@@ -12,11 +12,11 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../../constants';
-import {COLORS} from '../../../constants/theme';
+import { icons } from '../../../constants';
+import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 
-const BreedingRecordForm = ({navigation}) => {
+const BreedingRecordForm = ({ navigation }) => {
   const [animalId, setAnimalId] = useState('');
   const [animalType, setAnimalType] = useState('Dairy Cow');
   const [purpose, setPurpose] = useState('Improve Milk Production');
@@ -159,7 +159,7 @@ const BreedingRecordForm = ({navigation}) => {
   const handleSubmit = () => {
     setModalVisible(true);
   };
-  const CustomDropdown = ({label, value, onPress}) => (
+  const CustomDropdown = ({ label, value, onPress }) => (
     <View style={styles.inputGroup}>
       <Text style={styles.label}>{label}</Text>
       <TouchableOpacity style={styles.dropdownButton} onPress={onPress}>
@@ -173,7 +173,7 @@ const BreedingRecordForm = ({navigation}) => {
     </View>
   );
 
-  const CustomDatePicker = ({label, value, showPicker, onPress}) => (
+  const CustomDatePicker = ({ label, value, showPicker, onPress }) => (
     <View style={styles.inputGroup}>
       <Text style={styles.label}>{label}</Text>
       <TouchableOpacity style={styles.dateInput} onPress={onPress}>
@@ -196,7 +196,7 @@ const BreedingRecordForm = ({navigation}) => {
   );
 
   return (
-    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
+    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
       <SecondaryHeader title="Add Breeding Record" />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -415,17 +415,7 @@ const BreedingRecordForm = ({navigation}) => {
                 />
               </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Offspring IDs</Text>
-                <TextInput
-                  style={styles.input}
-                  value={offspringIds}
-                  onChangeText={setOffspringIds}
-                  placeholder="E.g., A101, A102, A103"
-                  placeholderTextColor="#999"
-                  backgroundColor={COLORS.lightGreen}
-                />
-              </View>
+
             </>
           )}
 
@@ -458,7 +448,7 @@ const BreedingRecordForm = ({navigation}) => {
             <FlatList
               data={dropdownOptions}
               keyExtractor={item => item}
-              renderItem={({item}) => (
+              renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.optionItem}
                   onPress={() => handleSelect(item)}>
@@ -482,7 +472,7 @@ const BreedingRecordForm = ({navigation}) => {
               resizeMode="contain"
               tintColor={COLORS.green}
             />
-           
+
             <Text style={styles.modalText}>
               Breeding record has been added successfully.
             </Text>
@@ -509,11 +499,11 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor:COLORS.white,
+    backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -525,7 +515,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor:COLORS.lightGray1,
+    borderBottomColor: COLORS.lightGray1,
     paddingBottom: 8,
   },
   inputGroup: {
@@ -539,7 +529,7 @@ const styles = StyleSheet.create({
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor:COLORS.lightGray2,
+    borderColor: COLORS.lightGray2,
     borderRadius: 8,
     paddingHorizontal: 12,
     fontSize: 16,
@@ -606,7 +596,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   toggleCircleActive: {
-    backgroundColor:COLORS.green,
+    backgroundColor: COLORS.green,
   },
   toggleCircleInactive: {
     backgroundColor: COLORS.lightGray1,
@@ -623,7 +613,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   submitButton: {
-    backgroundColor:COLORS.green2,
+    backgroundColor: COLORS.green2,
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: 'center',
@@ -634,7 +624,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   cancelButton: {
-    backgroundColor:COLORS.lightGray2,
+    backgroundColor: COLORS.lightGray2,
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: 'center',
@@ -661,7 +651,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
@@ -698,7 +688,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     width: '85%',
   },
-  
+
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
