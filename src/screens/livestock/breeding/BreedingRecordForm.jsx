@@ -17,64 +17,77 @@ import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 
 const BreedingRecordForm = ({ navigation }) => {
-  const [animalId, setAnimalId] = useState('');
-  const [animalType, setAnimalType] = useState('Dairy Cow');
+  // Animal selection state
+  const [selectedAnimal, setSelectedAnimal] = useState(null);
+  const [animalSearchQuery, setAnimalSearchQuery] = useState('');
+  const [showAnimalDropdown, setShowAnimalDropdown] = useState(false);
+
+  // Form state
   const [purpose, setPurpose] = useState('Improve Milk Production');
   const [strategy, setStrategy] = useState('Cross Breeding');
   const [serviceType, setServiceType] = useState('Natural Mating');
   const [serviceDate, setServiceDate] = useState(new Date());
   const [showServiceDatePicker, setShowServiceDatePicker] = useState(false);
+  const [numServices, setNumServices] = useState('1');
+  const [firstHeatDate, setFirstHeatDate] = useState(new Date());
+  const [showFirstHeatDatePicker, setShowFirstHeatDatePicker] = useState(false);
+
+  // AI specific fields
   const [sireCode, setSireCode] = useState('');
   const [aiType, setAiType] = useState('Regular AI');
   const [aiSource, setAiSource] = useState('Local');
   const [aiCost, setAiCost] = useState('');
-  const [numServices, setNumServices] = useState('1');
-  const [firstHeatDate, setFirstHeatDate] = useState(new Date());
-  const [showFirstHeatDatePicker, setShowFirstHeatDatePicker] = useState(false);
+
+  // Calculated fields
   const [gestationDays, setGestationDays] = useState('');
   const [expectedBirthDate, setExpectedBirthDate] = useState('');
-  const [birthRecorded, setBirthRecorded] = useState(false);
-  const [birthDate, setBirthDate] = useState(new Date());
-  const [showBirthDatePicker, setShowBirthDatePicker] = useState(false);
-  const [deliveryMethod, setDeliveryMethod] = useState('Natural Birth');
-  const [youngOnes, setYoungOnes] = useState('1');
-  const [birthWeight, setBirthWeight] = useState('');
-  const [litterWeight, setLitterWeight] = useState('');
-  const [offspringSex, setOffspringSex] = useState('');
-  const [offspringIds, setOffspringIds] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
 
+  // Modal states
+  const [modalVisible, setModalVisible] = useState(false);
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [dropdownOptions, setDropdownOptions] = useState([]);
 
-  const animalTypeOptions = [
-    'Dairy Cow',
-    'Beef Cattle',
-    'Goat',
-    'Sheep',
-    'Swine',
+  // Static data for animals (in real app, this would come from API)
+  const animalsList = [
+    { id: 'cmbdvu9gh0001hj8n06nva367', idNumber: 'KE-DAIRY-001', type: 'Dairy Cow', breedType: 'Holstein' },
+    { id: 'cmbdvu9gh0002hj8n06nva368', idNumber: 'KE-DAIRY-002', type: 'Dairy Cow', breedType: 'Jersey' },
+    { id: 'cmbdvu9gh0003hj8n06nva369', idNumber: 'KE-GOAT-001', type: 'Goat', breedType: 'Toggenburg' },
+    { id: 'cmbdvu9gh0004hj8n06nva370', idNumber: 'KE-SHEEP-001', type: 'Sheep', breedType: 'Dorper' },
+    { id: 'cmbdvu9gh0005hj8n06nva371', idNumber: 'KE-SWINE-001', type: 'Swine', breedType: 'Large White' },
   ];
+
   const purposeOptions = [
     'Improve Milk Production',
     'Stocking Number',
     'Immunity',
   ];
+
   const strategyOptions = [
     'Cross Breeding',
     'Breeding Within Breeds',
     'Breeding Between Breeds',
   ];
+
   const serviceTypeOptions = ['Natural Mating', 'Artificial Insemination'];
   const aiTypeOptions = ['Sex Cell Semen', 'Regular AI'];
   const aiSourceOptions = ['Local', 'Imported'];
-  const deliveryMethodOptions = ['Natural Birth', 'Assisted', 'Cesarean'];
 
+  // Filter animals based on search query
+  const filteredAnimals = animalsList.filter(animal =>
+    animal.idNumber.toLowerCase().includes(animalSearchQuery.toLowerCase()) ||
+    animal.type.toLowerCase().includes(animalSearchQuery.toLowerCase()) ||
+    animal.breedType.toLowerCase().includes(animalSearchQuery.toLowerCase())
+  );
+
+  // Calculate gestation period and expected birth date
   useEffect(() => {
+    if (!selectedAnimal) return;
+
     let days = '280';
-    if (animalType === 'Goat') days = '150';
-    if (animalType === 'Swine') days = '114';
-    if (animalType === 'Sheep') days = '152';
+    if (selectedAnimal.type === 'Goat') days = '150';
+    if (selectedAnimal.type === 'Swine') days = '114';
+    if (selectedAnimal.type === 'Sheep') days = '152';
     setGestationDays(days);
 
     if (serviceDate) {
@@ -82,13 +95,10 @@ const BreedingRecordForm = ({ navigation }) => {
       birthDate.setDate(birthDate.getDate() + parseInt(days));
       setExpectedBirthDate(birthDate.toISOString().split('T')[0]);
     }
-  }, [animalType, serviceDate]);
+  }, [selectedAnimal, serviceDate]);
 
   const showDropdown = type => {
     switch (type) {
-      case 'animalType':
-        setDropdownOptions(animalTypeOptions);
-        break;
       case 'purpose':
         setDropdownOptions(purposeOptions);
         break;
@@ -104,9 +114,6 @@ const BreedingRecordForm = ({ navigation }) => {
       case 'aiSource':
         setDropdownOptions(aiSourceOptions);
         break;
-      case 'deliveryMethod':
-        setDropdownOptions(deliveryMethodOptions);
-        break;
       default:
         setDropdownOptions([]);
     }
@@ -116,9 +123,6 @@ const BreedingRecordForm = ({ navigation }) => {
 
   const handleSelect = value => {
     switch (activeDropdown) {
-      case 'animalType':
-        setAnimalType(value);
-        break;
       case 'purpose':
         setPurpose(value);
         break;
@@ -134,9 +138,6 @@ const BreedingRecordForm = ({ navigation }) => {
       case 'aiSource':
         setAiSource(value);
         break;
-      case 'deliveryMethod':
-        setDeliveryMethod(value);
-        break;
     }
     setDropdownVisible(false);
   };
@@ -151,14 +152,39 @@ const BreedingRecordForm = ({ navigation }) => {
     if (selectedDate) setFirstHeatDate(selectedDate);
   };
 
-  const handleBirthDateChange = (event, selectedDate) => {
-    setShowBirthDatePicker(false);
-    if (selectedDate) setBirthDate(selectedDate);
-  };
-
   const handleSubmit = () => {
+    if (!selectedAnimal) {
+      alert('Please select an animal');
+      return;
+    }
+
+    // Prepare payload according to your API structure
+    const payload = {
+      damId: selectedAnimal.id, // Using selected animal as dam
+      // sireId would be selected from another dropdown or provided differently
+      farmId: "cmbduehjf0003l8048w6lbxxt", // This should come from user context
+      purpose,
+      strategy,
+      serviceType,
+      serviceDate: serviceDate.toISOString(),
+      numServices: parseInt(numServices),
+      firstHeatDate: firstHeatDate.toISOString(),
+      gestationDays: parseInt(gestationDays),
+      expectedBirthDate: new Date(expectedBirthDate).toISOString(),
+    };
+
+    // Add AI-specific fields if applicable
+    if (serviceType === 'Artificial Insemination') {
+      payload.sireCode = sireCode;
+      payload.aiType = aiType;
+      payload.aiSource = aiSource;
+      payload.aiCost = parseFloat(aiCost) || 0;
+    }
+
+    console.log('Breeding Record Payload:', payload);
     setModalVisible(true);
   };
+
   const CustomDropdown = ({ label, value, onPress }) => (
     <View style={styles.inputGroup}>
       <Text style={styles.label}>{label}</Text>
@@ -173,7 +199,7 @@ const BreedingRecordForm = ({ navigation }) => {
     </View>
   );
 
-  const CustomDatePicker = ({ label, value, showPicker, onPress }) => (
+  const CustomDatePicker = ({ label, value, onPress, showPicker, onChange }) => (
     <View style={styles.inputGroup}>
       <Text style={styles.label}>{label}</Text>
       <TouchableOpacity style={styles.dateInput} onPress={onPress}>
@@ -189,10 +215,43 @@ const BreedingRecordForm = ({ navigation }) => {
           value={value}
           mode="date"
           display="default"
-          onChange={onChange => setShowServiceDatePicker(false)}
+          onChange={onChange}
         />
       )}
     </View>
+  );
+
+  const AnimalDropdown = () => (
+    <View style={styles.inputGroup}>
+      <Text style={styles.label}>Select Animal</Text>
+      <TouchableOpacity
+        style={styles.dropdownButton}
+        onPress={() => setShowAnimalDropdown(true)}
+      >
+        <Text style={styles.dropdownButtonText}>
+          {selectedAnimal ? `${selectedAnimal.idNumber} - ${selectedAnimal.type}` : 'Select Animal'}
+        </Text>
+        <FastImage
+          source={icons.downArrow}
+          style={styles.dropdownIcon}
+          tintColor="#666"
+        />
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderAnimalItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.animalItem}
+      onPress={() => {
+        setSelectedAnimal(item);
+        setShowAnimalDropdown(false);
+        setAnimalSearchQuery('');
+      }}
+    >
+      <Text style={styles.animalId}>{item.idNumber}</Text>
+      <Text style={styles.animalDetails}>{item.type} - {item.breedType}</Text>
+    </TouchableOpacity>
   );
 
   return (
@@ -201,25 +260,17 @@ const BreedingRecordForm = ({ navigation }) => {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Animal Information</Text>
+          <Text style={styles.sectionTitle}>Animal Selection</Text>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Animal ID</Text>
-            <TextInput
-              style={styles.input}
-              value={animalId}
-              onChangeText={setAnimalId}
-              placeholder="Enter Animal ID"
-              placeholderTextColor="#999"
-              backgroundColor={COLORS.lightGreen}
-            />
-          </View>
+          <AnimalDropdown />
 
-          <CustomDropdown
-            label="Animal Type"
-            value={animalType}
-            onPress={() => showDropdown('animalType')}
-          />
+          {selectedAnimal && (
+            <View style={styles.selectedAnimalInfo}>
+              <Text style={styles.selectedAnimalText}>
+                Selected: {selectedAnimal.idNumber} ({selectedAnimal.type} - {selectedAnimal.breedType})
+              </Text>
+            </View>
+          )}
 
           <Text style={styles.sectionTitle}>Breeding Details</Text>
 
@@ -235,7 +286,6 @@ const BreedingRecordForm = ({ navigation }) => {
             onPress={() => showDropdown('strategy')}
           />
 
-          {/* Service Details */}
           <Text style={styles.sectionTitle}>Service Details</Text>
 
           <CustomDropdown
@@ -249,6 +299,7 @@ const BreedingRecordForm = ({ navigation }) => {
             value={serviceDate}
             onPress={() => setShowServiceDatePicker(true)}
             showPicker={showServiceDatePicker}
+            onChange={handleServiceDateChange}
           />
 
           <View style={styles.inputGroup}>
@@ -263,6 +314,14 @@ const BreedingRecordForm = ({ navigation }) => {
               backgroundColor={COLORS.lightGreen}
             />
           </View>
+
+          <CustomDatePicker
+            label="First Heat Date"
+            value={firstHeatDate}
+            onPress={() => setShowFirstHeatDatePicker(true)}
+            showPicker={showFirstHeatDatePicker}
+            onChange={handleFirstHeatDateChange}
+          />
 
           {/* AI specific fields */}
           {serviceType === 'Artificial Insemination' && (
@@ -308,116 +367,27 @@ const BreedingRecordForm = ({ navigation }) => {
             </>
           )}
 
-          {/* Gestation Details */}
-          <Text style={styles.sectionTitle}>Gestation Details</Text>
+          <Text style={styles.sectionTitle}>Gestation Information</Text>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Gestation Period (days)</Text>
             <TextInput
-              style={[styles.input]}
+              style={[styles.input, styles.disabledInput]}
               value={gestationDays}
               editable={false}
-              backgroundColor={COLORS.lightGreen}
+              backgroundColor={COLORS.lightGray2}
             />
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Expected Birth Date</Text>
             <TextInput
-              style={[styles.input]}
-              backgroundColor={COLORS.lightGreen}
+              style={[styles.input, styles.disabledInput]}
+              backgroundColor={COLORS.lightGray2}
               value={expectedBirthDate}
               editable={false}
             />
           </View>
-
-          {/* Birth Records Toggle */}
-          <TouchableOpacity
-            style={styles.toggleContainer}
-            onPress={() => setBirthRecorded(!birthRecorded)}>
-            <Text style={styles.toggleLabel}>Record Birth Details</Text>
-            <View
-              style={[
-                styles.toggleCircle,
-                birthRecorded
-                  ? styles.toggleCircleActive
-                  : styles.toggleCircleInactive,
-              ]}
-            />
-          </TouchableOpacity>
-
-          {/* Birth Details (if toggled) */}
-          {birthRecorded && (
-            <>
-              <Text style={styles.sectionTitle}>Birth Details</Text>
-
-              <CustomDatePicker
-                label="Birth Date"
-                value={birthDate}
-                onPress={() => setShowBirthDatePicker(true)}
-                showPicker={showBirthDatePicker}
-              />
-
-              <CustomDropdown
-                label="Delivery Method"
-                value={deliveryMethod}
-                onPress={() => showDropdown('deliveryMethod')}
-              />
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Number of Young Ones</Text>
-                <TextInput
-                  style={styles.input}
-                  value={youngOnes}
-                  onChangeText={setYoungOnes}
-                  placeholder="Enter number"
-                  placeholderTextColor="#999"
-                  keyboardType="numeric"
-                  backgroundColor={COLORS.lightGreen}
-                />
-              </View>
-
-              {animalType === 'Swine' ? (
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Litter Weight</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={litterWeight}
-                    onChangeText={setLitterWeight}
-                    placeholder="Total litter weight (e.g., 12 kg)"
-                    placeholderTextColor="#999"
-                    backgroundColor={COLORS.lightGreen}
-                  />
-                </View>
-              ) : (
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Birth Weight</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={birthWeight}
-                    onChangeText={setBirthWeight}
-                    placeholder="Birth weight (e.g., 3.5 kg)"
-                    placeholderTextColor="#999"
-                    backgroundColor={COLORS.lightGreen}
-                  />
-                </View>
-              )}
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Offspring Sex</Text>
-                <TextInput
-                  style={styles.input}
-                  value={offspringSex}
-                  onChangeText={setOffspringSex}
-                  placeholder="E.g., 2 Males, 3 Females"
-                  placeholderTextColor="#999"
-                  backgroundColor={COLORS.lightGreen}
-                />
-              </View>
-
-
-            </>
-          )}
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
@@ -434,6 +404,52 @@ const BreedingRecordForm = ({ navigation }) => {
         </View>
       </ScrollView>
 
+      {/* Animal Selection Modal */}
+      <Modal
+        visible={showAnimalDropdown}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowAnimalDropdown(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.animalModalContent}>
+            <Text style={styles.modalTitle}>Select Animal</Text>
+
+            <View style={styles.searchContainer}>
+              <FastImage
+                source={icons.search}
+                style={styles.searchIcon}
+                tintColor="#666"
+              />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search by ID, type, or breed..."
+                placeholderTextColor="#999"
+                value={animalSearchQuery}
+                onChangeText={setAnimalSearchQuery}
+              />
+            </View>
+
+            <FlatList
+              data={filteredAnimals}
+              keyExtractor={item => item.id}
+              renderItem={renderAnimalItem}
+              style={styles.animalList}
+              showsVerticalScrollIndicator={false}
+            />
+
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => {
+                setShowAnimalDropdown(false);
+                setAnimalSearchQuery('');
+              }}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* General Dropdown Modal */}
       <Modal
         visible={dropdownVisible}
         transparent={true}
@@ -460,19 +476,20 @@ const BreedingRecordForm = ({ navigation }) => {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Success Modal */}
       <Modal
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+          <View style={styles.successModalContent}>
             <FastImage
               source={icons.tick}
               style={styles.successIcon}
               resizeMode="contain"
               tintColor={COLORS.green}
             />
-
             <Text style={styles.modalText}>
               Breeding record has been added successfully.
             </Text>
@@ -492,9 +509,6 @@ const BreedingRecordForm = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   scrollContent: {
     padding: 16,
   },
@@ -525,6 +539,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.black,
     marginBottom: 6,
+    fontWeight: '500',
   },
   input: {
     height: 48,
@@ -535,6 +550,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     backgroundColor: COLORS.white,
+  },
+  disabledInput: {
+    backgroundColor: COLORS.lightGray2,
+    color: COLORS.gray,
   },
   dropdownButton: {
     height: 48,
@@ -550,6 +569,7 @@ const styles = StyleSheet.create({
   dropdownButtonText: {
     fontSize: 16,
     color: COLORS.black,
+    flex: 1,
   },
   dropdownIcon: {
     width: 16,
@@ -574,32 +594,16 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
   },
-  toggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 8,
-    marginVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.lightGray2,
-    paddingTop: 16,
+  selectedAnimalInfo: {
+    backgroundColor: COLORS.lightGreen,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
   },
-  toggleLabel: {
-    fontSize: 16,
+  selectedAnimalText: {
+    fontSize: 14,
+    color: COLORS.green,
     fontWeight: '500',
-    color: COLORS.black,
-  },
-  toggleCircle: {
-    width: 27,
-    height: 27,
-    borderRadius: 13.5,
-    backgroundColor: COLORS.white,
-  },
-  toggleCircleActive: {
-    backgroundColor: COLORS.green,
-  },
-  toggleCircleInactive: {
-    backgroundColor: COLORS.lightGray1,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -636,7 +640,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -656,12 +659,74 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
+  animalModalContent: {
+    width: '95%',
+    maxHeight: '85%',
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
     color: COLORS.black,
     textAlign: 'center',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.lightGray2,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    height: 48,
+  },
+  searchIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: COLORS.black,
+  },
+  animalList: {
+    maxHeight: 300,
+  },
+  animalItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray2,
+  },
+  animalId: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.black,
+  },
+  animalDetails: {
+    fontSize: 14,
+    color: COLORS.gray,
+    marginTop: 2,
+  },
+  closeButton: {
+    marginTop: 16,
+    backgroundColor: COLORS.lightGray2,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 16,
+    color: COLORS.black,
+    fontWeight: '500',
   },
   optionItem: {
     paddingVertical: 12,
@@ -679,21 +744,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.darkOverlayColor,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalContent: {
+  successModalContent: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 24,
     elevation: 5,
     width: '85%',
+    alignItems: 'center',
   },
-
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: COLORS.green,
+  successIcon: {
+    width: 64,
+    height: 64,
+    marginBottom: 16,
   },
   modalText: {
     fontSize: 16,
@@ -704,13 +768,15 @@ const styles = StyleSheet.create({
   modalButton: {
     minWidth: 120,
     backgroundColor: COLORS.green,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     alignItems: 'center',
-    borderRadius: 5,
+    borderRadius: 8,
   },
   modalButtonText: {
     color: COLORS.white,
     fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

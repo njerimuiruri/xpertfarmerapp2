@@ -1,12 +1,11 @@
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import React from 'react';
 import {StyleSheet} from 'react-native';
-import CustomDrawer1 from './CustomDrawer1';
+import CustomDrawerWithFarm from './CustomDrawer1';
 import FastImage from 'react-native-fast-image';
 import Tabs from '../Tabs';
 import {icons} from '../../constants';
 import {COLORS} from '../../constants/theme';
-import {View} from 'react-native';
 import {
   EmployeeScreen,
   FarmEmployeeTableScreen,
@@ -33,7 +32,7 @@ const DrawerNav = () => {
         drawerLabelStyle: styles.drawerLabelStyle,
         swipeEnabled: false,
       }}
-      drawerContent={props => <CustomDrawer1 {...props} />}>
+      drawerContent={props => <CustomDrawerWithFarm {...props} />}>
       <Drawer.Screen
         name="Dashboard"
         component={Tabs}
@@ -170,7 +169,7 @@ export default DrawerNav;
 
 const styles = StyleSheet.create({
   drawerStyles: {
-    width: '65%',
+    width: '75%',
     backgroundColor: '#121212',
   },
   drawerLabelStyle: {

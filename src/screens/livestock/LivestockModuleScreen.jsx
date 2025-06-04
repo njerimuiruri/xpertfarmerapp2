@@ -10,6 +10,7 @@ import {
   Alert,
   RefreshControl,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { icons } from '../../constants';
@@ -36,6 +37,7 @@ const LivestockModuleScreen = ({ route, navigation }) => {
   const [activeFarm, setActiveFarm] = useState(null);
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState(null);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -57,9 +59,12 @@ const LivestockModuleScreen = ({ route, navigation }) => {
     }
   };
 
-  const fetchLivestockData = async () => {
+  const fetchLivestockData = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (!isRefresh) {
+        setLoading(true);
+      }
+
       const { data, error } = await getLivestockForActiveFarm();
 
       if (error) {
@@ -125,12 +130,13 @@ const LivestockModuleScreen = ({ route, navigation }) => {
       setLivestockData([]);
     } finally {
       setLoading(false);
+      setInitialLoad(false);
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchLivestockData();
+    await fetchLivestockData(true);
     setRefreshing(false);
   };
 
@@ -449,7 +455,6 @@ const LivestockModuleScreen = ({ route, navigation }) => {
   const renderHeader = () => {
     return (
       <View style={styles.header}>
-
         <View style={styles.searchContainer}>
           <FastImage
             source={icons.search}
@@ -578,20 +583,32 @@ const LivestockModuleScreen = ({ route, navigation }) => {
     </TouchableOpacity>
   );
 
-  // Loading state
-  if (loading) {
+  // Enhanced Loading Component
+  const renderLoadingState = () => (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color={COLORS.green} />
+      <Text style={styles.loadingText}>Loading livestock data...</Text>
+      <Text style={styles.loadingSubText}>Please wait while we fetch your animals</Text>
+    </View>
+  );
+
+  // Loading state for initial load
+  if (loading && initialLoad) {
     return (
       <SafeAreaView style={styles.container}>
         <SecondaryHeader title="Livestock Management" />
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading livestock data...</Text>
-        </View>
+        {renderLoadingState()}
       </SafeAreaView>
     );
   }
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
+      <FastImage
+        source={icons.livestock || icons.account}
+        style={styles.emptyIcon}
+        tintColor={COLORS.gray}
+      />
       <Text style={styles.emptyTitle}>No Livestock Found</Text>
       <Text style={styles.emptyMessage}>
         {selectedType === 'all' && selectedStatus === 'all'
@@ -612,6 +629,13 @@ const LivestockModuleScreen = ({ route, navigation }) => {
       <SecondaryHeader title="Livestock Management" />
       {renderHeader()}
 
+      {loading && !initialLoad ? (
+        <View style={styles.refreshLoadingContainer}>
+          <ActivityIndicator size="small" color={COLORS.green} />
+          <Text style={styles.refreshLoadingText}>Updating livestock data...</Text>
+        </View>
+      ) : null}
+
       {filteredData.length === 0 && !loading ? (
         renderEmptyState()
       ) : (
@@ -625,8 +649,12 @@ const LivestockModuleScreen = ({ route, navigation }) => {
               refreshing={refreshing}
               onRefresh={onRefresh}
               colors={[COLORS.green]}
+              tintColor={COLORS.green}
+              title="Pull to refresh livestock data"
+              titleColor={COLORS.darkGray3}
             />
           }
+          showsVerticalScrollIndicator={false}
         />
       )}
 
@@ -646,7 +674,7 @@ const LivestockModuleScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: COLORS.lightGray },
   header: {
     backgroundColor: COLORS.white,
     padding: 10,
@@ -728,16 +756,49 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 20,
   },
   loadingText: {
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: '600',
     color: COLORS.darkGray3,
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  loadingSubText: {
+    fontSize: 14,
+    color: COLORS.gray,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  refreshLoadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.lightGreen,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 8,
+  },
+  refreshLoadingText: {
+    fontSize: 14,
+    color: COLORS.darkGray3,
+    marginLeft: 8,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: COLORS.white,
+  },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    marginBottom: 16,
   },
   emptyTitle: {
     fontSize: 20,

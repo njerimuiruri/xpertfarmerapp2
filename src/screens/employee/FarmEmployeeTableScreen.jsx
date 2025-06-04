@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,123 +10,107 @@ import {
   Alert,
   Modal,
   SafeAreaView,
+  ActivityIndicator,
+  RefreshControl,
+  Animated,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { icons } from '../../constants';
 import { COLORS } from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
-
-// Updated initial data to match add employee form fields
-const initialEmployeeData = [
-  {
-    id: '1',
-    firstName: 'John',
-    middleName: '',
-    lastName: 'Doe',
-    fullName: 'John Doe',
-    phone: '123-456-7890',
-    emergencyContact: '123-456-0000',
-    employeeType: 'permanent',
-    idNumber: 'ID12345',
-    dateOfEmployment: '2023-01-15',
-    role: 'cleaner',
-    paymentSchedule: 'monthly',
-    salary: '11,000',
-    selectedBenefits: {
-      paye: true,
-      nssf: true,
-      nhif: false,
-      housingLevy: false,
-    },
-  },
-  {
-    id: '2',
-    firstName: 'Jane',
-    middleName: '',
-    lastName: 'Smith',
-    fullName: 'Jane Smith',
-    phone: '098-765-4321',
-    emergencyContact: '098-765-0000',
-    employeeType: 'permanent',
-    idNumber: 'ID67890',
-    dateOfEmployment: '2023-03-22',
-    role: 'milker',
-    paymentSchedule: 'weekly',
-    salary: '8,000',
-    selectedBenefits: {
-      paye: true,
-      nssf: true,
-      nhif: true,
-      housingLevy: true,
-    },
-  },
-  {
-    id: '3',
-    firstName: 'Alice',
-    middleName: 'K',
-    lastName: 'Johnson',
-    fullName: 'Alice K Johnson',
-    phone: '456-123-7890',
-    emergencyContact: '456-123-0000',
-    employeeType: 'casual',
-    idNumber: 'ID24680',
-    dateOfEmployment: '2022-11-01',
-    role: 'feeder',
-    paymentSchedule: 'daily',
-    salary: '5,000',
-    workSchedule: 'full',
-    selectedBenefits: {},
-  },
-  {
-    id: '4',
-    firstName: 'Robert',
-    middleName: '',
-    lastName: 'Brown',
-    fullName: 'Robert Brown',
-    phone: '789-456-1230',
-    emergencyContact: '789-456-0000',
-    employeeType: 'casual',
-    idNumber: 'ID13579',
-    dateOfEmployment: '2023-02-10',
-    role: 'custom',
-    customRole: 'Crop Technician',
-    workSchedule: 'half',
-    paymentSchedule: 'daily',
-    salary: '4,500',
-    selectedBenefits: {},
-  },
-  {
-    id: '5',
-    firstName: 'Sarah',
-    middleName: 'J',
-    lastName: 'Wilson',
-    fullName: 'Sarah J Wilson',
-    phone: '321-654-0987',
-    emergencyContact: '321-654-0000',
-    employeeType: 'permanent',
-    idNumber: 'ID97531',
-    dateOfEmployment: '2023-05-15',
-    role: 'custom',
-    customRole: 'Livestock Specialist',
-    paymentSchedule: 'monthly',
-    salary: '12,000',
-    selectedBenefits: {
-      paye: true,
-      nssf: true,
-      nhif: true,
-      housingLevy: false,
-    },
-  },
-];
+import { getFarmEmployees, deleteEmployee } from '../../services/employees'; // Import your API functions
 
 const FarmEmployeeListScreen = ({ navigation }) => {
-  const [employees, setEmployees] = useState(initialEmployeeData);
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
-  const [filterRole, setFilterRole] = useState('');
-  const [filterType, setFilterType] = useState('');
-  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [filterType, setFilterType] = useState(''); // Keep only filterType, remove filterRole
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Toast state and animation
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const toastAnimation = useState(new Animated.Value(-100))[0];
+
+  // Fetch employees on component mount
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  // Add focus listener to refresh data when screen comes into focus
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchEmployees();
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  const fetchEmployees = async () => {
+    try {
+      setLoading(true);
+      const result = await getFarmEmployees(); // This will use the active farm automatically
+
+      if (result.error) {
+        Alert.alert('Error', result.error);
+        setEmployees([]);
+      } else {
+        // Transform the API data to match your component's expected format
+        const transformedEmployees = result.data.map(employee => ({
+          ...employee,
+          fullName: `${employee.firstName}${employee.middleName ? ' ' + employee.middleName : ''} ${employee.lastName}`,
+          // Ensure salary is formatted as string with commas if needed
+          salary: employee.salary ? employee.salary.toLocaleString() : '0',
+        }));
+        setEmployees(transformedEmployees);
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      Alert.alert('Error', 'Failed to fetch employees');
+      setEmployees([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchEmployees();
+    setRefreshing(false);
+  }, []);
+
+  // Toast functions
+  const showToast = (message) => {
+    setToastMessage(message);
+    setToastVisible(true);
+
+    // Animate toast in
+    Animated.timing(toastAnimation, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+
+    // Auto hide after 3 seconds
+    setTimeout(() => {
+      hideToast();
+    }, 3000);
+  };
+
+  const hideToast = () => {
+    Animated.timing(toastAnimation, {
+      toValue: -100,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setToastVisible(false);
+      setToastMessage('');
+    });
+  };
 
   // Get display role for employee
   const getDisplayRole = (employee) => {
@@ -141,14 +125,9 @@ const FarmEmployeeListScreen = ({ navigation }) => {
       .filter(
         employee => {
           const matchesSearch = employee.fullName.toLowerCase().includes(searchQuery.toLowerCase());
-          const matchesRole = filterRole === '' ||
-            (employee.role === 'custom' ?
-              (employee.customRole === filterRole) :
-              (employee.role === filterRole)
-            );
           const matchesType = filterType === '' || employee.employeeType === filterType;
 
-          return matchesSearch && matchesRole && matchesType;
+          return matchesSearch && matchesType;
         }
       )
       .sort((a, b) => {
@@ -163,28 +142,49 @@ const FarmEmployeeListScreen = ({ navigation }) => {
         }
         return 0;
       });
-  }, [employees, searchQuery, sortBy, sortOrder, filterRole, filterType]);
+  }, [employees, searchQuery, sortBy, sortOrder, filterType]);
 
-  const handleDelete = useCallback(id => {
-    Alert.alert(
-      'Delete Employee',
-      'Are you sure you want to delete this employee?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            setEmployees(prev => prev.filter(employee => employee.id !== id));
-          },
-        },
-      ],
-    );
+  const handleDelete = useCallback((employee) => {
+    setEmployeeToDelete(employee);
+    setIsDeleteModalVisible(true);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!employeeToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      const result = await deleteEmployee(employeeToDelete.id);
+
+      if (result.error) {
+        Alert.alert('Error', result.error);
+      } else {
+        // Remove employee from local state
+        setEmployees(prev => prev.filter(employee => employee.id !== employeeToDelete.id));
+        setIsDeleteModalVisible(false);
+        setEmployeeToDelete(null);
+
+        // Show success toast instead of Alert
+        setTimeout(() => {
+          showToast('Employee deleted successfully');
+        }, 300);
+      }
+    } catch (error) {
+      console.error('Error deleting employee:', error);
+      Alert.alert('Error', 'Failed to delete employee');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [employeeToDelete]);
+
+  const cancelDelete = useCallback(() => {
+    setIsDeleteModalVisible(false);
+    setEmployeeToDelete(null);
   }, []);
 
   const handleEdit = useCallback(
     employee => {
-      navigation.navigate('EditEmployeeScreen', { employee });
+      navigation.navigate('EditEmployeeScreen', { employeeId: employee.id });
     },
     [navigation],
   );
@@ -217,18 +217,53 @@ const FarmEmployeeListScreen = ({ navigation }) => {
           onChangeText={setSearchQuery}
         />
       </View>
-      <View style={styles.actionBar}>
+
+      {/* Filter Buttons */}
+      <View style={styles.filterButtonsContainer}>
         <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => setIsFilterModalVisible(true)}>
-          <FastImage
-            source={icons.filter}
-            style={styles.actionIcon}
-            tintColor="#333"
-          />
-          <Text style={styles.actionText}>Filter</Text>
+          style={[
+            styles.filterButton,
+            filterType === '' && styles.activeFilterButton,
+          ]}
+          onPress={() => setFilterType('')}>
+          <Text style={[
+            styles.filterButtonText,
+            filterType === '' && styles.activeFilterButtonText,
+          ]}>
+            All
+          </Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            filterType === 'permanent' && styles.activeFilterButton,
+          ]}
+          onPress={() => setFilterType('permanent')}>
+          <Text style={[
+            styles.filterButtonText,
+            filterType === 'permanent' && styles.activeFilterButtonText,
+          ]}>
+            Permanent
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            filterType === 'casual' && styles.activeFilterButton,
+          ]}
+          onPress={() => setFilterType('casual')}>
+          <Text style={[
+            styles.filterButtonText,
+            filterType === 'casual' && styles.activeFilterButtonText,
+          ]}>
+            Casual
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.actionBar}>
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => toggleSort('date')}>
@@ -239,8 +274,6 @@ const FarmEmployeeListScreen = ({ navigation }) => {
           />
           <Text style={styles.actionText}>Sort by Date</Text>
         </TouchableOpacity>
-
-
       </View>
     </View>
   );
@@ -281,7 +314,7 @@ const FarmEmployeeListScreen = ({ navigation }) => {
               />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => handleDelete(item.id)}
+              onPress={() => handleDelete(item)}
               style={styles.cardActionButton}>
               <FastImage
                 source={icons.remove}
@@ -300,14 +333,16 @@ const FarmEmployeeListScreen = ({ navigation }) => {
             />
             <Text style={styles.detailText}>{item.phone}</Text>
           </View>
-          <View style={styles.detailRow}>
-            <FastImage
-              source={icons.account}
-              style={styles.detailIcon}
-              tintColor="#666"
-            />
-            <Text style={styles.detailText}>ID: {item.idNumber}</Text>
-          </View>
+          {item.idNumber && (
+            <View style={styles.detailRow}>
+              <FastImage
+                source={icons.account}
+                style={styles.detailIcon}
+                tintColor="#666"
+              />
+              <Text style={styles.detailText}>ID: {item.idNumber}</Text>
+            </View>
+          )}
           <View style={styles.detailRow}>
             <FastImage
               source={icons.calendar}
@@ -315,7 +350,7 @@ const FarmEmployeeListScreen = ({ navigation }) => {
               tintColor="#666"
             />
             <Text style={styles.detailText}>
-              Employed: {item.dateOfEmployment}
+              Employed: {new Date(item.dateOfEmployment).toLocaleDateString()}
             </Text>
           </View>
           <View style={styles.detailRow}>
@@ -345,93 +380,124 @@ const FarmEmployeeListScreen = ({ navigation }) => {
     );
   };
 
-  const renderFilterModal = () => {
-    // Get unique roles from employees
-    const uniqueRoles = [...new Set(employees.map(emp =>
-      emp.role === 'custom' ? emp.customRole : emp.role
-    ))].filter(Boolean);
+  const renderDeleteModal = () => (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={isDeleteModalVisible}
+      onRequestClose={cancelDelete}>
+      <View style={styles.deleteModalOverlay}>
+        <View style={styles.deleteModalContainer}>
+          <View style={styles.deleteModalContent}>
+            {/* Icon */}
+            <View style={styles.deleteIconContainer}>
+              <FastImage
+                source={icons.remove}
+                style={styles.deleteModalIcon}
+                tintColor="#F44336"
+              />
+            </View>
 
-    return (
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isFilterModalVisible}
-        onRequestClose={() => setIsFilterModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Filter Options</Text>
+            {/* Title */}
+            <Text style={styles.deleteModalTitle}>Delete Employee</Text>
 
-            {/* Filter by employee type */}
-            <Text style={styles.modalSubtitle}>Employee Type</Text>
-            <TouchableOpacity
-              style={[
-                styles.filterOption,
-                filterType === 'permanent' && styles.selectedFilterOption,
-              ]}
-              onPress={() => setFilterType(prev => prev === 'permanent' ? '' : 'permanent')}>
-              <Text style={[
-                styles.filterOptionText,
-                filterType === 'permanent' && styles.selectedFilterOptionText,
-              ]}>
-                Permanent
+            {/* Message */}
+            <Text style={styles.deleteModalMessage}>
+              Are you sure you want to delete{' '}
+              <Text style={styles.deleteModalEmployeeName}>
+                {employeeToDelete?.fullName}
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.filterOption,
-                filterType === 'casual' && styles.selectedFilterOption,
-              ]}
-              onPress={() => setFilterType(prev => prev === 'casual' ? '' : 'casual')}>
-              <Text style={[
-                styles.filterOptionText,
-                filterType === 'casual' && styles.selectedFilterOptionText,
-              ]}>
-                Casual
-              </Text>
-            </TouchableOpacity>
+              ? This action cannot be undone.
+            </Text>
 
-            {/* Filter by role */}
-            <Text style={styles.modalSubtitle}>Role</Text>
-            {uniqueRoles.map(role => (
+            {/* Buttons */}
+            <View style={styles.deleteModalButtons}>
               <TouchableOpacity
-                key={role}
-                style={[
-                  styles.filterOption,
-                  filterRole === role && styles.selectedFilterOption,
-                ]}
-                onPress={() => setFilterRole(prev => prev === role ? '' : role)}>
-                <Text style={[
-                  styles.filterOptionText,
-                  filterRole === role && styles.selectedFilterOptionText,
-                ]}>
-                  {role.charAt(0).toUpperCase() + role.slice(1)}
-                </Text>
+                style={styles.cancelButton}
+                onPress={cancelDelete}
+                disabled={isDeleting}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
-            ))}
 
-            <TouchableOpacity
-              style={styles.resetButton}
-              onPress={() => {
-                setFilterRole('');
-                setFilterType('');
-                setSearchQuery('');
-                setSortBy('name');
-                setSortOrder('asc');
-                setIsFilterModalVisible(false);
-              }}>
-              <Text style={styles.resetButtonText}>Reset All Filters</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.closeModalButton}
-              onPress={() => setIsFilterModalVisible(false)}>
-              <Text style={styles.closeModalButtonText}>Close</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.deleteButton, isDeleting && styles.deleteButtonDisabled]}
+                onPress={confirmDelete}
+                disabled={isDeleting}>
+                {isDeleting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.deleteButtonText}>Delete</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </Modal>
+      </View>
+    </Modal>
+  );
+
+  const renderToast = () => {
+    if (!toastVisible) return null;
+
+    return (
+      <Animated.View
+        style={[
+          styles.toastContainer,
+          {
+            transform: [{ translateY: toastAnimation }]
+          }
+        ]}
+      >
+        <View style={styles.toastContent}>
+          <FastImage
+            source={icons.submited} // Using a check/success icon
+            style={styles.toastIcon}
+            tintColor="#fff"
+          />
+          <Text style={styles.toastText}>{toastMessage}</Text>
+          <TouchableOpacity onPress={hideToast} style={styles.toastCloseButton}>
+            <Text style={styles.toastCloseText}>×</Text>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
     );
   };
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <FastImage
+        source={icons.account}
+        style={styles.emptyIcon}
+        tintColor="#ccc"
+      />
+      <Text style={styles.emptyTitle}>No Employees Found</Text>
+      <Text style={styles.emptySubtitle}>
+        {searchQuery || filterType
+          ? "Try adjusting your search or filters"
+          : "Start by adding your first employee"
+        }
+      </Text>
+      {!searchQuery && !filterType && (
+        <TouchableOpacity
+          style={styles.emptyButton}
+          onPress={() => navigation.navigate('AddEmployeeScreen')}>
+          <Text style={styles.emptyButtonText}>Add Employee</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SecondaryHeader title="Farm Employees" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.green} />
+          <Text style={styles.loadingText}>Loading employees...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -443,12 +509,28 @@ const FarmEmployeeListScreen = ({ navigation }) => {
         animated={true}
         barStyle={'light-content'}
       />
+
+      {/* Toast notification */}
+      {renderToast()}
+
       {renderHeader()}
       <FlatList
         data={sortedAndFilteredEmployees}
         renderItem={renderEmployeeCard}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
+        keyExtractor={item => item.id.toString()}
+        contentContainerStyle={[
+          styles.listContent,
+          sortedAndFilteredEmployees.length === 0 && styles.emptyListContent
+        ]}
+        ListEmptyComponent={renderEmptyState}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[COLORS.green]}
+            tintColor={COLORS.green}
+          />
+        }
       />
       <TouchableOpacity
         style={styles.fab}
@@ -459,7 +541,7 @@ const FarmEmployeeListScreen = ({ navigation }) => {
           tintColor="#fff"
         />
       </TouchableOpacity>
-      {renderFilterModal()}
+      {renderDeleteModal()}
     </SafeAreaView>
   );
 };
@@ -468,6 +550,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.lightGreen,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
   },
   header: {
     backgroundColor: COLORS.white,
@@ -500,6 +592,110 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  filterButtonsContainer: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    gap: 10,
+    paddingHorizontal: 4,
+  },
+  filterButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 25,
+    backgroundColor: '#F8F9FA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#E9ECEF',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    minHeight: 44,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  activeFilterButton: {
+    backgroundColor: COLORS.green,
+    borderColor: COLORS.green,
+    elevation: 4,
+    shadowColor: COLORS.green,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    transform: [{ scale: 1.02 }],
+  },
+  filterButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#495057',
+    letterSpacing: 0.3,
+  },
+  activeFilterButtonText: {
+    color: COLORS.white,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+
+  // Optional: Add these additional styles for even more enhancement
+  filterButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 25,
+  },
+  filterButtonRipple: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    opacity: 0,
+  },
+
+  // Alternative pill-style buttons (choose one approach)
+  filterButtonsContainerAlt: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    backgroundColor: '#F1F3F4',
+    borderRadius: 30,
+    padding: 4,
+    marginHorizontal: 8,
+  },
+  filterButtonAlt: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 2,
+    minHeight: 40,
+  },
+  activeFilterButtonAlt: {
+    backgroundColor: COLORS.white,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  filterButtonTextAlt: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  activeFilterButtonTextAlt: {
+    color: '#1F2937',
+    fontWeight: '600',
+  },
+
   actionBar: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -524,6 +720,43 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+  },
+  emptyListContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyIcon: {
+    width: 80,
+    height: 80,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+    paddingHorizontal: 40,
+  },
+  emptyButton: {
+    backgroundColor: COLORS.green,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  emptyButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   card: {
     backgroundColor: COLORS.white,
@@ -625,68 +858,140 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
   },
-  modalContainer: {
+  // Delete Modal Styles
+  deleteModalOverlay: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
     padding: 20,
-    width: '80%',
-    maxHeight: '80%',
   },
-  modalTitle: {
+  deleteModalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 340,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+  },
+  deleteModalContent: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  deleteIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FFF3F3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  deleteModalIcon: {
+    width: 32,
+    height: 32,
+  },
+  deleteModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  deleteModalMessage: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  deleteModalEmployeeName: {
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  deleteModalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  deleteButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  deleteButtonDisabled: {
+    backgroundColor: '#FCA5A5',
+  },
+  deleteButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  // Toast Styles
+  toastContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  toastContent: {
+    backgroundColor: COLORS.green,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.27,
+    shadowRadius: 4.65,
+  },
+  toastIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+  },
+  toastText: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  toastCloseButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
+  toastCloseText: {
+    color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#333',
-  },
-  modalSubtitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 12,
-    marginBottom: 8,
-    color: '#555',
-  },
-  filterOption: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  selectedFilterOption: {
-    backgroundColor: '#e8f5e9',
-  },
-  filterOptionText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  selectedFilterOptionText: {
-    color: COLORS.green,
-    fontWeight: 'bold',
-  },
-  closeModalButton: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  closeModalButtonText: {
-    fontSize: 16,
-    color: COLORS.green,
-    fontWeight: 'bold',
-  },
-  resetButton: {
-    marginTop: 16,
-    padding: 12,
-    backgroundColor: '#f44336',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  resetButtonText: {
-    fontSize: 16,
-    color: COLORS.white,
-    fontWeight: 'bold',
+    lineHeight: 20,
   },
 });
 

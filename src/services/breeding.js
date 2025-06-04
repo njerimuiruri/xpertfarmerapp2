@@ -1,11 +1,10 @@
 import api from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export async function createBreedingRecord(data) {
+// Create a new breeding record
+export async function createBreedingRecord(breedingData) {
   try {
     const token = await AsyncStorage.getItem('token');
-    console.log('Retrieved Token:', token);
-
     const userRaw = await AsyncStorage.getItem('user');
     const user = JSON.parse(userRaw || '{}');
     const userId = user?.id;
@@ -28,33 +27,28 @@ export async function createBreedingRecord(data) {
       };
     }
 
+    // Prepare payload according to your API structure
     const payload = {
-      damId: data.damId,
-      sireId: data.sireId,
-      farmId,
-      purpose: data.purpose,
-      strategy: data.strategy,
-      serviceType: data.serviceType,
-      serviceDate: data.serviceDate,
-      numServices: parseInt(data.numServices) || 1,
-      firstHeatDate: data.firstHeatDate,
-      sireCode: data.sireCode,
-      aiType: data.aiType,
-      aiSource: data.aiSource,
-      aiCost: parseFloat(data.aiCost) || 0,
-      gestationDays: parseInt(data.gestationDays) || 280,
-      expectedBirthDate: data.expectedBirthDate,
-      // Birth details (if provided)
-      ...(data.birthRecorded && {
-        birthDate: data.birthDate,
-        deliveryMethod: data.deliveryMethod,
-        youngOnes: parseInt(data.youngOnes) || 1,
-        birthWeight: parseFloat(data.birthWeight) || 0,
-        litterWeight: parseFloat(data.litterWeight) || 0,
-        offspringSex: data.offspringSex,
-        offspringIds: data.offspringIds,
-      }),
+      damId: breedingData.damId,
+      sireId: breedingData.sireId,
+      farmId: farmId,
+      purpose: breedingData.purpose,
+      strategy: breedingData.strategy,
+      serviceType: breedingData.serviceType,
+      serviceDate: breedingData.serviceDate,
+      numServices: breedingData.numServices,
+      firstHeatDate: breedingData.firstHeatDate,
+      gestationDays: breedingData.gestationDays,
+      expectedBirthDate: breedingData.expectedBirthDate,
     };
+
+    // Add AI-specific fields if service type is Artificial Insemination
+    if (breedingData.serviceType === 'Artificial Insemination') {
+      payload.sireCode = breedingData.sireCode;
+      payload.aiType = breedingData.aiType;
+      payload.aiSource = breedingData.aiSource;
+      payload.aiCost = breedingData.aiCost;
+    }
 
     console.log(
       'Creating breeding record with payload:',
@@ -107,6 +101,7 @@ export async function createBreedingRecord(data) {
   }
 }
 
+// Get all breeding records
 export async function getAllBreedingRecords() {
   try {
     const token = await AsyncStorage.getItem('token');
@@ -143,6 +138,7 @@ export async function getAllBreedingRecords() {
   }
 }
 
+// Get breeding record by ID
 export async function getBreedingRecordById(id) {
   try {
     const token = await AsyncStorage.getItem('token');
@@ -171,7 +167,8 @@ export async function getBreedingRecordById(id) {
   }
 }
 
-export async function updateBreedingRecord(id, data) {
+// Update breeding record
+export async function updateBreedingRecord(id, breedingData) {
   try {
     const token = await AsyncStorage.getItem('token');
 
@@ -182,35 +179,30 @@ export async function updateBreedingRecord(id, data) {
       };
     }
 
+    // Prepare payload according to your API structure
     const payload = {
-      damId: data.damId,
-      sireId: data.sireId,
-      purpose: data.purpose,
-      strategy: data.strategy,
-      serviceType: data.serviceType,
-      serviceDate: data.serviceDate,
-      numServices: parseInt(data.numServices) || 1,
-      firstHeatDate: data.firstHeatDate,
-      sireCode: data.sireCode,
-      aiType: data.aiType,
-      aiSource: data.aiSource,
-      aiCost: parseFloat(data.aiCost) || 0,
-      gestationDays: parseInt(data.gestationDays) || 280,
-      expectedBirthDate: data.expectedBirthDate,
-      // Birth details (if provided)
-      ...(data.birthRecorded && {
-        birthDate: data.birthDate,
-        deliveryMethod: data.deliveryMethod,
-        youngOnes: parseInt(data.youngOnes) || 1,
-        birthWeight: parseFloat(data.birthWeight) || 0,
-        litterWeight: parseFloat(data.litterWeight) || 0,
-        offspringSex: data.offspringSex,
-        offspringIds: data.offspringIds,
-      }),
+      damId: breedingData.damId,
+      sireId: breedingData.sireId,
+      purpose: breedingData.purpose,
+      strategy: breedingData.strategy,
+      serviceType: breedingData.serviceType,
+      serviceDate: breedingData.serviceDate,
+      numServices: breedingData.numServices,
+      firstHeatDate: breedingData.firstHeatDate,
+      gestationDays: breedingData.gestationDays,
+      expectedBirthDate: breedingData.expectedBirthDate,
     };
 
+    // Add AI-specific fields if service type is Artificial Insemination
+    if (breedingData.serviceType === 'Artificial Insemination') {
+      payload.sireCode = breedingData.sireCode;
+      payload.aiType = breedingData.aiType;
+      payload.aiSource = breedingData.aiSource;
+      payload.aiCost = breedingData.aiCost;
+    }
+
     console.log(
-      '[updateBreedingRecord] Transformed payload:',
+      '[updateBreedingRecord] Payload:',
       JSON.stringify(payload, null, 2),
     );
 
@@ -242,6 +234,7 @@ export async function updateBreedingRecord(id, data) {
   }
 }
 
+// Delete breeding record
 export async function deleteBreedingRecord(id) {
   try {
     const token = await AsyncStorage.getItem('token');
@@ -270,7 +263,8 @@ export async function deleteBreedingRecord(id) {
   }
 }
 
-export async function getBreedingRecordsByAnimalId(animalId) {
+// Record birth for a breeding record
+export async function recordBirth(breedingId, birthData) {
   try {
     const token = await AsyncStorage.getItem('token');
 
@@ -281,17 +275,31 @@ export async function getBreedingRecordsByAnimalId(animalId) {
       };
     }
 
-    const response = await api.get(`/breeding/animal/${animalId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const payload = {
+      birthDate: birthData.birthDate || new Date().toISOString(),
+      numberOfOffspring: birthData.numberOfOffspring || 1,
+      birthWeight: birthData.birthWeight,
+      complications: birthData.complications || false,
+      complicationDetails: birthData.complicationDetails || '',
+      offspring: birthData.offspring || [], // Array of offspring details
+    };
 
-    console.log('[getBreedingRecordsByAnimalId] Response:', response.data);
-    return {data: response.data || [], error: null};
+    const response = await api.post(
+      `/breeding/${breedingId}/record-birth`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    console.log('[recordBirth] Response:', response.data);
+    return {data: response.data, error: null};
   } catch (error) {
     console.error(
-      '[getBreedingRecordsByAnimalId] Error:',
+      '[recordBirth] Error:',
       error?.response?.data || error.message,
     );
     return {
@@ -299,11 +307,111 @@ export async function getBreedingRecordsByAnimalId(animalId) {
       error:
         error?.response?.data?.message ||
         error.message ||
-        'Failed to get breeding records for animal',
+        'Failed to record birth',
     };
   }
 }
 
+// Register offspring as livestock
+export async function registerOffspringAsLivestock(offspringId, livestockData) {
+  try {
+    const token = await AsyncStorage.getItem('token');
+
+    if (!token) {
+      return {
+        data: null,
+        error: 'Authentication failed: missing token',
+      };
+    }
+
+    const payload = {
+      idNumber: livestockData.idNumber,
+      breedType: livestockData.breedType,
+      phenotype: livestockData.phenotype,
+      gender: livestockData.gender,
+      birthWeight: livestockData.birthWeight,
+      healthStatus: livestockData.healthStatus || 'healthy',
+    };
+
+    const response = await api.post(
+      `/breeding/offspring/${offspringId}/register-as-livestock`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    console.log('[registerOffspringAsLivestock] Response:', response.data);
+    return {data: response.data, error: null};
+  } catch (error) {
+    console.error(
+      '[registerOffspringAsLivestock] Error:',
+      error?.response?.data || error.message,
+    );
+    return {
+      data: null,
+      error:
+        error?.response?.data?.message ||
+        error.message ||
+        'Failed to register offspring as livestock',
+    };
+  }
+}
+
+// Get breeding statistics for a farm
+export async function getBreedingStatistics(farmId) {
+  try {
+    const token = await AsyncStorage.getItem('token');
+
+    if (!token) {
+      return {
+        data: null,
+        error: 'Authentication failed: missing token',
+      };
+    }
+
+    // If no farmId provided, use active farm
+    let targetFarmId = farmId;
+    if (!targetFarmId) {
+      const activeFarmRaw = await AsyncStorage.getItem('activeFarm');
+      const activeFarm = JSON.parse(activeFarmRaw || '{}');
+      targetFarmId = activeFarm?.id;
+    }
+
+    if (!targetFarmId) {
+      return {
+        data: null,
+        error: 'No farm ID provided and no active farm selected',
+      };
+    }
+
+    const response = await api.get(`/breeding/statistics/${targetFarmId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    console.log('[getBreedingStatistics] Response:', response.data);
+    return {data: response.data, error: null};
+  } catch (error) {
+    console.error(
+      '[getBreedingStatistics] Error:',
+      error?.response?.data || error.message,
+    );
+    return {
+      data: null,
+      error:
+        error?.response?.data?.message ||
+        error.message ||
+        'Failed to get breeding statistics',
+    };
+  }
+}
+
+// Helper function to get breeding records for active farm
 export async function getBreedingRecordsForActiveFarm() {
   try {
     const activeFarmRaw = await AsyncStorage.getItem('activeFarm');
@@ -353,132 +461,90 @@ export async function getBreedingRecordsForActiveFarm() {
   }
 }
 
-export async function getBreedingStatistics(animalId) {
+// Helper function to get female livestock (for dam selection)
+export async function getFemaleAnimalsForActiveFarm() {
   try {
-    const token = await AsyncStorage.getItem('token');
+    // Import livestock service functions
+    const {getLivestockForActiveFarm} = require('./livestock');
 
-    if (!token) {
+    const {data: allLivestock, error} = await getLivestockForActiveFarm();
+
+    if (error) {
+      return {data: null, error};
+    }
+
+    if (!Array.isArray(allLivestock)) {
       return {
-        data: null,
-        error: 'Authentication failed: missing token',
+        data: [],
+        error: 'Invalid livestock data received',
       };
     }
 
-    const response = await api.get('/breeding/statistics', {
-      params: animalId ? {animalId} : {},
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    // Filter for female animals that are suitable for breeding
+    const femaleAnimals = allLivestock.filter(animal => {
+      // Handle both mammal and poultry categories
+      if (animal.category === 'mammal' && animal.mammal) {
+        return animal.mammal.gender === 'Female' && animal.status === 'active';
+      }
+      if (animal.category === 'poultry' && animal.poultry) {
+        return animal.poultry.gender === 'Female' && animal.status === 'active';
+      }
+      return false;
     });
 
-    console.log('[getBreedingStatistics] Response:', response.data);
-    return {data: response.data, error: null};
+    return {data: femaleAnimals, error: null};
   } catch (error) {
     console.error(
-      '[getBreedingStatistics] Error:',
-      error?.response?.data || error.message,
+      '[getFemaleAnimalsForActiveFarm] Error:',
+      error?.message || error,
     );
     return {
       data: null,
-      error:
-        error?.response?.data?.message ||
-        error.message ||
-        'Failed to get breeding statistics',
+      error: 'Failed to retrieve female animals for breeding',
     };
   }
 }
 
-export async function recordPregnancyCheck(pregnancyData) {
+// Helper function to get male livestock (for sire selection)
+export async function getMaleAnimalsForActiveFarm() {
   try {
-    const token = await AsyncStorage.getItem('token');
+    // Import livestock service functions
+    const {getLivestockForActiveFarm} = require('./livestock');
 
-    if (!token) {
+    const {data: allLivestock, error} = await getLivestockForActiveFarm();
+
+    if (error) {
+      return {data: null, error};
+    }
+
+    if (!Array.isArray(allLivestock)) {
       return {
-        data: null,
-        error: 'Authentication failed: missing token',
+        data: [],
+        error: 'Invalid livestock data received',
       };
     }
 
-    const payload = {
-      breedingId: pregnancyData.breedingId,
-      checkDate: pregnancyData.checkDate || new Date().toISOString(),
-      result: pregnancyData.result,
-      method: pregnancyData.method,
-      performedBy: pregnancyData.performedBy,
-      notes: pregnancyData.notes,
-      cost: parseFloat(pregnancyData.cost) || 0,
-    };
-
-    const response = await api.post('/breeding/pregnancy-check', payload, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
+    // Filter for male animals that are suitable for breeding
+    const maleAnimals = allLivestock.filter(animal => {
+      // Handle both mammal and poultry categories
+      if (animal.category === 'mammal' && animal.mammal) {
+        return animal.mammal.gender === 'Male' && animal.status === 'active';
+      }
+      if (animal.category === 'poultry' && animal.poultry) {
+        return animal.poultry.gender === 'Male' && animal.status === 'active';
+      }
+      return false;
     });
 
-    console.log('[recordPregnancyCheck] Response:', response.data);
-    return {data: response.data, error: null};
+    return {data: maleAnimals, error: null};
   } catch (error) {
     console.error(
-      '[recordPregnancyCheck] Error:',
-      error?.response?.data || error.message,
+      '[getMaleAnimalsForActiveFarm] Error:',
+      error?.message || error,
     );
     return {
       data: null,
-      error:
-        error?.response?.data?.message ||
-        error.message ||
-        'Failed to record pregnancy check',
-    };
-  }
-}
-
-export async function recordBirthDetails(birthData) {
-  try {
-    const token = await AsyncStorage.getItem('token');
-
-    if (!token) {
-      return {
-        data: null,
-        error: 'Authentication failed: missing token',
-      };
-    }
-
-    const payload = {
-      breedingId: birthData.breedingId,
-      birthDate: birthData.birthDate || new Date().toISOString(),
-      deliveryMethod: birthData.deliveryMethod,
-      youngOnes: parseInt(birthData.youngOnes) || 1,
-      birthWeight: parseFloat(birthData.birthWeight) || 0,
-      litterWeight: parseFloat(birthData.litterWeight) || 0,
-      offspringSex: birthData.offspringSex,
-      offspringIds: birthData.offspringIds,
-      complications: birthData.complications,
-      assistanceRequired: birthData.assistanceRequired || false,
-      veterinarianInvolved: birthData.veterinarianInvolved || false,
-      notes: birthData.notes,
-    };
-
-    const response = await api.post('/breeding/birth-details', payload, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    console.log('[recordBirthDetails] Response:', response.data);
-    return {data: response.data, error: null};
-  } catch (error) {
-    console.error(
-      '[recordBirthDetails] Error:',
-      error?.response?.data || error.message,
-    );
-    return {
-      data: null,
-      error:
-        error?.response?.data?.message ||
-        error.message ||
-        'Failed to record birth details',
+      error: 'Failed to retrieve male animals for breeding',
     };
   }
 }

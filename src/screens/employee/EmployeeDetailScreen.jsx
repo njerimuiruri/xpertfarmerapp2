@@ -9,12 +9,12 @@ import {
   SafeAreaView,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../constants';
-import {COLORS} from '../../constants/theme';
+import { icons } from '../../constants';
+import { COLORS } from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
 
-const EmployeeDetailScreen = ({route, navigation}) => {
-  const {employee} = route.params || {};
+const EmployeeDetailScreen = ({ route, navigation }) => {
+  const { employee } = route.params || {};
 
   const getDisplayRole = (employee) => {
     if (employee.role === 'custom' && employee.customRole) {
@@ -27,11 +27,11 @@ const EmployeeDetailScreen = ({route, navigation}) => {
     if (!benefits || Object.keys(benefits).length === 0) {
       return "None";
     }
-    
+
     const activeBenefits = Object.keys(benefits)
       .filter(key => benefits[key])
       .map(key => {
-        switch(key) {
+        switch (key) {
           case 'paye': return 'PAYE';
           case 'nssf': return 'NSSF';
           case 'nhif': return 'NHIF';
@@ -39,18 +39,18 @@ const EmployeeDetailScreen = ({route, navigation}) => {
           default: return key.charAt(0).toUpperCase() + key.slice(1);
         }
       });
-    
+
     return activeBenefits.join(', ') || "None";
   };
 
-  const InfoRow = ({label, value}) => (
+  const InfoRow = ({ label, value }) => (
     <View style={styles.infoRow}>
       <Text style={styles.infoLabel}>{label}:</Text>
       <Text style={styles.infoValue}>{value || 'Not provided'}</Text>
     </View>
   );
 
-  const InfoSectionWithIcon = ({icon, title, children}) => (
+  const InfoSectionWithIcon = ({ icon, title, children }) => (
     <View style={styles.infoCard}>
       <View style={styles.sectionHeader}>
         <FastImage
@@ -73,7 +73,7 @@ const EmployeeDetailScreen = ({route, navigation}) => {
         barStyle={'light-content'}
       />
       <SecondaryHeader title={employee.fullName} showBackButton={true} />
-      
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.infoCard}>
           <View style={styles.profileHeader}>
@@ -91,8 +91,8 @@ const EmployeeDetailScreen = ({route, navigation}) => {
                 <View style={styles.idBadge}>
                   <Text style={styles.badgeText}>ID: {employee.idNumber}</Text>
                 </View>
-                <View style={[styles.idBadge, styles.typeBadge, 
-                  employee.employeeType === 'permanent' ? styles.permanentBadge : styles.casualBadge]}>
+                <View style={[styles.idBadge, styles.typeBadge,
+                employee.employeeType === 'permanent' ? styles.permanentBadge : styles.casualBadge]}>
                   <Text style={styles.typeBadgeText}>
                     {employee.employeeType === 'permanent' ? 'Permanent' : 'Casual'}
                   </Text>
@@ -122,8 +122,8 @@ const EmployeeDetailScreen = ({route, navigation}) => {
           <InfoRow label="Employment Type" value={employee.employeeType === 'permanent' ? 'Permanent' : 'Casual'} />
           {employee.workSchedule && (
             <InfoRow label="Work Schedule" value={
-              employee.workSchedule === 'full' ? 'Full Day (8 hours)' : 
-              employee.workSchedule === 'half' ? 'Half Day (4 hours)' : 'Custom'
+              employee.workSchedule === 'full' ? 'Full Day (8 hours)' :
+                employee.workSchedule === 'half' ? 'Half Day (4 hours)' : 'Custom'
             } />
           )}
         </InfoSectionWithIcon>
@@ -136,7 +136,8 @@ const EmployeeDetailScreen = ({route, navigation}) => {
 
         <TouchableOpacity
           style={styles.editButton}
-          onPress={() => navigation.navigate('EditEmployeeScreen', {employee})}>
+          onPress={() => navigation.navigate('EditEmployeeScreen', { employeeId: employee.id })}
+        >
           <FastImage
             source={icons.edit}
             style={styles.editIcon}
@@ -165,7 +166,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 2,
     shadowColor: COLORS.black,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },

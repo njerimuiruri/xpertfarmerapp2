@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Text,
@@ -13,74 +13,129 @@ import {
   Checkbox,
   FormControl,
   IconButton,
+  useToast,
 } from 'native-base';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import SecondaryHeader from '../../components/headers/secondary-header';
 import { COLORS } from '../../constants/theme';
 import { icons } from '../../constants';
+import { updateEmployee, getEmployeeById, formatEmployeeData } from '../../services/employees';
 
 const EditEmployeeScreen = ({ navigation, route }) => {
-  // Assuming employee data is passed as a parameter from previous screen
-  // For demonstration, initializing with sample data
-  // In a real app, you would use: const employeeData = route.params?.employeeData || {};
-  
-  const employeeData = {
-    employeeType: 'permanent',
-    firstName: 'John',
-    middleName: '',
-    lastName: 'Doe',
-    phone: '0707123456',
-    emergencyContact: '0712345678',
-    idNumber: '12345678',
-    dateOfEmployment: '01/01/2023',
-    role: 'milker',
-    customRole: '',
-    paymentSchedule: 'monthly',
-    salary: '11000',
-    workSchedule: 'full',
-    selectedBenefits: {
-      paye: true,
-      nssf: true,
-      nhif: true,
-      housingLevy: false,
-      customBenefit: false
-    },
-    customBenefitName: '',
-    customBenefitAmount: '',
-  };
+  const toast = useToast();
+  const employeeId = route.params?.employeeId;
 
   // Personal Information
-  const [employeeType, setEmployeeType] = useState(employeeData.employeeType || 'permanent');
-  const [firstName, setFirstName] = useState(employeeData.firstName || '');
-  const [middleName, setMiddleName] = useState(employeeData.middleName || '');
-  const [lastName, setLastName] = useState(employeeData.lastName || '');
-  const [phone, setPhone] = useState(employeeData.phone || '');
-  const [emergencyContact, setEmergencyContact] = useState(employeeData.emergencyContact || '');
-  const [idNumber, setIdNumber] = useState(employeeData.idNumber || '');
-  
+  const [employeeType, setEmployeeType] = useState('permanent');
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [emergencyContact, setEmergencyContact] = useState('');
+  const [idNumber, setIdNumber] = useState('');
+
   // Professional Information
-  const [dateOfEmployment, setDateOfEmployment] = useState(employeeData.dateOfEmployment || '');
-  const [role, setRole] = useState(employeeData.role || '');
-  const [customRole, setCustomRole] = useState(employeeData.customRole || '');
-  const [showCustomRole, setShowCustomRole] = useState(employeeData.role === 'custom');
-  const [paymentSchedule, setPaymentSchedule] = useState(employeeData.paymentSchedule || 'daily');
-  const [salary, setSalary] = useState(employeeData.salary || '');
-  const [workSchedule, setWorkSchedule] = useState(employeeData.workSchedule || '');
-  
+  const [dateOfEmployment, setDateOfEmployment] = useState('');
+  const [role, setRole] = useState('');
+  const [customRole, setCustomRole] = useState('');
+  const [showCustomRole, setShowCustomRole] = useState(false);
+  const [paymentSchedule, setPaymentSchedule] = useState('daily');
+  const [salary, setSalary] = useState('');
+  const [workSchedule, setWorkSchedule] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [typeOfEngagement, setTypeOfEngagement] = useState('');
+
   // Benefits and statutory deductions
-  const [selectedBenefits, setSelectedBenefits] = useState(employeeData.selectedBenefits || {
+  const [selectedBenefits, setSelectedBenefits] = useState({
     paye: false,
     nssf: false,
     nhif: false,
     housingLevy: false,
     customBenefit: false
   });
-  const [customBenefitName, setCustomBenefitName] = useState(employeeData.customBenefitName || '');
-  const [customBenefitAmount, setCustomBenefitAmount] = useState(employeeData.customBenefitAmount || '');
-  
+  const [customBenefitName, setCustomBenefitName] = useState('');
+  const [customBenefitAmount, setCustomBenefitAmount] = useState('');
+
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  // Load employee data on component mount
+  useEffect(() => {
+    const loadEmployeeData = async () => {
+      if (!employeeId) {
+        Alert.alert('Error', 'No employee ID provided');
+        navigation.goBack();
+        return;
+      }
+
+      try {
+        setInitialLoading(true);
+        const employeeData = await getEmployeeById(employeeId);
+
+        // Populate form fields with existing data
+        setEmployeeType(employeeData.employeeType || 'permanent');
+        setFirstName(employeeData.firstName || '');
+        setMiddleName(employeeData.middleName || '');
+        setLastName(employeeData.lastName || '');
+        setPhone(employeeData.phone || '');
+        setEmergencyContact(employeeData.emergencyContact || '');
+        setIdNumber(employeeData.idNumber || '');
+        setDateOfEmployment(employeeData.dateOfEmployment || '');
+        setRole(employeeData.role || '');
+        setPaymentSchedule(employeeData.paymentSchedule || 'daily');
+        setSalary(employeeData.salary?.toString() || '');
+        setWorkSchedule(employeeData.workSchedule || '');
+        setEndDate(employeeData.endDate || '');
+        setTypeOfEngagement(employeeData.typeOfEngagement || '');
+
+        // Handle custom role
+        if (employeeData.role && !['cleaner', 'feeder', 'milker'].includes(employeeData.role)) {
+          setRole('custom');
+          setCustomRole(employeeData.role);
+          setShowCustomRole(true);
+        }
+
+        // Handle benefits
+        if (employeeData.benefits && employeeData.benefits.length > 0) {
+          const benefits = {
+            paye: false,
+            nssf: false,
+            nhif: false,
+            housingLevy: false,
+            customBenefit: false
+          };
+
+          employeeData.benefits.forEach(benefit => {
+            if (['paye', 'nssf', 'nhif', 'housingLevy'].includes(benefit.name)) {
+              benefits[benefit.name] = true;
+            } else {
+              benefits.customBenefit = true;
+              setCustomBenefitName(benefit.name);
+              setCustomBenefitAmount(benefit.amount?.toString() || '');
+            }
+          });
+
+          setSelectedBenefits(benefits);
+        }
+
+      } catch (error) {
+        console.error('Error loading employee data:', error);
+        toast.show({
+          title: "Error",
+          description: "Failed to load employee data",
+          status: "error"
+        });
+        navigation.goBack();
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    loadEmployeeData();
+  }, [employeeId]);
+
   // Handle role selection
   const handleRoleSelect = (roleName) => {
     if (roleName === 'custom') {
@@ -89,14 +144,152 @@ const EditEmployeeScreen = ({ navigation, route }) => {
     } else {
       setShowCustomRole(false);
       setRole(roleName);
+      setCustomRole('');
     }
   };
-  
-  const handleSubmit = () => {
-    // Here you would implement the API call to update the employee data
-    // This would include all the state values collected above
-    setShowSuccessModal(true);
+
+  const validateForm = () => {
+    if (!firstName.trim()) {
+      toast.show({
+        title: "Validation Error",
+        description: "First name is required",
+        status: "error"
+      });
+      return false;
+    }
+
+    if (!lastName.trim()) {
+      toast.show({
+        title: "Validation Error",
+        description: "Last name is required",
+        status: "error"
+      });
+      return false;
+    }
+
+    if (!phone.trim()) {
+      toast.show({
+        title: "Validation Error",
+        description: "Phone number is required",
+        status: "error"
+      });
+      return false;
+    }
+
+    if (!dateOfEmployment.trim()) {
+      toast.show({
+        title: "Validation Error",
+        description: "Date of employment is required",
+        status: "error"
+      });
+      return false;
+    }
+
+    if (!role.trim()) {
+      toast.show({
+        title: "Validation Error",
+        description: "Role is required",
+        status: "error"
+      });
+      return false;
+    }
+
+    if (role === 'custom' && !customRole.trim()) {
+      toast.show({
+        title: "Validation Error",
+        description: "Custom role name is required",
+        status: "error"
+      });
+      return false;
+    }
+
+    if (!salary.trim()) {
+      toast.show({
+        title: "Validation Error",
+        description: "Salary is required",
+        status: "error"
+      });
+      return false;
+    }
+
+    if (selectedBenefits.customBenefit && !customBenefitName.trim()) {
+      toast.show({
+        title: "Validation Error",
+        description: "Custom benefit name is required",
+        status: "error"
+      });
+      return false;
+    }
+
+    return true;
   };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Prepare form data
+      const formData = {
+        firstName: firstName.trim(),
+        middleName: middleName.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim(),
+        emergencyContact: emergencyContact.trim(),
+        idNumber: idNumber.trim(),
+        dateOfEmployment: dateOfEmployment.trim(),
+        role,
+        customRole: customRole.trim(),
+        paymentSchedule,
+        salary: salary.trim(),
+        workSchedule,
+        endDate: endDate.trim(),
+        typeOfEngagement: typeOfEngagement.trim(),
+        selectedBenefits,
+        customBenefitName: customBenefitName.trim(),
+        customBenefitAmount: customBenefitAmount.trim(),
+      };
+
+      // Format the data using the existing formatEmployeeData function
+      const formattedData = formatEmployeeData(formData, employeeType);
+
+      // Call the update API
+      const result = await updateEmployee(employeeId, formattedData);
+
+      if (result.error) {
+        toast.show({
+          title: "Update Failed",
+          description: result.error,
+          status: "error"
+        });
+        return;
+      }
+
+      // Show success modal
+      setShowSuccessModal(true);
+
+    } catch (error) {
+      console.error('Error updating employee:', error);
+      toast.show({
+        title: "Error",
+        description: "Failed to update employee. Please try again.",
+        status: "error"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (initialLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: COLORS.lightGreen, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Loading employee data...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
@@ -118,9 +311,9 @@ const EditEmployeeScreen = ({ navigation, route }) => {
               <FormControl.Label>
                 <Text style={styles.label}>Employee Type</Text>
               </FormControl.Label>
-              <Radio.Group 
-                name="employeeType" 
-                value={employeeType} 
+              <Radio.Group
+                name="employeeType"
+                value={employeeType}
                 onChange={value => setEmployeeType(value)}
                 mt={1}
               >
@@ -138,7 +331,7 @@ const EditEmployeeScreen = ({ navigation, route }) => {
             {/* Personal Information */}
             <FormControl>
               <FormControl.Label>
-                <Text style={styles.label}>First Name</Text>
+                <Text style={styles.label}>First Name *</Text>
               </FormControl.Label>
               <Input
                 value={firstName}
@@ -164,7 +357,7 @@ const EditEmployeeScreen = ({ navigation, route }) => {
 
             <FormControl>
               <FormControl.Label>
-                <Text style={styles.label}>Last Name</Text>
+                <Text style={styles.label}>Last Name *</Text>
               </FormControl.Label>
               <Input
                 value={lastName}
@@ -177,7 +370,7 @@ const EditEmployeeScreen = ({ navigation, route }) => {
 
             <FormControl>
               <FormControl.Label>
-                <Text style={styles.label}>Phone Number</Text>
+                <Text style={styles.label}>Phone Number *</Text>
               </FormControl.Label>
               <Input
                 value={phone}
@@ -189,19 +382,21 @@ const EditEmployeeScreen = ({ navigation, route }) => {
               />
             </FormControl>
 
-            <FormControl>
-              <FormControl.Label>
-                <Text style={styles.label}>Emergency Contact</Text>
-              </FormControl.Label>
-              <Input
-                value={emergencyContact}
-                onChangeText={setEmergencyContact}
-                placeholder="Emergency Contact"
-                keyboardType="phone-pad"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-              />
-            </FormControl>
+            {employeeType === 'permanent' && (
+              <FormControl>
+                <FormControl.Label>
+                  <Text style={styles.label}>Emergency Contact</Text>
+                </FormControl.Label>
+                <Input
+                  value={emergencyContact}
+                  onChangeText={setEmergencyContact}
+                  placeholder="Emergency Contact"
+                  keyboardType="phone-pad"
+                  backgroundColor={COLORS.lightGreen}
+                  borderColor="gray.200"
+                />
+              </FormControl>
+            )}
 
             <FormControl>
               <FormControl.Label>
@@ -219,20 +414,20 @@ const EditEmployeeScreen = ({ navigation, route }) => {
             {/* Professional Information */}
             <FormControl>
               <FormControl.Label>
-                <Text style={styles.label}>Date of Employment</Text>
+                <Text style={styles.label}>Date of Employment *</Text>
               </FormControl.Label>
               <Input
                 value={dateOfEmployment}
                 onChangeText={setDateOfEmployment}
-                placeholder="__/__/____"
+                placeholder="DD/MM/YYYY"
                 backgroundColor={COLORS.lightGreen}
                 borderColor="gray.200"
                 InputRightElement={
                   <IconButton
                     icon={
-                      <FastImage 
-                        source={icons.calendar} 
-                        style={{ width: 24, height: 24 }} 
+                      <FastImage
+                        source={icons.calendar}
+                        style={{ width: 24, height: 24 }}
                       />
                     }
                     onPress={() => console.log("Open date picker")}
@@ -243,37 +438,37 @@ const EditEmployeeScreen = ({ navigation, route }) => {
 
             <FormControl>
               <FormControl.Label>
-                <Text style={styles.label}>Role</Text>
+                <Text style={styles.label}>Role *</Text>
               </FormControl.Label>
               <VStack space={2} mt={1}>
-                <Checkbox 
-                  value="cleaner" 
+                <Checkbox
+                  value="cleaner"
                   colorScheme="green"
-                  onChange={() => handleRoleSelect('cleaner')} 
+                  onChange={() => handleRoleSelect('cleaner')}
                   isChecked={role === 'cleaner'}
                 >
                   Cleaner
                 </Checkbox>
-                <Checkbox 
-                  value="feeder" 
+                <Checkbox
+                  value="feeder"
                   colorScheme="green"
-                  onChange={() => handleRoleSelect('feeder')} 
+                  onChange={() => handleRoleSelect('feeder')}
                   isChecked={role === 'feeder'}
                 >
                   Feeder
                 </Checkbox>
-                <Checkbox 
-                  value="milker" 
+                <Checkbox
+                  value="milker"
                   colorScheme="green"
-                  onChange={() => handleRoleSelect('milker')} 
+                  onChange={() => handleRoleSelect('milker')}
                   isChecked={role === 'milker'}
                 >
                   Milker
                 </Checkbox>
-                <Checkbox 
-                  value="custom" 
+                <Checkbox
+                  value="custom"
                   colorScheme="green"
-                  onChange={() => handleRoleSelect('custom')} 
+                  onChange={() => handleRoleSelect('custom')}
                   isChecked={role === 'custom'}
                 >
                   Create new role
@@ -283,7 +478,7 @@ const EditEmployeeScreen = ({ navigation, route }) => {
               {showCustomRole && (
                 <FormControl mt={2}>
                   <FormControl.Label>
-                    <Text style={styles.label}>Role Name</Text>
+                    <Text style={styles.label}>Role Name *</Text>
                   </FormControl.Label>
                   <Input
                     value={customRole}
@@ -301,9 +496,9 @@ const EditEmployeeScreen = ({ navigation, route }) => {
                 <FormControl.Label>
                   <Text style={styles.label}>Payment Schedule</Text>
                 </FormControl.Label>
-                <Radio.Group 
-                  name="paymentSchedule" 
-                  value={paymentSchedule} 
+                <Radio.Group
+                  name="paymentSchedule"
+                  value={paymentSchedule}
                   onChange={value => setPaymentSchedule(value)}
                   mt={1}
                 >
@@ -323,28 +518,56 @@ const EditEmployeeScreen = ({ navigation, route }) => {
             )}
 
             {employeeType === 'casual' && (
-              <FormControl>
-                <FormControl.Label>
-                  <Text style={styles.label}>Work Schedule</Text>
-                </FormControl.Label>
-                <Select
-                  selectedValue={workSchedule}
-                  minWidth="100%"
-                  backgroundColor={COLORS.lightGreen}
-                  borderColor="gray.200"
-                  placeholder="Select the hours"
-                  onValueChange={setWorkSchedule}
-                >
-                  <Select.Item label="Full Day (8 hours)" value="full" />
-                  <Select.Item label="Half Day (4 hours)" value="half" />
-                  <Select.Item label="Custom Hours" value="custom" />
-                </Select>
-              </FormControl>
+              <>
+                <FormControl>
+                  <FormControl.Label>
+                    <Text style={styles.label}>Work Schedule</Text>
+                  </FormControl.Label>
+                  <Select
+                    selectedValue={workSchedule}
+                    minWidth="100%"
+                    backgroundColor={COLORS.lightGreen}
+                    borderColor="gray.200"
+                    placeholder="Select the hours"
+                    onValueChange={setWorkSchedule}
+                  >
+                    <Select.Item label="Full Day (8 hours)" value="full" />
+                    <Select.Item label="Half Day (4 hours)" value="half" />
+                    <Select.Item label="Custom Hours" value="custom" />
+                  </Select>
+                </FormControl>
+
+                <FormControl>
+                  <FormControl.Label>
+                    <Text style={styles.label}>End Date</Text>
+                  </FormControl.Label>
+                  <Input
+                    value={endDate}
+                    onChangeText={setEndDate}
+                    placeholder="DD/MM/YYYY"
+                    backgroundColor={COLORS.lightGreen}
+                    borderColor="gray.200"
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormControl.Label>
+                    <Text style={styles.label}>Type of Engagement</Text>
+                  </FormControl.Label>
+                  <Input
+                    value={typeOfEngagement}
+                    onChangeText={setTypeOfEngagement}
+                    placeholder="Type of Engagement"
+                    backgroundColor={COLORS.lightGreen}
+                    borderColor="gray.200"
+                  />
+                </FormControl>
+              </>
             )}
 
             <FormControl>
               <FormControl.Label>
-                <Text style={styles.label}>Salary (Kenya Shillings)</Text>
+                <Text style={styles.label}>Salary (Kenya Shillings) *</Text>
               </FormControl.Label>
               <Input
                 value={salary}
@@ -362,42 +585,42 @@ const EditEmployeeScreen = ({ navigation, route }) => {
                   <Text style={styles.label}>Statutory and Benefits</Text>
                 </FormControl.Label>
                 <VStack space={2} mt={1}>
-                  <Checkbox 
-                    value="paye" 
+                  <Checkbox
+                    value="paye"
                     colorScheme="green"
-                    onChange={(isSelected) => setSelectedBenefits({...selectedBenefits, paye: isSelected})}
+                    onChange={(isSelected) => setSelectedBenefits({ ...selectedBenefits, paye: isSelected })}
                     isChecked={selectedBenefits.paye}
                   >
                     PAYE
                   </Checkbox>
-                  <Checkbox 
-                    value="nssf" 
+                  <Checkbox
+                    value="nssf"
                     colorScheme="green"
-                    onChange={(isSelected) => setSelectedBenefits({...selectedBenefits, nssf: isSelected})}
+                    onChange={(isSelected) => setSelectedBenefits({ ...selectedBenefits, nssf: isSelected })}
                     isChecked={selectedBenefits.nssf}
                   >
                     NSSF
                   </Checkbox>
-                  <Checkbox 
-                    value="nhif" 
+                  <Checkbox
+                    value="nhif"
                     colorScheme="green"
-                    onChange={(isSelected) => setSelectedBenefits({...selectedBenefits, nhif: isSelected})}
+                    onChange={(isSelected) => setSelectedBenefits({ ...selectedBenefits, nhif: isSelected })}
                     isChecked={selectedBenefits.nhif}
                   >
                     NHIF
                   </Checkbox>
-                  <Checkbox 
-                    value="housingLevy" 
+                  <Checkbox
+                    value="housingLevy"
                     colorScheme="green"
-                    onChange={(isSelected) => setSelectedBenefits({...selectedBenefits, housingLevy: isSelected})}
+                    onChange={(isSelected) => setSelectedBenefits({ ...selectedBenefits, housingLevy: isSelected })}
                     isChecked={selectedBenefits.housingLevy}
                   >
                     Housing Levy
                   </Checkbox>
-                  <Checkbox 
-                    value="customBenefit" 
+                  <Checkbox
+                    value="customBenefit"
                     colorScheme="green"
-                    onChange={(isSelected) => setSelectedBenefits({...selectedBenefits, customBenefit: isSelected})}
+                    onChange={(isSelected) => setSelectedBenefits({ ...selectedBenefits, customBenefit: isSelected })}
                     isChecked={selectedBenefits.customBenefit}
                   >
                     Add Benefit +
@@ -408,7 +631,7 @@ const EditEmployeeScreen = ({ navigation, route }) => {
                   <VStack space={3} mt={3}>
                     <FormControl>
                       <FormControl.Label>
-                        <Text style={styles.label}>Benefit Name</Text>
+                        <Text style={styles.label}>Benefit Name *</Text>
                       </FormControl.Label>
                       <Input
                         value={customBenefitName}
@@ -418,7 +641,7 @@ const EditEmployeeScreen = ({ navigation, route }) => {
                         borderColor="gray.200"
                       />
                     </FormControl>
-                    
+
                     <FormControl>
                       <FormControl.Label>
                         <Text style={styles.label}>Amount</Text>
@@ -443,14 +666,17 @@ const EditEmployeeScreen = ({ navigation, route }) => {
               variant="outline"
               borderColor={COLORS.green}
               style={styles.largeButton}
-              onPress={() => navigation.goBack()}>
+              onPress={() => navigation.goBack()}
+              isDisabled={loading}>
               Cancel
             </Button>
             <Button
               backgroundColor={COLORS.green}
               style={styles.largeButton}
-              onPress={handleSubmit}>
-              Update
+              onPress={handleSubmit}
+              isLoading={loading}
+              isDisabled={loading}>
+              {loading ? 'Updating...' : 'Update'}
             </Button>
           </HStack>
         </Box>
@@ -479,7 +705,7 @@ const EditEmployeeScreen = ({ navigation, route }) => {
               style={styles.modalButton}
               onPress={() => {
                 setShowSuccessModal(false);
-                navigation.navigate("FarmEmployeeTableScreen"); 
+                navigation.navigate("FarmEmployeeTableScreen");
               }}>
               Done
             </Button>
@@ -496,8 +722,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "center", 
-    alignSelf: "center", 
+    textAlign: "center",
+    alignSelf: "center",
   },
   label: {
     fontSize: 14,

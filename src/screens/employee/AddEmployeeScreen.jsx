@@ -15,11 +15,13 @@ import {
   IconButton,
   FormControl,
 } from 'native-base';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import FastImage from 'react-native-fast-image';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import SecondaryHeader from '../../components/headers/secondary-header';
 import { COLORS } from '../../constants/theme';
 import { icons } from '../../constants';
+import { createEmployee, formatEmployeeData } from '../../services/employees';
 
 export default function AddEmployeeScreen({ navigation }) {
   // State for step tracking
@@ -53,8 +55,37 @@ export default function AddEmployeeScreen({ navigation }) {
   const [customBenefitName, setCustomBenefitName] = useState('');
   const [customBenefitAmount, setCustomBenefitAmount] = useState('');
 
+  // Date picker states
+  const [showEmploymentDatePicker, setShowEmploymentDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [employmentDateObj, setEmploymentDateObj] = useState(new Date());
+  const [endDateObj, setEndDateObj] = useState(new Date());
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Date formatting function
+  const formatDate = (date) => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // Handle employment date change
+  const onEmploymentDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || employmentDateObj;
+    setShowEmploymentDatePicker(Platform.OS === 'ios');
+    setEmploymentDateObj(currentDate);
+    setDateOfEmployment(formatDate(currentDate));
+  };
+
+  // Handle end date change
+  const onEndDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || endDateObj;
+    setShowEndDatePicker(Platform.OS === 'ios');
+    setEndDateObj(currentDate);
+    setEndDate(formatDate(currentDate));
+  };
 
   const handleRoleSelect = (roleName) => {
     if (roleName === 'custom') {
@@ -80,12 +111,54 @@ export default function AddEmployeeScreen({ navigation }) {
     }
   };
 
+  const handleSubmit = async () => {
+    try {
+      // Collect form data
+      const formData = {
+        firstName,
+        middleName,
+        lastName,
+        phone,
+        emergencyContact,
+        idNumber,
+        dateOfEmployment,
+        role,
+        customRole,
+        paymentSchedule,
+        salary,
+        selectedBenefits,
+        customBenefitName,
+        customBenefitAmount,
+        // For casual employees
+        endDate,
+        typeOfEngagement,
+        workSchedule,
+      };
 
-  const handleSubmit = () => {
-    setShowSuccessModal(true);
+      // Format data for API
+      const employeeData = formatEmployeeData(formData, employeeType);
+
+      console.log('Submitting employee data:', employeeData);
+
+      // Call the API
+      const { data, error } = await createEmployee(employeeData);
+
+      if (error) {
+        console.error('Failed to create employee:', error);
+        alert(`Failed to create employee: ${error}`);
+        return;
+      }
+
+      console.log('Employee created successfully:', data);
+
+      // Show success modal
+      setShowSuccessModal(true);
+
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      alert('An unexpected error occurred. Please try again.');
+    }
   };
-
-
 
   const renderStepIndicator = () => {
     return (
@@ -172,10 +245,7 @@ export default function AddEmployeeScreen({ navigation }) {
 
         <FormControl isRequired>
           <FormControl.Label>
-            <Text
-
-
-              style={styles.label}>First Name</Text>
+            <Text style={styles.label}>First Name</Text>
           </FormControl.Label>
           <Input
             value={firstName}
@@ -213,7 +283,6 @@ export default function AddEmployeeScreen({ navigation }) {
             placeholder="Doe"
             borderColor="gray.300"
             backgroundColor={COLORS.lightGreen}
-
             p={3}
             borderRadius="md"
           />
@@ -245,7 +314,6 @@ export default function AddEmployeeScreen({ navigation }) {
             placeholder="(___) ___-____"
             keyboardType="phone-pad"
             backgroundColor={COLORS.lightGreen}
-
             borderColor="gray.300"
             p={3}
             borderRadius="md"
@@ -259,16 +327,13 @@ export default function AddEmployeeScreen({ navigation }) {
           <Input
             value={idNumber}
             onChangeText={setIdNumber}
-            placeholder="(___) ___-____"
+            placeholder="Enter ID number"
             backgroundColor={COLORS.lightGreen}
-
             borderColor="gray.300"
             p={3}
             borderRadius="md"
           />
         </FormControl>
-
-
 
         <Button
           mt={4}
@@ -293,53 +358,77 @@ export default function AddEmployeeScreen({ navigation }) {
           <FormControl.Label>
             <Text style={styles.label}>Date of Employment</Text>
           </FormControl.Label>
-          <Input
-            value={dateOfEmployment}
-            onChangeText={setDateOfEmployment}
-            placeholder="__/__/____"
-            borderColor="gray.300"
-            backgroundColor={COLORS.lightGreen}
-
-            p={3}
-            borderRadius="md"
-            InputRightElement={
-              <IconButton
-                icon={
-                  <FastImage
-                    source={icons.calendar}
-                    style={{ width: 24, height: 24 }}
-                  />
-                }
-                onPress={() => console.log("Open date picker")}
-              />
-            }
-          />
+          <Pressable onPress={() => setShowEmploymentDatePicker(true)}>
+            <Input
+              value={dateOfEmployment}
+              placeholder="DD/MM/YYYY"
+              borderColor="gray.300"
+              backgroundColor={COLORS.lightGreen}
+              p={3}
+              borderRadius="md"
+              isReadOnly
+              InputRightElement={
+                <IconButton
+                  icon={
+                    <FastImage
+                      source={icons.calendar}
+                      style={{ width: 24, height: 24 }}
+                    />
+                  }
+                  onPress={() => setShowEmploymentDatePicker(true)}
+                />
+              }
+            />
+          </Pressable>
         </FormControl>
+
+        {showEmploymentDatePicker && (
+          <DateTimePicker
+            testID="employmentDatePicker"
+            value={employmentDateObj}
+            mode="date"
+            display="default"
+            onChange={onEmploymentDateChange}
+          />
+        )}
+
         <FormControl>
           <FormControl.Label>
             <Text style={styles.label}>End Date (If applicable)</Text>
           </FormControl.Label>
-          <Input
-            value={endDate}
-            onChangeText={setEndDate}
-            placeholder="__/__/____"
-            borderColor="gray.300"
-            backgroundColor={COLORS.lightGreen}
-            p={3}
-            borderRadius="md"
-            InputRightElement={
-              <IconButton
-                icon={
-                  <FastImage
-                    source={icons.calendar}
-                    style={{ width: 24, height: 24 }}
-                  />
-                }
-                onPress={() => console.log("Open date picker")}
-              />
-            }
-          />
+          <Pressable onPress={() => setShowEndDatePicker(true)}>
+            <Input
+              value={endDate}
+              placeholder="DD/MM/YYYY"
+              borderColor="gray.300"
+              backgroundColor={COLORS.lightGreen}
+              p={3}
+              borderRadius="md"
+              isReadOnly
+              InputRightElement={
+                <IconButton
+                  icon={
+                    <FastImage
+                      source={icons.calendar}
+                      style={{ width: 24, height: 24 }}
+                    />
+                  }
+                  onPress={() => setShowEndDatePicker(true)}
+                />
+              }
+            />
+          </Pressable>
         </FormControl>
+
+        {showEndDatePicker && (
+          <DateTimePicker
+            testID="endDatePicker"
+            value={endDateObj}
+            mode="date"
+            display="default"
+            onChange={onEndDateChange}
+          />
+        )}
 
         <FormControl isRequired>
           <FormControl.Label>
@@ -390,7 +479,6 @@ export default function AddEmployeeScreen({ navigation }) {
                 onChangeText={setCustomRole}
                 placeholder="role/title"
                 backgroundColor={COLORS.lightGreen}
-
                 borderColor="gray.300"
                 p={3}
                 borderRadius="md"
@@ -432,7 +520,6 @@ export default function AddEmployeeScreen({ navigation }) {
             onChangeText={setSalary}
             placeholder="11,000"
             backgroundColor={COLORS.lightGreen}
-
             keyboardType="numeric"
             borderColor="gray.300"
             p={3}
@@ -559,7 +646,6 @@ export default function AddEmployeeScreen({ navigation }) {
             borderColor="gray.300"
             p={3}
             backgroundColor={COLORS.lightGreen}
-
             borderRadius="md"
           />
         </FormControl>
@@ -574,7 +660,6 @@ export default function AddEmployeeScreen({ navigation }) {
             placeholder="Doe"
             borderColor="gray.300"
             backgroundColor={COLORS.lightGreen}
-
             p={3}
             borderRadius="md"
           />
@@ -591,7 +676,6 @@ export default function AddEmployeeScreen({ navigation }) {
             borderColor="gray.300"
             p={3}
             backgroundColor={COLORS.lightGreen}
-
             borderRadius="md"
           />
         </FormControl>
@@ -612,32 +696,113 @@ export default function AddEmployeeScreen({ navigation }) {
           />
         </FormControl>
 
+        <FormControl>
+          <FormControl.Label>
+            <Text style={styles.label}>Emergency Contact</Text>
+          </FormControl.Label>
+          <Input
+            value={emergencyContact}
+            onChangeText={setEmergencyContact}
+            placeholder="(___) ___-____"
+            keyboardType="phone-pad"
+            backgroundColor={COLORS.lightGreen}
+            borderColor="gray.300"
+            p={3}
+            borderRadius="md"
+          />
+        </FormControl>
+
+        <FormControl>
+          <FormControl.Label>
+            <Text style={styles.label}>ID Number</Text>
+          </FormControl.Label>
+          <Input
+            value={idNumber}
+            onChangeText={setIdNumber}
+            placeholder="Enter ID number"
+            backgroundColor={COLORS.lightGreen}
+            borderColor="gray.300"
+            p={3}
+            borderRadius="md"
+          />
+        </FormControl>
+
         <FormControl isRequired>
           <FormControl.Label>
             <Text style={styles.label}>Date of Employment</Text>
           </FormControl.Label>
-          <Input
-            value={dateOfEmployment}
-            onChangeText={setDateOfEmployment}
-            placeholder="__/__/____"
-            borderColor="gray.300"
-            p={3}
-            backgroundColor={COLORS.lightGreen}
-
-            borderRadius="md"
-            InputRightElement={
-              <IconButton
-                icon={
-                  <FastImage
-                    source={icons.calendar}
-                    style={{ width: 24, height: 24 }}
-                  />
-                }
-                onPress={() => console.log("Open date picker")}
-              />
-            }
-          />
+          <Pressable onPress={() => setShowEmploymentDatePicker(true)}>
+            <Input
+              value={dateOfEmployment}
+              placeholder="DD/MM/YYYY"
+              borderColor="gray.300"
+              p={3}
+              backgroundColor={COLORS.lightGreen}
+              borderRadius="md"
+              isReadOnly
+              InputRightElement={
+                <IconButton
+                  icon={
+                    <FastImage
+                      source={icons.calendar}
+                      style={{ width: 24, height: 24 }}
+                    />
+                  }
+                  onPress={() => setShowEmploymentDatePicker(true)}
+                />
+              }
+            />
+          </Pressable>
         </FormControl>
+
+        {showEmploymentDatePicker && (
+          <DateTimePicker
+            testID="employmentDatePicker"
+            value={employmentDateObj}
+            mode="date"
+            display="default"
+            onChange={onEmploymentDateChange}
+          />
+        )}
+
+        <FormControl isRequired>
+          <FormControl.Label>
+            <Text style={styles.label}>End Date</Text>
+          </FormControl.Label>
+          <Pressable onPress={() => setShowEndDatePicker(true)}>
+            <Input
+              value={endDate}
+              placeholder="DD/MM/YYYY"
+              borderColor="gray.300"
+              backgroundColor={COLORS.lightGreen}
+              p={3}
+              borderRadius="md"
+              isReadOnly
+              InputRightElement={
+                <IconButton
+                  icon={
+                    <FastImage
+                      source={icons.calendar}
+                      style={{ width: 24, height: 24 }}
+                    />
+                  }
+                  onPress={() => setShowEndDatePicker(true)}
+                />
+              }
+            />
+          </Pressable>
+        </FormControl>
+
+        {showEndDatePicker && (
+          <DateTimePicker
+            testID="endDatePicker"
+            value={endDateObj}
+            mode="date"
+            display="default"
+            onChange={onEndDateChange}
+          />
+        )}
+
         <FormControl isRequired>
           <FormControl.Label>
             <Text style={styles.label}>Type of Engagement</Text>
@@ -679,6 +844,7 @@ export default function AddEmployeeScreen({ navigation }) {
             <Select.Item label="Custom Hours" value="custom" />
           </Select>
         </FormControl>
+
         <FormControl isRequired>
           <FormControl.Label>
             <Text style={styles.label}>Role</Text>
@@ -738,25 +904,6 @@ export default function AddEmployeeScreen({ navigation }) {
 
         <FormControl isRequired>
           <FormControl.Label>
-            <Text style={styles.label}>Work Schedule</Text>
-          </FormControl.Label>
-          <Select
-            selectedValue={workSchedule}
-            minWidth="100%"
-            borderColor="gray.300"
-            p={3}
-            borderRadius="md"
-            placeholder="Select the hours"
-            onValueChange={setWorkSchedule}
-          >
-            <Select.Item label="Full Day (8 hours)" value="full" />
-            <Select.Item label="Half Day (4 hours)" value="half" />
-            <Select.Item label="Custom Hours" value="custom" />
-          </Select>
-        </FormControl>
-
-        <FormControl isRequired>
-          <FormControl.Label>
             <Text style={styles.label}>Salary (Kenya Shillings)</Text>
           </FormControl.Label>
           <Input
@@ -805,7 +952,6 @@ export default function AddEmployeeScreen({ navigation }) {
         }}
       >
         <Box bg="white" p={4} mx={4} mt={4} borderRadius={12} shadow={1}>
-
           <Text style={styles.subtitleText}>
             Please fill out this form with the required information
           </Text>

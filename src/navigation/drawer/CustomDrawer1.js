@@ -1,18 +1,21 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React, {useState, useCallback, useEffect} from 'react';
+import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
 import {
   DrawerContentScrollView,
   DrawerItemList,
 } from '@react-navigation/drawer';
 import FastImage from 'react-native-fast-image';
-import { icons } from '../../constants';
-import { Divider } from 'native-base';
-import { COLORS } from '../../constants/theme';
+import {icons} from '../../constants';
+import {Divider} from 'native-base';
+import {COLORS} from '../../constants/theme';
 import AppVersion from '../../components/AppVersion';
 import CopyRight from '../../components/CopyRight';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
-import { Switch } from 'native-base';
-import { useState, useEffect } from 'react';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import LinearGradient from 'react-native-linear-gradient';
+import {getUserFarms, getFarmById} from '../../services/farm';
+import {getLivestockForActiveFarm} from '../../services/livestock';
 
 const CustomDrawer1 = props => {
   const navigation = useNavigation();
@@ -22,6 +25,9 @@ const CustomDrawer1 = props => {
     lastName: '',
     role: '',
   });
+  const [activeFarm, setActiveFarm] = useState(null);
+  const [livestockCount, setLivestockCount] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -37,6 +43,91 @@ const CustomDrawer1 = props => {
     loadUserData();
   }, []);
 
+  const fetchLivestockCount = async () => {
+    try {
+      const {data: livestock, error} = await getLivestockForActiveFarm();
+      if (!error && livestock && Array.isArray(livestock)) {
+        let totalCount = 0;
+        livestock.forEach(animal => {
+          if (animal?.type?.toLowerCase() === 'poultry') {
+            totalCount += animal.poultry?.initialQuantity || 1;
+          } else {
+            totalCount += 1;
+          }
+        });
+        setLivestockCount(totalCount);
+      }
+    } catch (error) {
+      console.error('Error fetching livestock count:', error);
+    }
+  };
+
+  const fetchActiveFarm = async () => {
+    try {
+      setLoading(true);
+      const storedFarm = await AsyncStorage.getItem('activeFarm');
+
+      if (storedFarm) {
+        const parsed = JSON.parse(storedFarm);
+        try {
+          const updatedFarm = await getFarmById(parsed.id);
+          const newActive = {
+            id: updatedFarm.id,
+            name: updatedFarm.name,
+            location: updatedFarm.administrativeLocation,
+            size: `${updatedFarm.size} acres`,
+            animals: Array.isArray(updatedFarm.farmingTypes)
+              ? updatedFarm.farmingTypes
+              : [],
+          };
+          setActiveFarm(newActive);
+          await AsyncStorage.setItem('activeFarm', JSON.stringify(newActive));
+          return;
+        } catch (error) {
+          console.log('Error fetching stored farm, using cached data:', error);
+          setActiveFarm(parsed);
+          return;
+        }
+      }
+
+      const {data} = await getUserFarms();
+      if (data && data.length > 0) {
+        const firstFarm = data[0];
+        const activeFarmData = {
+          id: firstFarm.id,
+          name: firstFarm.name,
+          location: firstFarm.administrativeLocation,
+          size: `${firstFarm.size} acres`,
+          animals: Array.isArray(firstFarm.farmingTypes)
+            ? firstFarm.farmingTypes
+            : [],
+        };
+        setActiveFarm(activeFarmData);
+        await AsyncStorage.setItem(
+          'activeFarm',
+          JSON.stringify(activeFarmData),
+        );
+      } else {
+        setActiveFarm(null);
+      }
+    } catch (error) {
+      console.error('Error fetching active farm:', error);
+      setActiveFarm(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchData = async () => {
+        await fetchActiveFarm();
+        await fetchLivestockCount();
+      };
+      fetchData();
+    }, []),
+  );
+
   const toggleSwitch = () => setIsDarkMode(previousState => !previousState);
 
   const handleLogout = async () => {
@@ -48,35 +139,89 @@ const CustomDrawer1 = props => {
     }
   };
 
+  const navigateToFarmInfo = () => {
+    navigation.navigate('FarmInformation');
+  };
+
   return (
     <View style={styles.container}>
       {/* Profile Section */}
       <View style={styles.profileSection}>
         <FastImage source={icons.avatar} style={styles.avatar} />
-        <Text
-          style={
-            styles.nameText
-          }>{`${userData.firstName} ${userData.lastName}`}</Text>
+        <Text style={styles.nameText}>
+          {`${userData.firstName} ${userData.lastName}`}
+        </Text>
         <Text style={styles.roleText}>{userData.role || 'User'}</Text>
         <Divider style={styles.divider} />
       </View>
 
+      {/* Active Farm Section */}
+      <View style={styles.activeFarmSection}>
+        <Text style={styles.farmSectionTitle}>Active Farm</Text>
+
+        {activeFarm ? (
+          <TouchableOpacity
+            style={styles.activeFarmCard}
+            onPress={navigateToFarmInfo}
+            activeOpacity={0.8}>
+            <LinearGradient
+              colors={['rgba(76, 113, 83, 0.8)', 'rgba(76, 113, 83, 0.6)']}
+              style={styles.farmCardGradient}>
+              <View style={styles.farmCardContent}>
+                <View style={styles.farmIconContainer}>
+                  <Icon name="barn" size={20} color={COLORS.green} />
+                </View>
+
+                <View style={styles.farmInfo}>
+                  <Text style={styles.farmName} numberOfLines={1}>
+                    {activeFarm.name}
+                  </Text>
+                  <View style={styles.farmDetails}>
+                    <Text style={styles.farmDetail} numberOfLines={1}>
+                      📍 {activeFarm.location}
+                    </Text>
+                    <View style={styles.farmStatsRow}>
+                      <Text style={styles.farmStat}>🌾 {activeFarm.size}</Text>
+                      <Text style={styles.farmStat}>🐄 {livestockCount}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <Icon
+                  name="chevron-right"
+                  size={18}
+                  color="rgba(255,255,255,0.8)"
+                />
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.noFarmCard}
+            onPress={navigateToFarmInfo}
+            activeOpacity={0.8}>
+            <View style={styles.noFarmContent}>
+              <Icon name="plus-circle-outline" size={24} color={COLORS.green} />
+              <View style={styles.noFarmTextContainer}>
+                <Text style={styles.noFarmText}>Add Your Farm</Text>
+                <Text style={styles.noFarmSubtext}>Set up your first farm</Text>
+              </View>
+              <Icon
+                name="chevron-right"
+                size={16}
+                color="rgba(255,255,255,0.6)"
+              />
+            </View>
+          </TouchableOpacity>
+        )}
+
+        <Divider style={styles.divider} />
+      </View>
+
       {/* Drawer Items */}
-      <DrawerContentScrollView {...props}>
+      <DrawerContentScrollView {...props} style={styles.drawerScrollView}>
         <DrawerItemList {...props} />
       </DrawerContentScrollView>
-
-      {/* Dark Mode Switch */}
-      {/* <View style={styles.switchContainer}>
-        <Text style={styles.switchLabel}>Dark Mode</Text>
-        <Switch
-          isChecked={isDarkMode}
-          onToggle={toggleSwitch}
-          offTrackColor="#767577"
-          onTrackColor="#81b0ff"
-          thumbColor={isDarkMode ? '#f5dd4b' : '#f4f3f4'}
-        />
-      </View> */}
 
       {/* Logout Button */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -133,6 +278,99 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.greenAlpha,
     width: '85%',
   },
+  activeFarmSection: {
+    paddingHorizontal: 15,
+    paddingVertical: 15,
+  },
+  farmSectionTitle: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 10,
+    opacity: 0.9,
+  },
+  activeFarmCard: {
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: 15,
+  },
+  farmCardGradient: {
+    padding: 12,
+  },
+  farmCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  farmIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  farmInfo: {
+    flex: 1,
+    paddingRight: 8,
+  },
+  farmName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 4,
+  },
+  farmDetails: {
+    gap: 4,
+  },
+  farmDetail: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  farmStatsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  farmStat: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.7)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  noFarmCard: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(76, 113, 83, 0.4)',
+    borderStyle: 'dashed',
+    padding: 12,
+    marginBottom: 15,
+  },
+  noFarmContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  noFarmTextContainer: {
+    flex: 1,
+    marginLeft: 10,
+    marginRight: 8,
+  },
+  noFarmText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'white',
+  },
+  noFarmSubtext: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+  drawerScrollView: {
+    flex: 1,
+  },
   footer: {
     alignItems: 'center',
     padding: 10,
@@ -143,6 +381,7 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: COLORS.green,
     marginVertical: 10,
+    marginHorizontal: 15,
     borderRadius: 5,
   },
   logoutIcon: {

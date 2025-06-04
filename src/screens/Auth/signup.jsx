@@ -246,7 +246,7 @@ export default function RegisterScreen({ navigation }) {
         gender: formData.gender,
         dob: formatDateForAPI(formData.date_of_birth),
         residenceCounty: formData.residence_county,
-        residenceConstituency: formData.residence_constituency, // Updated mapping
+        residenceConstituency: formData.residence_constituency,
         residenceLocation: formData.residence_location,
         email: formData.email,
         phoneNumber: sanitizePhoneNumber(formData.phone_number),
@@ -255,7 +255,7 @@ export default function RegisterScreen({ navigation }) {
         yearsOfExperience: formData.years_of_experience ? parseInt(formData.years_of_experience) : undefined,
         farmName: formData.farm_name,
         county: formData.county,
-        constituency: formData.constituency, // Updated mapping
+        constituency: formData.constituency,
         administrativeLocation: formData.administrative_location,
         farmSize: formData.farm_size ? parseFloat(formData.farm_size) : undefined,
         ownership: formData.ownership,

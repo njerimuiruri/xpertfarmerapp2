@@ -225,11 +225,11 @@ const RecordBirthScreen = ({ route, navigation }) => {
             <Text style={styles.buttonCancelText}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity
-  style={[styles.button, styles.saveButton]}
-  onPress={() => navigation.navigate('BreedingModuleLandingScreen')}
->
-  <Text style={styles.buttonSaveText}>Save Record</Text>
-</TouchableOpacity>
+            style={[styles.button, styles.saveButton]}
+            onPress={() => navigation.navigate('BreedingModuleLandingScreen')}
+          >
+            <Text style={styles.buttonSaveText}>Save Record</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -264,6 +264,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+
   },
   cardTitle: {
     fontSize: 18,
