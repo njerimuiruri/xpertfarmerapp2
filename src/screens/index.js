@@ -37,6 +37,8 @@ import EditBreedingRecordScreen from './livestock/breeding/EditBreedingRecordScr
 import RecordBirthScreen from './livestock/breeding/RecordBirthScreen';
 import BreedingRecordDetailScreen from './livestock/breeding/BreedingRecordDetailScreen';
 
+import ViewOffspringScreen from './livestock/breeding/ViewOffspringScreen ';
+
 import LivestockModuleScreen from './livestock/LivestockModuleScreen';
 import AnimalDetailScreen from './livestock/AnimalDetailScreen';
 import BreedingRecordForm from './livestock/breeding/BreedingRecordForm';
@@ -163,6 +165,7 @@ export {
   AnimalDetailScreen,
   FeedingModuleScreen,
   BreedingModuleLandingScreen,
+  ViewOffspringScreen,
 
   // Breeding
   BreedingRecordForm,

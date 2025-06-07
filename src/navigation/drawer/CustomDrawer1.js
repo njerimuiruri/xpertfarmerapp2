@@ -1,5 +1,12 @@
 import React, {useState, useCallback, useEffect} from 'react';
-import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+} from 'react-native';
 import {
   DrawerContentScrollView,
   DrawerItemList,
@@ -26,8 +33,10 @@ const CustomDrawer1 = props => {
     role: '',
   });
   const [activeFarm, setActiveFarm] = useState(null);
+  const [allFarms, setAllFarms] = useState([]);
   const [livestockCount, setLivestockCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [showFarmModal, setShowFarmModal] = useState(false);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -62,66 +71,81 @@ const CustomDrawer1 = props => {
     }
   };
 
-  const fetchActiveFarm = async () => {
+  const fetchAllFarms = async () => {
     try {
       setLoading(true);
-      const storedFarm = await AsyncStorage.getItem('activeFarm');
-
-      if (storedFarm) {
-        const parsed = JSON.parse(storedFarm);
-        try {
-          const updatedFarm = await getFarmById(parsed.id);
-          const newActive = {
-            id: updatedFarm.id,
-            name: updatedFarm.name,
-            location: updatedFarm.administrativeLocation,
-            size: `${updatedFarm.size} acres`,
-            animals: Array.isArray(updatedFarm.farmingTypes)
-              ? updatedFarm.farmingTypes
-              : [],
-          };
-          setActiveFarm(newActive);
-          await AsyncStorage.setItem('activeFarm', JSON.stringify(newActive));
-          return;
-        } catch (error) {
-          console.log('Error fetching stored farm, using cached data:', error);
-          setActiveFarm(parsed);
-          return;
-        }
-      }
-
+      const storedActiveFarm = await AsyncStorage.getItem('activeFarm');
       const {data} = await getUserFarms();
+
       if (data && data.length > 0) {
-        const firstFarm = data[0];
-        const activeFarmData = {
-          id: firstFarm.id,
-          name: firstFarm.name,
-          location: firstFarm.administrativeLocation,
-          size: `${firstFarm.size} acres`,
-          animals: Array.isArray(firstFarm.farmingTypes)
-            ? firstFarm.farmingTypes
-            : [],
-        };
-        setActiveFarm(activeFarmData);
-        await AsyncStorage.setItem(
-          'activeFarm',
-          JSON.stringify(activeFarmData),
-        );
+        const formattedFarms = data.map(farm => ({
+          id: farm.id,
+          name: farm.name,
+          location: farm.administrativeLocation,
+          size: `${farm.size} acres`,
+          animals: Array.isArray(farm.farmingTypes) ? farm.farmingTypes : [],
+          isActive: false,
+        }));
+
+        // Set active farm
+        let activeId = null;
+        if (storedActiveFarm) {
+          const parsed = JSON.parse(storedActiveFarm);
+          activeId = parsed.id;
+        } else {
+          activeId = formattedFarms[0]?.id;
+        }
+
+        const updatedFarms = formattedFarms.map(farm => ({
+          ...farm,
+          isActive: farm.id === activeId,
+        }));
+
+        const active = updatedFarms.find(f => f.isActive);
+        setAllFarms(updatedFarms);
+        setActiveFarm(active || updatedFarms[0]);
+
+        // Update stored active farm if needed
+        if (
+          active &&
+          (!storedActiveFarm || JSON.parse(storedActiveFarm).id !== active.id)
+        ) {
+          await AsyncStorage.setItem('activeFarm', JSON.stringify(active));
+        }
       } else {
+        setAllFarms([]);
         setActiveFarm(null);
       }
     } catch (error) {
-      console.error('Error fetching active farm:', error);
+      console.error('Error fetching farms:', error);
+      setAllFarms([]);
       setActiveFarm(null);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleFarmSelect = async farm => {
+    if (farm.id === activeFarm?.id) return;
+
+    const updatedFarms = allFarms.map(f => ({
+      ...f,
+      isActive: f.id === farm.id,
+    }));
+
+    setAllFarms(updatedFarms);
+    setActiveFarm(farm);
+    await AsyncStorage.setItem('activeFarm', JSON.stringify(farm));
+    setShowFarmModal(false);
+
+    // Refresh livestock count for new active farm
+    await fetchLivestockCount();
+  };
+
   useFocusEffect(
     useCallback(() => {
       const fetchData = async () => {
-        await fetchActiveFarm();
+        await fetchAllFarms();
         await fetchLivestockCount();
       };
       fetchData();
@@ -143,9 +167,89 @@ const CustomDrawer1 = props => {
     navigation.navigate('FarmInformation');
   };
 
+  const renderModalFarmItem = ({item}) => {
+    const isActive = item.isActive;
+
+    return (
+      <TouchableOpacity
+        style={[styles.modalFarmItem, isActive && styles.activeModalFarmItem]}
+        onPress={() => handleFarmSelect(item)}
+        activeOpacity={0.8}>
+        <View style={styles.modalFarmContent}>
+          <View
+            style={[
+              styles.farmIconContainer,
+              isActive && styles.activeFarmIcon,
+            ]}>
+            <Icon
+              name="barn"
+              size={20}
+              color={isActive ? COLORS.green : 'rgba(255,255,255,0.7)'}
+            />
+          </View>
+
+          <View style={styles.modalFarmInfo}>
+            <Text
+              style={[
+                styles.modalFarmName,
+                isActive && styles.activeModalFarmName,
+              ]}>
+              {item.name}
+            </Text>
+            <Text style={styles.modalFarmLocation}>📍 {item.location}</Text>
+            <Text style={styles.modalFarmSize}>🌾 {item.size}</Text>
+          </View>
+
+          {isActive && (
+            <Icon name="check-circle" size={20} color={COLORS.green} />
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const FarmSwitcherModal = () => (
+    <Modal
+      visible={showFarmModal}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setShowFarmModal(false)}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Switch Farm</Text>
+            <TouchableOpacity
+              onPress={() => setShowFarmModal(false)}
+              style={styles.closeButton}>
+              <Icon name="close" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          <FlatList
+            data={allFarms}
+            renderItem={renderModalFarmItem}
+            keyExtractor={item => item.id}
+            showsVerticalScrollIndicator={false}
+            ItemSeparatorComponent={() => <View style={{height: 12}} />}
+            style={styles.farmsList}
+          />
+
+          <TouchableOpacity
+            style={styles.addFarmButton}
+            onPress={() => {
+              setShowFarmModal(false);
+              navigation.navigate('AddFarm');
+            }}>
+            <Icon name="plus" size={20} color={COLORS.green} />
+            <Text style={styles.addFarmText}>Add New Farm</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <View style={styles.container}>
-      {/* Profile Section */}
       <View style={styles.profileSection}>
         <FastImage source={icons.avatar} style={styles.avatar} />
         <Text style={styles.nameText}>
@@ -155,72 +259,103 @@ const CustomDrawer1 = props => {
         <Divider style={styles.divider} />
       </View>
 
-      {/* Active Farm Section */}
-      <View style={styles.activeFarmSection}>
-        <Text style={styles.farmSectionTitle}>Active Farm</Text>
-
-        {activeFarm ? (
-          <TouchableOpacity
-            style={styles.activeFarmCard}
-            onPress={navigateToFarmInfo}
-            activeOpacity={0.8}>
-            <LinearGradient
-              colors={['rgba(76, 113, 83, 0.8)', 'rgba(76, 113, 83, 0.6)']}
-              style={styles.farmCardGradient}>
-              <View style={styles.farmCardContent}>
-                <View style={styles.farmIconContainer}>
-                  <Icon name="barn" size={20} color={COLORS.green} />
-                </View>
-
-                <View style={styles.farmInfo}>
-                  <Text style={styles.farmName} numberOfLines={1}>
-                    {activeFarm.name}
-                  </Text>
-                  <View style={styles.farmDetails}>
-                    <Text style={styles.farmDetail} numberOfLines={1}>
-                      📍 {activeFarm.location}
-                    </Text>
-                    <View style={styles.farmStatsRow}>
-                      <Text style={styles.farmStat}>🌾 {activeFarm.size}</Text>
-                      <Text style={styles.farmStat}>🐄 {livestockCount}</Text>
-                    </View>
-                  </View>
-                </View>
-
-                <Icon
-                  name="chevron-right"
-                  size={18}
-                  color="rgba(255,255,255,0.8)"
-                />
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={styles.noFarmCard}
-            onPress={navigateToFarmInfo}
-            activeOpacity={0.8}>
-            <View style={styles.noFarmContent}>
-              <Icon name="plus-circle-outline" size={24} color={COLORS.green} />
-              <View style={styles.noFarmTextContainer}>
-                <Text style={styles.noFarmText}>Add Your Farm</Text>
-                <Text style={styles.noFarmSubtext}>Set up your first farm</Text>
-              </View>
-              <Icon
-                name="chevron-right"
-                size={16}
-                color="rgba(255,255,255,0.6)"
-              />
-            </View>
-          </TouchableOpacity>
-        )}
-
-        <Divider style={styles.divider} />
-      </View>
-
-      {/* Drawer Items */}
       <DrawerContentScrollView {...props} style={styles.drawerScrollView}>
         <DrawerItemList {...props} />
+
+        <View style={styles.activeFarmSection}>
+          <Divider style={[styles.divider, {marginBottom: 15}]} />
+
+          {activeFarm ? (
+            <>
+              <TouchableOpacity
+                style={styles.activeFarmCard}
+                onPress={() => setShowFarmModal(true)}
+                activeOpacity={0.8}>
+                <LinearGradient
+                  colors={['rgba(76, 113, 83, 0.8)', 'rgba(76, 113, 83, 0.6)']}
+                  style={styles.activeFarmGradient}>
+                  <View style={styles.activeFarmHeader}>
+                    <View style={styles.activeFarmIconContainer}>
+                      <Icon name="barn" size={18} color={COLORS.green} />
+                    </View>
+                    <View style={styles.activeFarmInfo}>
+                      <Text style={styles.activeFarmName}>
+                        {activeFarm.name}
+                      </Text>
+                      <Text style={styles.activeFarmLocation}>
+                        📍 {activeFarm.location}
+                      </Text>
+                    </View>
+                    <View style={styles.switchButton}>
+                      <Icon name="swap-horizontal" size={16} color="white" />
+                    </View>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              {/* Farm Stats */}
+              <View style={styles.farmStatsContainer}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{activeFarm.size}</Text>
+                  <Text style={styles.statLabel}>Farm Size</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{livestockCount}</Text>
+                  <Text style={styles.statLabel}>Livestock</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{allFarms.length}</Text>
+                  <Text style={styles.statLabel}>Total Farms</Text>
+                </View>
+              </View>
+
+              <View style={styles.quickActionsContainer}>
+                <TouchableOpacity
+                  style={styles.quickActionButton}
+                  onPress={navigateToFarmInfo}>
+                  <Icon
+                    name="information-outline"
+                    size={16}
+                    color={COLORS.green}
+                  />
+                  <Text style={styles.quickActionText}>Farm Details</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.quickActionButton}
+                  onPress={() => setShowFarmModal(true)}>
+                  <Icon name="swap-horizontal" size={16} color={COLORS.green} />
+                  <Text style={styles.quickActionText}>Switch Farm</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            <TouchableOpacity
+              style={styles.noFarmCard}
+              onPress={navigateToFarmInfo}
+              activeOpacity={0.8}>
+              <View style={styles.noFarmContent}>
+                <Icon
+                  name="plus-circle-outline"
+                  size={24}
+                  color={COLORS.green}
+                />
+                <View style={styles.noFarmTextContainer}>
+                  <Text style={styles.noFarmText}>Set Up Your Farm</Text>
+                  <Text style={styles.noFarmSubtext}>
+                    Start your farming journey
+                  </Text>
+                </View>
+                <Icon
+                  name="chevron-right"
+                  size={20}
+                  color="rgba(255,255,255,0.6)"
+                />
+              </View>
+            </TouchableOpacity>
+          )}
+        </View>
       </DrawerContentScrollView>
 
       {/* Logout Button */}
@@ -233,12 +368,13 @@ const CustomDrawer1 = props => {
         <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
 
-      {/* Footer */}
       <View style={styles.footer}>
         <Divider style={styles.divider} />
         <AppVersion color="white" />
         <CopyRight color="white" />
       </View>
+
+      <FarmSwitcherModal />
     </View>
   );
 };
@@ -281,64 +417,100 @@ const styles = StyleSheet.create({
   activeFarmSection: {
     paddingHorizontal: 15,
     paddingVertical: 15,
-  },
-  farmSectionTitle: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 10,
-    opacity: 0.9,
+    marginTop: 10,
   },
   activeFarmCard: {
     borderRadius: 8,
     overflow: 'hidden',
-    marginBottom: 15,
+    marginBottom: 12,
   },
-  farmCardGradient: {
+  activeFarmGradient: {
     padding: 12,
   },
-  farmCardContent: {
+  activeFarmHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  farmIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  activeFarmIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
   },
-  farmInfo: {
+  activeFarmInfo: {
     flex: 1,
-    paddingRight: 8,
   },
-  farmName: {
+  activeFarmName: {
     fontSize: 14,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 4,
+    marginBottom: 2,
   },
-  farmDetails: {
-    gap: 4,
-  },
-  farmDetail: {
+  activeFarmLocation: {
     fontSize: 11,
     color: 'rgba(255,255,255,0.8)',
   },
-  farmStatsRow: {
+  switchButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  farmStatsContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  statLabel: {
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    marginHorizontal: 12,
+  },
+  quickActionsContainer: {
     flexDirection: 'row',
     gap: 8,
   },
-  farmStat: {
+  quickActionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(76, 113, 83, 0.3)',
+  },
+  quickActionText: {
     fontSize: 10,
-    color: 'rgba(255,255,255,0.7)',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-    overflow: 'hidden',
+    color: 'rgba(255,255,255,0.8)',
+    marginLeft: 4,
+    fontWeight: '500',
   },
   noFarmCard: {
     backgroundColor: 'rgba(255,255,255,0.05)',
@@ -346,8 +518,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(76, 113, 83, 0.4)',
     borderStyle: 'dashed',
-    padding: 12,
-    marginBottom: 15,
+    padding: 15,
   },
   noFarmContent: {
     flexDirection: 'row',
@@ -355,16 +526,16 @@ const styles = StyleSheet.create({
   },
   noFarmTextContainer: {
     flex: 1,
-    marginLeft: 10,
+    marginLeft: 12,
     marginRight: 8,
   },
   noFarmText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: 'white',
   },
   noFarmSubtext: {
-    fontSize: 11,
+    fontSize: 12,
     color: 'rgba(255,255,255,0.6)',
     marginTop: 2,
   },
@@ -394,14 +565,103 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  switchContainer: {
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: '#1a1a1a',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  closeButton: {
+    padding: 5,
+  },
+  farmsList: {
+    maxHeight: 300,
+  },
+  modalFarmItem: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 10,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  activeModalFarmItem: {
+    borderColor: COLORS.green,
+    backgroundColor: 'rgba(76, 113, 83, 0.1)',
+  },
+  modalFarmContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 10,
   },
-  switchLabel: {
+  farmIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  activeFarmIcon: {
+    backgroundColor: 'rgba(76, 113, 83, 0.3)',
+  },
+  modalFarmInfo: {
+    flex: 1,
+  },
+  modalFarmName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.9)',
+    marginBottom: 4,
+  },
+  activeModalFarmName: {
     color: 'white',
-    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalFarmLocation: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 2,
+  },
+  modalFarmSize: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  addFarmButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(76, 113, 83, 0.2)',
+    borderRadius: 10,
+    padding: 15,
+    marginTop: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(76, 113, 83, 0.4)',
+    borderStyle: 'dashed',
+  },
+  addFarmText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.green,
+    marginLeft: 8,
   },
 });

@@ -564,7 +564,6 @@ export async function getLivestockStatistics(livestockId) {
   }
 }
 
-// Fixed helper function to get livestock for active farm
 export async function getLivestockForActiveFarm() {
   try {
     const activeFarmRaw = await AsyncStorage.getItem('activeFarm');
@@ -614,7 +613,6 @@ export async function getLivestockForActiveFarm() {
   }
 }
 
-// Additional helper function to check if active farm exists
 export async function getActiveFarmInfo() {
   try {
     const activeFarmRaw = await AsyncStorage.getItem('activeFarm');

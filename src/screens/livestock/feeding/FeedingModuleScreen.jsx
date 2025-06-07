@@ -37,36 +37,7 @@ const initialFeedingData = [
     nextFeeding: '2025-03-04',
     timeOfDay: ['Morning', 'Afternoon', 'Evening'],
   },
-  {
-    id: '3',
-    animalType: 'Poultry',
-    feedName: 'Layer Feed',
-    frequency: 'Daily',
-    amount: '120 g per bird',
-    lastFed: '2025-03-03',
-    nextFeeding: '2025-03-04',
-    timeOfDay: ['Morning'],
-  },
-  {
-    id: '4',
-    animalType: 'Swine',
-    feedName: 'Starter Feed',
-    frequency: 'Three Times Daily',
-    amount: '1.5 kg per animal',
-    lastFed: '2025-03-03',
-    nextFeeding: '2025-03-04',
-    timeOfDay: ['Morning', 'Afternoon', 'Evening'],
-  },
-  {
-    id: '5',
-    animalType: 'Sheep',
-    feedName: 'Grazing Supplement',
-    frequency: 'Once Daily',
-    amount: '0.8 kg per animal',
-    lastFed: '2025-03-03',
-    nextFeeding: '2025-03-04',
-    timeOfDay: ['Morning'],
-  },
+
 ];
 
 const FeedingModuleScreen = ({ navigation }) => {

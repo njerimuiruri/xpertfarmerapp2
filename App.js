@@ -48,6 +48,7 @@ import {
   BreedingRecordForm,
   EditBreedingRecordScreen,
   BreedingRecordDetailScreen,
+  ViewOffspringScreen,
 
   // Feeds
   LivestockFeedingScreen,
@@ -312,7 +313,6 @@ export default function App() {
                 component={EditLivestockScreen}
                 options={{headerShown: false}}
               />
-
               <Stack.Screen
                 name="AddLivestockGroupScreen"
                 component={AddLivestockGroupScreen}
@@ -353,6 +353,12 @@ export default function App() {
                 component={AnimalFeedingProgramScreen}
                 options={{headerShown: false}}
               />
+              <Stack.Screen
+                name="ViewOffspringScreen"
+                component={ViewOffspringScreen}
+                options={{headerShown: false}}
+              />
+
               <Stack.Screen
                 name="FarmFeedsScreen"
                 component={FarmFeedsScreen}

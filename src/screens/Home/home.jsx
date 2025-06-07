@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getUserFarms, getFarmById } from '../../services/farm';
 import { getLivestockForActiveFarm } from '../../services/livestock';
 
+
 const Dashboard = () => {
   const navigation = useNavigation();
   const [selectedPeriod, setSelectedPeriod] = useState('This month');
@@ -53,7 +54,6 @@ const Dashboard = () => {
         return;
       }
 
-      // Calculate livestock statistics
       const stats = {
         totalAnimals: 0,
         flocks: 0,
@@ -70,12 +70,10 @@ const Dashboard = () => {
         const animalType = animal.type.toLowerCase();
 
         if (animalType === 'poultry') {
-          // For poultry, count by initial quantity if available
           const quantity = animal.poultry?.initialQuantity || 1;
           stats.flocks += quantity;
           stats.totalAnimals += quantity;
         } else {
-          // For mammals, each record represents one animal
           stats.totalAnimals += 1;
 
           switch (animalType) {
@@ -234,7 +232,6 @@ const Dashboard = () => {
     <View style={styles.container}>
       <Header navigation={navigation} />
       <ScrollView style={styles.scrollView}>
-        {/* Enhanced Welcome Banner */}
         <LinearGradient
           colors={['#8CD18C', '#A7E3A7']}
           start={{ x: 0, y: 0 }}
@@ -254,7 +251,6 @@ const Dashboard = () => {
 
 
 
-        {/* Farm Overview Section */}
         <View style={styles.overviewSection}>
           <Text style={styles.overviewTitle}>Farm Management</Text>
           <TouchableOpacity style={styles.monthSelector} onPress={() => setShowPeriodModal(true)}>

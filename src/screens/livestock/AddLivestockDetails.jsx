@@ -34,7 +34,6 @@ export default function AddLivestockScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [activeFarm, setActiveFarm] = useState(null);
 
-  // For mammals (cattle, goats, sheep, rabbit, swine)
   const [mammalFormData, setMammalFormData] = useState({
     idNumber: "",
     breedType: "",
@@ -48,7 +47,6 @@ export default function AddLivestockScreen({ navigation }) {
     birthWeight: "",
   });
 
-  // For poultry
   const [poultryFormData, setPoultryFormData] = useState({
     flockId: "",
     dateOfStocking: new Date(),
@@ -217,7 +215,7 @@ export default function AddLivestockScreen({ navigation }) {
           ...payload,
           flockId: poultryFormData.flockId,
           dateOfStocking: poultryFormData.dateOfStocking.toISOString(),
-          gender: poultryFormData.gender,
+          gender: poultryFormData.gender.toLowerCase(),
           initialQuantity: parseInt(poultryFormData.initialQuantity),
           breedType: poultryFormData.breedType,
           sourceOfBirds: poultryFormData.sourceOfBirds,
@@ -230,7 +228,7 @@ export default function AddLivestockScreen({ navigation }) {
           breedType: mammalFormData.breedType,
           phenotype: mammalFormData.phenotype,
           dateOfBirth: mammalFormData.dateOfBirth.toISOString(),
-          gender: mammalFormData.gender,
+          gender: mammalFormData.gender.toLowerCase(),
           sireId: mammalFormData.sireId,
           sireCode: mammalFormData.sireCode,
           damId: mammalFormData.damId,
