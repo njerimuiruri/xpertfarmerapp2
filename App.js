@@ -21,6 +21,7 @@ import {
   EmailOtpScreen,
   ProfileScreen,
   PersonalInformation,
+  AboutScreen,
   // farm
   FarmInformation,
   AddFarm,
@@ -228,6 +229,12 @@ export default function App() {
                 options={{headerShown: false}}
               />
               <Stack.Screen
+                name="AboutScreen"
+                component={AboutScreen}
+                options={{headerShown: false}}
+              />
+
+              <Stack.Screen
                 name="FarmInformation"
                 component={FarmInformation}
                 options={{headerShown: false}}
@@ -358,7 +365,6 @@ export default function App() {
                 component={ViewOffspringScreen}
                 options={{headerShown: false}}
               />
-
               <Stack.Screen
                 name="FarmFeedsScreen"
                 component={FarmFeedsScreen}

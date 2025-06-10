@@ -9,6 +9,9 @@ import HomeScreen from './Home/home';
 // personal information
 import ProfileScreen from './Home/profile-screen';
 import PersonalInformation from './Home/PersonalInformation';
+
+import AboutScreen from './Home/AboutScreen';
+
 // Farm details
 import AddFarm from './farm/AddFarm';
 import EditFarm from './farm/EditFarm';
@@ -143,6 +146,7 @@ export {
   //personal information
   ProfileScreen,
   PersonalInformation,
+  AboutScreen,
   // Farm Records
   FarmInformation,
   AddFarm,
