@@ -289,7 +289,6 @@ export async function deleteLivestock(id) {
   }
 }
 
-// Update livestock status (sold/deceased)
 export async function updateLivestockStatus(livestockId, status, reason) {
   try {
     const token = await AsyncStorage.getItem('token');
@@ -301,10 +300,31 @@ export async function updateLivestockStatus(livestockId, status, reason) {
       };
     }
 
+    // Validate status
+    const validStatuses = ['active', 'deceased', 'sold', 'transferred'];
+    if (!validStatuses.includes(status)) {
+      return {
+        data: null,
+        error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+      };
+    }
+
+    if (['deceased', 'sold'].includes(status) && !reason?.trim()) {
+      return {
+        data: null,
+        error: `Reason is required when marking animal as ${status}`,
+      };
+    }
+
     const payload = {
       status,
-      reason,
+      reason: reason?.trim() || null,
     };
+
+    console.log(
+      '[updateLivestockStatus] Payload:',
+      JSON.stringify(payload, null, 2),
+    );
 
     const response = await api.patch(
       `/livestock/${livestockId}/status`,
@@ -324,12 +344,22 @@ export async function updateLivestockStatus(livestockId, status, reason) {
       '[updateLivestockStatus] Error:',
       error?.response?.data || error.message,
     );
+
+    let errorMessage = 'Failed to update livestock status';
+
+    if (error?.response?.status === 404) {
+      errorMessage = 'Livestock not found';
+    } else if (error?.response?.status === 400) {
+      errorMessage = error?.response?.data?.message || 'Invalid data provided';
+    } else if (error?.response?.status === 401) {
+      errorMessage = 'Authentication failed. Please login again.';
+    } else if (error?.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    }
+
     return {
       data: null,
-      error:
-        error?.response?.data?.message ||
-        error.message ||
-        'Failed to update livestock status',
+      error: errorMessage,
     };
   }
 }
@@ -449,14 +479,39 @@ export async function transferLivestock(transferData) {
       };
     }
 
+    // Validate required fields
+    const requiredFields = ['livestockId', 'fromFarmId', 'toFarmId'];
+    const missingFields = requiredFields.filter(field => !transferData[field]);
+
+    if (missingFields.length > 0) {
+      return {
+        data: null,
+        error: `Missing required fields: ${missingFields.join(', ')}`,
+      };
+    }
+
+    // Validate that from and to farms are different
+    if (transferData.fromFarmId === transferData.toFarmId) {
+      return {
+        data: null,
+        error: 'Source and destination farms must be different',
+      };
+    }
+
     const payload = {
       livestockId: transferData.livestockId,
       fromFarmId: transferData.fromFarmId,
       toFarmId: transferData.toFarmId,
       transferDate: transferData.transferDate || new Date().toISOString(),
-      reason: transferData.reason,
-      transportMethod: transferData.transportMethod,
+      reason: transferData.reason?.trim() || 'Transfer between farms',
+      transportMethod:
+        transferData.transportMethod?.trim() || 'Standard transport',
     };
+
+    console.log(
+      '[transferLivestock] Payload:',
+      JSON.stringify(payload, null, 2),
+    );
 
     const response = await api.post('/livestock/transfer', payload, {
       headers: {
@@ -472,12 +527,25 @@ export async function transferLivestock(transferData) {
       '[transferLivestock] Error:',
       error?.response?.data || error.message,
     );
+
+    let errorMessage = 'Failed to transfer livestock';
+
+    if (error?.response?.status === 404) {
+      errorMessage = 'Livestock or farm not found';
+    } else if (error?.response?.status === 400) {
+      errorMessage = error?.response?.data?.message || 'Invalid transfer data';
+    } else if (error?.response?.status === 401) {
+      errorMessage = 'Authentication failed. Please login again.';
+    } else if (error?.response?.status === 403) {
+      errorMessage =
+        'Permission denied. You may not have access to one or both farms.';
+    } else if (error?.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    }
+
     return {
       data: null,
-      error:
-        error?.response?.data?.message ||
-        error.message ||
-        'Failed to transfer livestock',
+      error: errorMessage,
     };
   }
 }
@@ -634,6 +702,40 @@ export async function getActiveFarmInfo() {
     return {
       data: null,
       error: 'Failed to get active farm information',
+    };
+  }
+}
+
+export async function getUserFarms() {
+  try {
+    const token = await AsyncStorage.getItem('token');
+
+    if (!token) {
+      return {
+        data: null,
+        error: 'Authentication failed: missing token',
+      };
+    }
+
+    const response = await api.get('/farms', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    console.log('[getUserFarms] Response:', response.data);
+    return {data: response.data?.data || response.data || [], error: null};
+  } catch (error) {
+    console.error(
+      '[getUserFarms] Error:',
+      error?.response?.data || error.message,
+    );
+    return {
+      data: null,
+      error:
+        error?.response?.data?.message ||
+        error.message ||
+        'Failed to retrieve farms',
     };
   }
 }

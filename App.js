@@ -19,6 +19,7 @@ import {
   OnboardingScreen,
   ResetPassword,
   EmailOtpScreen,
+  TermsAndConditionsModal,
   ProfileScreen,
   PersonalInformation,
   AboutScreen,
@@ -39,6 +40,8 @@ import {
   AddFlockDetailsScreen,
   AddLivestockScreen,
   EditLivestockScreen,
+  StatusUpdateForm,
+  TransferForm,
   AddLivestockGroupScreen,
   OptionDetailsScreen,
   OptionLivestockGroupScreen,
@@ -214,6 +217,11 @@ export default function App() {
                 options={{headerShown: false}}
               />
               <Stack.Screen
+                name="TermsAndConditionsModal"
+                component={TermsAndConditionsModal}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
                 name="HomeScreen"
                 component={HomeScreen}
                 options={{headerShown: false}}
@@ -233,7 +241,6 @@ export default function App() {
                 component={AboutScreen}
                 options={{headerShown: false}}
               />
-
               <Stack.Screen
                 name="FarmInformation"
                 component={FarmInformation}
@@ -325,6 +332,17 @@ export default function App() {
                 component={AddLivestockGroupScreen}
                 options={{headerShown: false}}
               />
+              <Stack.Screen
+                name="StatusUpdateForm"
+                component={StatusUpdateForm}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="TransferForm"
+                component={TransferForm}
+                options={{headerShown: false}}
+              />
+
               <Stack.Screen
                 name="OptionDetailsScreen"
                 component={OptionDetailsScreen}

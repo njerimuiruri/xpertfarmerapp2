@@ -185,6 +185,12 @@ const LivestockModuleScreen = ({ route, navigation }) => {
     setActionModalVisible(false);
 
     switch (action) {
+      case 'update_status':
+        navigation.navigate('StatusUpdateForm', {
+          animalId: animal.id,
+          animalData: animal
+        });
+        break;
       case 'status_sold':
         handleMarkAsSold(animal);
         break;
@@ -222,11 +228,15 @@ const LivestockModuleScreen = ({ route, navigation }) => {
           text: 'Mark as Sold',
           onPress: async (reason) => {
             try {
+              const livestockId = animal.rawData._id || animal.rawData.id || animal.id;
+              console.log(' Updating status for ID:', livestockId);
+
               const { error } = await updateLivestockStatus(
-                animal.rawData._id,
+                livestockId,
                 'sold',
                 reason || 'Sold to buyer'
               );
+
 
               if (error) {
                 Alert.alert('Error', error);
@@ -255,8 +265,11 @@ const LivestockModuleScreen = ({ route, navigation }) => {
           text: 'Mark as Deceased',
           onPress: async (reason) => {
             try {
+              const livestockId = animal.rawData._id || animal.rawData.id || animal.id;
+              console.log('🧠 Updating status for ID:', livestockId);
+
               const { error } = await updateLivestockStatus(
-                animal.rawData._id,
+                livestockId,
                 'deceased',
                 reason || 'Natural causes'
               );
@@ -404,9 +417,10 @@ const LivestockModuleScreen = ({ route, navigation }) => {
   const ActionModal = () => {
     const actions = [
       { id: 'edit', label: 'Edit Details', icon: icons.edit, color: COLORS.blue },
+      { id: 'update_status', label: 'Update Status', icon: icons.edit, color: COLORS.green2 },
       { id: 'health', label: 'Health Event', icon: icons.health, color: COLORS.green },
-      { id: 'status_sold', label: 'Mark as Sold', icon: icons.money, color: COLORS.orange },
-      { id: 'status_deceased', label: 'Mark as Deceased', icon: icons.remove, color: COLORS.red },
+      { id: 'status_sold', label: 'Quick Mark as Sold', icon: icons.money, color: COLORS.orange },
+      { id: 'status_deceased', label: 'Quick Mark as Deceased', icon: icons.remove, color: COLORS.red },
       { id: 'mortality', label: 'Record Mortality', icon: icons.document, color: COLORS.darkRed },
       { id: 'sale', label: 'Record Sale', icon: icons.money, color: COLORS.green2 },
       { id: 'transfer', label: 'Transfer Animal', icon: icons.transfer, color: COLORS.purple },
@@ -969,5 +983,4 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
 });
-
-export default LivestockModuleScreen;
+export default LivestockModuleScreen

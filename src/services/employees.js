@@ -218,7 +218,14 @@ export function formatEmployeeData(formData, employeeType) {
     phone: formData.phone,
     employeeType: employeeType,
     dateOfEmployment: formData.dateOfEmployment,
-    role: formData.role === 'custom' ? formData.customRole : formData.role,
+    roles: formData.selectedRoles
+      .map(role => {
+        if (role === 'custom') {
+          return formData.customRole;
+        }
+        return role;
+      })
+      .filter(role => role && role.trim() !== ''),
     paymentSchedule: formData.paymentSchedule,
     salary: parseInt(formData.salary, 10),
   };
@@ -266,7 +273,6 @@ export function formatEmployeeData(formData, employeeType) {
       baseData.benefits = benefits;
     }
   } else if (employeeType === 'casual') {
-    // Add casual-specific fields
     if (formData.endDate) {
       baseData.endDate = formData.endDate;
     }

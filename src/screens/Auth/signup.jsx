@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { CodeField, Cursor } from 'react-native-confirmation-code-field';
 import { Image, ScrollView, Dimensions, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
-import { Box, Text, Input, Button, VStack, HStack, Pressable, Radio, Checkbox, Select, useToast, FormControl } from "native-base";
+import { Box, Text, Input, Button, VStack, HStack, Pressable, Radio, Checkbox, Select, useToast, FormControl, Modal } from "native-base";
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { COLORS } from '../../constants/theme';
@@ -10,6 +10,7 @@ import { Dropdown } from 'react-native-element-dropdown';
 
 import CustomIcon from '../../components/CustomIcon';
 import { register } from '../../services/user';
+import TermsAndConditionsModal from "./TermsAndConditionsModal";
 
 const { width } = Dimensions.get("window");
 
@@ -18,6 +19,7 @@ export default function RegisterScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   // Location data states
   const [countyList, setCountyList] = useState([]);
@@ -72,6 +74,36 @@ export default function RegisterScreen({ navigation }) {
     setCountyList(counties);
     setResidenceCountyList(counties);
   }, []);
+  const renderTermsModal = () => {
+    return (
+      <Modal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} size="full">
+        <Modal.Content maxWidth="95%" maxHeight="90%">
+          <Modal.CloseButton />
+          <Modal.Header>
+            <Text fontSize="18" fontWeight="600" color="gray.800">
+              Terms and Conditions
+            </Text>
+          </Modal.Header>
+          <Modal.Body p={0}>
+            <TermsAndConditionsModal />
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              backgroundColor="green.500"
+              onPress={() => setShowTermsModal(false)}
+              width="100%"
+              height={12}
+              borderRadius={8}
+            >
+              <Text color="white" fontSize="16" fontWeight="500">
+                Close
+              </Text>
+            </Button>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
+    );
+  };
 
   const handleInputChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -191,6 +223,10 @@ export default function RegisterScreen({ navigation }) {
         else if (formData.confirmPin.length !== 4) newErrors.confirmPin = "Confirm PIN must be 4 digits.";
         else if (formData.pin && formData.confirmPin && formData.pin !== formData.confirmPin) newErrors.confirmPin = "PINs do not match.";
         if (Object.keys(newErrors).length > 0) isValid = false;
+        if (!formData.terms_accepted) {
+          newErrors.terms_accepted = "You must accept the terms and conditions.";
+          isValid = false;
+        }
         break;
       default:
         break;
@@ -1069,6 +1105,37 @@ export default function RegisterScreen({ navigation }) {
             {errors.confirmPin}
           </FormControl.ErrorMessage>
         </FormControl>
+        <FormControl isInvalid={'terms_accepted' in errors}>
+          <HStack alignItems="flex-start" space={3} mt={4}>
+            <Checkbox
+              value="terms"
+              isChecked={formData.terms_accepted}
+              onChange={(isChecked) => handleInputChange("terms_accepted", isChecked)}
+              colorScheme="green"
+              size="sm"
+              mt={1}
+            />
+            <VStack flex={1} space={1}>
+              <Text fontSize="14" color="gray.700" flexWrap="wrap">
+                I agree to the{" "}
+                <Pressable onPress={() => setShowTermsModal(true)}>
+                  <Text fontSize="14" color="green.600" textDecorationLine="underline">
+                    Terms and Conditions
+                  </Text>
+                </Pressable>
+                {" "}and{" "}
+                <Pressable onPress={() => {/* Navigate to privacy policy page or open modal */ }}>
+                  <Text fontSize="14" color="green.600" textDecorationLine="underline">
+                    Privacy Policy
+                  </Text>
+                </Pressable>
+              </Text>
+            </VStack>
+          </HStack>
+          <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
+            {errors.terms_accepted}
+          </FormControl.ErrorMessage>
+        </FormControl>
       </VStack>
     );
   };
@@ -1135,6 +1202,8 @@ export default function RegisterScreen({ navigation }) {
               </Button>
             </HStack>
           </Box>
+          {renderTermsModal()}
+
         </Box>
       </ScrollView>
     </KeyboardAvoidingView>

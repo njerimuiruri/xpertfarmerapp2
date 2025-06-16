@@ -39,11 +39,13 @@ export default function AddEmployeeScreen({ navigation }) {
 
   const [dateOfEmployment, setDateOfEmployment] = useState('');
   const [role, setRole] = useState('');
+  const [selectedRoles, setSelectedRoles] = useState([]);
   const [customRole, setCustomRole] = useState('');
   const [showCustomRole, setShowCustomRole] = useState(false);
   const [paymentSchedule, setPaymentSchedule] = useState('daily');
   const [salary, setSalary] = useState('');
   const [workSchedule, setWorkSchedule] = useState('');
+
 
   const [selectedBenefits, setSelectedBenefits] = useState({
     paye: false,
@@ -87,16 +89,23 @@ export default function AddEmployeeScreen({ navigation }) {
     setEndDate(formatDate(currentDate));
   };
 
-  const handleRoleSelect = (roleName) => {
+  const handleRoleSelect = (roleName, isSelected) => {
     if (roleName === 'custom') {
-      setShowCustomRole(true);
-      setRole('custom');
+      setShowCustomRole(isSelected);
+      if (isSelected) {
+        setSelectedRoles(prev => [...prev, 'custom']);
+      } else {
+        setSelectedRoles(prev => prev.filter(role => role !== 'custom'));
+        setCustomRole('');
+      }
     } else {
-      setShowCustomRole(false);
-      setRole(roleName);
+      if (isSelected) {
+        setSelectedRoles(prev => [...prev, roleName]);
+      } else {
+        setSelectedRoles(prev => prev.filter(role => role !== roleName));
+      }
     }
   };
-
   const handleNext = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
@@ -438,32 +447,32 @@ export default function AddEmployeeScreen({ navigation }) {
             <Checkbox
               value="cleaner"
               colorScheme="green"
-              onChange={() => handleRoleSelect('cleaner')}
-              isChecked={role === 'cleaner'}
+              onChange={(isSelected) => handleRoleSelect('cleaner', isSelected)}
+              isChecked={selectedRoles.includes('cleaner')}
             >
               Cleaner
             </Checkbox>
             <Checkbox
               value="feeder"
               colorScheme="green"
-              onChange={() => handleRoleSelect('feeder')}
-              isChecked={role === 'feeder'}
+              onChange={(isSelected) => handleRoleSelect('feeder', isSelected)}
+              isChecked={selectedRoles.includes('feeder')}
             >
               Feeder
             </Checkbox>
             <Checkbox
               value="milker"
               colorScheme="green"
-              onChange={() => handleRoleSelect('milker')}
-              isChecked={role === 'milker'}
+              onChange={(isSelected) => handleRoleSelect('milker', isSelected)}
+              isChecked={selectedRoles.includes('milker')}
             >
               Milker
             </Checkbox>
             <Checkbox
               value="custom"
               colorScheme="green"
-              onChange={() => handleRoleSelect('custom')}
-              isChecked={role === 'custom'}
+              onChange={(isSelected) => handleRoleSelect('custom', isSelected)}
+              isChecked={selectedRoles.includes('custom')}
             >
               Create new role
             </Checkbox>
@@ -998,7 +1007,6 @@ export default function AddEmployeeScreen({ navigation }) {
                 style={styles.modalButton}
                 onPress={() => {
                   setShowSuccessModal(false);
-                  // Reset form
                   setCurrentStep(1);
                   setFirstName('');
                   setMiddleName('');
@@ -1007,7 +1015,7 @@ export default function AddEmployeeScreen({ navigation }) {
                   setEmergencyContact('');
                   setIdNumber('');
                   setDateOfEmployment('');
-                  setRole('');
+                  setSelectedRoles([]);
                   setCustomRole('');
                   setShowCustomRole(false);
                   setPaymentSchedule('daily');

@@ -136,9 +136,15 @@ const FarmEmployeeListScreen = ({ navigation }) => {
             ? a.fullName.localeCompare(b.fullName)
             : b.fullName.localeCompare(a.fullName);
         } else if (sortBy === 'date') {
+          const dateA = new Date(a.dateOfEmployment);
+          const dateB = new Date(b.dateOfEmployment);
+
+          if (isNaN(dateA.getTime())) return 1;
+          if (isNaN(dateB.getTime())) return -1;
+
           return sortOrder === 'asc'
-            ? new Date(a.dateOfEmployment) - new Date(b.dateOfEmployment)
-            : new Date(b.dateOfEmployment) - new Date(a.dateOfEmployment);
+            ? dateA.getTime() - dateB.getTime()
+            : dateB.getTime() - dateA.getTime();
         }
         return 0;
       });
@@ -265,18 +271,27 @@ const FarmEmployeeListScreen = ({ navigation }) => {
 
       <View style={styles.actionBar}>
         <TouchableOpacity
-          style={styles.actionButton}
+          style={[
+            styles.actionButton,
+            sortBy === 'date' && styles.activeActionButton // Add visual feedback
+          ]}
           onPress={() => toggleSort('date')}>
           <FastImage
             source={icons.calendar}
             style={styles.actionIcon}
-            tintColor="#333"
+            tintColor={sortBy === 'date' ? COLORS.green : "#333"}
           />
-          <Text style={styles.actionText}>Sort by Date</Text>
+          <Text style={[
+            styles.actionText,
+            sortBy === 'date' && styles.activeActionText
+          ]}>
+            Sort by Date {sortBy === 'date' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
   );
+
 
   const renderEmployeeCard = ({ item }) => {
     const displayRole = getDisplayRole(item);
@@ -616,6 +631,15 @@ const styles = StyleSheet.create({
     minHeight: 44,
     position: 'relative',
     overflow: 'hidden',
+  },
+  activeActionButton: {
+    backgroundColor: COLORS.green + '20',
+    borderWidth: 1,
+    borderColor: COLORS.green,
+  },
+  activeActionText: {
+    color: COLORS.green,
+    fontWeight: '600',
   },
   activeFilterButton: {
     backgroundColor: COLORS.green,

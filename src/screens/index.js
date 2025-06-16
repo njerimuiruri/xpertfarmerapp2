@@ -5,11 +5,12 @@ import Otp from '../screens/Auth/otp';
 import ResetPassword from '../screens/Auth/reset-password';
 import EmailOtpScreen from '../screens/Auth/Email-Otp-Screen';
 
+import TermsAndConditionsModal from '../screens/Auth/TermsAndConditionsModal';
+
 import HomeScreen from './Home/home';
 // personal information
 import ProfileScreen from './Home/profile-screen';
 import PersonalInformation from './Home/PersonalInformation';
-
 import AboutScreen from './Home/AboutScreen';
 
 // Farm details
@@ -29,6 +30,10 @@ import AddFlockDetailsScreen from './livestock/AddFlockDetails';
 import AddLivestockScreen from './livestock/AddLivestockDetails';
 
 import EditLivestockScreen from './livestock/EditLivestockScreen';
+
+import StatusUpdateForm from './livestock/StatusUpdateForm';
+
+import TransferForm from './livestock/TransferForm';
 
 import AddLivestockGroupScreen from './livestock/AddGroupLivestock';
 import OptionDetailsScreen from './livestock/optionDetails';
@@ -143,6 +148,7 @@ export {
   OnboardingScreen,
   ResetPassword,
   EmailOtpScreen,
+  TermsAndConditionsModal,
   //personal information
   ProfileScreen,
   PersonalInformation,
@@ -163,6 +169,8 @@ export {
   AddLivestockScreen,
   EditLivestockScreen,
   AddLivestockGroupScreen,
+  StatusUpdateForm,
+  TransferForm,
   OptionDetailsScreen,
   OptionLivestockGroupScreen,
   LivestockModuleScreen,
