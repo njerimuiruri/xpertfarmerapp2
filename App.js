@@ -19,7 +19,6 @@ import {
   OnboardingScreen,
   ResetPassword,
   EmailOtpScreen,
-  TermsAndConditionsModal,
   ProfileScreen,
   PersonalInformation,
   AboutScreen,
@@ -42,11 +41,15 @@ import {
   EditLivestockScreen,
   StatusUpdateForm,
   TransferForm,
+  SalesForm,
+  HealthEventForm,
   AddLivestockGroupScreen,
   OptionDetailsScreen,
   OptionLivestockGroupScreen,
   AnimalDetailScreen,
   FeedingModuleScreen,
+  MortalityForm,
+  HealthHistoryScreen,
 
   // Breeding
   BreedingRecordForm,
@@ -216,11 +219,7 @@ export default function App() {
                 component={EmailOtpScreen}
                 options={{headerShown: false}}
               />
-              <Stack.Screen
-                name="TermsAndConditionsModal"
-                component={TermsAndConditionsModal}
-                options={{headerShown: false}}
-              />
+
               <Stack.Screen
                 name="HomeScreen"
                 component={HomeScreen}
@@ -298,6 +297,16 @@ export default function App() {
                 options={{headerShown: false}}
               />
               <Stack.Screen
+                name="MortalityForm"
+                component={MortalityForm}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="SalesForm"
+                component={SalesForm}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
                 name="AnimalDetailScreen"
                 component={AnimalDetailScreen}
                 options={{headerShown: false}}
@@ -340,6 +349,16 @@ export default function App() {
               <Stack.Screen
                 name="TransferForm"
                 component={TransferForm}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="HealthEventForm"
+                component={HealthEventForm}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="HealthHistoryScreen"
+                component={HealthHistoryScreen}
                 options={{headerShown: false}}
               />
 

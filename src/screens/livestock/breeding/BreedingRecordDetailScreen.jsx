@@ -445,7 +445,7 @@ const BreedingRecordDetailScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.lightGray1,
+    backgroundColor: COLORS.lightGreen,
   },
   loadingContainer: {
     flex: 1,

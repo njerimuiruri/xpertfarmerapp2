@@ -10,7 +10,6 @@ import { Dropdown } from 'react-native-element-dropdown';
 
 import CustomIcon from '../../components/CustomIcon';
 import { register } from '../../services/user';
-import TermsAndConditionsModal from "./TermsAndConditionsModal";
 
 const { width } = Dimensions.get("window");
 
@@ -19,9 +18,7 @@ export default function RegisterScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [datePickerVisible, setDatePickerVisible] = useState(false);
-  const [showTermsModal, setShowTermsModal] = useState(false);
 
-  // Location data states
   const [countyList, setCountyList] = useState([]);
   const [constituencyList, setConstituencyList] = useState([]);
   const [wardsList, setWardsList] = useState([]);
@@ -74,36 +71,7 @@ export default function RegisterScreen({ navigation }) {
     setCountyList(counties);
     setResidenceCountyList(counties);
   }, []);
-  const renderTermsModal = () => {
-    return (
-      <Modal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} size="full">
-        <Modal.Content maxWidth="95%" maxHeight="90%">
-          <Modal.CloseButton />
-          <Modal.Header>
-            <Text fontSize="18" fontWeight="600" color="gray.800">
-              Terms and Conditions
-            </Text>
-          </Modal.Header>
-          <Modal.Body p={0}>
-            <TermsAndConditionsModal />
-          </Modal.Body>
-          <Modal.Footer>
-            <Button
-              backgroundColor="green.500"
-              onPress={() => setShowTermsModal(false)}
-              width="100%"
-              height={12}
-              borderRadius={8}
-            >
-              <Text color="white" fontSize="16" fontWeight="500">
-                Close
-              </Text>
-            </Button>
-          </Modal.Footer>
-        </Modal.Content>
-      </Modal>
-    );
-  };
+
 
   const handleInputChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -123,13 +91,11 @@ export default function RegisterScreen({ navigation }) {
       setConstituencyList([]);
     }
 
-    // Reset dependent fields
     handleInputChange("constituency", "");
     handleInputChange("administrative_location", "");
     setWardsList([]);
   };
 
-  // Handle constituency selection for farm location
   const handleConstituencyChange = (constituencyName) => {
     handleInputChange("constituency", constituencyName);
     const selectedCounty = countyData.find(c => c.County === formData.county);
@@ -1116,25 +1082,19 @@ export default function RegisterScreen({ navigation }) {
               mt={1}
             />
             <VStack flex={1} space={1}>
-              <Text fontSize="14" color="gray.700" flexWrap="wrap">
+              <Text fontSize="14" color="gray.700">
                 I agree to the{" "}
-                <Pressable onPress={() => setShowTermsModal(true)}>
-                  <Text fontSize="14" color="green.600" textDecorationLine="underline">
-                    Terms and Conditions
-                  </Text>
-                </Pressable>
-                {" "}and{" "}
-                <Pressable onPress={() => {/* Navigate to privacy policy page or open modal */ }}>
-                  <Text fontSize="14" color="green.600" textDecorationLine="underline">
-                    Privacy Policy
-                  </Text>
-                </Pressable>
+                <Text
+                  fontSize="14"
+                  color="green.600"
+                  textDecorationLine="underline"
+                >
+                  Terms and Conditions
+                </Text>
               </Text>
             </VStack>
           </HStack>
-          <FormControl.ErrorMessage leftIcon={<Icon name="alert-circle-outline" size={16} color="#EF4444" />}>
-            {errors.terms_accepted}
-          </FormControl.ErrorMessage>
+
         </FormControl>
       </VStack>
     );
@@ -1152,8 +1112,7 @@ export default function RegisterScreen({ navigation }) {
       >
         <Box flex={1} backgroundColor="white" safeArea>
           <Box paddingX={6} paddingY={4}>
-            {/* Header */}
-            <HStack alignItems="center" justifyContent="space-between" mb={6}>
+            \            <HStack alignItems="center" justifyContent="space-between" mb={6}>
               <Pressable onPress={() => navigation.goBack()}>
                 <Icon name="arrow-left" size={24} color="#059669" />
               </Pressable>
@@ -1202,7 +1161,6 @@ export default function RegisterScreen({ navigation }) {
               </Button>
             </HStack>
           </Box>
-          {renderTermsModal()}
 
         </Box>
       </ScrollView>

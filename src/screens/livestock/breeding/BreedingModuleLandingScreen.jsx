@@ -13,6 +13,7 @@ import {
   TextInput,
   ScrollView,
   Modal,
+  Dimensions,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -29,6 +30,8 @@ import {
 } from '../../../services/breeding';
 import { getLivestockForActiveFarm } from '../../../services/livestock';
 
+const { width } = Dimensions.get('window');
+
 const BreedingModuleLandingScreen = ({ navigation }) => {
   const [breedingRecords, setBreedingRecords] = useState([]);
   const [breeds, setBreeds] = useState([]);
@@ -42,6 +45,7 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
   const [activeFarm, setActiveFarm] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState(null);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
 
   const [statistics, setStatistics] = useState({
     totalBreedings: 0,
@@ -108,25 +112,52 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
         return;
       }
 
+      console.log('Raw livestock data:', livestock); // Debug log
+
       const map = {};
       livestock?.forEach(animal => {
-        const animalData = animal?.mammal || animal?.poultry;
-        map[animal.id] = {
+        // Try multiple possible data structures
+        const animalData = animal?.mammal || animal?.poultry || animal;
+
+        // Create multiple key mappings to handle different ID scenarios
+        const animalInfo = {
           id: animal.id,
-          idNumber: animalData?.idNumber || 'N/A',
-          breedType: animalData?.breedType || 'Unknown',
-          type: animal.type || 'Unknown',
+          idNumber: animalData?.idNumber || animalData?.damCode || animalData?.sireCode || 'N/A',
+          breedType: animalData?.breedType || animalData?.breed || 'Unknown',
+          type: animal.type || animalData?.type || 'Unknown',
           gender: animalData?.gender || 'Unknown',
+          // Add additional fields that might be useful
+          name: animalData?.name || animalData?.idNumber || 'Unnamed',
+          damCode: animalData?.damCode,
+          sireCode: animalData?.sireCode,
         };
+
+        // Map using animal.id (primary)
+        map[animal.id] = animalInfo;
+
+        // Also map using idNumber if it exists (for backward compatibility)
+        if (animalData?.idNumber) {
+          map[animalData.idNumber] = animalInfo;
+        }
+
+        // Map using damCode/sireCode if they exist
+        if (animalData?.damCode) {
+          map[animalData.damCode] = animalInfo;
+        }
+        if (animalData?.sireCode) {
+          map[animalData.sireCode] = animalInfo;
+        }
       });
 
-      console.log('Created livestock map for active farm with', Object.keys(map).length, 'animals');
+      console.log('Created livestock map keys:', Object.keys(map)); // Debug log
+      console.log('Sample livestock map entry:', map[Object.keys(map)[0]]); // Debug log
       setLivestockMap(map);
     } catch (error) {
       console.error('Error creating livestock map:', error);
       setLivestockMap({});
     }
   };
+
 
   const fetchBreedingRecords = async () => {
     try {
@@ -144,7 +175,16 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
         return;
       }
 
-      console.log('Fetched breeding records for active farm:', data?.length || 0, 'records');
+      console.log('Fetched breeding records:', data?.length || 0, 'records');
+      console.log('Sample breeding record:', data?.[0]); // Debug log
+
+      // Log the damId and sireId from breeding records
+      data?.forEach((record, index) => {
+        if (index < 3) { // Log first 3 records
+          console.log(`Record ${index}: damId=${record.damId}, sireId=${record.sireId}`);
+        }
+      });
+
       setBreedingRecords(data || []);
     } catch (error) {
       console.error('Error fetching breeding records:', error);
@@ -236,7 +276,7 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
       return {
         status: 'pregnant',
         text: `Due in ${daysRemaining} days`,
-        color: COLORS.orange,
+        color: '#FF8C00', // Orange for due soon
         icon: icons.clock,
       };
     }
@@ -244,13 +284,15 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
     return {
       status: 'pregnant',
       text: `${daysRemaining} days to go`,
-      color: COLORS.blue,
+      color: COLORS.green,
       icon: icons.clock,
     };
   };
+
   const hasOffspring = (record) => {
     return record.offspring && record.offspring.length > 0;
   };
+
   const sortedAndFilteredRecords = useMemo(() => {
     return breedingRecords
       .filter(record => {
@@ -292,6 +334,7 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
     setRecordToDelete(recordId);
     setDeleteModalVisible(true);
   }, []);
+
   const confirmDelete = async () => {
     try {
       await deleteBreedingRecord(recordToDelete);
@@ -308,20 +351,280 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
     setDeleteModalVisible(false);
     setRecordToDelete(null);
   };
+
   const toggleSort = useCallback(() => {
     setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
   }, []);
 
   const filterOptions = [
-    { key: 'all', label: 'All', color: COLORS.gray },
-    { key: 'pregnant', label: 'Pregnant', color: COLORS.blue },
-    { key: 'delivered', label: 'Delivered', color: COLORS.green },
-    { key: 'failed', label: 'Failed', color: COLORS.red }
+    { key: 'all', label: 'All Records', color: '#4A5568', icon: icons.grid },
+    { key: 'pregnant', label: 'Pregnant', color: COLORS.green, icon: icons.clock },
+    { key: 'delivered', label: 'Delivered', color: '#22C55E', icon: icons.tick },
+    { key: 'failed', label: 'Overdue', color: COLORS.red, icon: icons.warning }
   ];
 
+  const getStatusCounts = () => {
+    const counts = { all: breedingRecords.length, pregnant: 0, delivered: 0, failed: 0 };
+    breedingRecords.forEach(record => {
+      const status = getPregnancyStatus(record).status;
+      counts[status] = (counts[status] || 0) + 1;
+    });
+    return counts;
+  };
+
+  const statusCounts = getStatusCounts();
+
+
+
+  const renderFilterModal = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={filterModalVisible}
+      onRequestClose={() => setFilterModalVisible(false)}
+    >
+      <View style={styles.filterModalOverlay}>
+        <View style={styles.filterModalContainer}>
+          <View style={styles.filterModalHeader}>
+            <Text style={styles.filterModalTitle}>Filter & Sort</Text>
+            <TouchableOpacity
+              onPress={() => setFilterModalVisible(false)}
+              style={styles.filterModalClose}
+            >
+              <FastImage source={icons.close} style={styles.closeIcon} tintColor={COLORS.gray} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Filter by Status</Text>
+            <View style={styles.filterOptionsGrid}>
+              {filterOptions.map(option => (
+                <TouchableOpacity
+                  key={option.key}
+                  style={[
+                    styles.filterModalButton,
+                    filterStatus === option.key && [styles.activeFilterModalButton, { backgroundColor: option.color }],
+                  ]}
+                  onPress={() => setFilterStatus(option.key)}
+                >
+                  <FastImage
+                    source={option.icon}
+                    style={[
+                      styles.filterModalIcon,
+                      { tintColor: filterStatus === option.key ? COLORS.white : option.color }
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.filterModalButtonText,
+                      filterStatus === option.key && styles.activeFilterModalButtonText,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                  <View style={[
+                    styles.filterCount,
+                    filterStatus === option.key && styles.activeFilterCount
+                  ]}>
+                    <Text style={[
+                      styles.filterCountText,
+                      filterStatus === option.key && styles.activeFilterCountText
+                    ]}>
+                      {statusCounts[option.key] || 0}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Sort Options</Text>
+            <View style={styles.sortOptionsContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.sortOptionButton,
+                  sortBy === 'serviceDate' && styles.activeSortButton
+                ]}
+                onPress={() => setSortBy('serviceDate')}
+              >
+                <FastImage
+                  source={icons.calendar}
+                  style={[
+                    styles.sortOptionIcon,
+                    { tintColor: sortBy === 'serviceDate' ? COLORS.white : COLORS.green }
+                  ]}
+                />
+                <Text style={[
+                  styles.sortOptionText,
+                  sortBy === 'serviceDate' && styles.activeSortText
+                ]}>
+                  Service Date
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.sortOptionButton,
+                  sortBy === 'expectedBirthDate' && styles.activeSortButton
+                ]}
+                onPress={() => setSortBy('expectedBirthDate')}
+              >
+                <FastImage
+                  source={icons.clock}
+                  style={[
+                    styles.sortOptionIcon,
+                    { tintColor: sortBy === 'expectedBirthDate' ? COLORS.white : COLORS.green }
+                  ]}
+                />
+                <Text style={[
+                  styles.sortOptionText,
+                  sortBy === 'expectedBirthDate' && styles.activeSortText
+                ]}>
+                  Expected Birth
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.sortOrderButton}
+              onPress={toggleSort}
+            >
+              <FastImage
+                source={sortOrder === 'asc' ? icons.arrow_up : icons.arrow_down}
+                style={styles.sortOrderIcon}
+                tintColor={COLORS.green}
+              />
+              <Text style={styles.sortOrderText}>
+                {sortOrder === 'asc' ? 'Oldest First' : 'Newest First'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={styles.applyFiltersButton}
+            onPress={() => setFilterModalVisible(false)}
+          >
+            <Text style={styles.applyFiltersText}>Apply Filters</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
+  const renderSearchAndFilters = () => (
+    <View style={styles.searchAndFiltersContainer}>
+      <View style={styles.searchContainer}>
+        <FastImage
+          source={icons.search}
+          style={styles.searchIcon}
+          tintColor={COLORS.green}
+        />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by animal ID, type, purpose..."
+          placeholderTextColor="#9CA3AF"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <FastImage source={icons.close} style={styles.clearSearchIcon} tintColor="#9CA3AF" />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <View style={styles.quickFiltersContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.quickFiltersRow}>
+            {filterOptions.slice(0, 3).map(option => (
+              <TouchableOpacity
+                key={option.key}
+                style={[
+                  styles.quickFilterChip,
+                  filterStatus === option.key && [styles.activeQuickFilterChip, { backgroundColor: option.color }],
+                ]}
+                onPress={() => setFilterStatus(option.key)}
+              >
+                <FastImage
+                  source={option.icon}
+                  style={[
+                    styles.quickFilterIcon,
+                    { tintColor: filterStatus === option.key ? COLORS.white : option.color }
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.quickFilterText,
+                    filterStatus === option.key && styles.activeQuickFilterText,
+                  ]}
+                >
+                  {option.label.replace(' Records', '')}
+                </Text>
+                <View style={[
+                  styles.quickFilterBadge,
+                  filterStatus === option.key && styles.activeQuickFilterBadge
+                ]}>
+                  <Text style={[
+                    styles.quickFilterBadgeText,
+                    filterStatus === option.key && styles.activeQuickFilterBadgeText
+                  ]}>
+                    {statusCounts[option.key] || 0}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.moreFiltersButton}
+              onPress={() => setFilterModalVisible(true)}
+            >
+              <FastImage source={icons.filter} style={styles.moreFiltersIcon} tintColor={COLORS.green} />
+              <Text style={styles.moreFiltersText}>More</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
+    </View>
+  );
+
   const renderBreedingRecord = ({ item }) => {
-    const damInfo = livestockMap[item.damId];
-    const sireInfo = livestockMap[item.sireId];
+    // Debug logs for this specific record
+    console.log(`Rendering record ${item.id}:`);
+    console.log(`- damId: ${item.damId}`);
+    console.log(`- sireId: ${item.sireId}`);
+    console.log(`- Available livestock keys: ${Object.keys(livestockMap).slice(0, 5).join(', ')}...`);
+
+    // Try multiple ways to find the dam and sire
+    let damInfo = livestockMap[item.damId];
+    let sireInfo = livestockMap[item.sireId];
+
+    // If not found, try alternative lookups
+    if (!damInfo) {
+      // Try to find by idNumber, damCode, or other identifiers
+      damInfo = Object.values(livestockMap).find(animal =>
+        animal.id === item.damId ||
+        animal.idNumber === item.damId ||
+        animal.damCode === item.damId
+      );
+      if (damInfo) {
+        console.log(`Found dam by alternative lookup: ${JSON.stringify(damInfo)}`);
+      }
+    }
+
+    if (!sireInfo && item.serviceType !== 'Artificial Insemination') {
+      sireInfo = Object.values(livestockMap).find(animal =>
+        animal.id === item.sireId ||
+        animal.idNumber === item.sireId ||
+        animal.sireCode === item.sireId
+      );
+      if (sireInfo) {
+        console.log(`Found sire by alternative lookup: ${JSON.stringify(sireInfo)}`);
+      }
+    }
+
+    // Log what we found
+    console.log(`- Dam info: ${damInfo ? JSON.stringify(damInfo) : 'NOT FOUND'}`);
+    console.log(`- Sire info: ${sireInfo ? JSON.stringify(sireInfo) : 'NOT FOUND'}`);
+
     const pregnancyStatus = getPregnancyStatus(item);
 
     return (
@@ -330,8 +633,8 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
         onPress={() => handleViewDetails(item.id)}
         activeOpacity={0.7}
       >
-        <View style={styles.statusContainer}>
-          <View style={[styles.statusBadge, { backgroundColor: pregnancyStatus.color + '20' }]}>
+        <View style={styles.cardHeader}>
+          <View style={[styles.statusBadge, { backgroundColor: pregnancyStatus.color + '15' }]}>
             <FastImage
               source={pregnancyStatus.icon}
               style={[styles.statusIcon, { tintColor: pregnancyStatus.color }]}
@@ -340,128 +643,166 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
               {pregnancyStatus.text}
             </Text>
           </View>
+          <Text style={styles.recordId}>#{item.id.slice(-6)}</Text>
         </View>
 
         <View style={styles.animalsContainer}>
           <View style={styles.animalInfo}>
-            <Text style={styles.animalLabel}>Dam (♀)</Text>
+            <View style={styles.animalHeader}>
+              <FastImage source={icons.female} style={styles.genderIcon} tintColor="#EC4899" />
+              <Text style={styles.animalLabel}>Dam</Text>
+            </View>
             <Text style={styles.animalName}>
-              {damInfo ? `${damInfo.idNumber}` : 'Unknown'}
+              {damInfo ? (damInfo.name || damInfo.idNumber || 'Unnamed') : 'Unknown Animal'}
+            </Text>
+            <Text style={styles.animalCode}>
+              Code: {damInfo?.damCode || item.damCode || 'N/A'}
             </Text>
             <Text style={styles.animalDetails}>
-              {damInfo ? `${damInfo.type} - ${damInfo.breedType}` : 'N/A'}
+              {damInfo ? `${damInfo.type} • ${damInfo.breedType}` : 'N/A'}
             </Text>
           </View>
 
-          <View style={styles.breedingIcon}>
-            <FastImage source={icons.heart} style={styles.heartIcon} tintColor={COLORS.pink} />
+          <View style={styles.breedingIconContainer}>
+            <View style={styles.breedingLine} />
+            <FastImage source={icons.heart} style={styles.heartIcon} tintColor={COLORS.green} />
+            <View style={styles.breedingLine} />
           </View>
 
           <View style={styles.animalInfo}>
-            <Text style={styles.animalLabel}>Sire (♂)</Text>
+            <View style={styles.animalHeader}>
+              <FastImage source={icons.male} style={styles.genderIcon} tintColor="#3B82F6" />
+              <Text style={styles.animalLabel}>Sire</Text>
+            </View>
             <Text style={styles.animalName}>
               {item.serviceType === 'Artificial Insemination'
-                ? item.sireCode || 'AI Code'
-                : sireInfo ? `${sireInfo.idNumber}` : 'Unknown'
+                ? 'AI Service'
+                : sireInfo ? (sireInfo.name || sireInfo.idNumber || 'Unnamed') : 'Unknown Animal'
+              }
+            </Text>
+            <Text style={styles.animalCode}>
+              Code: {item.serviceType === 'Artificial Insemination'
+                ? (item.sireCode || item.aiCode || 'N/A')
+                : (sireInfo?.sireCode || item.sireCode || 'N/A')
               }
             </Text>
             <Text style={styles.animalDetails}>
               {item.serviceType === 'Artificial Insemination'
-                ? `AI - ${item.aiType || 'Regular'}`
-                : sireInfo ? `${sireInfo.type} - ${sireInfo.breedType}` : 'N/A'
+                ? `AI • ${item.aiType || 'Regular'}`
+                : sireInfo ? `${sireInfo.type} • ${sireInfo.breedType}` : 'N/A'
               }
             </Text>
           </View>
         </View>
 
+        {/* Rest of the component remains the same */}
         <View style={styles.detailsContainer}>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Purpose:</Text>
-            <Text style={styles.detailValue}>{item.purpose}</Text>
+          <View style={styles.detailsGrid}>
+            <View style={styles.detailItem}>
+              <FastImage source={icons.target} style={styles.detailIcon} tintColor={COLORS.green} />
+              <View>
+                <Text style={styles.detailLabel}>Purpose</Text>
+                <Text style={styles.detailValue}>{item.purpose}</Text>
+              </View>
+            </View>
+            <View style={styles.detailItem}>
+              <FastImage source={icons.strategy} style={styles.detailIcon} tintColor={COLORS.green} />
+              <View>
+                <Text style={styles.detailLabel}>Strategy</Text>
+                <Text style={styles.detailValue}>{item.strategy}</Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Strategy:</Text>
-            <Text style={styles.detailValue}>{item.strategy}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Service Date:</Text>
-            <Text style={styles.detailValue}>
-              {new Date(item.serviceDate).toLocaleDateString()}
-            </Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>
-              {pregnancyStatus.actualDate ? 'Birth Date:' : 'Expected Birth:'}
-            </Text>
-            <Text style={styles.detailValue}>
-              {pregnancyStatus.actualDate
-                ? pregnancyStatus.actualDate.toLocaleDateString()
-                : new Date(item.expectedBirthDate).toLocaleDateString()
-              }
-            </Text>
+
+          <View style={styles.detailsGrid}>
+            <View style={styles.detailItem}>
+              <FastImage source={icons.calendar} style={styles.detailIcon} tintColor={COLORS.green} />
+              <View>
+                <Text style={styles.detailLabel}>Service Date</Text>
+                <Text style={styles.detailValue}>
+                  {new Date(item.serviceDate).toLocaleDateString()}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.detailItem}>
+              <FastImage source={icons.clock} style={styles.detailIcon} tintColor={COLORS.green} />
+              <View>
+                <Text style={styles.detailLabel}>
+                  {pregnancyStatus.actualDate ? 'Birth Date' : 'Expected Birth'}
+                </Text>
+                <Text style={styles.detailValue}>
+                  {pregnancyStatus.actualDate
+                    ? pregnancyStatus.actualDate.toLocaleDateString()
+                    : new Date(item.expectedBirthDate).toLocaleDateString()
+                  }
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
 
         <View style={styles.actionContainer}>
           {pregnancyStatus.status === 'pregnant' ? (
             <TouchableOpacity
-              style={[styles.actionButton, styles.recordBirthButton]}
+              style={styles.primaryActionButton}
               onPress={(e) => {
                 e.stopPropagation();
                 navigation.navigate('RecordBirthScreen', { breedingRecord: item });
               }}
             >
-              <FastImage source={icons.submited} style={styles.actionIcon} tintColor={COLORS.white} />
-              <Text style={styles.recordBirthText}>Record Birth</Text>
+              <FastImage source={icons.submited} style={styles.primaryActionIcon} tintColor={COLORS.white} />
+              <Text style={styles.primaryActionText}>Record Birth</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
-              style={[styles.actionButton, styles.viewOffspringButton]}
+              style={[styles.primaryActionButton, { backgroundColor: '#3B82F6' }]}
               onPress={(e) => {
                 e.stopPropagation();
                 navigation.navigate('ViewOffspringScreen', { breedingRecord: item });
               }}
             >
-              <FastImage source={icons.eye} style={styles.actionIcon} tintColor={COLORS.white} />
-              <Text style={styles.viewOffspringText}>View Offspring</Text>
+              <FastImage source={icons.eye} style={styles.primaryActionIcon} tintColor={COLORS.white} />
+              <Text style={styles.primaryActionText}>View Offspring</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity
-            style={[styles.actionButton, styles.editButton]}
-            onPress={(e) => {
-              e.stopPropagation();
-              navigation.navigate('EditBreedingRecordScreen', { recordId: item.id });
-            }}
-          >
-            <FastImage source={icons.edit} style={styles.actionIcon} tintColor="#2196F3" />
-          </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.actionButton,
-              styles.deleteButton,
-              hasOffspring(item) && styles.disabledButton
-            ]}
-            onPress={(e) => {
-              e.stopPropagation();
-              if (hasOffspring(item)) {
-                Alert.alert(
-                  'Cannot Delete',
-                  'This breeding record cannot be deleted because offspring have been registered.',
-                  [{ text: 'OK' }]
-                );
-                return;
-              }
-              handleDelete(item.id);
-            }}
-            disabled={hasOffspring(item)}
-          >
-            <FastImage
-              source={icons.remove}
-              style={styles.actionIcon}
-              tintColor={hasOffspring(item) ? COLORS.gray : "#F44336"}
-            />
-          </TouchableOpacity>
+          <View style={styles.secondaryActions}>
+            <TouchableOpacity
+              style={styles.secondaryActionButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                navigation.navigate('EditBreedingRecordScreen', { recordId: item.id });
+              }}
+            >
+              <FastImage source={icons.edit} style={styles.secondaryActionIcon} tintColor={COLORS.green} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.secondaryActionButton,
+                hasOffspring(item) && styles.disabledSecondaryButton
+              ]}
+              onPress={(e) => {
+                e.stopPropagation();
+                if (hasOffspring(item)) {
+                  Alert.alert(
+                    'Cannot Delete',
+                    'This breeding record cannot be deleted because offspring have been registered.',
+                    [{ text: 'OK' }]
+                  );
+                  return;
+                }
+                handleDelete(item.id);
+              }}
+              disabled={hasOffspring(item)}
+            >
+              <FastImage
+                source={icons.remove}
+                style={styles.secondaryActionIcon}
+                tintColor={hasOffspring(item) ? COLORS.gray : COLORS.red}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -472,11 +813,11 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
       return (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconContainer}>
-            <FastImage source={icons.heart} style={styles.emptyIcon} tintColor={COLORS.gray} />
+            <FastImage source={icons.farm} style={styles.emptyIcon} tintColor={COLORS.green} />
           </View>
           <Text style={styles.emptyTitle}>No Active Farm Selected</Text>
           <Text style={styles.emptyText}>
-            Please select an active farm to view breeding records.
+            Please select an active farm to view and manage breeding records.
           </Text>
         </View>
       );
@@ -486,12 +827,21 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
       return (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconContainer}>
-            <FastImage source={icons.search} style={styles.emptyIcon} tintColor={COLORS.gray} />
+            <FastImage source={icons.search} style={styles.emptyIcon} tintColor={COLORS.green} />
           </View>
           <Text style={styles.emptyTitle}>No Results Found</Text>
           <Text style={styles.emptyText}>
-            No breeding records match your search criteria. Try adjusting your search or filters.
+            No breeding records match "{searchQuery}". Try adjusting your search or filters.
           </Text>
+          <TouchableOpacity
+            style={styles.clearSearchButton}
+            onPress={() => {
+              setSearchQuery('');
+              setFilterStatus('all');
+            }}
+          >
+            <Text style={styles.clearSearchButtonText}>Clear Search & Filters</Text>
+          </TouchableOpacity>
         </View>
       );
     }
@@ -502,16 +852,16 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
           <View style={styles.emptyIconContainer}>
             <FastImage source={icons.heart} style={styles.emptyIcon} tintColor={COLORS.green} />
           </View>
-          <Text style={styles.emptyTitle}>No Records Yet</Text>
+          <Text style={styles.emptyTitle}>No Breeding Records</Text>
           <Text style={styles.emptyText}>
-            Start tracking your breeding program for {activeFarm.name}
+            Start tracking your breeding program by creating your first breeding record.
           </Text>
           <TouchableOpacity
-            style={styles.addFirstButton}
-            onPress={() => navigation.navigate('BreedingRecordForm')}
+            style={styles.createFirstRecordButton}
+            onPress={() => navigation.navigate('CreateBreedingRecordScreen')}
           >
-            <FastImage source={icons.plus} style={styles.addButtonIcon} tintColor={COLORS.white} />
-            <Text style={styles.addFirstButtonText}>Add First Record</Text>
+            <FastImage source={icons.plus} style={styles.createFirstRecordIcon} tintColor={COLORS.white} />
+            <Text style={styles.createFirstRecordText}>Create First Record</Text>
           </TouchableOpacity>
         </View>
       );
@@ -520,157 +870,93 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
     return null;
   };
 
+  const renderDeleteModal = () => (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={deleteModalVisible}
+      onRequestClose={cancelDelete}
+    >
+      <View style={styles.deleteModalOverlay}>
+        <View style={styles.deleteModalContainer}>
+          <View style={styles.deleteModalIcon}>
+            <FastImage source={icons.warning} style={styles.deleteWarningIcon} tintColor={COLORS.red} />
+          </View>
+          <Text style={styles.deleteModalTitle}>Delete Breeding Record</Text>
+          <Text style={styles.deleteModalText}>
+            Are you sure you want to delete this breeding record? This action cannot be undone.
+          </Text>
+          <View style={styles.deleteModalActions}>
+            <TouchableOpacity style={styles.cancelButton} onPress={cancelDelete}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.deleteButton} onPress={confirmDelete}>
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
   if (loading) {
     return (
+
       <SafeAreaView style={styles.container}>
         <SecondaryHeader title="Breeding Records" />
-        <StatusBar barStyle="light-content" backgroundColor={COLORS.green} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.green} />
-          <Text style={styles.loadingText}>
-            Loading breeding records{activeFarm?.name ? ` for ${activeFarm.name}` : ''}...
-          </Text>
+          <Text style={styles.loadingText}>Loading breed records..</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
+
     <SafeAreaView style={styles.container}>
       <SecondaryHeader title="Breeding Records" />
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.green} />
 
-      <View style={styles.header}>
-        <View style={styles.searchContainer}>
-          <FastImage
-            source={icons.search}
-            style={styles.searchIcon}
-            tintColor="#666"
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search breeding records..."
-            placeholderTextColor="#666"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
+      <StatusBar
+        translucent
+        backgroundColor={COLORS.green2}
+        animated={true}
+        barStyle={'light-content'}
+      />
+      <View style={styles.content}>
+        {renderSearchAndFilters()}
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterScrollView}
-        >
-          <View style={styles.filterContainer}>
-            {filterOptions.map(option => (
-              <TouchableOpacity
-                key={option.key}
-                style={[
-                  styles.filterButton,
-                  filterStatus === option.key && [styles.activeFilterButton, { backgroundColor: option.color }],
-                ]}
-                onPress={() => setFilterStatus(option.key)}
-              >
-                <Text
-                  style={[
-                    styles.filterButtonText,
-                    filterStatus === option.key && styles.activeFilterButtonText,
-                  ]}
-                >
-                  {option.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-
-        <TouchableOpacity
-          style={styles.sortButton}
-          onPress={toggleSort}
-        >
-          <FastImage
-            source={icons.calendar}
-            style={styles.sortIcon}
-            tintColor="#666"
-          />
-          <Text style={styles.sortText}>
-            Sort by Date ({sortOrder === 'asc' ? '↑' : '↓'})
-          </Text>
-        </TouchableOpacity>
+        <FlatList
+          data={sortedAndFilteredRecords}
+          renderItem={renderBreedingRecord}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[
+            styles.listContainer,
+            sortedAndFilteredRecords.length === 0 && styles.emptyListContainer
+          ]}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS.green]}
+              tintColor={COLORS.green}
+            />
+          }
+          ListEmptyComponent={renderEmptyState}
+        />
       </View>
 
-      <FlatList
-        data={sortedAndFilteredRecords}
-        keyExtractor={item => item.id}
-        renderItem={renderBreedingRecord}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[COLORS.green]}
-            tintColor={COLORS.green}
-          />
-        }
-        ListEmptyComponent={renderEmptyState}
-      />
-
-      {activeFarm?.id && (
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={() => navigation.navigate('BreedingRecordForm')}
-        >
-          <FastImage source={icons.plus} style={styles.fabIcon} tintColor="#fff" />
-        </TouchableOpacity>
-      )}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={deleteModalVisible}
-        onRequestClose={cancelDelete}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('BreedingRecordForm')}
+        activeOpacity={0.8}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <View style={styles.warningIconContainer}>
-                <FastImage
-                  source={icons.warning}
-                  style={styles.warningIcon}
-                  tintColor={COLORS.red}
-                />
-              </View>
-              <Text style={styles.modalTitle}>Delete Breeding Record</Text>
-              <Text style={styles.modalSubtitle}>
-                This action cannot be undone. Are you sure you want to permanently delete this breeding record?
-              </Text>
-            </View>
+        <FastImage source={icons.plus} style={styles.fabIcon} tintColor={COLORS.white} />
+      </TouchableOpacity>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={cancelDelete}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.deleteConfirmButton}
-                onPress={confirmDelete}
-                activeOpacity={0.7}
-              >
-                <FastImage
-                  source={icons.remove}
-                  style={styles.deleteButtonIcon}
-                  tintColor={COLORS.white}
-                />
-                <Text style={styles.deleteButtonText}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {renderFilterModal()}
+      {renderDeleteModal()}
     </SafeAreaView>
   );
 };
@@ -678,10 +964,12 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.lightGray1,
+    backgroundColor: COLORS.lightGreen,
   },
-  scrollView: { flex: 1 },
-
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -691,117 +979,195 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     color: COLORS.gray,
+  },
+  statisticsCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  statisticsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.black,
+    marginBottom: 16,
+  },
+  statisticsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statisticsItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statisticsIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statIcon: {
+    width: 20,
+    height: 20,
+  },
+  statisticsNumber: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.black,
+    marginBottom: 4,
+  },
+  statisticsLabel: {
+    fontSize: 12,
+    color: COLORS.gray,
     textAlign: 'center',
   },
-  header: {
-    backgroundColor: COLORS.white,
-    padding: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray3,
+  searchAndFiltersContainer: {
+    marginBottom: 16,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.lightGray2,
-    borderRadius: 25,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    height: 45,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    height: 48,
   },
   searchIcon: {
     width: 20,
     height: 20,
-    marginRight: 12,
+    marginRight: 8,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: COLORS.dark,
+    color: COLORS.black,
   },
-  filterScrollView: {
-    marginBottom: 12,
+  clearSearchIcon: {
+    width: 20,
+    height: 20,
   },
-  filterContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 4,
+  quickFiltersContainer: {
+    height: 40,
   },
-  filterButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: COLORS.lightGray2,
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  activeFilterButton: {
-    borderColor: 'transparent',
-  },
-  filterButtonText: {
-    fontSize: 14,
-    color: COLORS.gray,
-    fontWeight: '500',
-  },
-  activeFilterButtonText: {
-    color: COLORS.white,
-    fontWeight: '600',
-  },
-  sortButton: {
+  quickFiltersRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-end',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: COLORS.lightGray2,
-    borderRadius: 16,
+    paddingRight: 16,
   },
-  sortIcon: {
+  quickFilterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginRight: 8,
+    minWidth: 80,
+  },
+  activeQuickFilterChip: {
+    backgroundColor: COLORS.green,
+  },
+  quickFilterIcon: {
     width: 16,
     height: 16,
-    marginRight: 6,
+    marginRight: 4,
   },
-  sortText: {
+  quickFilterText: {
     fontSize: 12,
     color: COLORS.gray,
-    fontWeight: '500',
+    marginRight: 4,
+  },
+  activeQuickFilterText: {
+    color: COLORS.white,
+  },
+  quickFilterBadge: {
+    backgroundColor: COLORS.white,
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    minWidth: 20,
+  },
+  activeQuickFilterBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  quickFilterBadgeText: {
+    fontSize: 10,
+    color: COLORS.gray,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  activeQuickFilterBadgeText: {
+    color: COLORS.white,
+  },
+  moreFiltersButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  moreFiltersIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 4,
+  },
+  moreFiltersText: {
+    fontSize: 12,
+    color: COLORS.green,
   },
   listContainer: {
-    padding: 16,
     paddingBottom: 80,
+  },
+  emptyListContainer: {
+    flexGrow: 1,
   },
   recordCard: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
-    shadowColor: COLORS.black,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
   },
-  statusContainer: {
-    alignItems: 'flex-end',
-    marginBottom: 12,
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    maxWidth: '80%', // Prevent status from taking full width
+    backgroundColor: '#F0F9FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   statusIcon: {
-    width: 16,
-    height: 16,
-    marginRight: 6,
+    width: 14,
+    height: 14,
+    marginRight: 4,
   },
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    flexShrink: 1, // Allow text to shrink if needed
+  },
+  recordId: {
+    fontSize: 12,
+    color: COLORS.gray,
+    fontWeight: '500',
   },
   animalsContainer: {
     flexDirection: 'row',
@@ -810,154 +1176,179 @@ const styles = StyleSheet.create({
   },
   animalInfo: {
     flex: 1,
+  },
+  animalHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 4,
+  },
+  genderIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 4,
   },
   animalLabel: {
     fontSize: 12,
     color: COLORS.gray,
-    marginBottom: 4,
+    fontWeight: '500',
   },
   animalName: {
     fontSize: 16,
     fontWeight: 'bold',
     color: COLORS.black,
-    textAlign: 'center',
+    marginBottom: 2,
   },
   animalDetails: {
     fontSize: 12,
     color: COLORS.gray,
-    textAlign: 'center',
-    marginTop: 2,
   },
-  breedingIcon: {
+  breedingIconContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginHorizontal: 16,
   },
+  breedingLine: {
+    width: 20,
+    height: 1,
+    backgroundColor: COLORS.green,
+  },
   heartIcon: {
-    width: 24,
-    height: 24,
+    width: 20,
+    height: 20,
+    marginHorizontal: 8,
   },
   detailsContainer: {
-    backgroundColor: COLORS.lightGray2,
-    borderRadius: 8,
-    padding: 12,
     marginBottom: 16,
   },
-  detailRow: {
+  detailsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    marginBottom: 8,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  detailIcon: {
+    width: 14,
+    height: 14,
+    marginRight: 8,
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: COLORS.gray,
-    fontWeight: '500',
+    marginBottom: 2,
   },
   detailValue: {
     fontSize: 14,
     color: COLORS.black,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   actionContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  actionButton: {
+  primaryActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  recordBirthButton: {
     backgroundColor: COLORS.green,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
     flex: 1,
-    justifyContent: 'center',
     marginRight: 8,
   },
-  viewOffspringButton: {
-    backgroundColor: COLORS.blue,
-    flex: 1,
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  editButton: {
-    backgroundColor: COLORS.lightBlue,
-    marginRight: 8,
-  },
-  deleteButton: {
-    backgroundColor: COLORS.lightRed,
-  },
-  actionIcon: {
+  primaryActionIcon: {
     width: 16,
     height: 16,
+    marginRight: 6,
   },
-  recordBirthText: {
+  primaryActionText: {
     color: COLORS.white,
+    fontSize: 14,
     fontWeight: '600',
-    marginLeft: 6,
   },
-  viewOffspringText: {
-    color: COLORS.white,
-    fontWeight: '600',
-    marginLeft: 6,
+  secondaryActions: {
+    flexDirection: 'row',
+  },
+  secondaryActionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F9FAFB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  disabledSecondaryButton: {
+    backgroundColor: '#F3F4F6',
+  },
+  secondaryActionIcon: {
+    width: 16,
+    height: 16,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
-    paddingVertical: 64,
   },
   emptyIconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: COLORS.lightGray2,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: COLORS.green + '15',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   emptyIcon: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
   },
   emptyTitle: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.dark,
-    marginBottom: 12,
+    color: COLORS.black,
+    marginBottom: 8,
     textAlign: 'center',
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 14,
     color: COLORS.gray,
     textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 32,
-    maxWidth: 280,
+    lineHeight: 20,
+    marginBottom: 24,
   },
-  addFirstButton: {
+  clearSearchButton: {
+    backgroundColor: COLORS.green,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  clearSearchButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  createFirstRecordButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.green,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 25,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
   },
-  addButtonIcon: {
-    width: 20,
-    height: 20,
+  createFirstRecordIcon: {
+    width: 16,
+    height: 16,
     marginRight: 8,
   },
-  addFirstButtonText: {
+  createFirstRecordText: {
     color: COLORS.white,
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '600',
   },
   fab: {
@@ -970,42 +1361,188 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.green,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 6,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   fabIcon: {
     width: 24,
     height: 24,
   },
-  modalOverlay: {
+  // Filter Modal Styles
+  filterModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  filterModalContainer: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 34,
+    maxHeight: '80%',
+  },
+  filterModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  filterModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.black,
+  },
+  filterModalClose: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F9FAFB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeIcon: {
+    width: 16,
+    height: 16,
+  },
+  filterSection: {
+    marginBottom: 24,
+  },
+  filterSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.black,
+    marginBottom: 12,
+  },
+  filterOptionsGrid: {
+    gap: 8,
+  },
+  filterModalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  activeFilterModalButton: {
+    backgroundColor: COLORS.green,
+  },
+  filterModalIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 12,
+  },
+  filterModalButtonText: {
+    fontSize: 14,
+    color: COLORS.black,
+    flex: 1,
+  },
+  activeFilterModalButtonText: {
+    color: COLORS.white,
+  },
+  filterCount: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    minWidth: 24,
+  },
+  activeFilterCount: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  filterCountText: {
+    fontSize: 12,
+    color: COLORS.gray,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  activeFilterCountText: {
+    color: COLORS.white,
+  },
+  sortOptionsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  sortOptionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    flex: 1,
+  },
+  activeSortButton: {
+    backgroundColor: COLORS.green,
+  },
+  sortOptionIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 8,
+  },
+  sortOptionText: {
+    fontSize: 14,
+    color: COLORS.black,
+  },
+  activeSortText: {
+    color: COLORS.white,
+  },
+  animalCode: {
+    fontSize: 12,
+    color: COLORS.green,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  sortOrderButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  sortOrderIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 8,
+  },
+  sortOrderText: {
+    fontSize: 14,
+    color: COLORS.black,
+  },
+  applyFiltersButton: {
+    backgroundColor: COLORS.green,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  applyFiltersText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Delete Modal Styles
+  deleteModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
-  modalContainer: {
+  deleteModalContainer: {
     backgroundColor: COLORS.white,
-    borderRadius: 20,
-    padding: 0,
-    width: '100%',
-    maxWidth: 340,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  modalHeader: {
+    borderRadius: 16,
+    padding: 24,
+    marginHorizontal: 32,
     alignItems: 'center',
-    paddingTop: 32,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
   },
-  warningIconContainer: {
+  deleteModalIcon: {
     width: 64,
     height: 64,
     borderRadius: 32,
@@ -1014,62 +1551,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  warningIcon: {
-    width: 28,
-    height: 28,
+  deleteWarningIcon: {
+    width: 32,
+    height: 32,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.dark,
+  deleteModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'center',
   },
-  modalSubtitle: {
-    fontSize: 15,
+  deleteModalText: {
+    fontSize: 14,
     color: COLORS.gray,
     textAlign: 'center',
-    lineHeight: 22,
+    marginBottom: 24,
+    lineHeight: 20,
   },
-  modalActions: {
+  deleteModalActions: {
     flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: COLORS.lightGray2,
+    gap: 12,
   },
   cancelButton: {
     flex: 1,
-    paddingVertical: 16,
+    backgroundColor: '#F9FAFB',
+    paddingVertical: 12,
+    borderRadius: 8,
     alignItems: 'center',
-    borderRightWidth: 1,
-    borderRightColor: COLORS.lightGray2,
   },
   cancelButtonText: {
-    fontSize: 16,
+    color: COLORS.black,
+    fontSize: 14,
     fontWeight: '600',
-    color: COLORS.gray,
   },
-  deleteConfirmButton: {
+  deleteButton: {
     flex: 1,
-    paddingVertical: 16,
-    alignItems: 'center',
     backgroundColor: COLORS.red,
-    borderBottomRightRadius: 20,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  deleteButtonIcon: {
-    width: 16,
-    height: 16,
-    marginRight: 6,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
   },
   deleteButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: COLORS.white,
-  },
-  disabledButton: {
-    backgroundColor: COLORS.lightGray2,
-    opacity: 0.5,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

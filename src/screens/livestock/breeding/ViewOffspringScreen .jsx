@@ -1,39 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import {
-    SafeAreaView,
-    View,
-    Text,
-    StyleSheet,
-    ScrollView,
-    TextInput,
-    TouchableOpacity,
-    Alert,
-    ActivityIndicator,
-    Modal,
-    RefreshControl,
-    Dimensions,
+    SafeAreaView, View, Text, ScrollView, TextInput, TouchableOpacity,
+    Alert, ActivityIndicator, Modal, RefreshControl, StyleSheet
 } from 'react-native';
-import FastImage from 'react-native-fast-image';
-import { icons } from '../../../constants';
-import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
+import { COLORS } from '../../../constants/theme';
+import { icons } from '../../../constants';
+import FastImage from 'react-native-fast-image';
+
 import {
     getBreedingRecordById,
-    registerOffspringAsLivestock
+    registerOffspringAsLivestock,
 } from '../../../services/breeding';
-
-const { width } = Dimensions.get('window');
 
 const ViewOffspringScreen = ({ navigation, route }) => {
     const { breedingRecord: initialRecord } = route.params;
     const breedingRecordId = initialRecord?.id;
 
     const [breedingRecord, setBreedingRecord] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [selectedOffspring, setSelectedOffspring] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
+    const [selectedOffspring, setSelectedOffspring] = useState(null);
     const [registering, setRegistering] = useState(false);
+
+    // Modal states for dropdowns
+    const [showTypeModal, setShowTypeModal] = useState(false);
+    const [showBreedModal, setShowBreedModal] = useState(false);
+    const [showPhenotypeModal, setShowPhenotypeModal] = useState(false);
 
     const [livestockForm, setLivestockForm] = useState({
         type: '',
@@ -41,39 +35,39 @@ const ViewOffspringScreen = ({ navigation, route }) => {
         phenotype: '',
         currentWeight: '',
     });
-
     const [errors, setErrors] = useState({});
 
+    // Data for dropdowns
     const animalTypes = [
-        'dairy cow',
-        'beef cow',
-        'bull',
-        'heifer',
-        'calf',
-        'goat',
-        'sheep',
-        'pig',
-        'chicken',
-        'duck',
-        'turkey',
+        { label: "Dairy Cattle", value: "dairyCattle" },
+        { label: "Beef Cattle", value: "beefCattle" },
+        { label: "Dairy Goats", value: "dairyGoats" },
+        { label: "Meat Goats", value: "meatGoats" },
+        { label: "Sheep", value: "sheep" },
+        { label: "Rabbit", value: "rabbit" },
+        { label: "Pig (Swine)", value: "swine" },
+        { label: "Poultry", value: "poultry" },
     ];
 
-    const commonBreeds = [
-        'Friesian',
-        'Holstein',
-        'Jersey',
-        'Guernsey',
-        'Ayrshire',
-        'Angus',
-        'Hereford',
-        'Simmental',
-        'Charolais',
-        'Brahman',
-    ];
+    const breedsByType = {
+        dairyCattle: ["Holstein", "Jersey", "Guernsey", "Ayrshire", "Brown Swiss"],
+        beefCattle: ["Angus", "Hereford", "Simmental", "Charolais", "Brahman"],
+        dairyGoats: ["Alpine", "Saanen", "Toggenburg", "LaMancha", "Nubian"],
+        meatGoats: ["Boer", "Kiko", "Spanish", "Myotonic", "Savanna"],
+        sheep: ["Merino", "Suffolk", "Dorper", "Romney", "Corriedale"],
+        rabbit: ["New Zealand White", "Californian", "Flemish Giant", "Rex", "Angora"],
+        swine: ["Duroc", "Yorkshire", "Hampshire", "Berkshire", "Landrace"],
+        poultry: ["Broiler", "Layer", "Dual Purpose", "Indigenous", "Turkey", "Duck", "Quail"],
+    };
 
-    useEffect(() => {
-        fetchBreedingRecord();
-    }, []);
+    const phenotypesByCategory = {
+        cattle: ["Black", "White", "Brown", "Spotted", "Red", "Mixed"],
+        goats: ["White", "Black", "Brown", "Multi-colored", "Grey"],
+        sheep: ["White", "Black", "Brown", "Spotted", "Grey"],
+        rabbit: ["White", "Black", "Grey", "Brown", "Spotted"],
+        swine: ["White", "Black", "Pink", "Spotted", "Red"],
+        poultry: ["White", "Black", "Brown", "Multi-colored", "Grey"],
+    };
 
     const fetchBreedingRecord = async () => {
         try {
@@ -81,12 +75,15 @@ const ViewOffspringScreen = ({ navigation, route }) => {
             const record = await getBreedingRecordById(breedingRecordId);
             setBreedingRecord(record);
         } catch (error) {
-            console.error('Error fetching breeding record:', error);
-            Alert.alert('Error', 'Failed to load breeding record details');
+            Alert.alert('Error', 'Failed to load breeding record');
         } finally {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchBreedingRecord();
+    }, []);
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -94,89 +91,98 @@ const ViewOffspringScreen = ({ navigation, route }) => {
         setRefreshing(false);
     };
 
-    const handleRegisterOffspring = (offspring) => {
-        Alert.alert(
-            'Registration Disabled',
-            'Offspring registration feature is currently disabled.',
-            [{ text: 'OK' }]
-        );
-        return;
+    const inferPhenotype = (record) =>
+        record?.damInfo?.phenotype || record?.sireInfo?.phenotype || 'Unknown';
 
-
+    const getPhenotypeCategory = (animalType) => {
+        if (animalType.includes('Cattle')) return 'cattle';
+        if (animalType.includes('Goat')) return 'goats';
+        if (animalType === 'sheep') return 'sheep';
+        if (animalType === 'rabbit') return 'rabbit';
+        if (animalType === 'swine') return 'swine';
+        if (animalType === 'poultry') return 'poultry';
+        return 'cattle'; // default
     };
 
-    const handleFormChange = (field, value) => {
-        setLivestockForm(prev => ({ ...prev, [field]: value }));
+    const handleRegister = (offspring) => {
+        setSelectedOffspring(offspring);
+        const defaultType = breedingRecord?.damInfo?.type || 'dairyCattle';
+        setLivestockForm({
+            type: defaultType,
+            breedType: breedingRecord?.damInfo?.breedType || '',
+            phenotype: inferPhenotype(breedingRecord),
+            currentWeight: offspring?.birthWeight?.toString() || '',
+        });
+        setErrors({});
+        setShowRegisterModal(true);
+    };
+
+    const handleChange = (field, value) => {
+        setLivestockForm((prev) => {
+            const newForm = { ...prev, [field]: value };
+
+            // Reset dependent fields when type changes
+            if (field === 'type') {
+                newForm.breedType = '';
+                newForm.phenotype = '';
+            }
+
+            return newForm;
+        });
 
         if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: null }));
+            setErrors((prev) => ({ ...prev, [field]: null }));
         }
     };
 
-    const validateLivestockForm = () => {
+    const validate = () => {
         const newErrors = {};
-
-        if (!livestockForm.type.trim()) {
-            newErrors.type = 'Animal type is required';
+        if (!livestockForm.type.trim()) newErrors.type = 'Type is required';
+        if (!livestockForm.breedType.trim()) newErrors.breedType = 'Breed is required';
+        if (!livestockForm.phenotype.trim()) newErrors.phenotype = 'Phenotype is required';
+        if (
+            livestockForm.currentWeight &&
+            (isNaN(parseFloat(livestockForm.currentWeight)) ||
+                parseFloat(livestockForm.currentWeight) <= 0)
+        ) {
+            newErrors.currentWeight = 'Weight must be a valid number';
         }
-
-        if (!livestockForm.breedType.trim()) {
-            newErrors.breedType = 'Breed type is required';
-        }
-
-        if (!livestockForm.phenotype.trim()) {
-            newErrors.phenotype = 'Phenotype description is required';
-        }
-
-        if (livestockForm.currentWeight && isNaN(parseFloat(livestockForm.currentWeight))) {
-            newErrors.currentWeight = 'Current weight must be a valid number';
-        }
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const submitLivestockRegistration = async () => {
-        if (!validateLivestockForm()) {
+    const submitRegistration = async () => {
+        if (!validate()) {
             Alert.alert('Validation Error', 'Please correct the errors in the form');
             return;
         }
 
         setRegistering(true);
-
         try {
+            const sire = breedingRecord?.sire?.mammal || {};
+            const dam = breedingRecord?.dam?.mammal || {};
+
+            const selectedTypeLabel = animalTypes.find(t => t.value === livestockForm.type)?.label || livestockForm.type;
+
             const payload = {
-                type: livestockForm.type,
+                type: selectedTypeLabel,
                 breedType: livestockForm.breedType,
                 phenotype: livestockForm.phenotype,
-                currentWeight: livestockForm.currentWeight ? parseFloat(livestockForm.currentWeight) : null,
-
-                damId: breedingRecord.damId,
-                damInfo: breedingRecord.damInfo,
-                sireId: breedingRecord.sireId,
-                sireInfo: breedingRecord.sireInfo,
-                sireCode: breedingRecord.sireCode,
-                serviceType: breedingRecord.serviceType,
-
-                birthDate: breedingRecord.birthInfo?.birthDate || breedingRecord.birthDate,
-                deliveryMethod: breedingRecord.birthInfo?.deliveryMethod || 'Natural Birth',
-                litterWeight: breedingRecord.birthInfo?.litterWeight,
-                birthWeight: selectedOffspring.birthWeight,
-
-                breedingRecordId: breedingRecordId,
-                breedingDate: breedingRecord.breedingDate,
-                expectedDueDate: breedingRecord.expectedDueDate,
-
-                offspringId: selectedOffspring.offspringId,
-                sex: selectedOffspring.sex,
-                notes: selectedOffspring.notes,
+                currentWeight: parseFloat(livestockForm.currentWeight),
+                mammal: {
+                    dateOfBirth: breedingRecord?.birthDate || new Date().toISOString(),
+                    gender: selectedOffspring?.sex,
+                    birthWeight: selectedOffspring?.birthWeight || null,
+                    sireId: sire?.idNumber || breedingRecord?.sireId,
+                    sireCode: sire?.sireCode || '',
+                    damId: dam?.idNumber || breedingRecord?.damId,
+                    damCode: dam?.damCode || '',
+                },
             };
-
-            console.log('Enhanced offspring registration payload:', JSON.stringify(payload, null, 2));
 
             const { data, error } = await registerOffspringAsLivestock(
                 breedingRecordId,
-                selectedOffspring.offspringId,
+                selectedOffspring.id,
                 payload
             );
 
@@ -185,335 +191,316 @@ const ViewOffspringScreen = ({ navigation, route }) => {
                 return;
             }
 
-            Alert.alert(
-                'Success',
-                `${selectedOffspring.offspringId} has been successfully registered as livestock with complete parent and birth information!`,
-                [
-                    {
-                        text: 'OK',
-                        onPress: () => {
-                            setShowRegisterModal(false);
-                            fetchBreedingRecord();
-                        },
+            Alert.alert('Success', 'Offspring registered as livestock', [
+                {
+                    text: 'OK',
+                    onPress: () => {
+                        setShowRegisterModal(false);
+                        fetchBreedingRecord();
                     },
-                ]
-            );
-
-        } catch (error) {
-            console.error('Error registering offspring:', error);
-            Alert.alert('Error', 'Failed to register offspring as livestock. Please try again.');
+                },
+            ]);
+        } catch (err) {
+            Alert.alert('Error', 'Something went wrong');
         } finally {
             setRegistering(false);
         }
     };
 
-
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
-    };
-
-    const calculateAge = (birthDate) => {
-        const today = new Date();
-        const birth = new Date(birthDate);
-        const diffTime = Math.abs(today - birth);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays < 30) {
-            return `${diffDays} day${diffDays !== 1 ? 's' : ''} old`;
-        } else if (diffDays < 365) {
-            const months = Math.floor(diffDays / 30);
-            return `${months} month${months !== 1 ? 's' : ''} old`;
-        } else {
-            const years = Math.floor(diffDays / 365);
-            return `${years} year${years !== 1 ? 's' : ''} old`;
-        }
-    };
-
-    const renderOffspringCard = (offspring, index) => (
-        <View key={index} style={styles.offspringCard}>
-            <View style={styles.cardHeader}>
-                <View style={styles.avatarContainer}>
-                    <View style={[styles.avatar, { backgroundColor: offspring.sex === 'Male' ? '#4A90E2' : '#E91E63' }]}>
-                        <Text style={styles.avatarText}>
-                            {offspring.sex === 'Male' ? '♂' : '♀'}
-                        </Text>
-                    </View>
-                </View>
-
-                <View style={styles.offspringInfo}>
-                    <View style={styles.detailsRow}>
-                        <View style={styles.detailChip}>
-                            <Text style={styles.detailChipText}>{offspring.sex}</Text>
-                        </View>
-                        {offspring.birthWeight && (
-                            <View style={styles.detailChip}>
-                                <Text style={styles.detailChipText}>{offspring.birthWeight} kg</Text>
-                            </View>
-                        )}
-                    </View>
-                    {breedingRecord?.birthDate && (
-                        <Text style={styles.ageText}>
-                            {calculateAge(breedingRecord.birthDate)}
-                        </Text>
-                    )}
-
-                    <View style={styles.parentInfo}>
-                        <Text style={styles.parentInfoTitle}>Lineage</Text>
-                        <View style={styles.parentRow}>
-                            <Text style={styles.parentLabel}>Dam Code:</Text>
-                            <Text style={styles.parentValue}>
-                                {breedingRecord?.damInfo?.damCode || breedingRecord?.damCode || breedingRecord?.damInfo?.idNumber || breedingRecord?.damId || 'Unknown'}
-                            </Text>
-                        </View>
-                        <View style={styles.parentRow}>
-                            <Text style={styles.parentLabel}>Sire Code:</Text>
-                            <Text style={styles.parentValue}>
-                                {breedingRecord?.serviceType === 'Artificial Insemination'
-                                    ? (breedingRecord?.sireCode || 'AI Code')
-                                    : (breedingRecord?.sireInfo?.sireCode || breedingRecord?.sireCode || breedingRecord?.sireInfo?.idNumber || breedingRecord?.sireId || 'Unknown')
-                                }
-                            </Text>
-                        </View>
-                        <View style={styles.parentRow}>
-                            <Text style={styles.parentLabel}>Delivery:</Text>
-                            <Text style={styles.parentValue}>
-                                {breedingRecord?.birthInfo?.deliveryMethod || 'Natural Birth'}
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-            </View>
-
-            <View style={styles.cardActions}>
-                {offspring.isRegisteredAsLivestock ? (
-                    <View style={styles.registeredContainer}>
-                        <View style={styles.registeredBadge}>
-                            <FastImage source={icons.check} style={styles.badgeIcon} tintColor={COLORS.white} />
-                            <Text style={styles.registeredText}>Registered as Livestock</Text>
-                        </View>
-                    </View>
-                ) : (
-                    <TouchableOpacity
-                        style={[styles.registerButton, styles.disabledButton]}
-                        onPress={() => handleRegisterOffspring(offspring)}
-                        activeOpacity={0.6}>
-                        <View style={styles.buttonContent}>
-                            <FastImage source={icons.plus} style={styles.buttonIcon} tintColor={COLORS.white} />
-                            <Text style={styles.registerButtonText}>Register as Livestock (Disabled)</Text>
-                        </View>
-                    </TouchableOpacity>
-                )}
-            </View>
-
-            {offspring.notes && (
-                <View style={styles.notesSection}>
-                    <Text style={styles.notesLabel}>Notes</Text>
-                    <Text style={styles.notesText}>{offspring.notes}</Text>
-                </View>
-            )}
-        </View>
-    );
-
-    const renderRegistrationModal = () => (
-        <Modal
-            animationType="slide"
-            transparent={true}
-            visible={showRegisterModal}
-            onRequestClose={() => setShowRegisterModal(false)}>
-            <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Register as Livestock</Text>
-                        <TouchableOpacity
-                            onPress={() => setShowRegisterModal(false)}
-                            style={styles.closeButton}>
+    const renderDropdownModal = (visible, onClose, title, data, selectedValue, onSelect, keyField = 'value', labelField = 'label') => (
+        <Modal visible={visible} transparent animationType="slide">
+            <View style={styles.modalOverlay}>
+                <View style={styles.dropdownModal}>
+                    <View style={styles.dropdownHeader}>
+                        <Text style={styles.dropdownTitle}>{title}</Text>
+                        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                             <FastImage source={icons.close} style={styles.closeIcon} tintColor={COLORS.gray} />
                         </TouchableOpacity>
                     </View>
+                    <ScrollView style={styles.dropdownList}>
+                        {data.map((item, index) => {
+                            const value = typeof item === 'string' ? item : item[keyField];
+                            const label = typeof item === 'string' ? item : item[labelField];
+                            const isSelected = selectedValue === value;
 
-                    <ScrollView style={styles.modalForm} showsVerticalScrollIndicator={false}>
-                        <View style={styles.offspringModalHeader}>
-                            <Text style={styles.offspringModalId}>
-                                {selectedOffspring?.offspringId}
-                            </Text>
-                            <Text style={styles.offspringModalSubtitle}>
-                                Complete the details below to register this offspring
-                            </Text>
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Animal Type *</Text>
-                            <TextInput
-                                style={[styles.input, errors.type && styles.inputError]}
-                                value={livestockForm.type}
-                                onChangeText={(value) => handleFormChange('type', value)}
-                                placeholder="e.g., dairy cow, bull, heifer"
-                                placeholderTextColor={COLORS.gray}
-                            />
-                            {errors.type && <Text style={styles.errorText}>{errors.type}</Text>}
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Breed Type *</Text>
-                            <TextInput
-                                style={[styles.input, errors.breedType && styles.inputError]}
-                                value={livestockForm.breedType}
-                                onChangeText={(value) => handleFormChange('breedType', value)}
-                                placeholder="e.g., Friesian, Holstein"
-                                placeholderTextColor={COLORS.gray}
-                            />
-                            {errors.breedType && <Text style={styles.errorText}>{errors.breedType}</Text>}
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Phenotype Description *</Text>
-                            <TextInput
-                                style={[styles.input, styles.textArea, errors.phenotype && styles.inputError]}
-                                value={livestockForm.phenotype}
-                                onChangeText={(value) => handleFormChange('phenotype', value)}
-                                placeholder="Describe physical characteristics, coat color, build, etc."
-                                placeholderTextColor={COLORS.gray}
-                                multiline
-                                numberOfLines={3}
-                            />
-                            {errors.phenotype && <Text style={styles.errorText}>{errors.phenotype}</Text>}
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Current Weight (kg)</Text>
-                            <TextInput
-                                style={[styles.input, errors.currentWeight && styles.inputError]}
-                                value={livestockForm.currentWeight}
-                                onChangeText={(value) => handleFormChange('currentWeight', value)}
-                                placeholder="Current weight (optional)"
-                                placeholderTextColor={COLORS.gray}
-                                keyboardType="decimal-pad"
-                            />
-                            {errors.currentWeight && <Text style={styles.errorText}>{errors.currentWeight}</Text>}
-                        </View>
+                            return (
+                                <TouchableOpacity
+                                    key={index}
+                                    style={[styles.dropdownItem, isSelected && styles.selectedDropdownItem]}
+                                    onPress={() => {
+                                        onSelect(value);
+                                        onClose();
+                                    }}
+                                >
+                                    <Text style={[styles.dropdownItemText, isSelected && styles.selectedDropdownItemText]}>
+                                        {label}
+                                    </Text>
+                                    {isSelected && (
+                                        <FastImage source={icons.check} style={styles.checkIcon} tintColor={COLORS.green} />
+                                    )}
+                                </TouchableOpacity>
+                            );
+                        })}
                     </ScrollView>
-
-                    <View style={styles.modalActions}>
-                        <TouchableOpacity
-                            style={styles.cancelButton}
-                            onPress={() => setShowRegisterModal(false)}>
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={[styles.submitButton, registering && styles.submitButtonDisabled]}
-                            onPress={submitLivestockRegistration}
-                            disabled={registering}>
-                            {registering ? (
-                                <ActivityIndicator size="small" color={COLORS.white} />
-                            ) : (
-                                <>
-                                    <FastImage source={icons.submited} style={styles.submitIcon} tintColor={COLORS.white} />
-                                    <Text style={styles.submitButtonText}>Register</Text>
-                                </>
-                            )}
-                        </TouchableOpacity>
-                    </View>
                 </View>
             </View>
         </Modal>
     );
 
+    const getAvailableBreeds = () => {
+        return breedsByType[livestockForm.type] || [];
+    };
+
+    const getAvailablePhenotypes = () => {
+        const category = getPhenotypeCategory(livestockForm.type);
+        return phenotypesByCategory[category] || [];
+    };
+
+    const getDisplayValue = (value, dataArray, keyField = 'value', labelField = 'label') => {
+        if (!value) return 'Select...';
+        const item = dataArray.find(item =>
+            typeof item === 'string' ? item === value : item[keyField] === value
+        );
+        return typeof item === 'string' ? item : (item ? item[labelField] : value);
+    };
+
     if (loading) {
         return (
-            <SafeAreaView style={styles.container}>
-                <SecondaryHeader
-                    title="Offspring Details"
-                    showBackButton={true}
-                    onBackPress={() => navigation.goBack()}
-                />
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={COLORS.green} />
-                    <Text style={styles.loadingText}>Loading offspring details...</Text>
-                </View>
+            <SafeAreaView style={styles.centered}>
+                <ActivityIndicator size="large" color={COLORS.green} />
             </SafeAreaView>
         );
     }
 
-    if (!breedingRecord) {
-        return (
-            <SafeAreaView style={styles.container}>
-                <SecondaryHeader
-                    title="Offspring Details"
-                    showBackButton={true}
-                    onBackPress={() => navigation.goBack()}
-                />
-                <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>Failed to load breeding record</Text>
-                    <TouchableOpacity style={styles.retryButton} onPress={fetchBreedingRecord}>
-                        <Text style={styles.retryButtonText}>Retry</Text>
-                    </TouchableOpacity>
-                </View>
-            </SafeAreaView>
-        );
-    }
-
-    const offspring = breedingRecord.offspring || [];
-    const birthInfo = breedingRecord.birthInfo || {};
+    const offspring = breedingRecord?.offspring || [];
 
     return (
-
         <SafeAreaView style={styles.container}>
             <SecondaryHeader
-                title="Offspring Details"
-                showBackButton={true}
+                title="Offspring"
+                showBackButton
                 onBackPress={() => navigation.goBack()}
             />
 
             <ScrollView
-                style={styles.scrollView}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                 contentContainerStyle={styles.scrollContent}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
-                showsVerticalScrollIndicator={false}>
-
-
-                <View style={styles.offspringSection}>
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Offspring</Text>
-                        <View style={styles.countBadge}>
-                            <Text style={styles.countText}>{offspring.length}</Text>
-                        </View>
+                showsVerticalScrollIndicator={false}
+            >
+                {offspring.length === 0 ? (
+                    <View style={styles.emptyState}>
+                        <FastImage source={icons.empty} style={styles.emptyIcon} tintColor={COLORS.gray} />
+                        <Text style={styles.emptyTitle}>No Offspring Records</Text>
+                        <Text style={styles.emptySubtitle}>
+                            Offspring will appear here once birth is recorded for this breeding record.
+                        </Text>
                     </View>
-
-                    {offspring.length > 0 ? (
-                        <View style={styles.offspringGrid}>
-                            {offspring.map((offspring, index) => renderOffspringCard(offspring, index))}
-                        </View>
-                    ) : (
-                        <View style={styles.emptyState}>
-                            <View style={styles.emptyIconContainer}>
-                                <FastImage source={icons.animals} style={styles.emptyIcon} tintColor={COLORS.gray} />
+                ) : (
+                    offspring.map((o, index) => (
+                        <View key={index} style={styles.offspringCard}>
+                            <View style={styles.cardHeader}>
+                                <View style={styles.idContainer}>
+                                    <Text style={styles.offspringId}>{o.offspringId}</Text>
+                                    <View style={[styles.statusBadge, o.livestockId ? styles.registeredBadge : styles.unregisteredBadge]}>
+                                        <Text style={[styles.statusText, o.livestockId ? styles.registeredText : styles.unregisteredText]}>
+                                            {o.livestockId ? 'Registered' : 'Unregistered'}
+                                        </Text>
+                                    </View>
+                                </View>
                             </View>
-                            <Text style={styles.emptyTitle}>No Offspring Recorded</Text>
-                            <Text style={styles.emptySubtitle}>
-                                Offspring details will appear here once they are added to the breeding record.
-                            </Text>
+
+                            <View style={styles.cardContent}>
+                                <View style={styles.infoRow}>
+                                    <View style={styles.infoItem}>
+                                        <Text style={styles.infoLabel}>Sex</Text>
+                                        <Text style={styles.infoValue}>{o.sex}</Text>
+                                    </View>
+                                    <View style={styles.infoItem}>
+                                        <Text style={styles.infoLabel}>Birth Weight</Text>
+                                        <Text style={styles.infoValue}>{o.birthWeight} kg</Text>
+                                    </View>
+                                </View>
+
+                                {o.notes && (
+                                    <View style={styles.notesContainer}>
+                                        <Text style={styles.infoLabel}>Notes</Text>
+                                        <Text style={styles.notesText}>{o.notes}</Text>
+                                    </View>
+                                )}
+                            </View>
+
+                            {!o.livestockId && (
+                                <TouchableOpacity
+                                    style={styles.registerButton}
+                                    onPress={() => handleRegister(o)}
+                                >
+                                    <FastImage source={icons.plus} style={styles.buttonIcon} tintColor={COLORS.white} />
+                                    <Text style={styles.registerButtonText}>Register as Livestock</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
-                    )}
-                </View>
-
-                {birthInfo.notes && (
-                    <View style={styles.notesCard}>
-                        <Text style={styles.cardTitle}>Birth Notes</Text>
-                        <Text style={styles.notesContent}>{birthInfo.notes}</Text>
-                    </View>
+                    ))
                 )}
-
             </ScrollView>
 
-            {renderRegistrationModal()}
+            {/* Registration Modal */}
+            <Modal visible={showRegisterModal} transparent animationType="slide">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Register Offspring</Text>
+                            <TouchableOpacity
+                                onPress={() => setShowRegisterModal(false)}
+                                style={styles.closeButton}
+                            >
+                                <FastImage source={icons.close} style={styles.closeIcon} tintColor={COLORS.gray} />
+                            </TouchableOpacity>
+                        </View>
 
+                        <Text style={styles.modalSubtitle}>
+                            ID: {selectedOffspring?.offspringId}
+                        </Text>
+
+                        <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
+                            {/* Type Selection */}
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.fieldLabel}>Animal Type *</Text>
+                                <TouchableOpacity
+                                    style={[styles.dropdownButton, errors.type && styles.inputError]}
+                                    onPress={() => setShowTypeModal(true)}
+                                >
+                                    <Text style={[styles.dropdownButtonText, !livestockForm.type && styles.placeholderText]}>
+                                        {getDisplayValue(livestockForm.type, animalTypes)}
+                                    </Text>
+                                    <FastImage source={icons.down} style={styles.dropdownIcon} tintColor={COLORS.gray} />
+                                </TouchableOpacity>
+                                {errors.type && <Text style={styles.errorText}>{errors.type}</Text>}
+                            </View>
+
+                            {/* Breed Selection */}
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.fieldLabel}>Breed Type *</Text>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.dropdownButton,
+                                        errors.breedType && styles.inputError,
+                                        !livestockForm.type && styles.disabledButton
+                                    ]}
+                                    onPress={() => livestockForm.type && setShowBreedModal(true)}
+                                    disabled={!livestockForm.type}
+                                >
+                                    <Text style={[
+                                        styles.dropdownButtonText,
+                                        (!livestockForm.breedType || !livestockForm.type) && styles.placeholderText
+                                    ]}>
+                                        {livestockForm.type
+                                            ? getDisplayValue(livestockForm.breedType, getAvailableBreeds())
+                                            : 'Select animal type first'
+                                        }
+                                    </Text>
+                                    <FastImage source={icons.down} style={styles.dropdownIcon} tintColor={COLORS.gray} />
+                                </TouchableOpacity>
+                                {errors.breedType && <Text style={styles.errorText}>{errors.breedType}</Text>}
+                            </View>
+
+                            {/* Phenotype Selection */}
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.fieldLabel}>Phenotype *</Text>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.dropdownButton,
+                                        errors.phenotype && styles.inputError,
+                                        !livestockForm.type && styles.disabledButton
+                                    ]}
+                                    onPress={() => livestockForm.type && setShowPhenotypeModal(true)}
+                                    disabled={!livestockForm.type}
+                                >
+                                    <Text style={[
+                                        styles.dropdownButtonText,
+                                        (!livestockForm.phenotype || !livestockForm.type) && styles.placeholderText
+                                    ]}>
+                                        {livestockForm.type
+                                            ? getDisplayValue(livestockForm.phenotype, getAvailablePhenotypes())
+                                            : 'Select animal type first'
+                                        }
+                                    </Text>
+                                    <FastImage source={icons.down} style={styles.dropdownIcon} tintColor={COLORS.gray} />
+                                </TouchableOpacity>
+                                {errors.phenotype && <Text style={styles.errorText}>{errors.phenotype}</Text>}
+                            </View>
+
+                            {/* Current Weight */}
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.fieldLabel}>Current Weight (kg)</Text>
+                                <TextInput
+                                    style={[styles.textInput, errors.currentWeight && styles.inputError]}
+                                    value={livestockForm.currentWeight}
+                                    onChangeText={(val) => handleChange('currentWeight', val)}
+                                    placeholder="Enter current weight"
+                                    placeholderTextColor={COLORS.gray}
+                                    keyboardType="decimal-pad"
+                                />
+                                {errors.currentWeight && <Text style={styles.errorText}>{errors.currentWeight}</Text>}
+                            </View>
+                        </ScrollView>
+
+                        <View style={styles.modalFooter}>
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                onPress={() => setShowRegisterModal(false)}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.submitButton, registering && styles.disabledButton]}
+                                onPress={submitRegistration}
+                                disabled={registering}
+                            >
+                                {registering ? (
+                                    <ActivityIndicator size="small" color={COLORS.white} />
+                                ) : (
+                                    <>
+                                        <FastImage source={icons.check} style={styles.buttonIcon} tintColor={COLORS.white} />
+                                        <Text style={styles.submitButtonText}>Register</Text>
+                                    </>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Dropdown Modals */}
+            {renderDropdownModal(
+                showTypeModal,
+                () => setShowTypeModal(false),
+                'Select Animal Type',
+                animalTypes,
+                livestockForm.type,
+                (value) => handleChange('type', value)
+            )}
+
+            {renderDropdownModal(
+                showBreedModal,
+                () => setShowBreedModal(false),
+                'Select Breed Type',
+                getAvailableBreeds(),
+                livestockForm.breedType,
+                (value) => handleChange('breedType', value),
+                null,
+                null
+            )}
+
+            {renderDropdownModal(
+                showPhenotypeModal,
+                () => setShowPhenotypeModal(false),
+                'Select Phenotype',
+                getAvailablePhenotypes(),
+                livestockForm.phenotype,
+                (value) => handleChange('phenotype', value),
+                null,
+                null
+            )}
         </SafeAreaView>
     );
 };
@@ -521,267 +508,134 @@ const ViewOffspringScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8FAFC',
+        backgroundColor: COLORS.lightGreen
     },
-    scrollView: {
+    centered: {
         flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: COLORS.lightGray1
     },
     scrollContent: {
-        padding: 20,
-        paddingBottom: 40,
+        padding: 16,
+        paddingBottom: 32,
     },
-    loadingContainer: {
+
+    // Empty State
+    emptyState: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#F8FAFC',
+        paddingVertical: 60,
     },
-    loadingText: {
-        marginTop: 16,
-        fontSize: 16,
-        color: '#64748B',
-        fontWeight: '500',
-    },
-    errorContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-        backgroundColor: '#F8FAFC',
-    },
-    retryButton: {
-        marginTop: 16,
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        backgroundColor: '#10B981',
-        borderRadius: 12,
-        shadowColor: '#10B981',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    retryButtonText: {
-        color: COLORS.white,
-        fontSize: 16,
-        fontWeight: '600',
-    },
-
-    // Hero Section
-    heroSection: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 20,
-        padding: 24,
-        marginBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 6,
-    },
-    heroContent: {
-        marginBottom: 20,
-    },
-    heroTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#1E293B',
-        marginBottom: 4,
-    },
-    heroSubtitle: {
-        fontSize: 16,
-        color: '#64748B',
-        lineHeight: 24,
-    },
-    heroStats: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        paddingTop: 20,
-        borderTopWidth: 1,
-        borderTopColor: '#E2E8F0',
-    },
-    statItem: {
-        alignItems: 'center',
-    },
-    statNumber: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#10B981',
-        marginBottom: 4,
-    },
-    statLabel: {
-        fontSize: 12,
-        color: '#64748B',
-        fontWeight: '500',
-        textAlign: 'center',
-    },
-
-    // Details Card
-    detailsCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    cardTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#1E293B',
+    emptyIcon: {
+        width: 64,
+        height: 64,
         marginBottom: 16,
     },
-    detailsGrid: {
-        gap: 12,
-    },
-    detailItem: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 8,
-    },
-    detailLabel: {
-        fontSize: 14,
-        color: '#64748B',
-        fontWeight: '500',
-        flex: 1,
-    },
-    detailValue: {
-        fontSize: 14,
-        color: '#1E293B',
-        fontWeight: '600',
-        flex: 1,
-        textAlign: 'right',
-    },
-
-    // Offspring Section
-    offspringSection: {
-        marginBottom: 20,
-    },
-    sectionHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 16,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#1E293B',
-    },
-    countBadge: {
-        backgroundColor: '#EFF6FF',
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderWidth: 1,
-        borderColor: '#DBEAFE',
-    },
-    countText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#2563EB',
-    },
-    offspringGrid: {
-        gap: 16,
-    },
-
-    // Offspring Card
-    offspringCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 3,
-        borderLeftWidth: 4,
-        borderLeftColor: '#10B981',
-    },
-    cardHeader: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        marginBottom: 16,
-    },
-    avatarContainer: {
-        marginRight: 16,
-    },
-    avatar: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    avatarText: {
+    emptyTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#FFFFFF',
-    },
-    offspringInfo: {
-        flex: 1,
-    },
-    offspringId: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#1E293B',
+        color: COLORS.black,
         marginBottom: 8,
     },
-    detailsRow: {
-        flexDirection: 'row',
-        gap: 8,
-        marginBottom: 6,
+    emptySubtitle: {
+        fontSize: 14,
+        color: COLORS.gray,
+        textAlign: 'center',
+        paddingHorizontal: 32,
     },
-    detailChip: {
-        backgroundColor: '#F1F5F9',
-        borderRadius: 8,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderWidth: 1,
-        borderColor: '#E2E8F0',
-    },
-    detailChipText: {
-        fontSize: 12,
-        color: '#475569',
-        fontWeight: '500',
-    },
-    ageText: {
-        fontSize: 12,
-        color: '#2563EB',
-        fontWeight: '600',
-    },
-    cardActions: {
-        marginTop: 4,
-    },
-    registerButton: {
-        backgroundColor: '#10B981',
-        borderRadius: 12,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        shadowColor: '#10B981',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+
+    // Offspring Cards
+    offspringCard: {
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        marginBottom: 16,
+        shadowColor: COLORS.black,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
         shadowRadius: 8,
         elevation: 4,
+        overflow: 'hidden',
     },
-    disabledButton: {
-        backgroundColor: '#9CA3AF',
-        shadowOpacity: 0.1,
-        elevation: 2,
+    cardHeader: {
+        padding: 16,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.lightGray2,
     },
-    buttonContent: {
+    idContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    offspringId: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: COLORS.black,
+        flex: 1,
+    },
+    statusBadge: {
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 20,
+    },
+    registeredBadge: {
+        backgroundColor: COLORS.lightGreen,
+    },
+    unregisteredBadge: {
+        backgroundColor: COLORS.lightRed,
+    },
+    statusText: {
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    registeredText: {
+        color: COLORS.green,
+    },
+    unregisteredText: {
+        color: COLORS.red,
+    },
+    cardContent: {
+        padding: 16,
+    },
+    infoRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 12,
+    },
+    infoItem: {
+        flex: 1,
+    },
+    infoLabel: {
+        fontSize: 12,
+        color: COLORS.gray,
+        fontWeight: '500',
+        marginBottom: 4,
+    },
+    infoValue: {
+        fontSize: 16,
+        color: COLORS.black,
+        fontWeight: '600',
+    },
+    notesContainer: {
+        marginTop: 8,
+    },
+    notesText: {
+        fontSize: 14,
+        color: COLORS.black,
+        lineHeight: 20,
+    },
+    registerButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: COLORS.green,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        margin: 16,
+        marginTop: 0,
+        borderRadius: 12,
     },
     buttonIcon: {
         width: 16,
@@ -789,289 +643,194 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     registerButtonText: {
-        fontSize: 14,
-        color: '#FFFFFF',
+        color: COLORS.white,
+        fontSize: 16,
         fontWeight: '600',
     },
-    registeredContainer: {
-        alignItems: 'flex-start',
-    },
-    registeredBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#DCFCE7',
-        paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#BBF7D0',
-    },
-    badgeIcon: {
-        width: 14,
-        height: 14,
-        marginRight: 6,
-    },
-    registeredText: {
-        fontSize: 12,
-        color: '#166534',
-        fontWeight: '600',
-    },
-    notesSection: {
-        marginTop: 16,
-        paddingTop: 16,
-        borderTopWidth: 1,
-        borderTopColor: '#E2E8F0',
-    },
-    notesLabel: {
-        fontSize: 12,
-        color: '#64748B',
-        fontWeight: '600',
-        marginBottom: 6,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    notesText: {
-        fontSize: 14,
-        color: '#475569',
-        lineHeight: 20,
-    },
-    // Parent Info Section
-    parentInfo: {
-        marginTop: 12,
-        padding: 12,
-        backgroundColor: '#F8FAFC',
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#E2E8F0',
-    },
-    parentInfoTitle: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#64748B',
-        marginBottom: 8,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    parentRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 4,
-    },
-    parentLabel: {
-        fontSize: 12,
-        color: '#64748B',
-        fontWeight: '500',
-    },
-    parentValue: {
-        fontSize: 12,
-        color: '#1E293B',
-        fontWeight: '600',
+
+    modalOverlay: {
         flex: 1,
-        textAlign: 'right',
-    },
-
-    // Empty State
-    emptyState: {
-        alignItems: 'center',
-        paddingVertical: 40,
-        paddingHorizontal: 20,
-    },
-    emptyIconContainer: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: '#F1F5F9',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
-    emptyIcon: {
-        width: 36,
-        height: 36,
-    },
-    emptyTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#1E293B',
-        marginBottom: 8,
-        textAlign: 'center',
-    },
-    emptySubtitle: {
-        fontSize: 14,
-        color: '#64748B',
-        lineHeight: 20,
-        textAlign: 'center',
-        maxWidth: 280,
-    },
-
-    // Notes Card
-    notesCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 3,
-        borderLeftWidth: 4,
-        borderLeftColor: '#3B82F6',
-    },
-    notesContent: {
-        fontSize: 14,
-        color: '#475569',
-        lineHeight: 20,
-    },
-
-    // Modal Styles
-    modalContainer: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'flex-end',
     },
     modalContent: {
-        backgroundColor: '#FFFFFF',
-        borderTopLeftRadius: 24,
+        backgroundColor: COLORS.white,
         borderTopRightRadius: 24,
+        borderTopLeftRadius: 24,
         maxHeight: '90%',
-        paddingBottom: 20,
     },
     modalHeader: {
         flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'space-between',
+        alignItems: 'center',
         padding: 20,
         paddingBottom: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#E2E8F0',
+        borderBottomColor: COLORS.lightGray2,
     },
     modalTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#1E293B',
+        color: COLORS.black,
+        flex: 1,
     },
     closeButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#F1F5F9',
-        justifyContent: 'center',
-        alignItems: 'center',
+        padding: 8,
+        borderRadius: 20,
+        backgroundColor: COLORS.lightGray2,
     },
     closeIcon: {
         width: 16,
         height: 16,
     },
-    modalForm: {
-        flex: 1,
-        paddingHorizontal: 20,
-    },
-    offspringModalHeader: {
-        alignItems: 'center',
-        paddingVertical: 20,
-        marginBottom: 16,
-    },
-    offspringModalId: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#1E293B',
-        marginBottom: 6,
-    },
-    offspringModalSubtitle: {
+    modalSubtitle: {
         fontSize: 14,
-        color: '#64748B',
-        textAlign: 'center',
-        lineHeight: 20,
+        color: COLORS.gray,
+        paddingHorizontal: 20,
+        paddingBottom: 16,
     },
-
-    // Form Inputs
+    formContainer: {
+        paddingHorizontal: 20,
+        maxHeight: 400,
+    },
     inputGroup: {
         marginBottom: 20,
     },
-    label: {
+    fieldLabel: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#374151',
+        color: COLORS.black,
         marginBottom: 8,
     },
-    input: {
+    dropdownButton: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#D1D5DB',
+        borderColor: COLORS.gray3,
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: COLORS.white,
+    },
+    disabledButton: {
+        backgroundColor: COLORS.lightGray2,
+        opacity: 0.6,
+    },
+    dropdownButtonText: {
+        fontSize: 16,
+        color: COLORS.black,
+        flex: 1,
+    },
+    placeholderText: {
+        color: COLORS.gray,
+    },
+    dropdownIcon: {
+        width: 16,
+        height: 16,
+        marginLeft: 8,
+    },
+    textInput: {
+        borderWidth: 1,
+        borderColor: COLORS.gray3,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 12,
         fontSize: 16,
-        color: '#1F2937',
-        backgroundColor: '#FFFFFF',
+        color: COLORS.black,
+        backgroundColor: COLORS.white,
     },
     inputError: {
-        borderColor: '#EF4444',
-        backgroundColor: '#FEF2F2',
-    },
-    textArea: {
-        height: 80,
-        textAlignVertical: 'top',
+        borderColor: COLORS.red,
     },
     errorText: {
         fontSize: 12,
-        color: '#EF4444',
+        color: COLORS.red,
         marginTop: 4,
-        fontWeight: '500',
     },
-
-    // Modal Actions
-    modalActions: {
+    modalFooter: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 20,
+        padding: 20,
         paddingTop: 16,
         borderTopWidth: 1,
-        borderTopColor: '#E2E8F0',
+        borderTopColor: COLORS.lightGray2,
         gap: 12,
     },
     cancelButton: {
         flex: 1,
-        backgroundColor: '#F3F4F6',
+        paddingVertical: 12,
         borderRadius: 12,
-        paddingVertical: 14,
+        backgroundColor: COLORS.lightGray2,
         alignItems: 'center',
         justifyContent: 'center',
     },
     cancelButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#6B7280',
+        color: COLORS.gray,
     },
     submitButton: {
         flex: 1,
-        backgroundColor: '#10B981',
+        flexDirection: 'row',
+        paddingVertical: 12,
         borderRadius: 12,
-        paddingVertical: 14,
+        backgroundColor: COLORS.green,
         alignItems: 'center',
         justifyContent: 'center',
-        flexDirection: 'row',
-        shadowColor: '#10B981',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    submitButtonDisabled: {
-        backgroundColor: '#9CA3AF',
-        shadowOpacity: 0.1,
-        elevation: 2,
-    },
-    submitIcon: {
-        width: 16,
-        height: 16,
-        marginRight: 8,
     },
     submitButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: COLORS.white,
+    },
+
+    dropdownModal: {
+        backgroundColor: COLORS.white,
+        borderTopRightRadius: 24,
+        borderTopLeftRadius: 24,
+        maxHeight: '70%',
+    },
+    dropdownHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.lightGray2,
+    },
+    dropdownTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: COLORS.black,
+        flex: 1,
+    },
+    dropdownList: {
+        maxHeight: 400,
+    },
+    dropdownItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.lightGray2,
+    },
+    selectedDropdownItem: {
+        backgroundColor: COLORS.lightGreen,
+    },
+    dropdownItemText: {
+        fontSize: 16,
+        color: COLORS.black,
+        flex: 1,
+    },
+    selectedDropdownItemText: {
+        color: COLORS.green,
+        fontWeight: '600',
+    },
+    checkIcon: {
+        width: 16,
+        height: 16,
     },
 });
 

@@ -218,14 +218,8 @@ export function formatEmployeeData(formData, employeeType) {
     phone: formData.phone,
     employeeType: employeeType,
     dateOfEmployment: formData.dateOfEmployment,
-    roles: formData.selectedRoles
-      .map(role => {
-        if (role === 'custom') {
-          return formData.customRole;
-        }
-        return role;
-      })
-      .filter(role => role && role.trim() !== ''),
+    // Fixed: Use selectedRole (singular) and handle it as a single value
+    role: formData.selectedRole || formData.customRole, // Use role instead of roles array
     paymentSchedule: formData.paymentSchedule,
     salary: parseInt(formData.salary, 10),
   };

@@ -1,48 +1,91 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
+  SafeAreaView,
   View,
   Text,
-  FlatList,
   TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
   StyleSheet,
   TextInput,
-  SafeAreaView,
   Alert,
   RefreshControl,
   Modal,
-  ActivityIndicator,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { icons } from '../../constants';
 import { COLORS } from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
-import {
-  getLivestockForActiveFarm,
-  deleteLivestock,
-  getActiveFarmInfo,
-  updateLivestockStatus,
-  recordLivestockMortality,
-  recordLivestockSale,
-  transferLivestock,
-} from '../../services/livestock';
+import { getActiveFarm } from '../../services/farm';
+import { getLivestockForActiveFarm, deleteLivestock } from '../../services/livestock';
 
-const LivestockModuleScreen = ({ route, navigation }) => {
+const LivestockModuleScreen = ({ navigation }) => {
+  const [activeFarm, setActiveFarm] = useState(null);
+  const [availableTypes, setAvailableTypes] = useState([]);
+  const [availableStatuses, setAvailableStatuses] = useState([]);
   const [selectedType, setSelectedType] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [livestockData, setLivestockData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
+  const [livestock, setLivestock] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeFarm, setActiveFarm] = useState(null);
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState(null);
   const [initialLoad, setInitialLoad] = useState(true);
 
+  // Enhanced type catalogue with normalized keys to prevent duplicates
+  const typesCatalogue = {
+    'dairy_cows': { label: 'Dairy Cows', icon: icons.livestock || icons.account },
+    'dairycattle': { label: 'Dairy Cows', icon: icons.livestock || icons.account }, // Normalized
+    'beef_cattle': { label: 'Beef Cattle', icon: icons.livestock || icons.account },
+    'beefcattle': { label: 'Beef Cattle', icon: icons.livestock || icons.account }, // Normalized
+    'poultry': { label: 'Poultry', icon: icons.livestock || icons.account },
+    'swine': { label: 'Swine', icon: icons.livestock || icons.account },
+    'goats': { label: 'Goats', icon: icons.livestock || icons.account },
+    'sheep': { label: 'Sheep', icon: icons.livestock || icons.account },
+    'rabbit': { label: 'Rabbits', icon: icons.livestock || icons.account },
+  };
+
+  // Complete status catalogue with all required statuses
+  const statusCatalogue = {
+    'active': { label: 'Active', color: COLORS.success || '#10B981', icon: icons.check || icons.account },
+    'sold': { label: 'Sold', color: COLORS.warning || '#F59E0B', icon: icons.money || icons.document },
+    'transferred': { label: 'Transferred', color: COLORS.info || '#3B82F6', icon: icons.transfer || icons.document },
+    'transfer': { label: 'Transferred', color: COLORS.info || '#3B82F6', icon: icons.transfer || icons.document }, // Alias
+    'deceased': { label: 'Deceased', color: COLORS.danger || '#EF4444', icon: icons.remove || icons.close },
+  };
+
+  // Normalize type function to prevent duplicates
+  const normalizeType = useCallback((type) => {
+    const normalized = type?.toLowerCase().replace(/[_\s]/g, '');
+    switch (normalized) {
+      case 'dairycattle':
+      case 'dairycows':
+        return 'dairy_cows';
+      case 'beefcattle':
+        return 'beef_cattle';
+      case 'poultry':
+        return 'poultry';
+      case 'swine':
+        return 'swine';
+      case 'goats':
+        return 'goats';
+      case 'sheep':
+        return 'sheep';
+      case 'rabbit':
+        return 'rabbit';
+      default:
+        return type?.toLowerCase() || 'unknown';
+    }
+  }, []);
+
+  useEffect(() => {
+    loadActiveFarm();
+  }, []);
+
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      fetchLivestockData();
-      loadActiveFarm();
+      fetchLivestock();
     });
 
     return unsubscribe;
@@ -50,269 +93,156 @@ const LivestockModuleScreen = ({ route, navigation }) => {
 
   const loadActiveFarm = async () => {
     try {
-      const { data, error } = await getActiveFarmInfo();
-      if (data) {
-        setActiveFarm(data);
-      }
+      const data = await getActiveFarm();
+      setActiveFarm(data);
     } catch (error) {
-      console.error('Error loading active farm:', error);
+      console.error('Error loading farm:', error);
     }
   };
 
-  const fetchLivestockData = async (isRefresh = false) => {
+  const fetchLivestock = async (isRefresh = false) => {
     try {
       if (!isRefresh) {
         setLoading(true);
       }
 
-      const { data, error } = await getLivestockForActiveFarm();
+      const data = await getLivestockForActiveFarm();
 
-      if (error) {
-        console.error('Error fetching livestock:', error);
-        Alert.alert('Error', error);
-        setLivestockData([]);
+      if (!Array.isArray(data)) {
+        console.error('[fetchLivestock] Expected array but got:', typeof data, data);
+        setLivestock([]);
         return;
       }
 
+      // Transform data with improved type normalization
       const transformedData = data.map(item => {
-        if (item.category === 'poultry' && item.poultry) {
-          return {
-            id: item.poultry.flockId || item._id,
-            title: `${item.poultry.breedType} Flock`,
-            farmId: item.farmId,
-            breed: item.poultry.breedType,
-            dob: new Date(item.poultry.dateOfStocking).toLocaleDateString(),
-            sex: item.poultry.gender,
-            type: item.type,
-            health: item.status || 'Active',
-            production: `Quantity: ${item.poultry.initialQuantity}`,
-            category: item.category,
-            status: item.status || 'active',
-            rawData: item
-          };
-        } else if (item.category === 'mammal' && item.mammal) {
-          return {
-            id: item.mammal.idNumber || item._id,
-            title: `${item.mammal.breedType}`,
-            farmId: item.farmId,
-            breed: item.mammal.breedType,
-            dob: new Date(item.mammal.dateOfBirth).toLocaleDateString(),
-            sex: item.mammal.gender,
-            type: item.type,
-            health: item.status || 'Active',
-            production: item.mammal.birthWeight ? `Birth Weight: ${item.mammal.birthWeight}kg` : 'N/A',
-            phenotype: item.mammal.phenotype,
-            category: item.category,
-            status: item.status || 'active',
-            rawData: item
-          };
-        }
+        const categoryData = item[item.category] || {};
+        const normalizedType = normalizeType(item.type);
 
         return {
-          id: item._id || item.id,
-          title: item.type || 'Unknown',
-          farmId: item.farmId,
-          breed: 'Unknown',
-          dob: 'N/A',
-          sex: 'N/A',
-          type: item.type,
-          health: 'N/A',
-          production: 'N/A',
-          status: item.status || 'active',
+          id: item.id || item._id,
+          title: categoryData.idNumber || item.name || 'Unknown',
+          farmId: item.farmId || activeFarm?.id,
+          breed: categoryData.breedType || categoryData.breed || 'Unknown',
+          dob: categoryData.dateOfBirth ? new Date(categoryData.dateOfBirth).toLocaleDateString() : 'N/A',
+          sex: categoryData.gender || categoryData.sex || 'N/A',
+          type: normalizedType,
+          originalType: item.type,
+          health: item.health || 'Active',
+          production: item.production || 'N/A',
+          phenotype: categoryData.phenotype || null,
+          category: item.category || 'mammal',
+          status: (item.status || 'active').toLowerCase(),
+          birthWeight: categoryData.birthWeight || null,
+          sireId: categoryData.sireId || null,
+          sireCode: categoryData.sireCode || null,
+          damId: categoryData.damId || null,
+          damCode: categoryData.damCode || null,
+          idNumber: categoryData.idNumber || null,
+          breedType: categoryData.breedType || null,
           rawData: item
         };
       });
 
-      setLivestockData(transformedData);
+      console.log(`[fetchLivestock] Transformed ${transformedData.length} livestock records`);
+      setLivestock(transformedData);
+      extractTypesAndStatuses(transformedData);
+
     } catch (error) {
-      console.error('Error fetching livestock data:', error);
+      console.error('Error fetching livestock:', error);
       Alert.alert('Error', 'Failed to fetch livestock data. Please try again.');
-      setLivestockData([]);
+      setLivestock([]);
     } finally {
       setLoading(false);
       setInitialLoad(false);
     }
   };
 
+  // Improved function to extract unique types and statuses
+  const extractTypesAndStatuses = useCallback((livestockData) => {
+    // Extract and normalize unique types
+    const typeSet = new Set();
+    const statusSet = new Set();
+
+    livestockData.forEach(item => {
+      if (item.type) {
+        typeSet.add(item.type);
+      }
+      if (item.status) {
+        statusSet.add(item.status.toLowerCase());
+      }
+    });
+
+    const uniqueTypes = Array.from(typeSet).filter(Boolean);
+    const uniqueStatuses = Array.from(statusSet).filter(Boolean);
+
+    console.log('[extractTypesAndStatuses] Found types:', uniqueTypes);
+    console.log('[extractTypesAndStatuses] Found statuses:', uniqueStatuses);
+
+    setAvailableTypes(uniqueTypes);
+    setAvailableStatuses(uniqueStatuses);
+  }, []);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchLivestockData(true);
+    await fetchLivestock(true);
     setRefreshing(false);
   };
 
-  useEffect(() => {
-    let baseData = livestockData;
+  // Memoized filtered data for better performance
+  const filteredData = useMemo(() => {
+    let baseData = livestock;
 
+    // Filter by type
     if (selectedType !== 'all') {
-      const typeMapping = {
-        'dairy_cows': ['dairyCattle'],
-        'beef_cattle': ['beefCattle'],
-        'swine': ['swine'],
-        'goats': ['dairyGoats', 'meatGoats'],
-        'sheep': ['sheep'],
-        'poultry': ['poultry']
-      };
-
-      baseData = baseData.filter(item =>
-        typeMapping[selectedType]?.includes(item.type) || item.type === selectedType
-      );
+      baseData = baseData.filter(item => item.type === selectedType);
     }
 
+    // Filter by status
     if (selectedStatus !== 'all') {
-      baseData = baseData.filter(item =>
-        item.status?.toLowerCase() === selectedStatus.toLowerCase()
-      );
+      baseData = baseData.filter(item => item.status === selectedStatus);
     }
 
+    // Filter by search query
     if (searchQuery.trim() !== '') {
       const lowercaseQuery = searchQuery.toLowerCase();
       baseData = baseData.filter(item => {
         return (
-          item.id.toLowerCase().includes(lowercaseQuery) ||
+          item.id.toString().toLowerCase().includes(lowercaseQuery) ||
           item.title.toLowerCase().includes(lowercaseQuery) ||
           (item.breed && item.breed.toLowerCase().includes(lowercaseQuery)) ||
-          (item.farmId && item.farmId.toLowerCase().includes(lowercaseQuery)) ||
-          (item.type && item.type.toLowerCase().includes(lowercaseQuery))
+          (item.type && item.type.toLowerCase().includes(lowercaseQuery)) ||
+          (item.idNumber && item.idNumber.toString().toLowerCase().includes(lowercaseQuery))
         );
       });
     }
 
-    setFilteredData(baseData);
-  }, [selectedType, selectedStatus, livestockData, searchQuery]);
+    return baseData;
+  }, [selectedType, selectedStatus, livestock, searchQuery]);
 
-  const handleAnimalAction = (animal, action) => {
-    setSelectedAnimal(animal);
+  const handleAnimalAction = useCallback((animal, action) => {
     setActionModalVisible(false);
 
     switch (action) {
+      case 'edit':
+        navigation.navigate('EditAnimalScreen', { animalId: animal.id, animalData: animal });
+        break;
       case 'update_status':
         navigation.navigate('StatusUpdateForm', {
           animalId: animal.id,
           animalData: animal
         });
         break;
-      case 'status_sold':
-        handleMarkAsSold(animal);
-        break;
-      case 'status_deceased':
-        handleMarkAsDeceased(animal);
-        break;
-      case 'mortality':
-        handleRecordMortality(animal);
-        break;
-      case 'sale':
-        handleRecordSale(animal);
-        break;
-      case 'transfer':
-        handleTransfer(animal);
-        break;
       case 'health':
         navigation.navigate('HealthEventForm', { animalId: animal.id, animalData: animal });
-        break;
-      case 'edit':
-        navigation.navigate('EditAnimalScreen', { animalId: animal.id, animalData: animal });
         break;
       case 'delete':
         handleDeleteLivestock(animal);
         break;
     }
-  };
+  }, [navigation]);
 
-  const handleMarkAsSold = async (animal) => {
-    Alert.prompt(
-      'Mark as Sold',
-      'Enter reason for sale:',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Mark as Sold',
-          onPress: async (reason) => {
-            try {
-              const livestockId = animal.rawData._id || animal.rawData.id || animal.id;
-              console.log(' Updating status for ID:', livestockId);
-
-              const { error } = await updateLivestockStatus(
-                livestockId,
-                'sold',
-                reason || 'Sold to buyer'
-              );
-
-
-              if (error) {
-                Alert.alert('Error', error);
-              } else {
-                Alert.alert('Success', 'Animal marked as sold successfully');
-                fetchLivestockData();
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Failed to update status');
-            }
-          }
-        }
-      ],
-      'plain-text',
-      'Sold to local farmer'
-    );
-  };
-
-  const handleMarkAsDeceased = async (animal) => {
-    Alert.prompt(
-      'Mark as Deceased',
-      'Enter reason for death:',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Mark as Deceased',
-          onPress: async (reason) => {
-            try {
-              const livestockId = animal.rawData._id || animal.rawData.id || animal.id;
-              console.log('🧠 Updating status for ID:', livestockId);
-
-              const { error } = await updateLivestockStatus(
-                livestockId,
-                'deceased',
-                reason || 'Natural causes'
-              );
-
-              if (error) {
-                Alert.alert('Error', error);
-              } else {
-                Alert.alert('Success', 'Animal marked as deceased successfully');
-                fetchLivestockData();
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Failed to update status');
-            }
-          }
-        }
-      ],
-      'plain-text',
-      'Natural causes due to age'
-    );
-  };
-
-  const handleRecordMortality = (animal) => {
-    navigation.navigate('MortalityRecordForm', {
-      animalId: animal.id,
-      animalData: animal
-    });
-  };
-
-  const handleRecordSale = (animal) => {
-    navigation.navigate('SaleRecordForm', {
-      animalId: animal.id,
-      animalData: animal
-    });
-  };
-
-  const handleTransfer = (animal) => {
-    navigation.navigate('TransferForm', {
-      animalId: animal.id,
-      animalData: animal
-    });
-  };
-
-  const handleDeleteLivestock = async (item) => {
+  const handleDeleteLivestock = useCallback(async (item) => {
     Alert.alert(
       'Delete Livestock',
       `Are you sure you want to delete ${item.title} (ID: ${item.id})?`,
@@ -323,9 +253,9 @@ const LivestockModuleScreen = ({ route, navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteLivestock(item.rawData._id);
+              await deleteLivestock(item.rawData._id || item.id);
               Alert.alert('Success', 'Livestock deleted successfully');
-              fetchLivestockData();
+              fetchLivestock();
             } catch (error) {
               console.error('Error deleting livestock:', error);
               Alert.alert('Error', 'Failed to delete livestock. Please try again.');
@@ -334,36 +264,49 @@ const LivestockModuleScreen = ({ route, navigation }) => {
         },
       ]
     );
-  };
+  }, [fetchLivestock]);
 
+  // Improved TypeSelector with no duplicates
   const TypeSelector = () => {
-    const types = [
-      { id: 'all', label: 'All Livestock' },
-      { id: 'dairy_cows', label: 'Dairy Cows' },
-      { id: 'beef_cattle', label: 'Beef Cattle' },
-      { id: 'swine', label: 'Swine' },
-      { id: 'goats', label: 'Goats' },
-      { id: 'sheep', label: 'Sheep' },
-      { id: 'poultry', label: 'Poultry' },
+    const typeOptions = [
+      {
+        id: 'all',
+        label: 'All Types',
+        icon: icons.livestock || icons.account
+      },
+      ...availableTypes.map(type => ({
+        id: type,
+        label: typesCatalogue[type]?.label || type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' '),
+        icon: typesCatalogue[type]?.icon || icons.livestock || icons.account
+      }))
     ];
 
     return (
-      <View style={styles.typeSelectorContainer}>
+      <View style={styles.selectorContainer}>
+        <Text style={styles.selectorTitle}>Livestock Type</Text>
         <FlatList
-          data={types}
+          data={typeOptions}
           horizontal
           showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.horizontalList}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[
-                styles.typeButton,
-                selectedType === item.id && styles.selectedTypeButton,
+                styles.filterChip,
+                selectedType === item.id && styles.selectedFilterChip,
               ]}
               onPress={() => setSelectedType(item.id)}>
+              <FastImage
+                source={item.icon}
+                style={[
+                  styles.chipIcon,
+                  { tintColor: selectedType === item.id ? COLORS.white : COLORS.gray }
+                ]}
+              />
               <Text
                 style={[
-                  styles.typeButtonText,
-                  selectedType === item.id && styles.selectedTypeButtonText,
+                  styles.filterChipText,
+                  selectedType === item.id && styles.selectedFilterChipText,
                 ]}>
                 {item.label}
               </Text>
@@ -375,34 +318,54 @@ const LivestockModuleScreen = ({ route, navigation }) => {
     );
   };
 
+  // Enhanced StatusSelector with all required statuses
   const StatusSelector = () => {
-    const statuses = [
-      { id: 'all', label: 'All Status', color: COLORS.gray },
-      { id: 'active', label: 'Active', color: COLORS.green },
-      { id: 'sold', label: 'Sold', color: COLORS.orange },
-      { id: 'transferred', label: 'Transferred', color: COLORS.purple },
-      { id: 'deceased', label: 'Mortality', color: COLORS.red },
+    // Always show all status options, whether they exist in data or not
+    const allStatusOptions = ['active', 'sold', 'transferred', 'deceased'];
+
+    const statusOptions = [
+      {
+        id: 'all',
+        label: 'All Status',
+        color: COLORS.success || '#10B981',
+        icon: icons.list || icons.document
+      },
+      ...allStatusOptions.map(status => ({
+        id: status,
+        label: statusCatalogue[status]?.label || status.charAt(0).toUpperCase() + status.slice(1),
+        color: statusCatalogue[status]?.color || COLORS.gray,
+        icon: statusCatalogue[status]?.icon || icons.document
+      }))
     ];
 
     return (
-      <View style={styles.statusSelectorContainer}>
+      <View style={styles.selectorContainer}>
+        <Text style={styles.selectorTitle}>Status Filter</Text>
         <FlatList
-          data={statuses}
+          data={statusOptions}
           horizontal
           showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.horizontalList}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[
-                styles.statusButton,
-                selectedStatus === item.id && styles.selectedStatusButton,
+                styles.statusChip,
+                selectedStatus === item.id && styles.selectedStatusChip,
                 { borderColor: item.color }
               ]}
               onPress={() => setSelectedStatus(item.id)}>
-              <View style={[styles.statusIndicator, { backgroundColor: item.color }]} />
+              <View style={[styles.statusDot, { backgroundColor: item.color }]} />
+              <FastImage
+                source={item.icon}
+                style={[
+                  styles.statusIcon,
+                  { tintColor: selectedStatus === item.id ? item.color : COLORS.gray }
+                ]}
+              />
               <Text
                 style={[
-                  styles.statusButtonText,
-                  selectedStatus === item.id && styles.selectedStatusButtonText,
+                  styles.statusChipText,
+                  selectedStatus === item.id && { color: item.color, fontWeight: '600' },
                 ]}>
                 {item.label}
               </Text>
@@ -414,17 +377,37 @@ const LivestockModuleScreen = ({ route, navigation }) => {
     );
   };
 
+  // Fixed ActionModal with proper visibility and backdrop
   const ActionModal = () => {
     const actions = [
-      { id: 'edit', label: 'Edit Details', icon: icons.edit, color: COLORS.blue },
-      { id: 'update_status', label: 'Update Status', icon: icons.edit, color: COLORS.green2 },
-      { id: 'health', label: 'Health Event', icon: icons.health, color: COLORS.green },
-      { id: 'status_sold', label: 'Quick Mark as Sold', icon: icons.money, color: COLORS.orange },
-      { id: 'status_deceased', label: 'Quick Mark as Deceased', icon: icons.remove, color: COLORS.red },
-      { id: 'mortality', label: 'Record Mortality', icon: icons.document, color: COLORS.darkRed },
-      { id: 'sale', label: 'Record Sale', icon: icons.money, color: COLORS.green2 },
-      { id: 'transfer', label: 'Transfer Animal', icon: icons.transfer, color: COLORS.purple },
-      { id: 'delete', label: 'Delete', icon: icons.remove, color: COLORS.red },
+      {
+        id: 'edit',
+        label: 'Edit Details',
+        icon: icons.edit || icons.account,
+        color: COLORS.success || '#10B981',
+        description: 'Update animal information'
+      },
+      {
+        id: 'update_status',
+        label: 'Update Status',
+        icon: icons.edit || icons.document,
+        color: COLORS.success || '#10B981',
+        description: 'Change animal status, record sales, transfers, etc.'
+      },
+      {
+        id: 'health',
+        label: 'Health Record',
+        icon: icons.health || icons.document,
+        color: COLORS.success || '#10B981',
+        description: 'Add health events and medical records'
+      },
+      {
+        id: 'delete',
+        label: 'Delete Animal',
+        icon: icons.remove || icons.close,
+        color: COLORS.danger || '#EF4444',
+        description: 'Permanently remove from system'
+      },
     ];
 
     return (
@@ -433,35 +416,49 @@ const LivestockModuleScreen = ({ route, navigation }) => {
         transparent={true}
         animationType="slide"
         onRequestClose={() => setActionModalVisible(false)}>
-        <View style={styles.modalOverlay}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setActionModalVisible(false)}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                Actions for {selectedAnimal?.title}
-              </Text>
+              <View style={styles.modalTitleContainer}>
+                <Text style={styles.modalTitle}>Animal Actions</Text>
+                <Text style={styles.modalSubtitle}>
+                  {selectedAnimal?.title} • ID: {selectedAnimal?.idNumber || selectedAnimal?.id}
+                </Text>
+              </View>
               <TouchableOpacity
                 onPress={() => setActionModalVisible(false)}
                 style={styles.closeButton}>
-                <FastImage source={icons.close} style={styles.closeIcon} />
+                <FastImage source={icons.close || icons.remove} style={styles.closeIcon} />
               </TouchableOpacity>
             </View>
-            <FlatList
-              data={actions}
-              keyExtractor={item => item.id}
-              renderItem={({ item }) => (
+
+            <View style={styles.actionsList}>
+              {actions.map((item, index) => (
                 <TouchableOpacity
-                  style={styles.actionItem}
+                  key={item.id}
+                  style={[
+                    styles.actionItem,
+                    index === actions.length - 1 && styles.lastActionItem
+                  ]}
                   onPress={() => handleAnimalAction(selectedAnimal, item.id)}>
-                  <FastImage
-                    source={item.icon}
-                    style={[styles.actionItemIcon, { tintColor: item.color }]}
-                  />
-                  <Text style={styles.actionItemText}>{item.label}</Text>
+                  <View style={[styles.actionIconContainer, { backgroundColor: `${item.color}15` }]}>
+                    <FastImage
+                      source={item.icon}
+                      style={[styles.actionItemIcon, { tintColor: item.color }]}
+                    />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <Text style={styles.actionItemText}>{item.label}</Text>
+                    <Text style={styles.actionItemDescription}>{item.description}</Text>
+                  </View>
                 </TouchableOpacity>
-              )}
-            />
+              ))}
+            </View>
           </View>
-        </View>
+        </TouchableOpacity>
       </Modal>
     );
   };
@@ -471,146 +468,218 @@ const LivestockModuleScreen = ({ route, navigation }) => {
       <View style={styles.header}>
         <View style={styles.searchContainer}>
           <FastImage
-            source={icons.search}
+            source={icons.search || icons.account}
             style={styles.searchIcon}
-            tintColor="#666"
+            tintColor={COLORS.gray}
           />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search livestock by ID, breed, type..."
-            placeholderTextColor="#666"
+            placeholder="Search by ID, name, breed, or type..."
+            placeholderTextColor={COLORS.gray}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery('')}
+              style={styles.clearSearchButton}>
+              <FastImage
+                source={icons.close || icons.remove}
+                style={styles.clearSearchIcon}
+                tintColor={COLORS.gray}
+              />
+            </TouchableOpacity>
+          )}
         </View>
+
+        {/* Always show selectors */}
         <TypeSelector />
         <StatusSelector />
+
+        {filteredData.length > 0 && (
+          <View style={styles.resultsHeader}>
+            <Text style={styles.resultsCount}>
+              {filteredData.length} animal{filteredData.length !== 1 ? 's' : ''} found
+            </Text>
+          </View>
+        )}
       </View>
     );
   };
 
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'sold': return COLORS.orange;
-      case 'deceased': return COLORS.red;
-      case 'transferred': return COLORS.purple;
-      default: return COLORS.green;
-    }
-  };
+  const getStatusColor = useCallback((status) => {
+    return statusCatalogue[status?.toLowerCase()]?.color || COLORS.success || '#10B981';
+  }, []);
 
-  const renderAnimalCard = ({ item }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => navigation.navigate('AnimalDetailScreen', {
-        id: item.id,
-        type: item.type,
-        animalData: item,
-      })}>
-      <View style={styles.cardHeader}>
-        <View style={styles.animalInfo}>
-          <Text style={styles.name}>{item.title}</Text>
-          <Text style={styles.breed}>{item.breed}</Text>
-          <View style={styles.statusContainer}>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-              <Text style={styles.statusText}>{item.status?.toUpperCase() || 'ACTIVE'}</Text>
+  // Optimized renderAnimalCard with useCallback
+  const renderAnimalCard = useCallback(({ item }) => (
+    <View style={styles.card}>
+      <TouchableOpacity
+        style={styles.cardTouchable}
+        onPress={() => navigation.navigate('AnimalDetailScreen', {
+          id: item.id,
+          type: item.type,
+          animalData: item,
+        })}>
+
+        <View style={styles.cardHeader}>
+          <View style={styles.animalInfo}>
+            <Text style={styles.animalName}>{item.title}</Text>
+            <Text style={styles.animalBreed}>{item.breed}</Text>
+            <View style={styles.statusContainer}>
+              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+                <Text style={styles.statusText}>
+                  {statusCatalogue[item.status]?.label.toUpperCase() || item.status?.toUpperCase() || 'ACTIVE'}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
-        <View style={styles.cardActions}>
+
           <TouchableOpacity
             onPress={(e) => {
               e.stopPropagation();
               setSelectedAnimal(item);
               setActionModalVisible(true);
             }}
-            style={styles.cardActionButton}>
+            style={styles.menuButton}>
             <FastImage
-              source={icons.menu}
-              style={styles.cardActionIcon}
-              tintColor="#333"
+              source={icons.menu || icons.document}
+              style={styles.menuIcon}
+              tintColor={COLORS.gray}
             />
           </TouchableOpacity>
         </View>
-      </View>
-      <View style={styles.cardDetails}>
-        <View style={styles.detailRow}>
-          <FastImage
-            source={icons.account}
-            style={styles.detailIcon}
-            tintColor="#666"
-          />
-          <Text style={styles.detailText}>ID: {item.id}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <FastImage
-            source={icons.document}
-            style={styles.detailIcon}
-            tintColor="#666"
-          />
-          {/* <Text style={styles.detailText}>Farm: {item.farmId}</Text> */}
-        </View>
-        <View style={styles.detailRow}>
-          <FastImage
-            source={icons.calendar}
-            style={styles.detailIcon}
-            tintColor="#666"
-          />
-          <Text style={styles.detailText}>Born: {item.dob}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <FastImage
-            source={icons.health}
-            style={styles.detailIcon}
-            tintColor="#666"
-          />
-          <Text style={styles.detailText}>Sex: {item.sex}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <FastImage
-            source={icons.document}
-            style={styles.detailIcon}
-            tintColor="#666"
-          />
-          <Text style={styles.detailText}>Type: {item.type}</Text>
-        </View>
-        {item.production && (
-          <View style={styles.detailRow}>
-            <FastImage
-              source={icons.breeding}
-              style={styles.detailIcon}
-              tintColor="#666"
-            />
-            <Text style={styles.detailText}>Production: {item.production}</Text>
-          </View>
-        )}
-        {item.phenotype && (
-          <View style={styles.detailRow}>
-            <FastImage
-              source={icons.breeding}
-              style={styles.detailIcon}
-              tintColor="#666"
-            />
-            <Text style={styles.detailText}>Phenotype: {item.phenotype}</Text>
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
 
-  // Enhanced Loading Component
+        <View style={styles.cardDetails}>
+          <View style={styles.detailsGrid}>
+            <View style={styles.detailItem}>
+              <FastImage
+                source={icons.account || icons.livestock}
+                style={styles.detailIcon}
+                tintColor={COLORS.gray}
+              />
+              <Text style={styles.detailLabel}>ID Number</Text>
+              <Text style={styles.detailValue}>{item.idNumber || item.id}</Text>
+            </View>
+
+            <View style={styles.detailItem}>
+              <FastImage
+                source={icons.calendar || icons.document}
+                style={styles.detailIcon}
+                tintColor={COLORS.gray}
+              />
+              <Text style={styles.detailLabel}>Birth Date</Text>
+              <Text style={styles.detailValue}>{item.dob}</Text>
+            </View>
+
+            <View style={styles.detailItem}>
+              <FastImage
+                source={icons.health || icons.account}
+                style={styles.detailIcon}
+                tintColor={COLORS.gray}
+              />
+              <Text style={styles.detailLabel}>Gender</Text>
+              <Text style={styles.detailValue}>{item.sex}</Text>
+            </View>
+
+            <View style={styles.detailItem}>
+              <FastImage
+                source={icons.document || icons.livestock}
+                style={styles.detailIcon}
+                tintColor={COLORS.gray}
+              />
+              <Text style={styles.detailLabel}>Type</Text>
+              <Text style={styles.detailValue}>
+                {typesCatalogue[item.type]?.label || item.type}
+              </Text>
+            </View>
+
+            <View style={styles.detailItem}>
+              <FastImage
+                source={icons.breeding || icons.document}
+                style={styles.detailIcon}
+                tintColor={COLORS.gray}
+              />
+              <Text style={styles.detailLabel}>Breed</Text>
+              <Text style={styles.detailValue}>{item.breedType || item.breed}</Text>
+            </View>
+
+            {item.birthWeight && (
+              <View style={styles.detailItem}>
+                <FastImage
+                  source={icons.weight || icons.document}
+                  style={styles.detailIcon}
+                  tintColor={COLORS.gray}
+                />
+                <Text style={styles.detailLabel}>Birth Weight</Text>
+                <Text style={styles.detailValue}>{item.birthWeight} kg</Text>
+              </View>
+            )}
+          </View>
+
+          {(item.production || item.phenotype || item.sireCode || item.damCode) && (
+            <View style={styles.additionalInfo}>
+              {item.phenotype && (
+                <View style={styles.infoRow}>
+                  <FastImage
+                    source={icons.breeding || icons.document}
+                    style={styles.infoIcon}
+                    tintColor={COLORS.gray}
+                  />
+                  <Text style={styles.infoText}>Phenotype: {item.phenotype}</Text>
+                </View>
+              )}
+              {item.sireCode && (
+                <View style={styles.infoRow}>
+                  <FastImage
+                    source={icons.breeding || icons.document}
+                    style={styles.infoIcon}
+                    tintColor={COLORS.gray}
+                  />
+                  <Text style={styles.infoText}>Sire Code: {item.sireCode}</Text>
+                </View>
+              )}
+              {item.damCode && (
+                <View style={styles.infoRow}>
+                  <FastImage
+                    source={icons.breeding || icons.document}
+                    style={styles.infoIcon}
+                    tintColor={COLORS.gray}
+                  />
+                  <Text style={styles.infoText}>Dam Code: {item.damCode}</Text>
+                </View>
+              )}
+              {item.production && (
+                <View style={styles.infoRow}>
+                  <FastImage
+                    source={icons.breeding || icons.document}
+                    style={styles.infoIcon}
+                    tintColor={COLORS.gray}
+                  />
+                  <Text style={styles.infoText}>{item.production}</Text>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    </View>
+  ), [navigation, getStatusColor]);
+
+  const keyExtractor = useCallback((item) => item.id.toString(), []);
+
   const renderLoadingState = () => (
     <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color={COLORS.green} />
+      <ActivityIndicator size="large" color={COLORS.success || '#10B981'} />
       <Text style={styles.loadingText}>Loading livestock data...</Text>
       <Text style={styles.loadingSubText}>Please wait while we fetch your animals</Text>
     </View>
   );
 
-  // Loading state for initial load
   if (loading && initialLoad) {
     return (
       <SafeAreaView style={styles.container}>
-        <SecondaryHeader title="Livestock Management" />
+        <SecondaryHeader title="Livestock Module" />
         {renderLoadingState()}
       </SafeAreaView>
     );
@@ -625,27 +694,32 @@ const LivestockModuleScreen = ({ route, navigation }) => {
       />
       <Text style={styles.emptyTitle}>No Livestock Found</Text>
       <Text style={styles.emptyMessage}>
-        {selectedType === 'all' && selectedStatus === 'all'
-          ? "You haven't added any livestock yet. Tap the + button to add your first animal."
-          : `No ${selectedType !== 'all' ? selectedType.replace('_', ' ') : 'livestock'} ${selectedStatus !== 'all' ? `with ${selectedStatus} status` : ''} found. Try adjusting your filters or add new livestock.`
+        {selectedType === 'all' && selectedStatus === 'all' && searchQuery === ''
+          ? "You haven't added any livestock yet. Get started by adding your first animal."
+          : `No ${selectedType !== 'all' ? (typesCatalogue[selectedType]?.label || selectedType).toLowerCase() : 'livestock'} ${selectedStatus !== 'all' ? `with ${selectedStatus} status` : ''} ${searchQuery ? `matching "${searchQuery}"` : ''} found.`
         }
       </Text>
       <TouchableOpacity
-        style={styles.addButton}
+        style={styles.emptyActionButton}
         onPress={() => navigation.navigate('AddLivestockScreen')}>
-        <Text style={styles.addButtonText}>Add Livestock</Text>
+        <FastImage
+          source={icons.plus || icons.add}
+          style={styles.emptyActionIcon}
+          tintColor={COLORS.white}
+        />
+        <Text style={styles.emptyActionText}>Add Livestock</Text>
       </TouchableOpacity>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <SecondaryHeader title="Livestock Management" />
+      <SecondaryHeader title="Livestock Module" />
       {renderHeader()}
 
       {loading && !initialLoad ? (
         <View style={styles.refreshLoadingContainer}>
-          <ActivityIndicator size="small" color={COLORS.green} />
+          <ActivityIndicator size="small" color={COLORS.success || '#10B981'} />
           <Text style={styles.refreshLoadingText}>Updating livestock data...</Text>
         </View>
       ) : null}
@@ -656,19 +730,28 @@ const LivestockModuleScreen = ({ route, navigation }) => {
         <FlatList
           data={filteredData}
           renderItem={renderAnimalCard}
-          keyExtractor={item => item.id}
+          keyExtractor={keyExtractor}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[COLORS.green]}
-              tintColor={COLORS.green}
+              colors={[COLORS.success || '#10B981']}
+              tintColor={COLORS.success || '#10B981'}
               title="Pull to refresh livestock data"
               titleColor={COLORS.darkGray3}
             />
           }
           showsVerticalScrollIndicator={false}
+          // Performance optimizations for large datasets
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          updateCellsBatchingPeriod={50}
+          initialNumToRender={10}
+          windowSize={10}
+          getItemLayout={(data, index) => (
+            { length: 280, offset: 280 * index, index }
+          )}
         />
       )}
 
@@ -676,9 +759,9 @@ const LivestockModuleScreen = ({ route, navigation }) => {
         style={styles.fab}
         onPress={() => navigation.navigate('AddLivestockScreen')}>
         <FastImage
-          source={icons.plus}
+          source={icons.plus || icons.add}
           style={styles.fabIcon}
-          tintColor="#fff"
+          tintColor={COLORS.white}
         />
       </TouchableOpacity>
 
@@ -687,98 +770,141 @@ const LivestockModuleScreen = ({ route, navigation }) => {
   );
 };
 
+// Enhanced styles with better modal visibility
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.lightGray },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background || COLORS.lightGray,
+  },
   header: {
     backgroundColor: COLORS.white,
-    padding: 10,
+    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.green3,
-  },
-  farmInfoContainer: {
-    backgroundColor: COLORS.lightGreen,
-    padding: 8,
-    borderRadius: 6,
-    marginBottom: 10,
-  },
-  farmInfoText: {
-    fontSize: 12,
-    color: COLORS.darkGray3,
-    fontWeight: '600',
+    borderBottomColor: COLORS.border || COLORS.lightGray2,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.lightGray2,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    marginBottom: 16,
-  },
-  searchIcon: { width: 20, height: 20, marginRight: 8 },
-  searchInput: { flex: 1, height: 40, fontSize: 16, color: '#333' },
-  typeSelectorContainer: {
-    marginBottom: 16,
-  },
-  typeButton: {
-    paddingVertical: 8,
+    backgroundColor: COLORS.background || COLORS.lightGray2,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: COLORS.lightGray2,
-    marginRight: 10,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border || COLORS.lightGray2,
   },
-  selectedTypeButton: {
-    backgroundColor: COLORS.green2,
+  searchIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 12,
   },
-  typeButtonText: {
-    fontSize: 14,
-    color: '#333',
+  searchInput: {
+    flex: 1,
+    height: 48,
+    fontSize: 16,
+    color: COLORS.text || COLORS.black,
   },
-  selectedTypeButtonText: {
-    color: COLORS.white,
+  clearSearchButton: {
+    padding: 4,
   },
-  statusSelectorContainer: {
-    marginBottom: 10,
+  clearSearchIcon: {
+    width: 16,
+    height: 16,
   },
-  statusButton: {
+  selectorContainer: {
+    marginBottom: 20,
+  },
+  selectorTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.text || COLORS.black,
+    marginBottom: 12,
+  },
+  horizontalList: {
+    paddingRight: 16,
+  },
+  filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    backgroundColor: COLORS.white,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 25,
+    backgroundColor: COLORS.background || COLORS.lightGray2,
+    marginRight: 12,
     borderWidth: 1,
-    marginRight: 10,
+    borderColor: COLORS.border || COLORS.lightGray2,
   },
-  selectedStatusButton: {
-    backgroundColor: COLORS.lightGray,
+  selectedFilterChip: {
+    backgroundColor: COLORS.success || '#10B981',
+    borderColor: COLORS.success || '#10B981',
   },
-  statusIndicator: {
+  chipIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 8,
+  },
+  filterChipText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.text || COLORS.black,
+  },
+  selectedFilterChipText: {
+    color: COLORS.white,
+    fontWeight: '600',
+  },
+  statusChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 25,
+    backgroundColor: COLORS.white,
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: COLORS.border || COLORS.lightGray2,
+  },
+  selectedStatusChip: {
+    backgroundColor: COLORS.background || COLORS.lightGray2,
+  },
+  statusDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: 6,
+    marginRight: 8,
   },
-  statusButtonText: {
-    fontSize: 12,
-    color: '#333',
+  statusIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 8,
   },
-  selectedStatusButtonText: {
-    fontWeight: '600',
+  statusChipText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.text || COLORS.black,
   },
-  listContent: { padding: 16 },
+  resultsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  resultsCount: {
+    fontSize: 14,
+    color: COLORS.gray,
+    fontWeight: '500',
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
-    paddingHorizontal: 20,
+    padding: 40,
   },
   loadingText: {
     fontSize: 18,
     fontWeight: '600',
-    color: COLORS.darkGray3,
+    color: COLORS.text || COLORS.black,
     marginTop: 16,
-    textAlign: 'center',
   },
   loadingSubText: {
     fontSize: 14,
@@ -788,55 +914,172 @@ const styles = StyleSheet.create({
   },
   refreshLoadingContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.lightGreen,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginHorizontal: 16,
-    marginTop: 8,
-    borderRadius: 8,
+    alignItems: 'center',
+    paddingVertical: 12,
+    backgroundColor: COLORS.background || COLORS.lightGray,
   },
   refreshLoadingText: {
     fontSize: 14,
-    color: COLORS.darkGray3,
+    color: COLORS.gray,
     marginLeft: 8,
+  },
+  listContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 100,
+  },
+  card: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: COLORS.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardTouchable: {
+    padding: 16,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  animalInfo: {
+    flex: 1,
+  },
+  animalName: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.text || COLORS.black,
+    marginBottom: 4,
+  },
+  animalBreed: {
+    fontSize: 16,
+    color: COLORS.gray,
+    marginBottom: 8,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.white,
+    letterSpacing: 0.5,
+  },
+  menuButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: COLORS.background || COLORS.lightGray2,
+  },
+  menuIcon: {
+    width: 20,
+    height: 20,
+  },
+  cardDetails: {
+    marginTop: 8,
+  },
+  detailsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  detailItem: {
+    width: '48%',
+    marginBottom: 16,
+  },
+  detailIcon: {
+    width: 16,
+    height: 16,
+    marginBottom: 4,
+  },
+  detailLabel: {
+    fontSize: 12,
+    color: COLORS.gray,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  detailValue: {
+    fontSize: 14,
+    color: COLORS.text || COLORS.black,
+    fontWeight: '600',
+  },
+  additionalInfo: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border || COLORS.lightGray2,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  infoIcon: {
+    width: 14,
+    height: 14,
+    marginRight: 8,
+  },
+  infoText: {
+    fontSize: 14,
+    color: COLORS.text || COLORS.black,
+    flex: 1,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: COLORS.white,
+    padding: 40,
   },
   emptyIcon: {
     width: 64,
     height: 64,
-    marginBottom: 16,
+    marginBottom: 24,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.darkGray3,
-    marginBottom: 10,
+    fontSize: 24,
+    fontWeight: '700',
+    color: COLORS.text || COLORS.black,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   emptyMessage: {
     fontSize: 16,
-    color: COLORS.darkGray3,
+    color: COLORS.gray,
     textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 22,
+    lineHeight: 24,
+    marginBottom: 32,
   },
-  addButton: {
-    backgroundColor: COLORS.green,
-    paddingHorizontal: 20,
+  emptyActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.success || '#10B981',
+    paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 12,
   },
-  addButtonText: {
-    color: COLORS.white,
+  emptyActionIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+  },
+  emptyActionText: {
     fontSize: 16,
     fontWeight: '600',
+    color: COLORS.white,
   },
   fab: {
     position: 'absolute',
@@ -845,142 +1088,106 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: COLORS.green,
+    backgroundColor: COLORS.success || '#10B981',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 6,
     shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   fabIcon: {
     width: 24,
     height: 24,
   },
-  card: {
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  animalInfo: {
-    flex: 1,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  breed: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  statusContainer: {
-    marginTop: 8,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  statusText: {
-    fontSize: 10,
-    color: COLORS.white,
-    fontWeight: 'bold',
-  },
-  cardActions: {
-    flexDirection: 'row',
-  },
-  cardActionButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-  cardActionIcon: {
-    width: 20,
-    height: 20,
-  },
-  cardDetails: {
-    marginTop: 8,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  detailIcon: {
-    width: 16,
-    height: 16,
-    marginRight: 8,
-  },
-  detailText: {
-    fontSize: 14,
-    color: '#666',
-  },
+  // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: COLORS.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 20,
-    paddingBottom: 34,
-    maxHeight: '70%',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 32,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
+    paddingTop: 24,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray2,
+    borderBottomColor: COLORS.border || COLORS.lightGray2,
+  },
+  modalTitleContainer: {
+    flex: 1,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.black,
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.text || COLORS.black,
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: COLORS.gray,
   },
   closeButton: {
     padding: 8,
+    borderRadius: 8,
+    backgroundColor: COLORS.background || COLORS.lightGray2,
   },
   closeIcon: {
     width: 20,
     height: 20,
-    tintColor: COLORS.darkGray3,
+    tintColor: COLORS.gray,
+  },
+  actionsList: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
   },
   actionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray2,
+    borderBottomColor: COLORS.border || COLORS.lightGray2,
+  },
+  lastActionItem: {
+    borderBottomWidth: 0,
+  },
+  actionIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
   },
   actionItemIcon: {
     width: 24,
     height: 24,
-    marginRight: 16,
+  },
+  actionContent: {
+    flex: 1,
   },
   actionItemText: {
     fontSize: 16,
-    color: COLORS.black,
+    fontWeight: '600',
+    color: COLORS.text || COLORS.black,
+    marginBottom: 2,
+  },
+  actionItemDescription: {
+    fontSize: 14,
+    color: COLORS.gray,
   },
 });
-export default LivestockModuleScreen
+
+export default LivestockModuleScreen;

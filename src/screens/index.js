@@ -5,8 +5,6 @@ import Otp from '../screens/Auth/otp';
 import ResetPassword from '../screens/Auth/reset-password';
 import EmailOtpScreen from '../screens/Auth/Email-Otp-Screen';
 
-import TermsAndConditionsModal from '../screens/Auth/TermsAndConditionsModal';
-
 import HomeScreen from './Home/home';
 // personal information
 import ProfileScreen from './Home/profile-screen';
@@ -34,6 +32,14 @@ import EditLivestockScreen from './livestock/EditLivestockScreen';
 import StatusUpdateForm from './livestock/StatusUpdateForm';
 
 import TransferForm from './livestock/TransferForm';
+
+import MortalityForm from './livestock/MortalityForm';
+
+import SalesForm from './livestock/SalesForm';
+
+import HealthEventForm from './livestock/HealthEventForm';
+
+import HealthHistoryScreen from './livestock/HealthHistoryScreen';
 
 import AddLivestockGroupScreen from './livestock/AddGroupLivestock';
 import OptionDetailsScreen from './livestock/optionDetails';
@@ -148,7 +154,6 @@ export {
   OnboardingScreen,
   ResetPassword,
   EmailOtpScreen,
-  TermsAndConditionsModal,
   //personal information
   ProfileScreen,
   PersonalInformation,
@@ -170,10 +175,14 @@ export {
   EditLivestockScreen,
   AddLivestockGroupScreen,
   StatusUpdateForm,
+  SalesForm,
+  HealthHistoryScreen,
   TransferForm,
+  HealthEventForm,
   OptionDetailsScreen,
   OptionLivestockGroupScreen,
   LivestockModuleScreen,
+  MortalityForm,
   AnimalDetailScreen,
   FeedingModuleScreen,
   BreedingModuleLandingScreen,

@@ -519,7 +519,7 @@ const RecordBirthScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.lightGray1,
+    backgroundColor: COLORS.lightGreen,
   },
   scrollView: {
     flex: 1,

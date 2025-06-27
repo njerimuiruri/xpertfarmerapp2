@@ -36,16 +36,18 @@ const StatusUpdateForm = ({ route, navigation }) => {
             label: 'Deceased',
             description: 'Animal has passed away',
             color: COLORS.red,
-            requiresReason: true,
+            requiresReason: false, // Changed to false since we'll use the mortality form
             reasonPlaceholder: 'e.g., Natural causes due to age, Disease, etc.',
+            isMortality: true, // Added flag to identify mortality option
         },
         {
             id: 'sold',
             label: 'Sold',
             description: 'Animal has been sold',
             color: COLORS.orange,
-            requiresReason: true,
+            requiresReason: false, // Changed to false since we'll use the sales form
             reasonPlaceholder: 'e.g., Sold to local farmer, Market sale, etc.',
+            isSale: true, // Added flag to identify sale option
         },
         {
             id: 'transferred',
@@ -82,8 +84,27 @@ const StatusUpdateForm = ({ route, navigation }) => {
 
         const selectedOption = statusOptions.find(option => option.id === selectedStatus);
 
+        // Handle transfer navigation
         if (selectedOption?.isTransfer) {
             navigation.navigate('TransferForm', {
+                animalId,
+                animalData,
+            });
+            return;
+        }
+
+        // Handle mortality navigation
+        if (selectedOption?.isMortality) {
+            navigation.navigate('MortalityForm', {
+                animalId,
+                animalData,
+            });
+            return;
+        }
+
+        // Handle sale navigation
+        if (selectedOption?.isSale) {
+            navigation.navigate('SalesForm', {
                 animalId,
                 animalData,
             });
@@ -161,6 +182,12 @@ const StatusUpdateForm = ({ route, navigation }) => {
                             {option.isTransfer && (
                                 <Text style={styles.transferNote}> (Opens transfer form)</Text>
                             )}
+                            {option.isMortality && (
+                                <Text style={styles.mortalityNote}> (Opens mortality form)</Text>
+                            )}
+                            {option.isSale && (
+                                <Text style={styles.saleNote}> (Opens sales form)</Text>
+                            )}
                         </Text>
                         <Text style={styles.statusOptionDescription}>
                             {option.description}
@@ -227,8 +254,8 @@ const StatusUpdateForm = ({ route, navigation }) => {
                     </View>
                 </View>
 
-                {/* Reason Input - Only show if not transfer and reason is needed */}
-                {selectedOption && !selectedOption.isTransfer && (
+                {/* Reason Input - Only show if not transfer, not mortality, not sale and reason is needed */}
+                {selectedOption && !selectedOption.isTransfer && !selectedOption.isMortality && !selectedOption.isSale && (
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>
                             Reason {selectedOption.requiresReason && <Text style={styles.required}>*</Text>}
@@ -261,14 +288,56 @@ const StatusUpdateForm = ({ route, navigation }) => {
                             You've selected to transfer this animal. Clicking "Proceed to Transfer" will take you to the transfer form where you can select the destination farm and provide transfer details.
                         </Text>
 
-                        <View style={styles.transferInfoBox}>
-                            <Text style={styles.transferInfoText}>
+                        <View style={styles.infoBox}>
+                            <Text style={styles.infoText}>
                                 📋 In the transfer form you'll be able to:
                             </Text>
-                            <Text style={styles.transferInfoItem}>• Select destination farm</Text>
-                            <Text style={styles.transferInfoItem}>• Set transfer date</Text>
-                            <Text style={styles.transferInfoItem}>• Provide transfer reason</Text>
-                            <Text style={styles.transferInfoItem}>• Specify transport method</Text>
+                            <Text style={styles.infoItem}>• Select destination farm</Text>
+                            <Text style={styles.infoItem}>• Set transfer date</Text>
+                            <Text style={styles.infoItem}>• Provide transfer reason</Text>
+                            <Text style={styles.infoItem}>• Specify transport method</Text>
+                        </View>
+                    </View>
+                )}
+
+                {/* Mortality Info */}
+                {selectedOption?.isMortality && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Mortality Recording</Text>
+                        <Text style={styles.sectionDescription}>
+                            You've selected to record this animal as deceased. Clicking "Record Mortality" will take you to the mortality form where you can provide detailed information about the death.
+                        </Text>
+
+                        <View style={styles.infoBox}>
+                            <Text style={styles.infoText}>
+                                📋 In the mortality form you'll be able to:
+                            </Text>
+                            <Text style={styles.infoItem}>• Select cause of death</Text>
+                            <Text style={styles.infoItem}>• Set date and time of death</Text>
+                            <Text style={styles.infoItem}>• Provide detailed description</Text>
+                            <Text style={styles.infoItem}>• Add photos or attachments</Text>
+                            <Text style={styles.infoItem}>• Specify who reported the mortality</Text>
+                        </View>
+                    </View>
+                )}
+
+                {/* Sale Info */}
+                {selectedOption?.isSale && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Sale Recording</Text>
+                        <Text style={styles.sectionDescription}>
+                            You've selected to record this animal as sold. Clicking "Record Sale" will take you to the sales form where you can provide detailed information about the sale.
+                        </Text>
+
+                        <View style={styles.infoBox}>
+                            <Text style={styles.infoText}>
+                                📋 In the sales form you'll be able to:
+                            </Text>
+                            <Text style={styles.infoItem}>• Enter buyer information</Text>
+                            <Text style={styles.infoItem}>• Set sale date and amount</Text>
+                            <Text style={styles.infoItem}>• Specify payment method</Text>
+                            <Text style={styles.infoItem}>• Add receipt number</Text>
+                            <Text style={styles.infoItem}>• Provide buyer contact details</Text>
                         </View>
                     </View>
                 )}
@@ -286,7 +355,13 @@ const StatusUpdateForm = ({ route, navigation }) => {
                         <ActivityIndicator color={COLORS.white} />
                     ) : (
                         <Text style={styles.submitButtonText}>
-                            {selectedOption?.isTransfer ? 'Proceed to Transfer' : 'Update Status'}
+                            {selectedOption?.isTransfer
+                                ? 'Proceed to Transfer'
+                                : selectedOption?.isMortality
+                                    ? 'Record Mortality'
+                                    : selectedOption?.isSale
+                                        ? 'Record Sale'
+                                        : 'Update Status'}
                         </Text>
                     )}
                 </TouchableOpacity>
@@ -424,6 +499,24 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: COLORS.darkGray3,
     },
+    transferNote: {
+        fontSize: 12,
+        color: COLORS.purple,
+        fontWeight: '400',
+        fontStyle: 'italic',
+    },
+    mortalityNote: {
+        fontSize: 12,
+        color: COLORS.red,
+        fontWeight: '400',
+        fontStyle: 'italic',
+    },
+    saleNote: {
+        fontSize: 12,
+        color: COLORS.orange,
+        fontWeight: '400',
+        fontStyle: 'italic',
+    },
     radioButton: {
         width: 20,
         height: 20,
@@ -447,6 +540,25 @@ const styles = StyleSheet.create({
         color: COLORS.black,
         backgroundColor: COLORS.white,
         minHeight: 80,
+    },
+    infoBox: {
+        backgroundColor: COLORS.lightGray,
+        borderRadius: 8,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: COLORS.lightGray2,
+    },
+    infoText: {
+        fontSize: 14,
+        color: COLORS.darkGray3,
+        fontWeight: '500',
+        marginBottom: 8,
+    },
+    infoItem: {
+        fontSize: 14,
+        color: COLORS.darkGray3,
+        marginBottom: 4,
+        paddingLeft: 8,
     },
     submitButton: {
         backgroundColor: COLORS.green,

@@ -361,7 +361,7 @@ export default function AddLivestockScreen({ navigation }) {
     <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
       <SecondaryHeader title="Add Livestock" />
       <ScrollView contentContainerStyle={styles.scrollView}>
-        <Box bg="white" p={4} borderRadius={8} shadow={1} mx={4} mt={4} mb={2}>
+        {/* <Box bg="white" p={4} borderRadius={8} shadow={1} mx={4} mt={4} mb={2}>
           <HStack justifyContent="space-between" alignItems="center">
             <VStack>
               <Text fontSize="sm" color={COLORS.darkGray3}>Active Farm:</Text>
@@ -373,7 +373,7 @@ export default function AddLivestockScreen({ navigation }) {
               <Text fontSize="xs" color="white" fontWeight="bold">ACTIVE</Text>
             </Box>
           </HStack>
-        </Box>
+        </Box> */}
 
         <Box bg="white" p={6} borderRadius={8} shadow={1} mx={4} my={2}>
           <Text style={styles.titleText}>Livestock Registration Form</Text>

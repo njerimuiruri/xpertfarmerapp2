@@ -116,6 +116,55 @@ export async function createLivestock(data) {
   }
 }
 
+// Fixed version of the problematic functions in your livestock service
+
+export async function getLivestockForActiveFarm() {
+  try {
+    const activeFarmRaw = await AsyncStorage.getItem('activeFarm');
+    const activeFarm = JSON.parse(activeFarmRaw || '{}');
+    const farmId = activeFarm?.id;
+
+    if (!farmId) {
+      return []; // ✅ Return empty array directly since screen expects array
+    }
+
+    const {data: allLivestock, error} = await getAllLivestock();
+
+    if (error) {
+      console.error(
+        '[getLivestockForActiveFarm] Error from getAllLivestock:',
+        error,
+      );
+      throw new Error(error);
+    }
+
+    // ✅ Fix: allLivestock is already the array, no need for .data
+    if (!Array.isArray(allLivestock)) {
+      console.error(
+        '[getLivestockForActiveFarm] allLivestock is not an array:',
+        allLivestock,
+      );
+      return [];
+    }
+
+    const farmLivestock = allLivestock.filter(
+      livestock => livestock && livestock.farmId === farmId,
+    );
+
+    console.log(
+      `[getLivestockForActiveFarm] Found ${farmLivestock.length} livestock for farm ${farmId}`,
+    );
+    return farmLivestock; // ✅ Return array directly
+  } catch (error) {
+    console.error(
+      '[getLivestockForActiveFarm] Error:',
+      error?.message || error,
+    );
+    throw new Error('Failed to retrieve livestock for active farm');
+  }
+}
+
+// Also make sure getAllLivestock returns the correct format
 export async function getAllLivestock() {
   try {
     const token = await AsyncStorage.getItem('token');
@@ -125,7 +174,7 @@ export async function getAllLivestock() {
 
     if (!token || !userId) {
       return {
-        data: null,
+        data: [],
         error: 'Authentication failed: missing token or user ID',
       };
     }
@@ -136,14 +185,16 @@ export async function getAllLivestock() {
       },
     });
 
-    return {data: response.data || [], error: null};
+    const livestockData = response.data?.data || response.data || [];
+
+    return {data: livestockData, error: null};
   } catch (error) {
     console.error(
       '[getAllLivestock] Error:',
       error?.response?.data || error.message,
     );
     return {
-      data: null,
+      data: [],
       error:
         error?.response?.data?.message ||
         error.message ||
@@ -628,55 +679,6 @@ export async function getLivestockStatistics(livestockId) {
         error?.response?.data?.message ||
         error.message ||
         'Failed to get livestock statistics',
-    };
-  }
-}
-
-export async function getLivestockForActiveFarm() {
-  try {
-    const activeFarmRaw = await AsyncStorage.getItem('activeFarm');
-    const activeFarm = JSON.parse(activeFarmRaw || '{}');
-    const farmId = activeFarm?.id;
-
-    if (!farmId) {
-      return {
-        data: [],
-        error: 'No active farm selected',
-      };
-    }
-
-    const {data: response, error} = await getAllLivestock();
-
-    if (error) {
-      return {data: null, error};
-    }
-
-    const allLivestock = response?.data || []; // ✅ Extract array
-
-    if (!Array.isArray(allLivestock)) {
-      console.error(
-        '[getLivestockForActiveFarm] allLivestock is not an array:',
-        response,
-      );
-      return {
-        data: [],
-        error: 'Invalid livestock data received from server',
-      };
-    }
-
-    const farmLivestock = allLivestock.filter(
-      livestock => livestock && livestock.farmId === farmId,
-    );
-
-    return {data: farmLivestock, error: null};
-  } catch (error) {
-    console.error(
-      '[getLivestockForActiveFarm] Error:',
-      error?.message || error,
-    );
-    return {
-      data: null,
-      error: 'Failed to retrieve livestock for active farm',
     };
   }
 }

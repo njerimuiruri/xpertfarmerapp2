@@ -239,7 +239,7 @@ const AnimalDetailScreen = ({ route, navigation }) => {
         </View>
         <View style={styles.basicInfoContainer}>
           <Text style={styles.infoTitle}>Basic Information</Text>
-          <InfoRow label="ID" value={animalData.id || animalData.idNumber} />
+          <InfoRow label="ID" value={animalData.idNumber || animalData.idNumber} />
           <InfoRow label="Type" value={animalData.type || animalData.livestockType} />
           <InfoRow label="Breed" value={animalData.breedType || animalData.breed} />
           <InfoRow label="Gender" value={animalData.gender || animalData.sex} />

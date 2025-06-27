@@ -13,12 +13,16 @@ import {
   ActivityIndicator,
   RefreshControl,
   Animated,
+  Dimensions,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { icons } from '../../constants';
 import { COLORS } from '../../constants/theme';
 import SecondaryHeader from '../../components/headers/secondary-header';
-import { getFarmEmployees, deleteEmployee } from '../../services/employees'; // Import your API functions
+import { getFarmEmployees, deleteEmployee } from '../../services/employees';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const ITEMS_PER_PAGE = 10;
 
 const FarmEmployeeListScreen = ({ navigation }) => {
   const [employees, setEmployees] = useState([]);
@@ -27,22 +31,33 @@ const FarmEmployeeListScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
-  const [filterType, setFilterType] = useState(''); // Keep only filterType, remove filterRole
+  const [filterType, setFilterType] = useState('');
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Toast state and animation
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const toastAnimation = useState(new Animated.Value(-100))[0];
 
-  // Fetch employees on component mount
+  // Animation for cards
+  const fadeAnim = useState(new Animated.Value(0))[0];
+
   useEffect(() => {
     fetchEmployees();
+    // Fade in animation
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
   }, []);
 
-  // Add focus listener to refresh data when screen comes into focus
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       fetchEmployees();
@@ -50,20 +65,23 @@ const FarmEmployeeListScreen = ({ navigation }) => {
     return unsubscribe;
   }, [navigation]);
 
+  // Reset pagination when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterType, sortBy, sortOrder]);
+
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const result = await getFarmEmployees(); // This will use the active farm automatically
+      const result = await getFarmEmployees();
 
       if (result.error) {
         Alert.alert('Error', result.error);
         setEmployees([]);
       } else {
-        // Transform the API data to match your component's expected format
         const transformedEmployees = result.data.map(employee => ({
           ...employee,
           fullName: `${employee.firstName}${employee.middleName ? ' ' + employee.middleName : ''} ${employee.lastName}`,
-          // Ensure salary is formatted as string with commas if needed
           salary: employee.salary ? employee.salary.toLocaleString() : '0',
         }));
         setEmployees(transformedEmployees);
@@ -79,23 +97,21 @@ const FarmEmployeeListScreen = ({ navigation }) => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
+    setCurrentPage(1);
     await fetchEmployees();
     setRefreshing(false);
   }, []);
 
-  // Toast functions
   const showToast = (message) => {
     setToastMessage(message);
     setToastVisible(true);
 
-    // Animate toast in
     Animated.timing(toastAnimation, {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
 
-    // Auto hide after 3 seconds
     setTimeout(() => {
       hideToast();
     }, 3000);
@@ -112,7 +128,6 @@ const FarmEmployeeListScreen = ({ navigation }) => {
     });
   };
 
-  // Get display role for employee
   const getDisplayRole = (employee) => {
     if (employee.role === 'custom' && employee.customRole) {
       return employee.customRole;
@@ -122,14 +137,11 @@ const FarmEmployeeListScreen = ({ navigation }) => {
 
   const sortedAndFilteredEmployees = useMemo(() => {
     return employees
-      .filter(
-        employee => {
-          const matchesSearch = employee.fullName.toLowerCase().includes(searchQuery.toLowerCase());
-          const matchesType = filterType === '' || employee.employeeType === filterType;
-
-          return matchesSearch && matchesType;
-        }
-      )
+      .filter(employee => {
+        const matchesSearch = employee.fullName.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesType = filterType === '' || employee.employeeType === filterType;
+        return matchesSearch && matchesType;
+      })
       .sort((a, b) => {
         if (sortBy === 'name') {
           return sortOrder === 'asc'
@@ -150,6 +162,25 @@ const FarmEmployeeListScreen = ({ navigation }) => {
       });
   }, [employees, searchQuery, sortBy, sortOrder, filterType]);
 
+  const paginatedEmployees = useMemo(() => {
+    const startIndex = 0;
+    const endIndex = currentPage * ITEMS_PER_PAGE;
+    return sortedAndFilteredEmployees.slice(startIndex, endIndex);
+  }, [sortedAndFilteredEmployees, currentPage]);
+
+  const totalPages = Math.ceil(sortedAndFilteredEmployees.length / ITEMS_PER_PAGE);
+  const hasMoreData = currentPage < totalPages;
+
+  const loadMoreData = useCallback(() => {
+    if (!isLoadingMore && hasMoreData) {
+      setIsLoadingMore(true);
+      setTimeout(() => {
+        setCurrentPage(prev => prev + 1);
+        setIsLoadingMore(false);
+      }, 500);
+    }
+  }, [isLoadingMore, hasMoreData]);
+
   const handleDelete = useCallback((employee) => {
     setEmployeeToDelete(employee);
     setIsDeleteModalVisible(true);
@@ -165,12 +196,10 @@ const FarmEmployeeListScreen = ({ navigation }) => {
       if (result.error) {
         Alert.alert('Error', result.error);
       } else {
-        // Remove employee from local state
         setEmployees(prev => prev.filter(employee => employee.id !== employeeToDelete.id));
         setIsDeleteModalVisible(false);
         setEmployeeToDelete(null);
 
-        // Show success toast instead of Alert
         setTimeout(() => {
           showToast('Employee deleted successfully');
         }, 300);
@@ -209,189 +238,227 @@ const FarmEmployeeListScreen = ({ navigation }) => {
 
   const renderHeader = () => (
     <View style={styles.header}>
+      {/* Search Container */}
       <View style={styles.searchContainer}>
-        <FastImage
-          source={icons.search}
-          style={styles.searchIcon}
-          tintColor="#666"
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search employees..."
-          placeholderTextColor="#666"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+        <View style={styles.searchInputContainer}>
+          <FastImage
+            source={icons.search}
+            style={styles.searchIcon}
+            tintColor={COLORS.green}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search employees..."
+            placeholderTextColor="#9CA3AF"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Text style={styles.clearButton}>×</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Filter Buttons */}
-      <View style={styles.filterButtonsContainer}>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            filterType === '' && styles.activeFilterButton,
-          ]}
-          onPress={() => setFilterType('')}>
-          <Text style={[
-            styles.filterButtonText,
-            filterType === '' && styles.activeFilterButtonText,
-          ]}>
-            All
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            filterType === 'permanent' && styles.activeFilterButton,
-          ]}
-          onPress={() => setFilterType('permanent')}>
-          <Text style={[
-            styles.filterButtonText,
-            filterType === 'permanent' && styles.activeFilterButtonText,
-          ]}>
-            Permanent
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            filterType === 'casual' && styles.activeFilterButton,
-          ]}
-          onPress={() => setFilterType('casual')}>
-          <Text style={[
-            styles.filterButtonText,
-            filterType === 'casual' && styles.activeFilterButtonText,
-          ]}>
-            Casual
-          </Text>
-        </TouchableOpacity>
+      <View style={styles.filterSection}>
+        <Text style={styles.sectionTitle}>Filter by Type</Text>
+        <View style={styles.filterButtonsContainer}>
+          {[
+            { key: '', label: 'All', count: employees.length },
+            { key: 'permanent', label: 'Permanent', count: employees.filter(e => e.employeeType === 'permanent').length },
+            { key: 'casual', label: 'Casual', count: employees.filter(e => e.employeeType === 'casual').length }
+          ].map((filter) => (
+            <TouchableOpacity
+              key={filter.key}
+              style={[
+                styles.filterButton,
+                filterType === filter.key && styles.activeFilterButton,
+              ]}
+              onPress={() => setFilterType(filter.key)}>
+              <Text style={[
+                styles.filterButtonText,
+                filterType === filter.key && styles.activeFilterButtonText,
+              ]}>
+                {filter.label}
+              </Text>
+              <View style={[
+                styles.filterCount,
+                filterType === filter.key && styles.activeFilterCount,
+              ]}>
+                <Text style={[
+                  styles.filterCountText,
+                  filterType === filter.key && styles.activeFilterCountText,
+                ]}>
+                  {filter.count}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
-      <View style={styles.actionBar}>
+      <View style={styles.statsAndSortContainer}>
+        <View style={styles.statsContainer}>
+          <Text style={styles.statsText}>
+            Showing {paginatedEmployees.length} of {sortedAndFilteredEmployees.length} employees
+          </Text>
+        </View>
+
         <TouchableOpacity
-          style={[
-            styles.actionButton,
-            sortBy === 'date' && styles.activeActionButton // Add visual feedback
-          ]}
+          style={[styles.sortButton, sortBy === 'date' && styles.activeSortButton]}
           onPress={() => toggleSort('date')}>
           <FastImage
             source={icons.calendar}
-            style={styles.actionIcon}
-            tintColor={sortBy === 'date' ? COLORS.green : "#333"}
+            style={styles.sortIcon}
+            tintColor={sortBy === 'date' ? COLORS.white : COLORS.green}
           />
           <Text style={[
-            styles.actionText,
-            sortBy === 'date' && styles.activeActionText
+            styles.sortButtonText,
+            sortBy === 'date' && styles.activeSortButtonText
           ]}>
-            Sort by Date {sortBy === 'date' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+            Date {sortBy === 'date' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
           </Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 
-
-  const renderEmployeeCard = ({ item }) => {
+  const renderEmployeeCard = ({ item, index }) => {
     const displayRole = getDisplayRole(item);
 
     return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => navigation.navigate('EmployeeDetailScreen', { employee: item })}>
+      <Animated.View
+        style={[
+          styles.cardContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{
+              translateY: fadeAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [50, 0],
+              }),
+            }],
+          }
+        ]}>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate('EmployeeDetailScreen', { employee: item })}
+          activeOpacity={0.7}>
 
-        <View style={styles.cardHeader}>
-          <View style={styles.employeeInfo}>
-            <Text style={styles.name}>{item.fullName}</Text>
-            <View style={styles.roleContainer}>
-              <Text style={styles.position}>{displayRole}</Text>
-              {item.employeeType === 'casual' && (
-                <View style={styles.badgeCasual}>
-                  <Text style={styles.badgeText}>Casual</Text>
+          <View style={styles.cardHeader}>
+            <View style={styles.employeeInfo}>
+              <Text style={styles.name}>{item.fullName}</Text>
+              <View style={styles.roleContainer}>
+                <Text style={styles.position}>{displayRole}</Text>
+                <View style={[
+                  styles.employeeTypeBadge,
+                  item.employeeType === 'casual' ? styles.casualBadge : styles.permanentBadge
+                ]}>
+                  <Text style={[
+                    styles.badgeText,
+                    item.employeeType === 'casual' ? styles.casualBadgeText : styles.permanentBadgeText
+                  ]}>
+                    {item.employeeType.charAt(0).toUpperCase() + item.employeeType.slice(1)}
+                  </Text>
                 </View>
-              )}
-              {item.employeeType === 'permanent' && (
-                <View style={styles.badgePermanent}>
-                  <Text style={styles.badgeText}>Permanent</Text>
-                </View>
-              )}
+              </View>
+            </View>
+
+            <View style={styles.cardActions}>
+              <TouchableOpacity
+                onPress={() => handleEdit(item)}
+                style={[styles.cardActionButton, styles.editButton]}>
+                <FastImage
+                  source={icons.submited}
+                  style={styles.cardActionIcon}
+                  tintColor="#fff"
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleDelete(item)}
+                style={[styles.cardActionButton, styles.deleteButton]}>
+                <FastImage
+                  source={icons.remove}
+                  style={styles.cardActionIcon}
+                  tintColor="#fff"
+                />
+              </TouchableOpacity>
             </View>
           </View>
-          <View style={styles.cardActions}>
-            <TouchableOpacity
-              onPress={() => handleEdit(item)}
-              style={styles.cardActionButton}>
-              <FastImage
-                source={icons.submited}
-                style={styles.cardActionIcon}
-                tintColor="#4CAF50"
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleDelete(item)}
-              style={styles.cardActionButton}>
-              <FastImage
-                source={icons.remove}
-                style={styles.cardActionIcon}
-                tintColor="#F44336"
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={styles.cardDetails}>
-          <View style={styles.detailRow}>
-            <FastImage
-              source={icons.call}
-              style={styles.detailIcon}
-              tintColor="#666"
-            />
-            <Text style={styles.detailText}>{item.phone}</Text>
-          </View>
-          {item.idNumber && (
+
+          <View style={styles.cardDetails}>
             <View style={styles.detailRow}>
-              <FastImage
-                source={icons.account}
-                style={styles.detailIcon}
-                tintColor="#666"
-              />
-              <Text style={styles.detailText}>ID: {item.idNumber}</Text>
+              <View style={styles.detailIconContainer}>
+                <FastImage
+                  source={icons.call}
+                  style={styles.detailIcon}
+                  tintColor={COLORS.green}
+                />
+              </View>
+              <Text style={styles.detailText}>{item.phone}</Text>
             </View>
-          )}
-          <View style={styles.detailRow}>
-            <FastImage
-              source={icons.calendar}
-              style={styles.detailIcon}
-              tintColor="#666"
-            />
-            <Text style={styles.detailText}>
-              Employed: {new Date(item.dateOfEmployment).toLocaleDateString()}
-            </Text>
-          </View>
-          <View style={styles.detailRow}>
-            <FastImage
-              source={icons.calendar}
-              style={styles.detailIcon}
-              tintColor="#666"
-            />
-            <Text style={styles.detailText}>
-              {item.paymentSchedule.charAt(0).toUpperCase() + item.paymentSchedule.slice(1)} payment: KSh {item.salary}
-            </Text>
-          </View>
-          {item.workSchedule && (
+
+            {item.idNumber && (
+              <View style={styles.detailRow}>
+                <View style={styles.detailIconContainer}>
+                  <FastImage
+                    source={icons.account}
+                    style={styles.detailIcon}
+                    tintColor={COLORS.green}
+                  />
+                </View>
+                <Text style={styles.detailText}>ID: {item.idNumber}</Text>
+              </View>
+            )}
+
             <View style={styles.detailRow}>
-              <FastImage
-                source={icons.calendar}
-                style={styles.detailIcon}
-                tintColor="#666"
-              />
+              <View style={styles.detailIconContainer}>
+                <FastImage
+                  source={icons.calendar}
+                  style={styles.detailIcon}
+                  tintColor={COLORS.green}
+                />
+              </View>
               <Text style={styles.detailText}>
-                Schedule: {item.workSchedule === 'full' ? 'Full Day (8 hours)' : item.workSchedule === 'half' ? 'Half Day (4 hours)' : 'Custom'}
+                Employed: {new Date(item.dateOfEmployment).toLocaleDateString()}
               </Text>
             </View>
+
+            <View style={styles.salaryRow}>
+              <Text style={styles.salaryLabel}>
+                {item.paymentSchedule.charAt(0).toUpperCase() + item.paymentSchedule.slice(1)} Salary:
+              </Text>
+              <Text style={styles.salaryAmount}>KSh {item.salary}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
+
+  const renderLoadMoreButton = () => {
+    if (!hasMoreData) return null;
+
+    return (
+      <View style={styles.loadMoreContainer}>
+        <TouchableOpacity
+          style={styles.loadMoreButton}
+          onPress={loadMoreData}
+          disabled={isLoadingMore}>
+          {isLoadingMore ? (
+            <ActivityIndicator size="small" color={COLORS.white} />
+          ) : (
+            <>
+              <Text style={styles.loadMoreText}>Load More</Text>
+              <Text style={styles.loadMoreSubtext}>
+                {sortedAndFilteredEmployees.length - paginatedEmployees.length} remaining
+              </Text>
+            </>
           )}
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -404,19 +471,15 @@ const FarmEmployeeListScreen = ({ navigation }) => {
       <View style={styles.deleteModalOverlay}>
         <View style={styles.deleteModalContainer}>
           <View style={styles.deleteModalContent}>
-            {/* Icon */}
             <View style={styles.deleteIconContainer}>
               <FastImage
                 source={icons.remove}
                 style={styles.deleteModalIcon}
-                tintColor="#F44336"
+                tintColor="#EF4444"
               />
             </View>
 
-            {/* Title */}
             <Text style={styles.deleteModalTitle}>Delete Employee</Text>
-
-            {/* Message */}
             <Text style={styles.deleteModalMessage}>
               Are you sure you want to delete{' '}
               <Text style={styles.deleteModalEmployeeName}>
@@ -425,7 +488,6 @@ const FarmEmployeeListScreen = ({ navigation }) => {
               ? This action cannot be undone.
             </Text>
 
-            {/* Buttons */}
             <View style={styles.deleteModalButtons}>
               <TouchableOpacity
                 style={styles.cancelButton}
@@ -435,13 +497,13 @@ const FarmEmployeeListScreen = ({ navigation }) => {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.deleteButton, isDeleting && styles.deleteButtonDisabled]}
+                style={[styles.confirmDeleteButton, isDeleting && styles.deleteButtonDisabled]}
                 onPress={confirmDelete}
                 disabled={isDeleting}>
                 {isDeleting ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <Text style={styles.deleteButtonText}>Delete</Text>
+                  <Text style={styles.confirmDeleteButtonText}>Delete</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -465,7 +527,7 @@ const FarmEmployeeListScreen = ({ navigation }) => {
       >
         <View style={styles.toastContent}>
           <FastImage
-            source={icons.submited} // Using a check/success icon
+            source={icons.submited}
             style={styles.toastIcon}
             tintColor="#fff"
           />
@@ -480,11 +542,13 @@ const FarmEmployeeListScreen = ({ navigation }) => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <FastImage
-        source={icons.account}
-        style={styles.emptyIcon}
-        tintColor="#ccc"
-      />
+      <View style={styles.emptyIconContainer}>
+        <FastImage
+          source={icons.account}
+          style={styles.emptyIcon}
+          tintColor="#D1D5DB"
+        />
+      </View>
       <Text style={styles.emptyTitle}>No Employees Found</Text>
       <Text style={styles.emptySubtitle}>
         {searchQuery || filterType
@@ -525,19 +589,19 @@ const FarmEmployeeListScreen = ({ navigation }) => {
         barStyle={'light-content'}
       />
 
-      {/* Toast notification */}
       {renderToast()}
 
-      {renderHeader()}
       <FlatList
-        data={sortedAndFilteredEmployees}
+        data={paginatedEmployees}
         renderItem={renderEmployeeCard}
         keyExtractor={item => item.id.toString()}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderLoadMoreButton}
+        ListEmptyComponent={renderEmptyState}
         contentContainerStyle={[
           styles.listContent,
-          sortedAndFilteredEmployees.length === 0 && styles.emptyListContent
+          paginatedEmployees.length === 0 && styles.emptyListContent
         ]}
-        ListEmptyComponent={renderEmptyState}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -546,7 +610,9 @@ const FarmEmployeeListScreen = ({ navigation }) => {
             tintColor={COLORS.green}
           />
         }
+        showsVerticalScrollIndicator={false}
       />
+
       <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate('AddEmployeeScreen')}>
@@ -556,6 +622,7 @@ const FarmEmployeeListScreen = ({ navigation }) => {
           tintColor="#fff"
         />
       </TouchableOpacity>
+
       {renderDeleteModal()}
     </SafeAreaView>
   );
@@ -564,234 +631,183 @@ const FarmEmployeeListScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.lightGreen,
+    backgroundColor: '#F8FAFC',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#F8FAFC',
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    color: '#6B7280',
+    fontWeight: '500',
   },
   header: {
     backgroundColor: COLORS.white,
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f1f3f4',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    marginBottom: 16,
-  },
-  searchIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    fontSize: 16,
-    color: '#333',
-  },
-  filterButtonsContainer: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    gap: 10,
-    paddingHorizontal: 4,
-  },
-  filterButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 25,
-    backgroundColor: '#F8F9FA',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#E9ECEF',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
-    minHeight: 44,
-    position: 'relative',
-    overflow: 'hidden',
+    shadowRadius: 4,
+    marginBottom: 16,
   },
-  activeActionButton: {
-    backgroundColor: COLORS.green + '20',
+  searchContainer: {
+    marginBottom: 16,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 48,
     borderWidth: 1,
-    borderColor: COLORS.green,
+    borderColor: '#E5E7EB',
   },
-  activeActionText: {
-    color: COLORS.green,
+  searchIcon: {
+    width: 18,
+    height: 18,
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1F2937',
+    fontWeight: '400',
+  },
+  clearButton: {
+    fontSize: 20,
+    color: '#9CA3AF',
+    fontWeight: 'bold',
+    paddingHorizontal: 6,
+  },
+  filterSection: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 15,
     fontWeight: '600',
+    color: '#374151',
+    marginBottom: 10,
+  },
+  filterButtonsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  filterButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
   },
   activeFilterButton: {
     backgroundColor: COLORS.green,
     borderColor: COLORS.green,
-    elevation: 4,
-    shadowColor: COLORS.green,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    transform: [{ scale: 1.02 }],
   },
   filterButtonText: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '600',
-    color: '#495057',
-    letterSpacing: 0.3,
+    color: '#6B7280',
+    marginBottom: 2,
   },
   activeFilterButtonText: {
     color: COLORS.white,
+  },
+  filterCount: {
+    backgroundColor: '#E5E7EB',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 8,
+    minWidth: 20,
+    alignItems: 'center',
+  },
+  activeFilterCount: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  filterCountText: {
+    fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    color: '#374151',
   },
-
-  // Optional: Add these additional styles for even more enhancement
-  filterButtonGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 25,
+  activeFilterCountText: {
+    color: COLORS.white,
   },
-  filterButtonRipple: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    opacity: 0,
-  },
-
-  // Alternative pill-style buttons (choose one approach)
-  filterButtonsContainerAlt: {
+  statsAndSortContainer: {
     flexDirection: 'row',
-    marginBottom: 16,
-    backgroundColor: '#F1F3F4',
-    borderRadius: 30,
-    padding: 4,
-    marginHorizontal: 8,
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  filterButtonAlt: {
+  statsContainer: {
     flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 2,
-    minHeight: 40,
   },
-  activeFilterButtonAlt: {
-    backgroundColor: COLORS.white,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  filterButtonTextAlt: {
-    fontSize: 14,
-    fontWeight: '500',
+  statsText: {
+    fontSize: 13,
     color: '#6B7280',
+    fontWeight: '500',
   },
-  activeFilterButtonTextAlt: {
-    color: '#1F2937',
-    fontWeight: '600',
-  },
-
-  actionBar: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-  },
-  actionButton: {
+  sortButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    backgroundColor: '#f1f3f4',
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  actionIcon: {
-    width: 18,
-    height: 18,
-    marginRight: 6,
+  activeSortButton: {
+    backgroundColor: COLORS.green,
+    borderColor: COLORS.green,
   },
-  actionText: {
-    fontSize: 14,
-    color: '#333',
+  sortIcon: {
+    width: 14,
+    height: 14,
+    marginRight: 5,
+  },
+  sortButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  activeSortButtonText: {
+    color: COLORS.white,
   },
   listContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 100,
   },
   emptyListContent: {
     flex: 1,
     justifyContent: 'center',
   },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyIcon: {
-    width: 80,
-    height: 80,
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 24,
-    paddingHorizontal: 40,
-  },
-  emptyButton: {
-    backgroundColor: COLORS.green,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  emptyButtonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: 'bold',
+  cardContainer: {
+    marginBottom: 12,
   },
   card: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
     elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -801,105 +817,211 @@ const styles = StyleSheet.create({
   },
   employeeInfo: {
     flex: 1,
+    marginRight: 12,
   },
   name: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 4,
   },
   roleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    flexWrap: 'wrap',
   },
   position: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 13,
+    color: '#6B7280',
     marginRight: 8,
+    fontWeight: '500',
   },
-  badgeCasual: {
-    backgroundColor: '#FF9800',
-    paddingHorizontal: 8,
+  employeeTypeBadge: {
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 12,
+    borderRadius: 6,
   },
-  badgePermanent: {
-    backgroundColor: COLORS.green,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
+  casualBadge: {
+    backgroundColor: '#FEF3C7',
+  },
+  permanentBadge: {
+    backgroundColor: '#D1FAE5',
   },
   badgeText: {
-    color: COLORS.white,
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: '700',
+  },
+  casualBadgeText: {
+    color: '#92400E',
+  },
+  permanentBadgeText: {
+    color: '#065F46',
   },
   cardActions: {
     flexDirection: 'row',
+    gap: 6,
   },
   cardActionButton: {
-    padding: 8,
-    marginLeft: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  editButton: {
+    backgroundColor: COLORS.green,
+  },
+  deleteButton: {
+    backgroundColor: '#EF4444',
   },
   cardActionIcon: {
-    width: 20,
-    height: 20,
+    width: 16,
+    height: 16,
   },
   cardDetails: {
-    marginTop: 8,
+    gap: 10,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+  },
+  detailIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
   detailIcon: {
-    width: 16,
-    height: 16,
-    marginRight: 8,
+    width: 14,
+    height: 14,
   },
   detailText: {
+    fontSize: 13,
+    color: '#4B5563',
+    fontWeight: '500',
+    flex: 1,
+  },
+  salaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  salaryLabel: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  salaryAmount: {
     fontSize: 14,
-    color: '#666',
+    color: COLORS.green,
+    fontWeight: '700',
+  },
+  loadMoreContainer: {
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  loadMoreButton: {
+    backgroundColor: COLORS.green,
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 50,
+  },
+  loadMoreText: {
+    color: COLORS.white,
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  loadMoreSubtext: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 32,
+  },
+  emptyIconContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emptyIcon: {
+    width: 32,
+    height: 32,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  emptyButton: {
+    backgroundColor: COLORS.green,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  emptyButtonText: {
+    color: COLORS.white,
+    fontSize: 15,
+    fontWeight: '600',
   },
   fab: {
     position: 'absolute',
     bottom: 24,
-    right: 24,
+    right: 16,
     width: 56,
     height: 56,
     borderRadius: 28,
     backgroundColor: COLORS.green,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 6,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   fabIcon: {
     width: 24,
     height: 24,
   },
-  // Delete Modal Styles
   deleteModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
   },
   deleteModalContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
     borderRadius: 16,
     width: '100%',
-    maxWidth: 340,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
+    maxWidth: 400,
+    overflow: 'hidden',
   },
   deleteModalContent: {
     padding: 24,
@@ -909,27 +1031,27 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#FFF3F3',
+    backgroundColor: '#FEE2E2',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
   },
   deleteModalIcon: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
   },
   deleteModalTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: '#1F2937',
-    marginBottom: 12,
+    marginBottom: 8,
     textAlign: 'center',
   },
   deleteModalMessage: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#6B7280',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
     marginBottom: 24,
   },
   deleteModalEmployeeName: {
@@ -944,78 +1066,71 @@ const styles = StyleSheet.create({
   cancelButton: {
     flex: 1,
     paddingVertical: 12,
-    paddingHorizontal: 20,
     borderRadius: 8,
     backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#6B7280',
+    color: '#374151',
   },
-  deleteButton: {
+  confirmDeleteButton: {
     flex: 1,
     paddingVertical: 12,
-    paddingHorizontal: 20,
     borderRadius: 8,
     backgroundColor: '#EF4444',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 48,
   },
   deleteButtonDisabled: {
-    backgroundColor: '#FCA5A5',
+    opacity: 0.7,
   },
-  deleteButtonText: {
-    fontSize: 16,
+  confirmDeleteButtonText: {
+    fontSize: 15,
     fontWeight: '600',
-    color: '#fff',
+    color: COLORS.white,
   },
-  // Toast Styles
   toastContainer: {
     position: 'absolute',
     top: 0,
-    left: 0,
-    right: 0,
+    left: 16,
+    right: 16,
     zIndex: 1000,
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    elevation: 1000,
   },
   toastContent: {
     backgroundColor: COLORS.green,
-    borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    elevation: 6,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
   },
   toastIcon: {
     width: 20,
     height: 20,
-    marginRight: 8,
+    marginRight: 10,
   },
   toastText: {
     flex: 1,
-    color: '#fff',
-    fontSize: 16,
+    fontSize: 14,
+    color: COLORS.white,
     fontWeight: '500',
   },
   toastCloseButton: {
     padding: 4,
-    marginLeft: 8,
   },
   toastCloseText: {
-    color: '#fff',
-    fontSize: 20,
+    fontSize: 18,
+    color: COLORS.white,
     fontWeight: 'bold',
-    lineHeight: 20,
   },
 });
 

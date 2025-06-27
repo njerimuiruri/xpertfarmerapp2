@@ -1,1142 +1,1071 @@
 import React, { useState } from 'react';
 import {
-  Box,
+  View,
   Text,
-  Input,
-  Button,
-  VStack,
-  Select,
-  HStack,
-  Radio,
+  TextInput,
+  TouchableOpacity,
   ScrollView,
+  Alert,
+  StyleSheet,
   Modal,
-  Checkbox,
-  Pressable,
-  IconButton,
-  FormControl,
-} from 'native-base';
-import { View, StyleSheet, Platform } from 'react-native';
-import FastImage from 'react-native-fast-image';
+  StatusBar,
+
+  FlatList,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import SecondaryHeader from '../../components/headers/secondary-header';
-import { COLORS } from '../../constants/theme';
-import { icons } from '../../constants';
+import { COLORS } from "../../constants/theme";
+import SecondaryHeader from "../../components/headers/secondary-header";
+
 import { createEmployee, formatEmployeeData } from '../../services/employees';
 
-export default function AddEmployeeScreen({ navigation }) {
-  // State for step tracking
-  const [currentStep, setCurrentStep] = useState(1);
-  const [totalSteps, setTotalSteps] = useState(2);
-  const [endDate, setEndDate] = useState('');
-  const [typeOfEngagement, setTypeOfEngagement] = useState('');
+
+const AddEmployeeScreen = ({ navigation }) => {
   const [employeeType, setEmployeeType] = useState('permanent');
-  const [firstName, setFirstName] = useState('');
-  const [middleName, setMiddleName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [emergencyContact, setEmergencyContact] = useState('');
-  const [idNumber, setIdNumber] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const [dateOfEmployment, setDateOfEmployment] = useState('');
-  const [role, setRole] = useState('');
-  const [selectedRoles, setSelectedRoles] = useState([]);
-  const [customRole, setCustomRole] = useState('');
-  const [showCustomRole, setShowCustomRole] = useState(false);
-  const [paymentSchedule, setPaymentSchedule] = useState('daily');
-  const [salary, setSalary] = useState('');
-  const [workSchedule, setWorkSchedule] = useState('');
-
-
-  const [selectedBenefits, setSelectedBenefits] = useState({
-    paye: false,
-    nssf: false,
-    nhif: false,
-    housingLevy: false,
-    customBenefit: false
+  const [formData, setFormData] = useState({
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    phone: '',
+    idNumber: '',
+    emergencyContact: '',
+    dateOfEmployment: new Date(),
+    endDate: new Date(),
+    paymentSchedule: 'monthly',
+    salary: '',
+    typeOfEngagement: 'seasonal',
+    workSchedule: 'full',
+    selectedRole: '',
+    customRole: '',
+    selectedBenefits: {
+      paye: false,
+      nssf: false,
+      nhif: false,
+      housingLevy: false,
+      customBenefit: false,
+    },
+    customBenefitName: '',
+    customBenefitAmount: '',
   });
-  const [customBenefitName, setCustomBenefitName] = useState('');
-  const [customBenefitAmount, setCustomBenefitAmount] = useState('');
 
-  // Date picker states
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [showBenefitModal, setShowBenefitModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showEngagementModal, setShowEngagementModal] = useState(false);
+  const [showWorkScheduleModal, setShowWorkScheduleModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // Added for delete modal
+
   const [showEmploymentDatePicker, setShowEmploymentDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-  const [employmentDateObj, setEmploymentDateObj] = useState(new Date());
-  const [endDateObj, setEndDateObj] = useState(new Date());
 
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  // Date formatting function
-  const formatDate = (date) => {
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+  const predefinedRoles = [
+    'milker',
+    'cleaner',
+    'farm manager',
+    'veterinarian',
+    'feed mixer',
+    'security guard',
+    'maintenance',
+    'driver',
+    'accountant',
+    'supervisor',
+  ];
+
+  const predefinedBenefits = [
+    { key: 'paye', name: 'PAYE', amount: 0 },
+    { key: 'nssf', name: 'NSSF', amount: 1080 },
+    { key: 'nhif', name: 'NHIF', amount: 1400 },
+    { key: 'housingLevy', name: 'Housing Levy', amount: 375 },
+  ];
+
+  const paymentScheduleOptions = ['daily', 'weekly', 'monthly'];
+  const engagementTypes = ['seasonal', 'temporary', 'contract'];
+  const workScheduleTypes = ['full-time', 'part-time', 'flexible'];
+
+  const updateFormData = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: null }));
+    }
   };
 
-  // Handle employment date change
+  const formatPhoneNumber = (phone) => {
+    let cleanPhone = phone.replace(/\D/g, '');
+
+    if (cleanPhone.startsWith('254')) {
+      cleanPhone = cleanPhone.substring(3);
+    }
+
+    if (cleanPhone.startsWith('0')) {
+      cleanPhone = cleanPhone.substring(1);
+    }
+
+    return `+254${cleanPhone}`;
+  };
+
+  const handlePhoneChange = (field, text) => {
+    updateFormData(field, text);
+  };
+
+  const handlePhoneBlur = (field) => {
+    if (formData[field]) {
+      const formatted = formatPhoneNumber(formData[field]);
+      updateFormData(field, formatted);
+    }
+  };
+
+  const selectRole = (role) => {
+    updateFormData('selectedRole', role);
+    setShowRoleModal(false);
+  };
+
+  const addCustomRole = () => {
+    if (formData.customRole.trim()) {
+      updateFormData('selectedRole', formData.customRole.trim());
+      updateFormData('customRole', '');
+      setShowRoleModal(false);
+    }
+  };
+
+  const toggleBenefit = (benefitKey) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedBenefits: {
+        ...prev.selectedBenefits,
+        [benefitKey]: !prev.selectedBenefits[benefitKey],
+      },
+    }));
+  };
+
+  const addCustomBenefit = () => {
+    if (formData.customBenefitName.trim() && formData.customBenefitAmount.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        selectedBenefits: {
+          ...prev.selectedBenefits,
+          customBenefit: true,
+        },
+      }));
+      setShowBenefitModal(false);
+    }
+  };
+
+  const formatDateForDisplay = (date) => {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   const onEmploymentDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || employmentDateObj;
-    setShowEmploymentDatePicker(Platform.OS === 'ios');
-    setEmploymentDateObj(currentDate);
-    setDateOfEmployment(formatDate(currentDate));
+    setShowEmploymentDatePicker(false);
+    if (selectedDate) {
+      updateFormData('dateOfEmployment', selectedDate);
+    }
   };
 
-  // Handle end date change
   const onEndDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || endDateObj;
-    setShowEndDatePicker(Platform.OS === 'ios');
-    setEndDateObj(currentDate);
-    setEndDate(formatDate(currentDate));
-  };
-
-  const handleRoleSelect = (roleName, isSelected) => {
-    if (roleName === 'custom') {
-      setShowCustomRole(isSelected);
-      if (isSelected) {
-        setSelectedRoles(prev => [...prev, 'custom']);
-      } else {
-        setSelectedRoles(prev => prev.filter(role => role !== 'custom'));
-        setCustomRole('');
-      }
-    } else {
-      if (isSelected) {
-        setSelectedRoles(prev => [...prev, roleName]);
-      } else {
-        setSelectedRoles(prev => prev.filter(role => role !== roleName));
-      }
-    }
-  };
-  const handleNext = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      handleSubmit();
+    setShowEndDatePicker(false);
+    if (selectedDate) {
+      updateFormData('endDate', selectedDate);
     }
   };
 
-  const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+  const validateForm = () => {
+    const newErrors = {};
+    const required = ['firstName', 'lastName', 'phone', 'salary'];
+
+    required.forEach(field => {
+      if (!formData[field] || formData[field].toString().trim() === '') {
+        newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
+      }
+    });
+
+    if (formData.phone && !formData.phone.startsWith('+254')) {
+      newErrors.phone = 'Phone number must be in Kenya format (+254...)';
     }
+
+    if (formData.salary && isNaN(parseInt(formData.salary))) {
+      newErrors.salary = 'Salary must be a valid number';
+    }
+
+    if (!formData.selectedRole) {
+      newErrors.role = 'Please select a role';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
+    if (!validateForm()) {
+      Alert.alert('Validation Error', 'Please correct the errors in the form');
+      return;
+    }
+
+    setLoading(true);
     try {
-      // Collect form data
-      const formData = {
-        firstName,
-        middleName,
-        lastName,
-        phone,
-        emergencyContact,
-        idNumber,
-        dateOfEmployment,
-        role,
-        customRole,
-        paymentSchedule,
-        salary,
-        selectedBenefits,
-        customBenefitName,
-        customBenefitAmount,
-        // For casual employees
-        endDate,
-        typeOfEngagement,
-        workSchedule,
-      };
+      const formattedData = formatEmployeeData(formData, employeeType);
 
-      // Format data for API
-      const employeeData = formatEmployeeData(formData, employeeType);
+      console.log('Submitting employee data:', JSON.stringify(formattedData, null, 2));
 
-      console.log('Submitting employee data:', employeeData);
-
-      // Call the API
-      const { data, error } = await createEmployee(employeeData);
+      const { data, error } = await createEmployee(formattedData);
 
       if (error) {
-        console.error('Failed to create employee:', error);
-        alert(`Failed to create employee: ${error}`);
+        Alert.alert('Error', error);
         return;
       }
 
       console.log('Employee created successfully:', data);
 
-      // Show success modal
-      setShowSuccessModal(true);
+      Alert.alert(
+        'Success',
+        'Employee created successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              if (navigation) {
+                navigation.goBack();
+              }
+            }
+          }
+        ]
+      );
 
     } catch (error) {
-      console.error('Unexpected error:', error);
-      alert('An unexpected error occurred. Please try again.');
+      console.error('Error creating employee:', error);
+      Alert.alert(
+        'Error',
+        'An unexpected error occurred while creating the employee. Please try again.'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
-  const renderStepIndicator = () => {
-    return (
-      <HStack mt={4} mb={6} px={6} position="relative" alignItems="center">
-        <Box
-          position="absolute"
-          top="10px"
-          left="0"
-          right="0"
-          height="2px"
-          bg="gray.200"
-          zIndex={0}
-          mx={12}
-        />
 
-        <VStack flex={1} alignItems="center" zIndex={1}>
-          <Box
-            w="8"
-            h="8"
-            borderRadius="full"
-            bg={currentStep >= 1 ? COLORS.green : "gray.200"}
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Text color={currentStep >= 1 ? "white" : "gray.500"} fontWeight="bold">1</Text>
-          </Box>
-          <Text
-            color={currentStep >= 1 ? COLORS.green : "gray.400"}
-            fontSize="xs"
-            mt={1}
-            textAlign="center"
-          >
-            Personal{'\n'}Information
-          </Text>
-        </VStack>
+  const renderDropdownModal = (visible, setVisible, title, options, selectedValue, onSelect) => (
+    <Modal visible={visible} transparent animationType="slide">
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{title}</Text>
+          </View>
 
-        {/* Step 2 */}
-        <VStack flex={1} alignItems="center" zIndex={1}>
-          <Box
-            w="8"
-            h="8"
-            borderRadius="full"
-            bg={currentStep >= 2 ? COLORS.green : "gray.200"}
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Text color={currentStep >= 2 ? "white" : "gray.500"} fontWeight="bold">2</Text>
-          </Box>
-          <Text
-            color={currentStep >= 2 ? COLORS.green : "gray.400"}
-            fontSize="xs"
-            mt={1}
-            textAlign="center"
-          >
-            Professional{'\n'}Information
-          </Text>
-        </VStack>
-      </HStack>
-    );
-  };
-
-  // Step 1: Personal Information
-  const renderPersonalInformationForm = () => {
-    return (
-      <VStack space={4} px={4}>
-        <FormControl>
-          <Text style={styles.sectionTitle}>Select the type of labor</Text>
-          <Radio.Group
-            name="employeeType"
-            value={employeeType}
-            onChange={value => setEmployeeType(value)}
-            mt={2}
-          >
-            <HStack space={6}>
-              <Radio value="permanent" colorScheme="green">
-                <Text ml={1}>Permanent</Text>
-              </Radio>
-              <Radio value="casual" colorScheme="green">
-                <Text ml={1}>Casual</Text>
-              </Radio>
-            </HStack>
-          </Radio.Group>
-        </FormControl>
-
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>First Name</Text>
-          </FormControl.Label>
-          <Input
-            value={firstName}
-            onChangeText={setFirstName}
-            placeholder="John"
-            borderColor="gray.300"
-            backgroundColor={COLORS.lightGreen}
-            p={3}
-            borderRadius="md"
+          <FlatList
+            data={options}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[
+                  styles.optionItem,
+                  selectedValue === item && styles.selectedOption,
+                ]}
+                onPress={() => {
+                  onSelect(item);
+                  setVisible(false);
+                }}>
+                <Text style={[
+                  styles.optionText,
+                  selectedValue === item && styles.selectedOptionText,
+                ]}>
+                  {item.charAt(0).toUpperCase() + item.slice(1)}
+                </Text>
+                {selectedValue === item && (
+                  <Text style={styles.checkmark}>✓</Text>
+                )}
+              </TouchableOpacity>
+            )}
           />
-        </FormControl>
 
-        <FormControl>
-          <FormControl.Label>
-            <Text style={styles.label}>Middle Name</Text>
-          </FormControl.Label>
-          <Input
-            value={middleName}
-            onChangeText={setMiddleName}
-            placeholder="Doe"
-            borderColor="gray.300"
-            backgroundColor={COLORS.lightGreen}
-            p={3}
-            borderRadius="md"
+          <TouchableOpacity
+            style={styles.closeModalButton}
+            onPress={() => setVisible(false)}>
+            <Text style={styles.closeModalButtonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
+  const renderRoleModal = () => (
+    <Modal visible={showRoleModal} transparent animationType="slide">
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Role</Text>
+          </View>
+
+          <FlatList
+            data={predefinedRoles}
+            keyExtractor={(item) => item}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[
+                  styles.optionItem,
+                  formData.selectedRole === item && styles.selectedOption,
+                ]}
+                onPress={() => selectRole(item)}>
+                <Text style={[
+                  styles.optionText,
+                  formData.selectedRole === item && styles.selectedOptionText,
+                ]}>
+                  {item.charAt(0).toUpperCase() + item.slice(1)}
+                </Text>
+                {formData.selectedRole === item && (
+                  <Text style={styles.checkmark}>✓</Text>
+                )}
+              </TouchableOpacity>
+            )}
           />
-        </FormControl>
 
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>Last Name</Text>
-          </FormControl.Label>
-          <Input
-            value={lastName}
-            onChangeText={setLastName}
-            placeholder="Doe"
-            borderColor="gray.300"
-            backgroundColor={COLORS.lightGreen}
-            p={3}
-            borderRadius="md"
-          />
-        </FormControl>
-
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>Phone Number</Text>
-          </FormControl.Label>
-          <Input
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="(___) ___-____"
-            keyboardType="phone-pad"
-            backgroundColor={COLORS.lightGreen}
-            borderColor="gray.300"
-            p={3}
-            borderRadius="md"
-          />
-        </FormControl>
-
-        <FormControl>
-          <FormControl.Label>
-            <Text style={styles.label}>Emergency Contact</Text>
-          </FormControl.Label>
-          <Input
-            value={emergencyContact}
-            onChangeText={setEmergencyContact}
-            placeholder="(___) ___-____"
-            keyboardType="phone-pad"
-            backgroundColor={COLORS.lightGreen}
-            borderColor="gray.300"
-            p={3}
-            borderRadius="md"
-          />
-        </FormControl>
-
-        <FormControl>
-          <FormControl.Label>
-            <Text style={styles.label}>ID Number</Text>
-          </FormControl.Label>
-          <Input
-            value={idNumber}
-            onChangeText={setIdNumber}
-            placeholder="Enter ID number"
-            backgroundColor={COLORS.lightGreen}
-            borderColor="gray.300"
-            p={3}
-            borderRadius="md"
-          />
-        </FormControl>
-
-        <Button
-          mt={4}
-          mb={8}
-          backgroundColor={COLORS.green}
-          onPress={handleNext}
-          alignSelf="center"
-          borderRadius="md"
-          width="120px"
-        >
-          Next
-        </Button>
-      </VStack>
-    );
-  };
-
-  // Step 2
-  const renderProfessionalInformationForm = () => {
-    return (
-      <VStack space={4} px={4}>
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>Date of Employment</Text>
-          </FormControl.Label>
-          <Pressable onPress={() => setShowEmploymentDatePicker(true)}>
-            <Input
-              value={dateOfEmployment}
-              placeholder="DD/MM/YYYY"
-              borderColor="gray.300"
-              backgroundColor={COLORS.lightGreen}
-              p={3}
-              borderRadius="md"
-              isReadOnly
-              InputRightElement={
-                <IconButton
-                  icon={
-                    <FastImage
-                      source={icons.calendar}
-                      style={{ width: 24, height: 24 }}
-                    />
-                  }
-                  onPress={() => setShowEmploymentDatePicker(true)}
-                />
-              }
+          <View style={styles.customInputSection}>
+            <Text style={styles.customLabel}>Add Custom Role</Text>
+            <TextInput
+              style={styles.customInput}
+              value={formData.customRole}
+              onChangeText={(text) => updateFormData('customRole', text)}
+              placeholder="Enter custom role"
+              placeholderTextColor={COLORS.textLight}
             />
-          </Pressable>
-        </FormControl>
+            <TouchableOpacity style={styles.addCustomButton} onPress={addCustomRole}>
+              <Text style={styles.addCustomButtonText}>Add Role</Text>
+            </TouchableOpacity>
+          </View>
 
-        {showEmploymentDatePicker && (
-          <DateTimePicker
-            testID="employmentDatePicker"
-            value={employmentDateObj}
-            mode="date"
-            display="default"
-            onChange={onEmploymentDateChange}
+          <TouchableOpacity
+            style={styles.closeModalButton}
+            onPress={() => setShowRoleModal(false)}>
+            <Text style={styles.closeModalButtonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
+  const renderBenefitModal = () => (
+    <Modal visible={showBenefitModal} transparent animationType="slide">
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Benefits</Text>
+          </View>
+
+          <FlatList
+            data={predefinedBenefits}
+            keyExtractor={(item) => item.key}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[
+                  styles.optionItem,
+                  formData.selectedBenefits[item.key] && styles.selectedOption,
+                ]}
+                onPress={() => toggleBenefit(item.key)}>
+                <Text style={[
+                  styles.optionText,
+                  formData.selectedBenefits[item.key] && styles.selectedOptionText,
+                ]}>
+                  {item.name} {item.amount > 0 && `(KSh ${item.amount.toLocaleString()})`}
+                </Text>
+                {formData.selectedBenefits[item.key] && (
+                  <Text style={styles.checkmark}>✓</Text>
+                )}
+              </TouchableOpacity>
+            )}
           />
-        )}
 
-        <FormControl>
-          <FormControl.Label>
-            <Text style={styles.label}>End Date (If applicable)</Text>
-          </FormControl.Label>
-          <Pressable onPress={() => setShowEndDatePicker(true)}>
-            <Input
-              value={endDate}
-              placeholder="DD/MM/YYYY"
-              borderColor="gray.300"
-              backgroundColor={COLORS.lightGreen}
-              p={3}
-              borderRadius="md"
-              isReadOnly
-              InputRightElement={
-                <IconButton
-                  icon={
-                    <FastImage
-                      source={icons.calendar}
-                      style={{ width: 24, height: 24 }}
-                    />
-                  }
-                  onPress={() => setShowEndDatePicker(true)}
-                />
-              }
+          <View style={styles.customInputSection}>
+            <Text style={styles.customLabel}>Add Custom Benefit</Text>
+            <TextInput
+              style={styles.customInput}
+              value={formData.customBenefitName}
+              onChangeText={(text) => updateFormData('customBenefitName', text)}
+              placeholder="Benefit name"
+              placeholderTextColor={COLORS.textLight}
             />
-          </Pressable>
-        </FormControl>
-
-        {showEndDatePicker && (
-          <DateTimePicker
-            testID="endDatePicker"
-            value={endDateObj}
-            mode="date"
-            display="default"
-            onChange={onEndDateChange}
-          />
-        )}
-
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>Role</Text>
-          </FormControl.Label>
-          <VStack space={2} mt={1}>
-            <Checkbox
-              value="cleaner"
-              colorScheme="green"
-              onChange={(isSelected) => handleRoleSelect('cleaner', isSelected)}
-              isChecked={selectedRoles.includes('cleaner')}
-            >
-              Cleaner
-            </Checkbox>
-            <Checkbox
-              value="feeder"
-              colorScheme="green"
-              onChange={(isSelected) => handleRoleSelect('feeder', isSelected)}
-              isChecked={selectedRoles.includes('feeder')}
-            >
-              Feeder
-            </Checkbox>
-            <Checkbox
-              value="milker"
-              colorScheme="green"
-              onChange={(isSelected) => handleRoleSelect('milker', isSelected)}
-              isChecked={selectedRoles.includes('milker')}
-            >
-              Milker
-            </Checkbox>
-            <Checkbox
-              value="custom"
-              colorScheme="green"
-              onChange={(isSelected) => handleRoleSelect('custom', isSelected)}
-              isChecked={selectedRoles.includes('custom')}
-            >
-              Create new role
-            </Checkbox>
-          </VStack>
-
-          {showCustomRole && (
-            <FormControl mt={2} isRequired>
-              <FormControl.Label>
-                <Text style={styles.label}>Role Name</Text>
-              </FormControl.Label>
-              <Input
-                value={customRole}
-                onChangeText={setCustomRole}
-                placeholder="role/title"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.300"
-                p={3}
-                borderRadius="md"
-              />
-            </FormControl>
-          )}
-        </FormControl>
-
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>Payment Schedule</Text>
-          </FormControl.Label>
-          <Radio.Group
-            name="paymentSchedule"
-            value={paymentSchedule}
-            onChange={value => setPaymentSchedule(value)}
-            mt={1}
-          >
-            <HStack space={4} flexWrap="wrap">
-              <Radio value="daily" colorScheme="green">
-                <Text ml={1}>Daily</Text>
-              </Radio>
-              <Radio value="weekly" colorScheme="green">
-                <Text ml={1}>Weekly</Text>
-              </Radio>
-              <Radio value="monthly" colorScheme="green">
-                <Text ml={1}>Monthly</Text>
-              </Radio>
-            </HStack>
-          </Radio.Group>
-        </FormControl>
-
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>Salary (Kenya Shillings)</Text>
-          </FormControl.Label>
-          <Input
-            value={salary}
-            onChangeText={setSalary}
-            placeholder="11,000"
-            backgroundColor={COLORS.lightGreen}
-            keyboardType="numeric"
-            borderColor="gray.300"
-            p={3}
-            borderRadius="md"
-          />
-        </FormControl>
-
-        <FormControl>
-          <FormControl.Label>
-            <Text style={styles.label}>Statutory and Benefits (Select Relevant Fields)</Text>
-          </FormControl.Label>
-          <VStack space={2} mt={1}>
-            <Checkbox
-              value="paye"
-              colorScheme="green"
-              onChange={(isSelected) => setSelectedBenefits({ ...selectedBenefits, paye: isSelected })}
-              isChecked={selectedBenefits.paye}
-            >
-              PAYE
-            </Checkbox>
-            <Checkbox
-              value="nssf"
-              colorScheme="green"
-              onChange={(isSelected) => setSelectedBenefits({ ...selectedBenefits, nssf: isSelected })}
-              isChecked={selectedBenefits.nssf}
-            >
-              NSSF
-            </Checkbox>
-            <Checkbox
-              value="nhif"
-              colorScheme="green"
-              onChange={(isSelected) => setSelectedBenefits({ ...selectedBenefits, nhif: isSelected })}
-              isChecked={selectedBenefits.nhif}
-            >
-              NHIF
-            </Checkbox>
-            <Checkbox
-              value="housingLevy"
-              colorScheme="green"
-              onChange={(isSelected) => setSelectedBenefits({ ...selectedBenefits, housingLevy: isSelected })}
-              isChecked={selectedBenefits.housingLevy}
-            >
-              Housing Levy
-            </Checkbox>
-            <Checkbox
-              value="customBenefit"
-              colorScheme="green"
-              onChange={(isSelected) => setSelectedBenefits({ ...selectedBenefits, customBenefit: isSelected })}
-              isChecked={selectedBenefits.customBenefit}
-            >
-              Add Benefit +
-            </Checkbox>
-          </VStack>
-
-          {selectedBenefits.customBenefit && (
-            <VStack space={3} mt={3}>
-              <FormControl isRequired>
-                <FormControl.Label>
-                  <Text style={styles.label}>Benefit Name</Text>
-                </FormControl.Label>
-                <Input
-                  value={customBenefitName}
-                  onChangeText={setCustomBenefitName}
-                  placeholder="role/title"
-                  borderColor="gray.300"
-                  p={3}
-                  borderRadius="md"
-                />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormControl.Label>
-                  <Text style={styles.label}>Amount</Text>
-                </FormControl.Label>
-                <Input
-                  value={customBenefitAmount}
-                  onChangeText={setCustomBenefitAmount}
-                  placeholder="5,000"
-                  keyboardType="numeric"
-                  borderColor="gray.300"
-                  backgroundColor={COLORS.lightGreen}
-                  p={3}
-                  borderRadius="md"
-                />
-              </FormControl>
-            </VStack>
-          )}
-        </FormControl>
-
-        <HStack justifyContent="space-between" mt={4} mb={8}>
-          <Button
-            variant="outline"
-            borderColor={COLORS.green}
-            onPress={handlePrevious}
-            borderRadius="md"
-            width="120px"
-          >
-            Previous
-          </Button>
-          <Button
-            backgroundColor={COLORS.green}
-            onPress={handleSubmit}
-            borderRadius="md"
-            width="120px"
-          >
-            Submit
-          </Button>
-        </HStack>
-      </VStack>
-    );
-  };
-
-  const renderCasualEmployeeForm = () => {
-    return (
-      <VStack space={4} px={4}>
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>First Name</Text>
-          </FormControl.Label>
-          <Input
-            value={firstName}
-            onChangeText={setFirstName}
-            placeholder="John"
-            borderColor="gray.300"
-            p={3}
-            backgroundColor={COLORS.lightGreen}
-            borderRadius="md"
-          />
-        </FormControl>
-
-        <FormControl>
-          <FormControl.Label>
-            <Text style={styles.label}>Middle Name</Text>
-          </FormControl.Label>
-          <Input
-            value={middleName}
-            onChangeText={setMiddleName}
-            placeholder="Doe"
-            borderColor="gray.300"
-            backgroundColor={COLORS.lightGreen}
-            p={3}
-            borderRadius="md"
-          />
-        </FormControl>
-
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>Last Name</Text>
-          </FormControl.Label>
-          <Input
-            value={lastName}
-            onChangeText={setLastName}
-            placeholder="Doe"
-            borderColor="gray.300"
-            p={3}
-            backgroundColor={COLORS.lightGreen}
-            borderRadius="md"
-          />
-        </FormControl>
-
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>Phone Number</Text>
-          </FormControl.Label>
-          <Input
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="(___) ___-____"
-            keyboardType="phone-pad"
-            borderColor="gray.300"
-            p={3}
-            backgroundColor={COLORS.lightGreen}
-            borderRadius="md"
-          />
-        </FormControl>
-
-        <FormControl>
-          <FormControl.Label>
-            <Text style={styles.label}>Emergency Contact</Text>
-          </FormControl.Label>
-          <Input
-            value={emergencyContact}
-            onChangeText={setEmergencyContact}
-            placeholder="(___) ___-____"
-            keyboardType="phone-pad"
-            backgroundColor={COLORS.lightGreen}
-            borderColor="gray.300"
-            p={3}
-            borderRadius="md"
-          />
-        </FormControl>
-
-        <FormControl>
-          <FormControl.Label>
-            <Text style={styles.label}>ID Number</Text>
-          </FormControl.Label>
-          <Input
-            value={idNumber}
-            onChangeText={setIdNumber}
-            placeholder="Enter ID number"
-            backgroundColor={COLORS.lightGreen}
-            borderColor="gray.300"
-            p={3}
-            borderRadius="md"
-          />
-        </FormControl>
-
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>Date of Employment</Text>
-          </FormControl.Label>
-          <Pressable onPress={() => setShowEmploymentDatePicker(true)}>
-            <Input
-              value={dateOfEmployment}
-              placeholder="DD/MM/YYYY"
-              borderColor="gray.300"
-              p={3}
-              backgroundColor={COLORS.lightGreen}
-              borderRadius="md"
-              isReadOnly
-              InputRightElement={
-                <IconButton
-                  icon={
-                    <FastImage
-                      source={icons.calendar}
-                      style={{ width: 24, height: 24 }}
-                    />
-                  }
-                  onPress={() => setShowEmploymentDatePicker(true)}
-                />
-              }
+            <TextInput
+              style={[styles.customInput, { marginTop: 8 }]}
+              value={formData.customBenefitAmount}
+              onChangeText={(text) => updateFormData('customBenefitAmount', text)}
+              placeholder="Amount (KSh)"
+              placeholderTextColor={COLORS.textLight}
+              keyboardType="numeric"
             />
-          </Pressable>
-        </FormControl>
+            <TouchableOpacity style={styles.addCustomButton} onPress={addCustomBenefit}>
+              <Text style={styles.addCustomButtonText}>Add Benefit</Text>
+            </TouchableOpacity>
+          </View>
 
-        {showEmploymentDatePicker && (
-          <DateTimePicker
-            testID="employmentDatePicker"
-            value={employmentDateObj}
-            mode="date"
-            display="default"
-            onChange={onEmploymentDateChange}
-          />
-        )}
-
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>End Date</Text>
-          </FormControl.Label>
-          <Pressable onPress={() => setShowEndDatePicker(true)}>
-            <Input
-              value={endDate}
-              placeholder="DD/MM/YYYY"
-              borderColor="gray.300"
-              backgroundColor={COLORS.lightGreen}
-              p={3}
-              borderRadius="md"
-              isReadOnly
-              InputRightElement={
-                <IconButton
-                  icon={
-                    <FastImage
-                      source={icons.calendar}
-                      style={{ width: 24, height: 24 }}
-                    />
-                  }
-                  onPress={() => setShowEndDatePicker(true)}
-                />
-              }
-            />
-          </Pressable>
-        </FormControl>
-
-        {showEndDatePicker && (
-          <DateTimePicker
-            testID="endDatePicker"
-            value={endDateObj}
-            mode="date"
-            display="default"
-            onChange={onEndDateChange}
-          />
-        )}
-
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>Type of Engagement</Text>
-          </FormControl.Label>
-          <Select
-            selectedValue={typeOfEngagement}
-            minWidth="100%"
-            borderColor="gray.300"
-            p={3}
-            borderRadius="md"
-            backgroundColor={COLORS.lightGreen}
-            placeholder="Select engagement type"
-            onValueChange={setTypeOfEngagement}
-          >
-            <Select.Item label="Full-time" value="fulltime" />
-            <Select.Item label="Part-time" value="parttime" />
-            <Select.Item label="Contract" value="contract" />
-            <Select.Item label="Seasonal" value="seasonal" />
-            <Select.Item label="Daily Worker" value="daily" />
-          </Select>
-        </FormControl>
-
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>Work Schedule</Text>
-          </FormControl.Label>
-          <Select
-            selectedValue={workSchedule}
-            minWidth="100%"
-            borderColor="gray.300"
-            p={3}
-            borderRadius="md"
-            backgroundColor={COLORS.lightGreen}
-            placeholder="Select the hours"
-            onValueChange={setWorkSchedule}
-          >
-            <Select.Item label="Full Day (8 hours)" value="full" />
-            <Select.Item label="Half Day (4 hours)" value="half" />
-            <Select.Item label="Custom Hours" value="custom" />
-          </Select>
-        </FormControl>
-
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>Role</Text>
-          </FormControl.Label>
-          <VStack space={2} mt={1}>
-            <Checkbox
-              value="cleaner"
-              colorScheme="green"
-              onChange={() => handleRoleSelect('cleaner')}
-              isChecked={role === 'cleaner'}
-            >
-              Cleaner
-            </Checkbox>
-            <Checkbox
-              value="feeder"
-              colorScheme="green"
-              onChange={() => handleRoleSelect('feeder')}
-              isChecked={role === 'feeder'}
-            >
-              Feeder
-            </Checkbox>
-            <Checkbox
-              value="milker"
-              colorScheme="green"
-              onChange={() => handleRoleSelect('milker')}
-              isChecked={role === 'milker'}
-            >
-              Milker
-            </Checkbox>
-            <Checkbox
-              value="custom"
-              colorScheme="green"
-              onChange={() => handleRoleSelect('custom')}
-              isChecked={role === 'custom'}
-            >
-              Create new role
-            </Checkbox>
-          </VStack>
-
-          {showCustomRole && (
-            <FormControl mt={2} isRequired>
-              <FormControl.Label>
-                <Text style={styles.label}>Role Name</Text>
-              </FormControl.Label>
-              <Input
-                value={customRole}
-                onChangeText={setCustomRole}
-                placeholder="role/title"
-                borderColor="gray.300"
-                p={3}
-                backgroundColor={COLORS.lightGreen}
-                borderRadius="md"
-              />
-            </FormControl>
-          )}
-        </FormControl>
-
-        <FormControl isRequired>
-          <FormControl.Label>
-            <Text style={styles.label}>Salary (Kenya Shillings)</Text>
-          </FormControl.Label>
-          <Input
-            value={salary}
-            onChangeText={setSalary}
-            placeholder="11,000"
-            keyboardType="numeric"
-            borderColor="gray.300"
-            backgroundColor={COLORS.lightGreen}
-            p={3}
-            borderRadius="md"
-          />
-        </FormControl>
-
-        <HStack justifyContent="space-between" mt={4} mb={8}>
-          <Button
-            variant="outline"
-            borderColor={COLORS.green}
-            onPress={() => navigation.goBack()}
-            borderRadius="md"
-            width="120px"
-          >
-            Back
-          </Button>
-          <Button
-            backgroundColor={COLORS.green}
-            onPress={handleSubmit}
-            borderRadius="md"
-            width="120px"
-          >
-            Submit
-          </Button>
-        </HStack>
-      </VStack>
-    );
-  };
+          <TouchableOpacity
+            style={styles.closeModalButton}
+            onPress={() => setShowBenefitModal(false)}>
+            <Text style={styles.closeModalButtonText}>Done</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
-      <SecondaryHeader title={employeeType === 'casual' ? "Register Employee (Casual)" : `Register Employee Step ${currentStep}`} />
+    <SafeAreaView style={styles.container}>
+      <SecondaryHeader title="Add Employees" />
 
+      <StatusBar
+        translucent
+        backgroundColor={COLORS.green2}
+        animated={true}
+        barStyle={'light-content'}
+      />
       <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingBottom: 20,
-        }}
-      >
-        <Box bg="white" p={4} mx={4} mt={4} borderRadius={12} shadow={1}>
-          <Text style={styles.subtitleText}>
-            Please fill out this form with the required information
-          </Text>
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
 
-          {employeeType === 'permanent' && renderStepIndicator()}
 
-          {employeeType === 'permanent' && currentStep === 1 && renderPersonalInformationForm()}
-          {employeeType === 'permanent' && currentStep === 2 && renderProfessionalInformationForm()}
-          {employeeType === 'casual' && renderCasualEmployeeForm()}
-        </Box>
-      </ScrollView>
 
-      {/* Success Modal */}
-      <Modal
-        isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}>
-        <Modal.Content maxWidth="85%" borderRadius={12} p={5}>
-          <Modal.Body alignItems="center">
-            <View style={styles.iconContainer}>
-              <FastImage
-                source={icons.tick}
-                style={styles.tickIcon}
-                resizeMode="contain"
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Employee Type</Text>
+          <View style={styles.typeSelector}>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                employeeType === 'permanent' && styles.selectedType,
+              ]}
+              onPress={() => setEmployeeType('permanent')}>
+              <Text style={[
+                styles.typeButtonText,
+                employeeType === 'permanent' && styles.selectedTypeText,
+              ]}>
+                Permanent
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                employeeType === 'casual' && styles.selectedType,
+              ]}
+              onPress={() => setEmployeeType('casual')}>
+              <Text style={[
+                styles.typeButtonText,
+                employeeType === 'casual' && styles.selectedTypeText,
+              ]}>
+                Casual
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Basic Information */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Basic Information</Text>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>First Name *</Text>
+            <TextInput
+              style={[styles.input, errors.firstName && styles.inputError]}
+              placeholder="Enter first name"
+              placeholderTextColor={COLORS.textLight}
+              value={formData.firstName}
+              onChangeText={(text) => updateFormData('firstName', text)}
+            />
+            {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Middle Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter middle name (optional)"
+              placeholderTextColor={COLORS.textLight}
+              value={formData.middleName}
+              onChangeText={(text) => updateFormData('middleName', text)}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Last Name *</Text>
+            <TextInput
+              style={[styles.input, errors.lastName && styles.inputError]}
+              placeholder="Enter last name"
+              placeholderTextColor={COLORS.textLight}
+              value={formData.lastName}
+              onChangeText={(text) => updateFormData('lastName', text)}
+            />
+            {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
+          </View>
+
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, styles.flex1]}>
+              <Text style={styles.label}>Phone Number *</Text>
+              <TextInput
+                style={[styles.input, errors.phone && styles.inputError]}
+                placeholder="0712345678"
+                placeholderTextColor={COLORS.textLight}
+                value={formData.phone}
+                onChangeText={(text) => handlePhoneChange('phone', text)}
+                onBlur={() => handlePhoneBlur('phone')}
+                keyboardType="phone-pad"
+              />
+              {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
+            </View>
+
+            <View style={[styles.inputGroup, styles.flex1, styles.marginLeft]}>
+              <Text style={styles.label}>ID Number</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="12345678"
+                placeholderTextColor={COLORS.textLight}
+                value={formData.idNumber}
+                onChangeText={(text) => updateFormData('idNumber', text)}
+                keyboardType="numeric"
               />
             </View>
-            <Text style={styles.modalText}>
-              Employee has been registered successfully!
-            </Text>
-          </Modal.Body>
-          <Modal.Footer justifyContent="center">
-            <HStack space={4}>
-              <Button
-                variant="outline"
-                borderColor={COLORS.green}
-                style={styles.modalButton}
-                onPress={() => {
-                  setShowSuccessModal(false);
-                  navigation.navigate("FarmEmployeeTableScreen");
-                }}>
-                View Employees
-              </Button>
-              <Button
-                backgroundColor={COLORS.green}
-                style={styles.modalButton}
-                onPress={() => {
-                  setShowSuccessModal(false);
-                  setCurrentStep(1);
-                  setFirstName('');
-                  setMiddleName('');
-                  setLastName('');
-                  setPhone('');
-                  setEmergencyContact('');
-                  setIdNumber('');
-                  setDateOfEmployment('');
-                  setSelectedRoles([]);
-                  setCustomRole('');
-                  setShowCustomRole(false);
-                  setPaymentSchedule('daily');
-                  setSalary('');
-                  setWorkSchedule('');
-                  setSelectedBenefits({
-                    paye: false,
-                    nssf: false,
-                    nhif: false,
-                    housingLevy: false,
-                    customBenefit: false
-                  });
-                  setCustomBenefitName('');
-                  setCustomBenefitAmount('');
-                }}>
-                Add Another
-              </Button>
-            </HStack>
-          </Modal.Footer>
-        </Modal.Content>
-      </Modal>
-    </View>
+          </View>
+
+          {employeeType === 'permanent' && (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Emergency Contact</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="0712345678"
+                placeholderTextColor={COLORS.textLight}
+                value={formData.emergencyContact}
+                onChangeText={(text) => handlePhoneChange('emergencyContact', text)}
+                onBlur={() => handlePhoneBlur('emergencyContact')}
+                keyboardType="phone-pad"
+              />
+            </View>
+          )}
+        </View>
+
+        {/* Employment Details */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Employment Details</Text>
+
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, styles.flex1]}>
+              <Text style={styles.label}>Date of Employment *</Text>
+              <TouchableOpacity
+                style={[styles.input, styles.dateInput]}
+                onPress={() => setShowEmploymentDatePicker(true)}>
+                <Text style={styles.dateText}>
+                  {formatDateForDisplay(formData.dateOfEmployment)}
+                </Text>
+                <Text style={styles.dateIcon}>📅</Text>
+              </TouchableOpacity>
+            </View>
+
+            {employeeType === 'casual' && (
+              <View style={[styles.inputGroup, styles.flex1, styles.marginLeft]}>
+                <Text style={styles.label}>End Date *</Text>
+                <TouchableOpacity
+                  style={[styles.input, styles.dateInput]}
+                  onPress={() => setShowEndDatePicker(true)}>
+                  <Text style={styles.dateText}>
+                    {formatDateForDisplay(formData.endDate)}
+                  </Text>
+                  <Text style={styles.dateIcon}>📅</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+
+          {/* Role Selection */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Role *</Text>
+            <TouchableOpacity
+              style={[styles.input, styles.dropdownButton, errors.role && styles.inputError]}
+              onPress={() => setShowRoleModal(true)}>
+              <Text style={[
+                styles.dropdownText,
+                !formData.selectedRole && styles.placeholderText
+              ]}>
+                {formData.selectedRole
+                  ? formData.selectedRole.charAt(0).toUpperCase() + formData.selectedRole.slice(1)
+                  : 'Select role'
+                }
+              </Text>
+              <Text style={styles.dropdownIcon}>▼</Text>
+            </TouchableOpacity>
+            {errors.role && <Text style={styles.errorText}>{errors.role}</Text>}
+          </View>
+        </View>
+
+        {/* Payment Details */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Payment Details</Text>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Payment Schedule</Text>
+            <TouchableOpacity
+              style={[styles.input, styles.dropdownButton]}
+              onPress={() => setShowPaymentModal(true)}>
+              <Text style={styles.dropdownText}>
+                {formData.paymentSchedule.charAt(0).toUpperCase() + formData.paymentSchedule.slice(1)}
+              </Text>
+              <Text style={styles.dropdownIcon}>▼</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Salary (KSh) *</Text>
+            <TextInput
+              style={[styles.input, errors.salary && styles.inputError]}
+              placeholder="e.g., 50,000"
+              placeholderTextColor={COLORS.textLight}
+              value={formData.salary}
+              onChangeText={(text) => updateFormData('salary', text)}
+              keyboardType="numeric"
+            />
+            {errors.salary && <Text style={styles.errorText}>{errors.salary}</Text>}
+          </View>
+        </View>
+
+        {/* Casual Employee Specific Fields */}
+        {employeeType === 'casual' && (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Casual Employment Details</Text>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Type of Engagement</Text>
+              <TouchableOpacity
+                style={[styles.input, styles.dropdownButton]}
+                onPress={() => setShowEngagementModal(true)}>
+                <Text style={styles.dropdownText}>
+                  {formData.typeOfEngagement.charAt(0).toUpperCase() + formData.typeOfEngagement.slice(1)}
+                </Text>
+                <Text style={styles.dropdownIcon}>▼</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Work Schedule</Text>
+              <TouchableOpacity
+                style={[styles.input, styles.dropdownButton]}
+                onPress={() => setShowWorkScheduleModal(true)}>
+                <Text style={styles.dropdownText}>
+                  {formData.workSchedule.charAt(0).toUpperCase() + formData.workSchedule.slice(1)}
+                </Text>
+                <Text style={styles.dropdownIcon}>▼</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* Benefits Section for Permanent Employees */}
+        {employeeType === 'permanent' && (
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Benefits</Text>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Employee Benefits</Text>
+              <TouchableOpacity
+                style={[styles.input, styles.dropdownButton]}
+                onPress={() => setShowBenefitModal(true)}>
+                <Text style={[
+                  styles.dropdownText,
+                  Object.values(formData.selectedBenefits).filter(Boolean).length === 0 && styles.placeholderText
+                ]}>
+                  {Object.values(formData.selectedBenefits).filter(Boolean).length > 0
+                    ? `${Object.values(formData.selectedBenefits).filter(Boolean).length} benefit(s) selected`
+                    : 'Select benefits'
+                  }
+                </Text>
+                <Text style={styles.dropdownIcon}>▼</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.selectedItems}>
+              {Object.entries(formData.selectedBenefits).map(([key, isSelected]) => {
+                if (!isSelected) return null;
+
+                const benefit = predefinedBenefits.find(b => b.key === key);
+                if (benefit) {
+                  return (
+                    <View key={key} style={styles.selectedItem}>
+                      <Text style={styles.selectedItemText}>
+                        {benefit.name} {benefit.amount > 0 && `(KSh ${benefit.amount.toLocaleString()})`}
+                      </Text>
+                      <TouchableOpacity onPress={() => toggleBenefit(key)}>
+                        <Text style={styles.removeButton}>×</Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                }
+
+                if (key === 'customBenefit') {
+                  return (
+                    <View key={key} style={styles.selectedItem}>
+                      <Text style={styles.selectedItemText}>
+                        {formData.customBenefitName} (KSh {parseInt(formData.customBenefitAmount || 0).toLocaleString()})
+                      </Text>
+                      <TouchableOpacity onPress={() => toggleBenefit(key)}>
+                        <Text style={styles.removeButton}>×</Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                }
+
+                return null;
+              })}
+            </View>
+          </View>
+        )}
+
+
+      </ScrollView>
+
+      <View style={styles.submitContainer}>
+        <TouchableOpacity
+          style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+          onPress={handleSubmit}
+          disabled={loading}>
+          {loading ? (
+            <ActivityIndicator size="small" color={COLORS.white} />
+          ) : (
+            <Text style={styles.submitButtonText}>Create Employee</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {showEmploymentDatePicker && (
+        <DateTimePicker
+          value={formData.dateOfEmployment}
+          mode="date"
+          display="default"
+          onChange={onEmploymentDateChange}
+        />
+      )}
+
+      {showEndDatePicker && (
+        <DateTimePicker
+          value={formData.endDate}
+          mode="date"
+          display="default"
+          onChange={onEndDateChange}
+        />
+      )}
+
+      {renderRoleModal()}
+      {renderBenefitModal()}
+      {renderDropdownModal(
+        showPaymentModal,
+        setShowPaymentModal,
+        'Select Payment Schedule',
+        paymentScheduleOptions,
+        formData.paymentSchedule,
+        (value) => updateFormData('paymentSchedule', value)
+      )}
+      {renderDropdownModal(
+        showEngagementModal,
+        setShowEngagementModal,
+        'Select Type of Engagement',
+        engagementTypes,
+        formData.typeOfEngagement,
+        (value) => updateFormData('typeOfEngagement', value)
+      )}
+      {renderDropdownModal(
+        showWorkScheduleModal,
+        setShowWorkScheduleModal,
+        'Select Work Schedule',
+        workScheduleTypes,
+        formData.workSchedule,
+        (value) => updateFormData('workSchedule', value)
+      )}
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  titleText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: COLORS.black,
-    marginTop: 8,
-    textAlign: "center",
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.lightGreen,
   },
-  subtitleText: {
-    fontSize: 14,
-    color: COLORS.darkGray3,
-    marginBottom: 8,
-    textAlign: "center",
+  scrollView: {
+    flex: 1,
   },
-  stepIndicator: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    textAlign: 'center',
-    lineHeight: 24,
-    fontSize: 14,
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 100,
+  },
+  header: {
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 28,
     fontWeight: 'bold',
-  },
-  stepLabel: {
-    fontSize: 12,
-    color: COLORS.darkGray3,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: COLORS.darkGray3,
-    marginBottom: 8,
-  },
-  label: {
-    fontSize: 14,
-    color: COLORS.darkGray3,
+    color: COLORS.black,
     marginBottom: 4,
   },
-  uploadBox: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: "gray.300",
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.white,
-  },
-  uploadIDBox: {
-    width: '80%',
-    height: 150,
-    borderWidth: 2,
-    borderColor: COLORS.green,
-    borderStyle: 'dashed',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.lightGreen,
-    marginTop: 20,
-  },
-  uploadText: {
+  subtitle: {
     fontSize: 16,
-    fontWeight: "500",
-    color: COLORS.darkGray3,
-    textAlign: "center",
+    color: COLORS.black,
   },
-  uploadSubtext: {
-    fontSize: 14,
-    color: COLORS.darkGray3,
-    textAlign: "center",
-    marginHorizontal: 20,
-  },
-  modalButton: {
-    width: 120,
-    height: 50,
+  card: {
+    backgroundColor: COLORS.white,
     borderRadius: 12,
-    justifyContent: 'center',
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    backgroundColor: COLORS.green,
-    borderRadius: 40,
-    justifyContent: 'center',
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: COLORS.black,
+    marginBottom: 16,
+  },
+  typeSelector: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.lightGreen,
+    borderRadius: 8,
+    padding: 4,
+  },
+  typeButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 6,
     alignItems: 'center',
-    marginBottom: 10,
   },
-  tickIcon: {
-    width: 40,
-    height: 40,
-    tintColor: COLORS.white,
+  selectedType: {
+    backgroundColor: COLORS.green3,
   },
-  modalText: {
-    textAlign: 'center',
+  typeButtonText: {
     fontSize: 16,
     fontWeight: '500',
-    color: COLORS.darkGray3,
-    marginTop: 10,
+    color: COLORS.gray,
   },
+  selectedTypeText: {
+    color: COLORS.white,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: COLORS.black,
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray1,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: COLORS.black,
+  },
+  inputError: {
+    borderColor: COLORS.red,
+  },
+  errorText: {
+    fontSize: 14,
+    color: COLORS.red,
+    marginTop: 4,
+  },
+  row: {
+    flexDirection: 'row',
+  },
+  flex1: {
+    flex: 1,
+  },
+  marginLeft: {
+    marginLeft: 12,
+  },
+  dateInput: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: 16,
+    color: COLORS.text,
+  },
+  dateIcon: {
+    fontSize: 16,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: COLORS.black,
+  },
+  placeholderText: {
+    color: COLORS.lightGray1,
+  },
+  dropdownIcon: {
+    fontSize: 12,
+    color: COLORS.gray,
+  },
+  selectedItems: {
+    marginTop: 8,
+  },
+  selectedItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: COLORS.lightGreen,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginBottom: 4,
+  },
+  selectedItemText: {
+    fontSize: 14,
+    color: COLORS.black,
+    flex: 1,
+  },
+  removeButton: {
+    fontSize: 18,
+    color: COLORS.gray,
+    fontWeight: 'bold',
+    paddingLeft: 8,
+  },
+
+  submitContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightGray1,
+  },
+  submitButton: {
+    backgroundColor: COLORS.green,
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  submitButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.white,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray2,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: COLORS.black,
+    textAlign: 'center',
+  },
+  optionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray1,
+  },
+  selectedOption: {
+    backgroundColor: COLORS.lightGreen,
+  },
+  optionText: {
+    fontSize: 16,
+    color: COLORS.black,
+    fontWeight: '500',
+
+
+  },
+  selectedOptionText: {
+    color: COLORS.black,
+    fontWeight: '500',
+  },
+  checkmark: {
+    fontSize: 16,
+    color: COLORS.green,
+    fontWeight: 'bold',
+  },
+  customInputSection: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightGray1,
+  },
+  customLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: COLORS.black,
+    marginBottom: 8,
+  },
+  customInput: {
+    backgroundColor: COLORS.gray,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray1,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: COLORS.black,
+  },
+  addCustomButton: {
+    backgroundColor: COLORS.green,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  addCustomButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: COLORS.white,
+  },
+  closeModalButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: COLORS.gray2,
+  },
+  closeModalButtonText: {
+    fontSize: 16,
+    color: COLORS.gray,
+    fontWeight: '500',
+  },
+
 });
+
+export default AddEmployeeScreen;
