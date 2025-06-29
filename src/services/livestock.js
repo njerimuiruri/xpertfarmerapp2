@@ -741,3 +741,33 @@ export async function getUserFarms() {
     };
   }
 }
+// Add this to services/livestock.js
+
+export async function getHealthRecords(livestockId) {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+      return {data: null, error: 'Authentication failed: missing token'};
+    }
+
+    const response = await api.get(`/livestock/${livestockId}/health`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return {data: response.data?.data || response.data || [], error: null};
+  } catch (error) {
+    console.error(
+      '[getHealthRecords] Error:',
+      error?.response?.data || error.message,
+    );
+    return {
+      data: null,
+      error:
+        error?.response?.data?.message ||
+        error.message ||
+        'Failed to fetch health records',
+    };
+  }
+}

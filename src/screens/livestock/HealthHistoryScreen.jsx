@@ -120,12 +120,24 @@ const HealthHistoryScreen = ({ route, navigation }) => {
                             tintColor={COLORS.white}
                         />
                     </View>
+                    {/* <View style={styles.eventInfo}>
+                        <Text style={styles.eventType}>
+                            {item.eventType === 'vaccination' ? 'Vaccination' : 'Treatment'}
+                        </Text>
+                        <Text style={styles.eventDate}>{formatDate(item.date)}</Text>
+                    </View> */}
                     <View style={styles.eventInfo}>
                         <Text style={styles.eventType}>
                             {item.eventType === 'vaccination' ? 'Vaccination' : 'Treatment'}
                         </Text>
                         <Text style={styles.eventDate}>{formatDate(item.date)}</Text>
+                        {animalData?.title && (
+                            <Text style={styles.animalTag}>
+                                🐄 {animalData.title} ({animalData.id})
+                            </Text>
+                        )}
                     </View>
+
                 </View>
                 <View style={styles.eventCost}>
                     <Text style={styles.costText}>KES {item.cost?.toLocaleString() || '0'}</Text>
@@ -343,6 +355,12 @@ const styles = StyleSheet.create({
     },
     eventInfo: {
         flex: 1,
+    },
+    animalTag: {
+        marginTop: 4,
+        fontSize: 13,
+        color: COLORS.gray,
+        fontStyle: 'italic',
     },
     eventType: {
         fontSize: 16,

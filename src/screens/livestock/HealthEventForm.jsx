@@ -21,7 +21,6 @@ import { recordHealthEvent } from '../../services/livestock';
 const HealthEventForm = ({ route, navigation }) => {
     const { animalId, animalData } = route.params;
 
-    // Form state
     const [eventType, setEventType] = useState('vaccination');
     const [date, setDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -34,7 +33,6 @@ const HealthEventForm = ({ route, navigation }) => {
     const [showNextScheduledPicker, setShowNextScheduledPicker] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    // Pre-fill some common descriptions based on event type
     const getDefaultDescription = (type) => {
         if (type === 'vaccination') {
             return 'Routine vaccination';
@@ -121,13 +119,10 @@ const HealthEventForm = ({ route, navigation }) => {
         setLoading(true);
 
         try {
-            // Get the actual livestock ID from the animal data
             const livestockId = animalData.rawData._id || animalData.rawData.id || animalId;
 
-            // Filter out empty medications
             const validMedications = medications.filter(med => med.trim());
 
-            // Prepare the payload
             const healthEventData = {
                 livestockId,
                 eventType,
@@ -167,7 +162,6 @@ const HealthEventForm = ({ route, navigation }) => {
                     {
                         text: 'Add Another',
                         onPress: () => {
-                            // Reset form for another entry
                             setEventType('vaccination');
                             setDate(new Date());
                             setDescription(getDefaultDescription('vaccination'));
@@ -194,9 +188,16 @@ const HealthEventForm = ({ route, navigation }) => {
         }
     };
 
-    const EventTypeSelector = () => (
-        <View style={styles.eventTypeContainer}>
-            <Text style={styles.label}>Event Type</Text>
+    const EventTypeCard = () => (
+        <View style={styles.card}>
+            <View style={styles.cardHeader}>
+                <FastImage
+                    source={icons.health}
+                    style={styles.cardHeaderIcon}
+                    tintColor={COLORS.green}
+                />
+                <Text style={styles.cardTitle}>Event Type</Text>
+            </View>
             <View style={styles.eventTypeButtons}>
                 <TouchableOpacity
                     style={[
@@ -243,44 +244,193 @@ const HealthEventForm = ({ route, navigation }) => {
         </View>
     );
 
-    const MedicationsList = () => (
-        <View style={styles.medicationsContainer}>
-            <View style={styles.medicationsHeader}>
-                <Text style={styles.label}>Medications Used</Text>
-                <TouchableOpacity
-                    onPress={handleAddMedication}
-                    style={styles.addMedicationButton}>
-                    <FastImage
-                        source={icons.plus}
-                        style={styles.addMedicationIcon}
-                        tintColor={COLORS.green}
-                    />
-                    <Text style={styles.addMedicationText}>Add</Text>
-                </TouchableOpacity>
+    const BasicDetailsCard = () => (
+        <View style={styles.card}>
+            <View style={styles.cardHeader}>
+                <FastImage
+                    source={icons.calendar}
+                    style={styles.cardHeaderIcon}
+                    tintColor={COLORS.blue}
+                />
+                <Text style={styles.cardTitle}>Basic Details</Text>
             </View>
 
-            {medications.map((medication, index) => (
-                <View key={index} style={styles.medicationRow}>
+            <View style={styles.cardContent}>
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Date of Procedure</Text>
+                    <TouchableOpacity
+                        style={styles.dateButton}
+                        onPress={() => setShowDatePicker(true)}>
+                        <FastImage
+                            source={icons.calendar}
+                            style={styles.dateIcon}
+                            tintColor={COLORS.gray}
+                        />
+                        <Text style={styles.dateText}>
+                            {date.toLocaleDateString()}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Description</Text>
                     <TextInput
-                        style={[styles.input, styles.medicationInput]}
-                        placeholder={`Medication ${index + 1}`}
-                        value={medication}
-                        onChangeText={(value) => handleMedicationChange(index, value)}
+                        style={[styles.input, styles.textArea]}
+                        placeholder={`Enter ${eventType} description...`}
+                        value={description}
+                        onChangeText={setDescription}
+                        multiline
+                        numberOfLines={3}
+                        textAlignVertical="top"
                         placeholderTextColor="#999"
                     />
-                    {medications.length > 1 && (
-                        <TouchableOpacity
-                            onPress={() => handleRemoveMedication(index)}
-                            style={styles.removeMedicationButton}>
-                            <FastImage
-                                source={icons.remove}
-                                style={styles.removeMedicationIcon}
-                                tintColor={COLORS.red}
-                            />
-                        </TouchableOpacity>
-                    )}
                 </View>
-            ))}
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Performed By</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="e.g., Dr. John Smith (Veterinarian)"
+                        value={performedBy}
+                        onChangeText={setPerformedBy}
+                        placeholderTextColor="#999"
+                    />
+                </View>
+            </View>
+        </View>
+    );
+
+    const MedicationsCard = () => (
+        <View style={styles.card}>
+            <View style={styles.cardHeader}>
+                <FastImage
+                    source={icons.health}
+                    style={styles.cardHeaderIcon}
+                    tintColor={COLORS.orange}
+                />
+                <View style={styles.cardHeaderContent}>
+                    <Text style={styles.cardTitle}>Medications & Dosage</Text>
+                    <TouchableOpacity
+                        onPress={handleAddMedication}
+                        style={styles.addMedicationButton}>
+                        <FastImage
+                            source={icons.plus}
+                            style={styles.addMedicationIcon}
+                            tintColor={COLORS.green}
+                        />
+                        <Text style={styles.addMedicationText}>Add</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            <View style={styles.cardContent}>
+                <Text style={styles.sectionSubtitle}>Medications Used</Text>
+                {medications.map((medication, index) => (
+                    <View key={index} style={styles.medicationRow}>
+                        <TextInput
+                            style={[styles.input, styles.medicationInput]}
+                            placeholder={`Medication ${index + 1}`}
+                            value={medication}
+                            onChangeText={(value) => handleMedicationChange(index, value)}
+                            placeholderTextColor="#999"
+                        />
+                        {medications.length > 1 && (
+                            <TouchableOpacity
+                                onPress={() => handleRemoveMedication(index)}
+                                style={styles.removeMedicationButton}>
+                                <FastImage
+                                    source={icons.remove}
+                                    style={styles.removeMedicationIcon}
+                                    tintColor={COLORS.red}
+                                />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                ))}
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Dosage Instructions</Text>
+                    <TextInput
+                        style={[styles.input, styles.textArea]}
+                        placeholder={eventType === 'vaccination'
+                            ? "e.g., 10ml subcutaneous injection"
+                            : "e.g., 5ml twice daily for 5 days"
+                        }
+                        value={dosage}
+                        onChangeText={setDosage}
+                        multiline
+                        numberOfLines={2}
+                        textAlignVertical="top"
+                        placeholderTextColor="#999"
+                    />
+                </View>
+            </View>
+        </View>
+    );
+
+    const CostAndScheduleCard = () => (
+        <View style={styles.card}>
+            <View style={styles.cardHeader}>
+                <FastImage
+                    source={icons.calendar}
+                    style={styles.cardHeaderIcon}
+                    tintColor={COLORS.purple}
+                />
+                <Text style={styles.cardTitle}>Cost & Scheduling</Text>
+            </View>
+
+            <View style={styles.cardContent}>
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Cost (KES)</Text>
+                    <View style={styles.costInputContainer}>
+                        <Text style={styles.currencySymbol}>KES</Text>
+                        <TextInput
+                            style={[styles.input, styles.costInput]}
+                            placeholder="Enter cost"
+                            value={cost}
+                            onChangeText={setCost}
+                            keyboardType="numeric"
+                            placeholderTextColor="#999"
+                        />
+                    </View>
+                </View>
+
+                {eventType === 'vaccination' && (
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Next Scheduled Vaccination</Text>
+                        <TouchableOpacity
+                            style={styles.dateButton}
+                            onPress={() => setShowNextScheduledPicker(true)}>
+                            <FastImage
+                                source={icons.calendar}
+                                style={styles.dateIcon}
+                                tintColor={COLORS.gray}
+                            />
+                            <Text style={[
+                                styles.dateText,
+                                !nextScheduled && styles.placeholderText
+                            ]}>
+                                {nextScheduled ? nextScheduled.toLocaleDateString() : 'Select next vaccination date'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+            </View>
+        </View>
+    );
+
+    const AnimalInfoCard = () => (
+        <View style={styles.animalInfoCard}>
+            <View style={styles.animalInfoContent}>
+                <FastImage
+                    source={icons.health}
+                    style={styles.animalIcon}
+                    tintColor={COLORS.green}
+                />
+                <View style={styles.animalDetails}>
+                    <Text style={styles.animalName}>{animalData?.title}</Text>
+                </View>
+            </View>
         </View>
     );
 
@@ -288,108 +438,16 @@ const HealthEventForm = ({ route, navigation }) => {
         <SafeAreaView style={styles.container}>
             <SecondaryHeader
                 title="Health Record"
-                subtitle={`${animalData?.title} (ID: ${animalData?.id})`}
+                subtitle="Record health events and treatments"
             />
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 <View style={styles.form}>
-                    <EventTypeSelector />
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Date of Procedure</Text>
-                        <TouchableOpacity
-                            style={styles.dateButton}
-                            onPress={() => setShowDatePicker(true)}>
-                            <FastImage
-                                source={icons.calendar}
-                                style={styles.dateIcon}
-                                tintColor={COLORS.gray}
-                            />
-                            <Text style={styles.dateText}>
-                                {date.toLocaleDateString()}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Description */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Description</Text>
-                        <TextInput
-                            style={[styles.input, styles.textArea]}
-                            placeholder={`Enter ${eventType} description...`}
-                            value={description}
-                            onChangeText={setDescription}
-                            multiline
-                            numberOfLines={3}
-                            textAlignVertical="top"
-                            placeholderTextColor="#999"
-                        />
-                    </View>
-
-                    {/* Performed By */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Performed By</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="e.g., Dr. John Smith (Veterinarian)"
-                            value={performedBy}
-                            onChangeText={setPerformedBy}
-                            placeholderTextColor="#999"
-                        />
-                    </View>
-
-                    {/* Medications */}
-                    <MedicationsList />
-
-                    {/* Dosage */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Dosage Instructions</Text>
-                        <TextInput
-                            style={[styles.input, styles.textArea]}
-                            placeholder={eventType === 'vaccination'
-                                ? "e.g., 10ml subcutaneous injection"
-                                : "e.g., 5ml twice daily for 5 days"
-                            }
-                            value={dosage}
-                            onChangeText={setDosage}
-                            multiline
-                            numberOfLines={2}
-                            textAlignVertical="top"
-                            placeholderTextColor="#999"
-                        />
-                    </View>
-
-                    {/* Cost */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Cost (KES)</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Enter cost in KES"
-                            value={cost}
-                            onChangeText={setCost}
-                            keyboardType="numeric"
-                            placeholderTextColor="#999"
-                        />
-                    </View>
-
-                    {/* Next Scheduled (only for vaccinations) */}
-                    {eventType === 'vaccination' && (
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Next Scheduled Vaccination</Text>
-                            <TouchableOpacity
-                                style={styles.dateButton}
-                                onPress={() => setShowNextScheduledPicker(true)}>
-                                <FastImage
-                                    source={icons.calendar}
-                                    style={styles.dateIcon}
-                                    tintColor={COLORS.gray}
-                                />
-                                <Text style={styles.dateText}>
-                                    {nextScheduled ? nextScheduled.toLocaleDateString() : 'Select date'}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
+                    <AnimalInfoCard />
+                    <EventTypeCard />
+                    <BasicDetailsCard />
+                    <MedicationsCard />
+                    <CostAndScheduleCard />
 
                     {/* Submit Button */}
                     <TouchableOpacity
@@ -441,7 +499,7 @@ const HealthEventForm = ({ route, navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.lightGray,
+        backgroundColor: '#f8f9fa',
     },
     content: {
         flex: 1,
@@ -449,12 +507,106 @@ const styles = StyleSheet.create({
     form: {
         padding: 16,
     },
-    eventTypeContainer: {
-        marginBottom: 24,
+
+    // Animal Info Card
+    animalInfoCard: {
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 5,
+        borderLeftWidth: 4,
+        borderLeftColor: COLORS.green,
     },
+    animalInfoContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    animalIcon: {
+        width: 40,
+        height: 40,
+        marginRight: 12,
+    },
+    animalDetails: {
+        flex: 1,
+    },
+    animalName: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: COLORS.darkGray3,
+        marginBottom: 2,
+    },
+    animalId: {
+        fontSize: 14,
+        color: COLORS.gray,
+        fontWeight: '500',
+    },
+
+    // Card Styles
+    card: {
+        backgroundColor: COLORS.white,
+        borderRadius: 16,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 5,
+        overflow: 'hidden',
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: '#f8f9fa',
+        borderBottomWidth: 1,
+        borderBottomColor: '#e9ecef',
+    },
+    cardHeaderContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flex: 1,
+    },
+    cardHeaderIcon: {
+        width: 24,
+        height: 24,
+        marginRight: 12,
+    },
+    cardTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: COLORS.darkGray3,
+        flex: 1,
+    },
+    cardContent: {
+        padding: 16,
+    },
+    sectionSubtitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: COLORS.gray,
+        marginBottom: 12,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+
     eventTypeButtons: {
         flexDirection: 'row',
         gap: 12,
+        paddingHorizontal: 16,
+        paddingBottom: 16,
     },
     eventTypeButton: {
         flex: 1,
@@ -463,9 +615,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         padding: 16,
         borderRadius: 12,
-        backgroundColor: COLORS.white,
+        backgroundColor: '#f8f9fa',
         borderWidth: 2,
-        borderColor: COLORS.lightGray2,
+        borderColor: '#e9ecef',
     },
     selectedEventType: {
         backgroundColor: COLORS.green,
@@ -484,6 +636,8 @@ const styles = StyleSheet.create({
     selectedEventTypeText: {
         color: COLORS.white,
     },
+
+    // Input Styles
     inputGroup: {
         marginBottom: 20,
     },
@@ -494,25 +648,50 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     input: {
-        backgroundColor: COLORS.white,
+        backgroundColor: '#f8f9fa',
         borderWidth: 1,
-        borderColor: COLORS.lightGray2,
-        borderRadius: 8,
-        padding: 12,
+        borderColor: '#e9ecef',
+        borderRadius: 12,
+        padding: 14,
         fontSize: 16,
         color: COLORS.black,
     },
     textArea: {
         minHeight: 80,
     },
+
+    // Cost Input
+    costInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f8f9fa',
+        borderWidth: 1,
+        borderColor: '#e9ecef',
+        borderRadius: 12,
+    },
+    currencySymbol: {
+        paddingLeft: 14,
+        paddingRight: 8,
+        fontSize: 16,
+        fontWeight: '600',
+        color: COLORS.gray,
+    },
+    costInput: {
+        flex: 1,
+        backgroundColor: 'transparent',
+        borderWidth: 0,
+        paddingLeft: 0,
+    },
+
+    // Date Button
     dateButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.white,
+        backgroundColor: '#f8f9fa',
         borderWidth: 1,
-        borderColor: COLORS.lightGray2,
-        borderRadius: 8,
-        padding: 12,
+        borderColor: '#e9ecef',
+        borderRadius: 12,
+        padding: 14,
     },
     dateIcon: {
         width: 20,
@@ -522,23 +701,21 @@ const styles = StyleSheet.create({
     dateText: {
         fontSize: 16,
         color: COLORS.black,
+        fontWeight: '500',
     },
-    medicationsContainer: {
-        marginBottom: 20,
+    placeholderText: {
+        color: '#999',
+        fontWeight: '400',
     },
-    medicationsHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
+
+    // Medications
     addMedicationButton: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 12,
         paddingVertical: 6,
-        borderRadius: 6,
-        backgroundColor: COLORS.lightGreen,
+        borderRadius: 8,
+        backgroundColor: '#e8f5e8',
     },
     addMedicationIcon: {
         width: 16,
@@ -553,33 +730,44 @@ const styles = StyleSheet.create({
     medicationRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: 12,
     },
     medicationInput: {
         flex: 1,
-        marginRight: 8,
+        marginRight: 12,
     },
     removeMedicationButton: {
-        padding: 8,
-        backgroundColor: COLORS.lightRed,
-        borderRadius: 6,
+        padding: 10,
+        backgroundColor: '#ffe6e6',
+        borderRadius: 8,
     },
     removeMedicationIcon: {
         width: 16,
         height: 16,
     },
+
+    // Submit Button
     submitButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: COLORS.green,
-        borderRadius: 12,
-        padding: 16,
+        borderRadius: 16,
+        padding: 18,
         marginTop: 20,
         marginBottom: 40,
+        shadowColor: COLORS.green,
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 8,
     },
     submitButtonDisabled: {
         backgroundColor: COLORS.gray,
+        shadowOpacity: 0.1,
     },
     submitIcon: {
         width: 20,
@@ -588,7 +776,7 @@ const styles = StyleSheet.create({
     },
     submitText: {
         fontSize: 18,
-        fontWeight: '600',
+        fontWeight: '700',
         color: COLORS.white,
     },
 });

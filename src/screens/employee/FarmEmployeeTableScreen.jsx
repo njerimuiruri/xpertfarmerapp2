@@ -238,7 +238,6 @@ const FarmEmployeeListScreen = ({ navigation }) => {
 
   const renderHeader = () => (
     <View style={styles.header}>
-      {/* Search Container */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
           <FastImage
@@ -261,7 +260,6 @@ const FarmEmployeeListScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Filter Buttons */}
       <View style={styles.filterSection}>
         <Text style={styles.sectionTitle}>Filter by Type</Text>
         <View style={styles.filterButtonsContainer}>
@@ -657,7 +655,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    marginBottom: 16,
+    marginBottom: -10,
   },
   searchContainer: {
     marginBottom: 16,
@@ -789,6 +787,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 16,
     paddingBottom: 100,
+
   },
   emptyListContent: {
     flex: 1,

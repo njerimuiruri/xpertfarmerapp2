@@ -33,12 +33,11 @@ const LivestockModuleScreen = ({ navigation }) => {
   const [selectedAnimal, setSelectedAnimal] = useState(null);
   const [initialLoad, setInitialLoad] = useState(true);
 
-  // Enhanced type catalogue with normalized keys to prevent duplicates
   const typesCatalogue = {
     'dairy_cows': { label: 'Dairy Cows', icon: icons.livestock || icons.account },
-    'dairycattle': { label: 'Dairy Cows', icon: icons.livestock || icons.account }, // Normalized
+    'dairycattle': { label: 'Dairy Cows', icon: icons.livestock || icons.account },
     'beef_cattle': { label: 'Beef Cattle', icon: icons.livestock || icons.account },
-    'beefcattle': { label: 'Beef Cattle', icon: icons.livestock || icons.account }, // Normalized
+    'beefcattle': { label: 'Beef Cattle', icon: icons.livestock || icons.account },
     'poultry': { label: 'Poultry', icon: icons.livestock || icons.account },
     'swine': { label: 'Swine', icon: icons.livestock || icons.account },
     'goats': { label: 'Goats', icon: icons.livestock || icons.account },
@@ -46,16 +45,14 @@ const LivestockModuleScreen = ({ navigation }) => {
     'rabbit': { label: 'Rabbits', icon: icons.livestock || icons.account },
   };
 
-  // Complete status catalogue with all required statuses
   const statusCatalogue = {
     'active': { label: 'Active', color: COLORS.success || '#10B981', icon: icons.check || icons.account },
     'sold': { label: 'Sold', color: COLORS.warning || '#F59E0B', icon: icons.money || icons.document },
     'transferred': { label: 'Transferred', color: COLORS.info || '#3B82F6', icon: icons.transfer || icons.document },
-    'transfer': { label: 'Transferred', color: COLORS.info || '#3B82F6', icon: icons.transfer || icons.document }, // Alias
+    'transfer': { label: 'Transferred', color: COLORS.info || '#3B82F6', icon: icons.transfer || icons.document },
     'deceased': { label: 'Deceased', color: COLORS.danger || '#EF4444', icon: icons.remove || icons.close },
   };
 
-  // Normalize type function to prevent duplicates
   const normalizeType = useCallback((type) => {
     const normalized = type?.toLowerCase().replace(/[_\s]/g, '');
     switch (normalized) {
@@ -114,7 +111,6 @@ const LivestockModuleScreen = ({ navigation }) => {
         return;
       }
 
-      // Transform data with improved type normalization
       const transformedData = data.map(item => {
         const categoryData = item[item.category] || {};
         const normalizedType = normalizeType(item.type);
@@ -158,9 +154,7 @@ const LivestockModuleScreen = ({ navigation }) => {
     }
   };
 
-  // Improved function to extract unique types and statuses
   const extractTypesAndStatuses = useCallback((livestockData) => {
-    // Extract and normalize unique types
     const typeSet = new Set();
     const statusSet = new Set();
 
@@ -189,21 +183,17 @@ const LivestockModuleScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  // Memoized filtered data for better performance
   const filteredData = useMemo(() => {
     let baseData = livestock;
 
-    // Filter by type
     if (selectedType !== 'all') {
       baseData = baseData.filter(item => item.type === selectedType);
     }
 
-    // Filter by status
     if (selectedStatus !== 'all') {
       baseData = baseData.filter(item => item.status === selectedStatus);
     }
 
-    // Filter by search query
     if (searchQuery.trim() !== '') {
       const lowercaseQuery = searchQuery.toLowerCase();
       baseData = baseData.filter(item => {
@@ -266,7 +256,6 @@ const LivestockModuleScreen = ({ navigation }) => {
     );
   }, [fetchLivestock]);
 
-  // Improved TypeSelector with no duplicates
   const TypeSelector = () => {
     const typeOptions = [
       {
@@ -318,9 +307,7 @@ const LivestockModuleScreen = ({ navigation }) => {
     );
   };
 
-  // Enhanced StatusSelector with all required statuses
   const StatusSelector = () => {
-    // Always show all status options, whether they exist in data or not
     const allStatusOptions = ['active', 'sold', 'transferred', 'deceased'];
 
     const statusOptions = [
@@ -377,7 +364,6 @@ const LivestockModuleScreen = ({ navigation }) => {
     );
   };
 
-  // Fixed ActionModal with proper visibility and backdrop
   const ActionModal = () => {
     const actions = [
       {
@@ -511,7 +497,6 @@ const LivestockModuleScreen = ({ navigation }) => {
     return statusCatalogue[status?.toLowerCase()]?.color || COLORS.success || '#10B981';
   }, []);
 
-  // Optimized renderAnimalCard with useCallback
   const renderAnimalCard = useCallback(({ item }) => (
     <View style={styles.card}>
       <TouchableOpacity
@@ -543,7 +528,7 @@ const LivestockModuleScreen = ({ navigation }) => {
             }}
             style={styles.menuButton}>
             <FastImage
-              source={icons.menu || icons.document}
+              source={icons.dots3 || icons.document}
               style={styles.menuIcon}
               tintColor={COLORS.gray}
             />

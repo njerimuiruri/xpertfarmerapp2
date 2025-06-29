@@ -26,6 +26,7 @@ import { createEmployee, formatEmployeeData } from '../../services/employees';
 const AddEmployeeScreen = ({ navigation }) => {
   const [employeeType, setEmployeeType] = useState('permanent');
   const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -227,20 +228,8 @@ const AddEmployeeScreen = ({ navigation }) => {
 
       console.log('Employee created successfully:', data);
 
-      Alert.alert(
-        'Success',
-        'Employee created successfully!',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              if (navigation) {
-                navigation.goBack();
-              }
-            }
-          }
-        ]
-      );
+      setShowSuccessModal(true);
+
 
     } catch (error) {
       console.error('Error creating employee:', error);
@@ -415,6 +404,75 @@ const AddEmployeeScreen = ({ navigation }) => {
       </View>
     </Modal>
   );
+  const renderSuccessModal = () => (
+    <Modal visible={showSuccessModal} transparent animationType="fade">
+      <View style={styles.successModalOverlay}>
+        <View style={styles.successModalCard}>
+          {/* Success Icon */}
+          <View style={styles.successIconContainer}>
+            <View style={styles.successIcon}>
+              <Text style={styles.successCheckmark}>✓</Text>
+            </View>
+          </View>
+
+          {/* Success Content */}
+          <Text style={styles.successTitle}>Employee Added!</Text>
+          <Text style={styles.successMessage}>
+            The employee has been successfully added to your team.
+          </Text>
+
+          {/* Action Buttons */}
+          <View style={styles.successButtonContainer}>
+            <TouchableOpacity
+              style={styles.successPrimaryButton}
+              onPress={() => {
+                setShowSuccessModal(false);
+                if (navigation) {
+                  navigation.goBack();
+                }
+              }}>
+              <Text style={styles.successPrimaryButtonText}>Done</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.successSecondaryButton}
+              onPress={() => {
+                setShowSuccessModal(false);
+                setFormData({
+                  firstName: '',
+                  middleName: '',
+                  lastName: '',
+                  phone: '',
+                  idNumber: '',
+                  emergencyContact: '',
+                  dateOfEmployment: new Date(),
+                  endDate: new Date(),
+                  paymentSchedule: 'monthly',
+                  salary: '',
+                  typeOfEngagement: 'seasonal',
+                  workSchedule: 'full',
+                  selectedRole: '',
+                  customRole: '',
+                  selectedBenefits: {
+                    paye: false,
+                    nssf: false,
+                    nhif: false,
+                    housingLevy: false,
+                    customBenefit: false,
+                  },
+                  customBenefitName: '',
+                  customBenefitAmount: '',
+                });
+                setErrors({});
+              }}>
+              <Text style={styles.successSecondaryButtonText}>Add Another</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -782,6 +840,8 @@ const AddEmployeeScreen = ({ navigation }) => {
         formData.workSchedule,
         (value) => updateFormData('workSchedule', value)
       )}
+      {renderSuccessModal()}
+
     </SafeAreaView>
   );
 };
@@ -1065,7 +1125,91 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
     fontWeight: '500',
   },
-
+  successModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  successModalCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 320,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  successIconContainer: {
+    marginBottom: 24,
+  },
+  successIcon: {
+    width: 80,
+    height: 80,
+    backgroundColor: COLORS.green,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: COLORS.green,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  successCheckmark: {
+    fontSize: 40,
+    color: COLORS.white,
+    fontWeight: 'bold',
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.black,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  successMessage: {
+    fontSize: 16,
+    color: COLORS.gray,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 32,
+  },
+  successButtonContainer: {
+    width: '100%',
+    gap: 12,
+  },
+  successPrimaryButton: {
+    backgroundColor: COLORS.green,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    width: '100%',
+  },
+  successPrimaryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.white,
+  },
+  successSecondaryButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.lightGray1,
+    width: '100%',
+  },
+  successSecondaryButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: COLORS.gray,
+  },
 });
 
 export default AddEmployeeScreen;
