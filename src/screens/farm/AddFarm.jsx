@@ -29,10 +29,19 @@ export default function AddFarm({ navigation }) {
   const [wardsList, setWardsList] = useState([]);
   const toast = useToast();
 
-  // Initialize county list on component mount
   useEffect(() => {
-    const counties = countyData.map(item => item.County);
-    setCountyList(counties);
+    try {
+      if (countyData && Array.isArray(countyData)) {
+        const counties = countyData.map(item => item.County);
+        setCountyList(counties);
+      } else {
+        console.warn('County data is not available or not an array');
+        setCountyList([]);
+      }
+    } catch (error) {
+      console.error('Error loading county data:', error);
+      setCountyList([]);
+    }
   }, []);
 
   const handleInputChange = (name, value) => {
@@ -42,8 +51,30 @@ export default function AddFarm({ navigation }) {
 
   const handleCountyChange = (selectedCounty) => {
     handleInputChange('county', selectedCounty);
-    const match = countyData.find(c => c.County === selectedCounty);
-    setWardsList(match ? match.Wards : []);
+
+    try {
+      if (countyData && Array.isArray(countyData)) {
+        const match = countyData.find(c => c.County === selectedCounty);
+        if (match && match.Constituencies && Array.isArray(match.Constituencies)) {
+          // Flatten all wards from all constituencies
+          const allWards = match.Constituencies.reduce((acc, constituency) => {
+            if (constituency.Wards && Array.isArray(constituency.Wards)) {
+              return [...acc, ...constituency.Wards];
+            }
+            return acc;
+          }, []);
+          setWardsList(allWards);
+        } else {
+          setWardsList([]);
+        }
+      } else {
+        setWardsList([]);
+      }
+    } catch (error) {
+      console.error('Error processing county change:', error);
+      setWardsList([]);
+    }
+
     handleInputChange('administrative_location', '');
   };
 
@@ -173,7 +204,7 @@ export default function AddFarm({ navigation }) {
             <FormControl isRequired isInvalid={errors.administrative_location}>
               <FormControl.Label>
                 <Text fontSize="16" fontWeight="500" color="gray.700">
-                  Administrative Location
+                  Administrative Location (Ward)
                 </Text>
               </FormControl.Label>
               <Dropdown

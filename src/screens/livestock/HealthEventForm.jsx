@@ -419,20 +419,6 @@ const HealthEventForm = ({ route, navigation }) => {
         </View>
     );
 
-    const AnimalInfoCard = () => (
-        <View style={styles.animalInfoCard}>
-            <View style={styles.animalInfoContent}>
-                <FastImage
-                    source={icons.health}
-                    style={styles.animalIcon}
-                    tintColor={COLORS.green}
-                />
-                <View style={styles.animalDetails}>
-                    <Text style={styles.animalName}>{animalData?.title}</Text>
-                </View>
-            </View>
-        </View>
-    );
 
     return (
         <SafeAreaView style={styles.container}>
@@ -443,13 +429,11 @@ const HealthEventForm = ({ route, navigation }) => {
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 <View style={styles.form}>
-                    <AnimalInfoCard />
                     <EventTypeCard />
                     <BasicDetailsCard />
                     <MedicationsCard />
                     <CostAndScheduleCard />
 
-                    {/* Submit Button */}
                     <TouchableOpacity
                         style={[styles.submitButton, loading && styles.submitButtonDisabled]}
                         onPress={handleSubmit}
@@ -472,7 +456,6 @@ const HealthEventForm = ({ route, navigation }) => {
                 </View>
             </ScrollView>
 
-            {/* Date Pickers */}
             {showDatePicker && (
                 <DateTimePicker
                     value={date}
@@ -508,7 +491,6 @@ const styles = StyleSheet.create({
         padding: 16,
     },
 
-    // Animal Info Card
     animalInfoCard: {
         backgroundColor: COLORS.white,
         borderRadius: 16,
@@ -549,7 +531,6 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
 
-    // Card Styles
     card: {
         backgroundColor: COLORS.white,
         borderRadius: 16,

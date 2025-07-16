@@ -7,6 +7,8 @@ import {
   StyleSheet,
   Modal,
   SafeAreaView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import {
   Button,
@@ -25,15 +27,21 @@ import FastImage from 'react-native-fast-image';
 import { icons } from '../../../constants';
 import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
+import { getLivestockForActiveFarm } from '../../../services/livestock';
+import { createFeedingProgram } from '../../../services/feeding';
 
 const FarmFeedsScreen = ({ navigation }) => {
-  // Main state
   const [currentStep, setCurrentStep] = useState(1);
   const [programType, setProgramType] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [timeOfDay, setTimeOfDay] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [notes, setNotes] = useState('');
 
-  // Animal/Group state
+  const [livestock, setLivestock] = useState([]);
+  const [loadingLivestock, setLoadingLivestock] = useState(true);
+
   const [animalData, setAnimalData] = useState({
     id: '',
     type: '',
@@ -81,11 +89,66 @@ const FarmFeedsScreen = ({ navigation }) => {
   });
 
   useEffect(() => {
+    fetchLivestock();
+  }, []);
+
+  useEffect(() => {
     if (animalData.type)
       setAnimalData(prev => ({ ...prev, lifecycleStages: [] }));
     if (animalData.groupType)
       setAnimalData(prev => ({ ...prev, groupLifecycleStages: [] }));
   }, [animalData.type, animalData.groupType]);
+
+  const fetchLivestock = async () => {
+    try {
+      setLoadingLivestock(true);
+      const livestockData = await getLivestockForActiveFarm();
+      setLivestock(livestockData);
+      console.log('Fetched livestock:', livestockData);
+    } catch (error) {
+      console.error('Error fetching livestock:', error);
+      Alert.alert('Error', 'Failed to load livestock data');
+    } finally {
+      setLoadingLivestock(false);
+    }
+  };
+
+  const getAnimalOptions = () => {
+    if (programType === 'Single Animal') {
+      return livestock
+        .filter(animal => animal.category === 'mammal')
+        .map(animal => ({
+          id: animal.id,
+          idNumber: animal.mammal?.idNumber || animal.id,
+          type: animal.type,
+          breedType: animal.mammal?.breedType || '',
+          gender: animal.mammal?.gender || '',
+        }));
+    } else if (programType === 'Group') {
+      return livestock
+        .filter(animal => animal.category === 'poultry')
+        .map(animal => ({
+          id: animal.id,
+          flockId: animal.poultry?.flockId || animal.id,
+          type: animal.type,
+          breedType: animal.poultry?.breedType || '',
+          quantity: animal.poultry?.currentQuantity || animal.poultry?.initialQuantity || 0,
+        }));
+    }
+    return [];
+  };
+
+  const getAnimalTypeFromLivestockType = (livestockType) => {
+    const typeMapping = {
+      'dairyCattle': 'Dairy',
+      'beefCattle': 'Beef',
+      'swine': 'Swine',
+      'sheep': 'Sheep and Goats',
+      'goats': 'Sheep and Goats',
+      'poultry': 'Poultry',
+    };
+    return typeMapping[livestockType] || livestockType;
+  };
 
   const getLifecycleOptions = (type, isGroup = false) => {
     const options = {
@@ -131,7 +194,6 @@ const FarmFeedsScreen = ({ navigation }) => {
     }
   };
 
-  // Update feed data
   const updateFeedData = (feedKey, field, value) => {
     setFeedData(prev => ({
       ...prev,
@@ -143,524 +205,924 @@ const FarmFeedsScreen = ({ navigation }) => {
     setAnimalData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleAnimalSelection = (animalId) => {
+    const selectedAnimal = livestock.find(animal => animal.id === animalId);
+    if (selectedAnimal) {
+      const animalType = getAnimalTypeFromLivestockType(selectedAnimal.type);
+      setAnimalData(prev => ({
+        ...prev,
+        id: animalId,
+        type: animalType,
+        lifecycleStages: [],
+      }));
+    }
+  };
+
+  const handleGroupSelection = (groupId) => {
+    const selectedGroup = livestock.find(animal => animal.id === groupId);
+    if (selectedGroup) {
+      const groupType = getAnimalTypeFromLivestockType(selectedGroup.type);
+      setAnimalData(prev => ({
+        ...prev,
+        groupId: groupId,
+        groupType: groupType,
+        groupLifecycleStages: [],
+      }));
+    }
+  };
+
   const validateStep1 = () => {
+    if (!programType) {
+      Alert.alert('Validation Error', 'Please select a program type to continue');
+      return false;
+    }
+
+    if (programType === 'Single Animal') {
+      if (!animalData.id) {
+        Alert.alert('Validation Error', 'Please select an animal for your feeding program');
+        return false;
+      }
+      if (!animalData.type) {
+        Alert.alert('Validation Error', 'Please select an animal type');
+        return false;
+      }
+      if (animalData.lifecycleStages.length === 0) {
+        Alert.alert('Validation Error', 'Please select at least one lifecycle stage for your animal');
+        return false;
+      }
+    } else if (programType === 'Group') {
+      if (!animalData.groupId) {
+        Alert.alert('Validation Error', 'Please select a group for your feeding program');
+        return false;
+      }
+      if (!animalData.groupType) {
+        Alert.alert('Validation Error', 'Please select a group type');
+        return false;
+      }
+      if (animalData.groupLifecycleStages.length === 0) {
+        Alert.alert('Validation Error', 'Please select at least one lifecycle stage for your group');
+        return false;
+      }
+    }
+
     return true;
   };
 
   const validateStep2 = () => {
+    if (!feedType) {
+      Alert.alert('Validation Error', 'Please select a feed type for your program');
+      return false;
+    }
+
+    if (!feedData.basal.feedType || !feedData.basal.source || !feedData.basal.schedule) {
+      Alert.alert('Validation Error', 'Please complete all required basal feed fields (Type, Source, Schedule)');
+      return false;
+    }
+
+    if (feedType === 'Basal Feed + Concentrates + Supplements') {
+      if (!feedData.concentrate.feedType || !feedData.concentrate.source || !feedData.concentrate.schedule) {
+        Alert.alert('Validation Error', 'Please complete all required concentrate feed fields');
+        return false;
+      }
+      if (!feedData.supplement.feedType || !feedData.supplement.source || !feedData.supplement.schedule) {
+        Alert.alert('Validation Error', 'Please complete all required supplement feed fields');
+        return false;
+      }
+    }
+
+    if (timeOfDay.length === 0) {
+      Alert.alert('Validation Error', 'Please select at least one feeding time');
+      return false;
+    }
+
     return true;
   };
 
   const nextStep = () => {
-    if (currentStep === 1 && validateStep1()) setCurrentStep(2);
+    if (currentStep === 1 && validateStep1()) {
+      setCurrentStep(2);
+    }
   };
 
   const prevStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = () => {
-    setModalVisible(true);
+  const handleSubmit = async () => {
+    if (!validateStep2()) return;
+
+    setSubmitting(true);
+    try {
+      const feedingProgramData = {
+        programType,
+        animalId: programType === 'Single Animal' ? animalData.id : null,
+        animalType: programType === 'Single Animal' ? animalData.type : null,
+        lifecycleStages: programType === 'Single Animal' ? animalData.lifecycleStages : [],
+        groupId: programType === 'Group' ? animalData.groupId : null,
+        groupType: programType === 'Group' ? animalData.groupType : null,
+        groupLifecycleStages: programType === 'Group' ? animalData.groupLifecycleStages : [],
+        feedType,
+        basal: {
+          ...feedData.basal,
+          quantity: parseFloat(feedData.basal.quantity) || 0,
+          cost: parseFloat(feedData.basal.cost) || 0,
+          date: feedData.basal.date.toISOString(),
+        },
+        concentrate: feedType === 'Basal Feed + Concentrates + Supplements' ? {
+          ...feedData.concentrate,
+          quantity: parseFloat(feedData.concentrate.quantity) || 0,
+          cost: parseFloat(feedData.concentrate.cost) || 0,
+          date: feedData.concentrate.date.toISOString(),
+        } : null,
+        supplement: feedType === 'Basal Feed + Concentrates + Supplements' ? {
+          ...feedData.supplement,
+          quantity: parseFloat(feedData.supplement.quantity) || 0,
+          cost: parseFloat(feedData.supplement.cost) || 0,
+          date: feedData.supplement.date.toISOString(),
+        } : null,
+        timeOfDay,
+        notes,
+      };
+
+      console.log('Submitting feeding program:', feedingProgramData);
+
+      const result = await createFeedingProgram(feedingProgramData);
+
+      if (result.error) {
+        Alert.alert('Error', result.error);
+      } else {
+        setModalVisible(true);
+      }
+    } catch (error) {
+      console.error('Error creating feeding program:', error);
+      Alert.alert('Error', 'Failed to create feeding program. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const renderFeedForm = (feedKey, title) => (
-    <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+  const renderFeedForm = (feedKey, title, icon) => (
+    <Box bg="white" p={6} borderRadius={16} shadow={2} mb={6}>
+      <HStack alignItems="center" mb={4}>
+        <Box bg={COLORS.lightGreen} p={2} borderRadius={8} mr={3}>
+          <Text style={styles.feedIcon}>{icon}</Text>
+        </Box>
+        <Text style={styles.feedSectionTitle}>{title}</Text>
+      </HStack>
 
-      <FormControl mb={4}>
-        <FormControl.Label>Type of Feed</FormControl.Label>
-        <Input
-          backgroundColor={COLORS.lightGreen}
-          placeholder="Enter Feed Type"
-          value={feedData[feedKey].feedType}
-          onChangeText={value => updateFeedData(feedKey, 'feedType', value)}
-        />
-      </FormControl>
-
-      <FormControl mb={4}>
-        <FormControl.Label>Source of Feed</FormControl.Label>
-        <Select
-          selectedValue={feedData[feedKey].source}
-          minWidth="100%"
-          backgroundColor={COLORS.lightGreen}
-          placeholder="Select Source"
-          onValueChange={value => updateFeedData(feedKey, 'source', value)}>
-          {['Personally Grown', 'Grown and Purchased', 'Purely Purchased'].map(
-            source => (
-              <Select.Item key={source} label={source} value={source} />
-            ),
-          )}
-        </Select>
-      </FormControl>
-
-      <FormControl mb={4}>
-        <FormControl.Label>Feeding Schedule</FormControl.Label>
-        <Select
-          selectedValue={feedData[feedKey].schedule}
-          minWidth="100%"
-          backgroundColor={COLORS.lightGreen}
-          placeholder="Select Schedule"
-          onValueChange={value => updateFeedData(feedKey, 'schedule', value)}>
-          {['Daily', 'Twice Daily', 'Three Times Daily', 'Weekly'].map(
-            schedule => (
-              <Select.Item key={schedule} label={schedule} value={schedule} />
-            ),
-          )}
-        </Select>
-      </FormControl>
-
-      <FormControl mb={4}>
-        <FormControl.Label>Quantity (kg)</FormControl.Label>
-        <Input
-          backgroundColor={COLORS.lightGreen}
-          placeholder="Enter Quantity"
-          keyboardType="numeric"
-          value={feedData[feedKey].quantity}
-          onChangeText={value => updateFeedData(feedKey, 'quantity', value)}
-        />
-      </FormControl>
-
-      <FormControl mb={4}>
-        <FormControl.Label>Date Acquired</FormControl.Label>
-        <HStack alignItems="center" space={2}>
-          <Input
-            flex={1}
-            backgroundColor={COLORS.lightGreen}
-            value={feedData[feedKey].date.toLocaleDateString('en-GB')}
-            isReadOnly
-          />
-          <TouchableOpacity
-            onPress={() =>
-              setDatePickerVisible({ ...datePickerVisible, [feedKey]: true })
-            }>
-            <FastImage
-              source={icons.calendar}
-              style={styles.calendarIcon}
-              tintColor={COLORS.green2}
-            />
-          </TouchableOpacity>
-        </HStack>
-        {datePickerVisible[feedKey] && (
-          <DateTimePicker
-            value={feedData[feedKey].date}
-            mode="date"
-            display="default"
-            onChange={(event, date) => handleDateChange(feedKey, date)}
-          />
-        )}
-      </FormControl>
-
-      <FormControl mb={4}>
-        <FormControl.Label>Cost</FormControl.Label>
-        <Input
-          backgroundColor={COLORS.lightGreen}
-          placeholder="Enter Cost"
-          keyboardType="numeric"
-          value={feedData[feedKey].cost}
-          onChangeText={value => updateFeedData(feedKey, 'cost', value)}
-        />
-      </FormControl>
-
-      <FormControl mb={4}>
-        <FormControl.Label>Supplier</FormControl.Label>
-        <Input
-          backgroundColor={COLORS.lightGreen}
-          placeholder="Enter Supplier"
-          value={feedData[feedKey].supplier}
-          onChangeText={value => updateFeedData(feedKey, 'supplier', value)}
-        />
-      </FormControl>
-    </Box>
-  );
-
-  const renderSelectionButtons = (options, selectedValues, onToggle) => (
-    <VStack space={2}>
-      {options.map(option => (
-        <TouchableOpacity
-          key={option}
-          style={[
-            styles.selectionButton,
-            selectedValues.includes(option) && styles.selectedButton,
-          ]}
-          onPress={() => onToggle(option)}>
-          <Text
-            style={[
-              styles.selectionText,
-              selectedValues.includes(option) && styles.selectedText,
-            ]}>
-            {option}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </VStack>
-  );
-
-  // Render step 1 content
-  const renderStep1 = () => (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
-      <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
-        <Text style={styles.sectionTitle}>Feeding Program Selection</Text>
-
-        <FormControl mb={4}>
-          <FormControl.Label>Program Type</FormControl.Label>
-          <Radio.Group
-            name="programType"
-            value={programType}
-            onChange={setProgramType}>
-            <VStack space={2}>
-              <Radio value="Single Animal" my={1}>
-                Single Animal Feeding Program
-              </Radio>
-              <Radio value="Group" my={1}>
-                Group Feeding Program
-              </Radio>
-            </VStack>
-          </Radio.Group>
-        </FormControl>
-      </Box>
-
-      {programType === 'Single Animal' && (
-        <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
-          <Text style={styles.sectionTitle}>Single Animal Details</Text>
-
-          <FormControl mb={4}>
-            <FormControl.Label>Animal ID</FormControl.Label>
+      <VStack space={4}>
+        <HStack space={3}>
+          <FormControl flex={1} isRequired>
+            <FormControl.Label style={styles.formLabel}>Feed Type</FormControl.Label>
             <Input
               backgroundColor={COLORS.lightGreen}
-              placeholder="Enter Animal ID"
-              value={animalData.id}
-              onChangeText={value => updateAnimalData('id', value)}
+              borderColor="transparent"
+              borderRadius={12}
+              placeholder="e.g., Hay, Pellets, Grain"
+              value={feedData[feedKey].feedType}
+              onChangeText={value => updateFeedData(feedKey, 'feedType', value)}
+              fontSize={14}
+              _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
             />
           </FormControl>
 
-          <FormControl mb={4}>
-            <FormControl.Label>Animal Type</FormControl.Label>
+          <FormControl flex={1} isRequired>
+            <FormControl.Label style={styles.formLabel}>Source</FormControl.Label>
             <Select
-              selectedValue={animalData.type}
+              selectedValue={feedData[feedKey].source}
               minWidth="100%"
               backgroundColor={COLORS.lightGreen}
-              placeholder="Select Animal Type"
-              onValueChange={value => updateAnimalData('type', value)}>
-              {['Dairy', 'Beef', 'Swine', 'Sheep and Goats'].map(type => (
-                <Select.Item key={type} label={type} value={type} />
-              ))}
+              borderColor="transparent"
+              borderRadius={12}
+              placeholder="Select Source"
+              fontSize={14}
+              _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+              onValueChange={value => updateFeedData(feedKey, 'source', value)}>
+              {['Personally Grown', 'Grown and Purchased', 'Purely Purchased'].map(
+                source => (
+                  <Select.Item key={source} label={source} value={source} />
+                ),
+              )}
             </Select>
           </FormControl>
+        </HStack>
 
-          {animalData.type && (
-            <FormControl mb={4}>
-              <FormControl.Label>Lifecycle Stage</FormControl.Label>
-              {renderSelectionButtons(
-                getLifecycleOptions(animalData.type),
-                animalData.lifecycleStages,
-                stage => toggleSelection(stage, 'lifecycleStages'),
-              )}
-            </FormControl>
-          )}
-
-          <Center mt={6}>
-            <HStack space={4} justifyContent="center">
-              <Button
-                variant="outline"
-                borderColor={COLORS.green}
-                _text={{ color: COLORS.green }}
-                borderRadius={8}
-                onPress={() => navigation.goBack()}>
-                Cancel
-              </Button>
-              <Button
-                backgroundColor={COLORS.green}
-                borderRadius={8}
-                onPress={nextStep}>
-                Next
-              </Button>
-            </HStack>
-          </Center>
-        </Box>
-      )}
-
-      {programType === 'Group' && (
-        <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
-          <Text style={styles.sectionTitle}>Group Details</Text>
-
-          <FormControl mb={4}>
-            <FormControl.Label>Group ID</FormControl.Label>
-            <Input
-              backgroundColor={COLORS.lightGreen}
-              placeholder="Enter Group ID"
-              value={animalData.groupId}
-              onChangeText={value => updateAnimalData('groupId', value)}
-            />
-          </FormControl>
-
-          <FormControl mb={4}>
-            <FormControl.Label>Group Type</FormControl.Label>
+        <HStack space={3}>
+          <FormControl flex={1} isRequired>
+            <FormControl.Label style={styles.formLabel}>Schedule</FormControl.Label>
             <Select
-              selectedValue={animalData.groupType}
+              selectedValue={feedData[feedKey].schedule}
               minWidth="100%"
               backgroundColor={COLORS.lightGreen}
-              placeholder="Select Group Type"
-              onValueChange={value => updateAnimalData('groupType', value)}>
-              {['Poultry', 'Dairy', 'Beef', 'Swine', 'Sheep and Goats'].map(
-                type => (
-                  <Select.Item key={type} label={type} value={type} />
+              borderColor="transparent"
+              borderRadius={12}
+              placeholder="Select Schedule"
+              fontSize={14}
+              _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+              onValueChange={value => updateFeedData(feedKey, 'schedule', value)}>
+              {['Daily', 'Twice Daily', 'Three Times Daily', 'Weekly'].map(
+                schedule => (
+                  <Select.Item key={schedule} label={schedule} value={schedule} />
                 ),
               )}
             </Select>
           </FormControl>
 
-          {animalData.groupType && (
-            <FormControl mb={4}>
-              <FormControl.Label>Lifecycle Stage</FormControl.Label>
-              {renderSelectionButtons(
-                getLifecycleOptions(animalData.groupType, true),
-                animalData.groupLifecycleStages,
-                stage => toggleSelection(stage, 'groupLifecycleStages'),
-              )}
-            </FormControl>
-          )}
+          <FormControl flex={1}>
+            <FormControl.Label style={styles.formLabel}>Quantity (kg)</FormControl.Label>
+            <Input
+              backgroundColor={COLORS.lightGreen}
+              borderColor="transparent"
+              borderRadius={12}
+              placeholder="Amount"
+              keyboardType="numeric"
+              fontSize={14}
+              value={feedData[feedKey].quantity}
+              onChangeText={value => updateFeedData(feedKey, 'quantity', value)}
+              _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+            />
+          </FormControl>
+        </HStack>
 
-          <Center mt={6}>
-            <HStack space={4} justifyContent="center">
-              <Button
-                variant="outline"
-                borderColor={COLORS.green}
-                _text={{ color: COLORS.green }}
-                borderRadius={8}
-                onPress={() => navigation.goBack()}>
-                Cancel
-              </Button>
-              <Button
-                backgroundColor={COLORS.green}
-                borderRadius={8}
-                onPress={nextStep}>
-                Next
-              </Button>
+        <HStack space={3}>
+          <FormControl flex={1}>
+            <FormControl.Label style={styles.formLabel}>Date Acquired</FormControl.Label>
+            <HStack alignItems="center" space={2}>
+              <Input
+                flex={1}
+                backgroundColor={COLORS.lightGreen}
+                borderColor="transparent"
+                borderRadius={12}
+                fontSize={14}
+                value={feedData[feedKey].date.toLocaleDateString('en-GB')}
+                isReadOnly
+                _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+              />
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() =>
+                  setDatePickerVisible({ ...datePickerVisible, [feedKey]: true })
+                }>
+                <FastImage
+                  source={icons.calendar}
+                  style={styles.calendarIcon}
+                  tintColor={COLORS.green2}
+                />
+              </TouchableOpacity>
             </HStack>
-          </Center>
+            {datePickerVisible[feedKey] && (
+              <DateTimePicker
+                value={feedData[feedKey].date}
+                mode="date"
+                display="default"
+                onChange={(event, date) => handleDateChange(feedKey, date)}
+              />
+            )}
+          </FormControl>
+
+          <FormControl flex={1}>
+            <FormControl.Label style={styles.formLabel}>Cost</FormControl.Label>
+            <Input
+              backgroundColor={COLORS.lightGreen}
+              borderColor="transparent"
+              borderRadius={12}
+              placeholder="Amount"
+              keyboardType="numeric"
+              fontSize={14}
+              value={feedData[feedKey].cost}
+              onChangeText={value => updateFeedData(feedKey, 'cost', value)}
+              _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+            />
+          </FormControl>
+        </HStack>
+
+        <FormControl>
+          <FormControl.Label style={styles.formLabel}>Supplier</FormControl.Label>
+          <Input
+            backgroundColor={COLORS.lightGreen}
+            borderColor="transparent"
+            borderRadius={12}
+            placeholder="Enter supplier name"
+            fontSize={14}
+            value={feedData[feedKey].supplier}
+            onChangeText={value => updateFeedData(feedKey, 'supplier', value)}
+            _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+          />
+        </FormControl>
+      </VStack>
+    </Box>
+  );
+
+  const renderSelectionButtons = (options, selectedValues, onToggle) => (
+    <Box>
+      <HStack flexWrap="wrap" space={2}>
+        {options.map((option, index) => (
+          <TouchableOpacity
+            key={option}
+            style={[
+              styles.chipButton,
+              selectedValues.includes(option) && styles.selectedChip,
+              { marginBottom: 8 }
+            ]}
+            onPress={() => onToggle(option)}>
+            <Text
+              style={[
+                styles.chipText,
+                selectedValues.includes(option) && styles.selectedChipText,
+              ]}>
+              {option}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </HStack>
+    </Box>
+  );
+
+  const renderStep1 = () => (
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <Box bg="white" p={6} borderRadius={16} shadow={2} mb={6}>
+        <HStack alignItems="center" mb={4}>
+          <Box bg={COLORS.lightGreen} p={2} borderRadius={8} mr={3}>
+            <Text style={styles.sectionIcon}>🎯</Text>
+          </Box>
+          <VStack flex={1}>
+            <Text style={styles.sectionTitle}>Program Type</Text>
+            <Text style={styles.sectionSubtitle}>Choose your feeding program type</Text>
+          </VStack>
+        </HStack>
+
+        <Radio.Group
+          name="programType"
+          value={programType}
+          onChange={setProgramType}>
+          <VStack space={3}>
+            <Box style={styles.radioContainer}>
+              <Radio value="Single Animal" my={1} colorScheme="green">
+                <VStack ml={3}>
+                  <Text style={styles.radioTitle}>Single Animal</Text>
+                  <Text style={styles.radioSubtitle}>Create a feeding program for one animal</Text>
+                </VStack>
+              </Radio>
+            </Box>
+            <Box style={styles.radioContainer}>
+              <Radio value="Group" my={1} colorScheme="green">
+                <VStack ml={3}>
+                  <Text style={styles.radioTitle}>Group</Text>
+                  <Text style={styles.radioSubtitle}>Create a feeding program for a group of animals</Text>
+                </VStack>
+              </Radio>
+            </Box>
+          </VStack>
+        </Radio.Group>
+      </Box>
+
+      {programType && (
+        <Box bg="white" p={6} borderRadius={16} shadow={2} mb={6}>
+          <HStack alignItems="center" mb={4}>
+            <Box bg={COLORS.lightGreen} p={2} borderRadius={8} mr={3}>
+              <Text style={styles.sectionIcon}>🐄</Text>
+            </Box>
+            <VStack flex={1}>
+              <Text style={styles.sectionTitle}>
+                {programType === 'Single Animal' ? 'Animal Selection' : 'Group Selection'}
+              </Text>
+              <Text style={styles.sectionSubtitle}>
+                {programType === 'Single Animal'
+                  ? 'Select the animal for this program'
+                  : 'Select the group for this program'}
+              </Text>
+            </VStack>
+          </HStack>
+
+          {programType === 'Single Animal' ? (
+            <VStack space={4}>
+              <FormControl>
+                <FormControl.Label style={styles.formLabel}>Select Animal</FormControl.Label>
+                {loadingLivestock ? (
+                  <Center py={8}>
+                    <ActivityIndicator size="large" color={COLORS.green2} />
+                    <Text style={styles.loadingText}>Loading animals...</Text>
+                  </Center>
+                ) : (
+                  <Select
+                    selectedValue={animalData.id}
+                    minWidth="100%"
+                    backgroundColor={COLORS.lightGreen}
+                    borderColor="transparent"
+                    borderRadius={12}
+                    placeholder="Choose an animal"
+                    fontSize={14}
+                    _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+                    onValueChange={handleAnimalSelection}>
+                    {getAnimalOptions().map(animal => (
+                      <Select.Item
+                        key={animal.id}
+                        label={`${animal.idNumber} - ${animal.type} (${animal.breedType})`}
+                        value={animal.id}
+                      />
+                    ))}
+                  </Select>
+                )}
+              </FormControl>
+
+              {animalData.type && (
+                <FormControl>
+                  <FormControl.Label style={styles.formLabel}>Lifecycle Stages</FormControl.Label>
+                  <Text style={styles.helpText}>Select applicable stages for your animal</Text>
+                  {renderSelectionButtons(
+                    getLifecycleOptions(animalData.type),
+                    animalData.lifecycleStages,
+                    (stage) => toggleSelection(stage, 'lifecycleStages')
+                  )}
+                </FormControl>
+              )}
+            </VStack>
+          ) : (
+            <VStack space={4}>
+              <FormControl>
+                <FormControl.Label style={styles.formLabel}>Select Group</FormControl.Label>
+                {loadingLivestock ? (
+                  <Center py={8}>
+                    <ActivityIndicator size="large" color={COLORS.green2} />
+                    <Text style={styles.loadingText}>Loading groups...</Text>
+                  </Center>
+                ) : (
+                  <Select
+                    selectedValue={animalData.groupId}
+                    minWidth="100%"
+                    backgroundColor={COLORS.lightGreen}
+                    borderColor="transparent"
+                    borderRadius={12}
+                    placeholder="Choose a group"
+                    fontSize={14}
+                    _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+                    onValueChange={handleGroupSelection}>
+                    {getAnimalOptions().map(group => (
+                      <Select.Item
+                        key={group.id}
+                        label={`${group.flockId} - ${group.type} (${group.quantity} birds)`}
+                        value={group.id}
+                      />
+                    ))}
+                  </Select>
+                )}
+              </FormControl>
+
+              {animalData.groupType && (
+                <FormControl>
+                  <FormControl.Label style={styles.formLabel}>Lifecycle Stages</FormControl.Label>
+                  <Text style={styles.helpText}>Select applicable stages for your group</Text>
+                  {renderSelectionButtons(
+                    getLifecycleOptions(animalData.groupType, true),
+                    animalData.groupLifecycleStages,
+                    (stage) => toggleSelection(stage, 'groupLifecycleStages')
+                  )}
+                </FormControl>
+              )}
+            </VStack>
+          )}
         </Box>
       )}
+
+      <HStack justifyContent="flex-end" mt={4}>
+        <TouchableOpacity
+          style={[styles.nextButton, !programType && styles.disabledButton]}
+          onPress={nextStep}
+          disabled={!programType}>
+          <Text style={styles.nextButtonText}>Next Step →</Text>
+        </TouchableOpacity>
+      </HStack>
     </ScrollView>
   );
 
-  // Render step 2 content
   const renderStep2 = () => (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
-      <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
-        <Text style={styles.sectionTitle}>Feeding Types</Text>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      {/* Feed Type Selection */}
+      <Box bg="white" p={6} borderRadius={16} shadow={2} mb={6}>
+        <HStack alignItems="center" mb={4}>
+          <Box bg={COLORS.lightGreen} p={2} borderRadius={8} mr={3}>
+            <Text style={styles.sectionIcon}>🌾</Text>
+          </Box>
+          <VStack flex={1}>
+            <Text style={styles.sectionTitle}>Feed Configuration</Text>
+            <Text style={styles.sectionSubtitle}>Choose your feed type and details</Text>
+          </VStack>
+        </HStack>
 
-        <FormControl mb={4}>
-          <FormControl.Label>Type of Feeds</FormControl.Label>
-          <Radio.Group name="feedType" value={feedType} onChange={setFeedType}>
-            <VStack space={2}>
-              <Radio value="Basal Feeds" my={1}>
-                Basal Feeds
+        <Radio.Group
+          name="feedType"
+          value={feedType}
+          onChange={setFeedType}>
+          <VStack space={3}>
+            <Box style={styles.radioContainer}>
+              <Radio value="Basal Feed Only" my={1} colorScheme="green">
+                <VStack ml={3}>
+                  <Text style={styles.radioTitle}>Basal Feed Only</Text>
+                  <Text style={styles.radioSubtitle}>Simple feeding with basic feed</Text>
+                </VStack>
               </Radio>
-              <Radio value="Basal Feed + Concentrates + Supplements" my={1}>
-                Basal Feed + Concentrates + Supplements
+            </Box>
+            <Box style={styles.radioContainer}>
+              <Radio value="Basal Feed + Concentrates + Supplements" my={1} colorScheme="green">
+                <VStack ml={3}>
+                  <Text style={styles.radioTitle}>Complete Feed Program</Text>
+                  <Text style={styles.radioSubtitle}>Basal feed with concentrates and supplements</Text>
+                </VStack>
               </Radio>
-            </VStack>
-          </Radio.Group>
-        </FormControl>
+            </Box>
+          </VStack>
+        </Radio.Group>
       </Box>
 
-      {renderFeedForm('basal', 'Basal Feed Details')}
-
-      {feedType === 'Basal Feed + Concentrates + Supplements' && (
+      {/* Feed Forms */}
+      {feedType && (
         <>
-          {renderFeedForm('concentrate', 'Concentrate Details')}
-          {renderFeedForm('supplement', 'Supplement Details')}
+          {renderFeedForm('basal', 'Basal Feed', '🌾')}
+
+          {feedType === 'Basal Feed + Concentrates + Supplements' && (
+            <>
+              {renderFeedForm('concentrate', 'Concentrate Feed', '🥗')}
+              {renderFeedForm('supplement', 'Supplement Feed', '💊')}
+            </>
+          )}
+
+          {/* Feeding Schedule */}
+          <Box bg="white" p={6} borderRadius={16} shadow={2} mb={6}>
+            <HStack alignItems="center" mb={4}>
+              <Box bg={COLORS.lightGreen} p={2} borderRadius={8} mr={3}>
+                <Text style={styles.sectionIcon}>⏰</Text>
+              </Box>
+              <VStack flex={1}>
+                <Text style={styles.sectionTitle}>Feeding Schedule</Text>
+                <Text style={styles.sectionSubtitle}>When do you plan to feed?</Text>
+              </VStack>
+            </HStack>
+
+            <VStack space={3}>
+              <Text style={styles.formLabel}>Time of Day</Text>
+              <HStack flexWrap="wrap" space={2}>
+                {['Morning', 'Afternoon', 'Evening', 'Night'].map(time => (
+                  <TouchableOpacity
+                    key={time}
+                    style={[
+                      styles.timeChip,
+                      timeOfDay.includes(time) && styles.selectedTimeChip,
+                    ]}
+                    onPress={() => toggleTimeOfDay(time)}>
+                    <Text
+                      style={[
+                        styles.timeChipText,
+                        timeOfDay.includes(time) && styles.selectedTimeChipText,
+                      ]}>
+                      {time}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </HStack>
+            </VStack>
+          </Box>
+
+          {/* Additional Notes */}
+          <Box bg="white" p={6} borderRadius={16} shadow={2} mb={6}>
+            <HStack alignItems="center" mb={4}>
+              <Box bg={COLORS.lightGreen} p={2} borderRadius={8} mr={3}>
+                <Text style={styles.sectionIcon}>📝</Text>
+              </Box>
+              <VStack flex={1}>
+                <Text style={styles.sectionTitle}>Additional Notes</Text>
+                <Text style={styles.sectionSubtitle}>Any special instructions or comments</Text>
+              </VStack>
+            </HStack>
+
+            <TextArea
+              backgroundColor={COLORS.lightGreen}
+              borderColor="transparent"
+              borderRadius={12}
+              placeholder="Add any additional notes about this feeding program..."
+              value={notes}
+              onChangeText={setNotes}
+              fontSize={14}
+              numberOfLines={4}
+              _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+            />
+          </Box>
         </>
       )}
 
-      <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
-        <Text style={styles.sectionTitle}>Feeding Time</Text>
+      {/* Navigation */}
+      <HStack justifyContent="space-between" mt={4}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={prevStep}>
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
 
-        <FormControl mb={4}>
-          <FormControl.Label>Time of Day</FormControl.Label>
-          {renderSelectionButtons(
-            ['Morning', 'Afternoon', 'Evening', 'Night'],
-            timeOfDay,
-            toggleTimeOfDay,
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            (!feedType || timeOfDay.length === 0) && styles.disabledButton,
+          ]}
+          onPress={handleSubmit}
+          disabled={!feedType || timeOfDay.length === 0 || submitting}>
+          {submitting ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Text style={styles.submitButtonText}>Create Program</Text>
           )}
-        </FormControl>
-      </Box>
-
-      <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
-        <Text style={styles.sectionTitle}>Notes</Text>
-        <FormControl mb={4}>
-          <TextArea
-            backgroundColor={COLORS.lightGreen}
-            h={20}
-            placeholder="Additional notes or instructions..."
-          />
-        </FormControl>
-
-        <Center mt={6}>
-          <HStack space={4} justifyContent="center">
-            <Button
-              variant="outline"
-              borderColor={COLORS.green}
-              _text={{ color: COLORS.green }}
-              borderRadius={8}
-              onPress={prevStep}>
-              Back
-            </Button>
-            <Button
-              variant="outline"
-              borderColor={COLORS.green}
-              _text={{ color: COLORS.green }}
-              borderRadius={8}
-              onPress={() => navigation.goBack()}>
-              Cancel
-            </Button>
-            <Button
-              backgroundColor={COLORS.green}
-              borderRadius={8}
-              onPress={handleSubmit}>
-              Submit
-            </Button>
-          </HStack>
-        </Center>
-      </Box>
+        </TouchableOpacity>
+      </HStack>
     </ScrollView>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <SecondaryHeader
-        title="Create Feeding Program"
-        onBack={() => navigation.goBack()}
+        title="Farm Feeds"
+        onBackPress={() => navigation.goBack()}
+        backgroundColor={COLORS.lightGreen}
       />
 
       <View style={styles.stepIndicator}>
-        <View style={[styles.step, currentStep >= 1 && styles.activeStep]}>
-          <Text
-            style={[
-              styles.stepText,
-              currentStep >= 1 && styles.activeStepText,
-            ]}>
-            1
-          </Text>
-        </View>
-        <View style={styles.stepLine} />
-        <View style={[styles.step, currentStep >= 2 && styles.activeStep]}>
-          <Text
-            style={[
-              styles.stepText,
-              currentStep >= 2 && styles.activeStepText,
-            ]}>
-            2
-          </Text>
-        </View>
+        <HStack space={4} alignItems="center" justifyContent="center">
+          <Box style={[styles.stepCircle, currentStep >= 1 && styles.activeStep]}>
+            <Text style={[styles.stepNumber, currentStep >= 1 && styles.activeStepNumber]}>1</Text>
+          </Box>
+          <Box style={[styles.stepLine, currentStep >= 2 && styles.activeStepLine]} />
+          <Box style={[styles.stepCircle, currentStep >= 2 && styles.activeStep]}>
+            <Text style={[styles.stepNumber, currentStep >= 2 && styles.activeStepNumber]}>2</Text>
+          </Box>
+        </HStack>
       </View>
 
-      {currentStep === 1 ? renderStep1() : renderStep2()}
+      <View style={styles.content}>
+        {currentStep === 1 ? renderStep1() : renderStep2()}
+      </View>
 
+      {/* Success Modal */}
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}>
-        <SafeAreaView style={styles.modalContainer}>
+        <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <FastImage
-              source={icons.tick}
-              style={styles.successIcon}
-              tintColor={COLORS.green}
-            />
-            <Text style={styles.modalText}>
-              Your feeding program has been successfully created and saved.
+            <Text style={styles.modalTitle}>Success!</Text>
+            <Text style={styles.modalMessage}>
+              Your feeding program has been created successfully.
             </Text>
-            <Button
-              backgroundColor={COLORS.green}
-              borderRadius={8}
-              mt={4}
+            <TouchableOpacity
+              style={styles.modalButton}
               onPress={() => {
                 setModalVisible(false);
-                navigation.navigate('FeedingModuleScreen');
+                navigation.goBack();
               }}>
-              Done
-            </Button>
+              <Text style={styles.modalButtonText}>Continue</Text>
+            </TouchableOpacity>
           </View>
-        </SafeAreaView>
+        </View>
       </Modal>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.lightGreen,
+  },
   stepIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
     backgroundColor: 'white',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    marginHorizontal: 20,
+    marginTop: 10,
+    borderRadius: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
-  step: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#E0E0E0',
-    alignItems: 'center',
+  stepCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.lightGray,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  activeStep: { backgroundColor: COLORS.green },
-  stepText: { fontSize: 16, fontWeight: 'bold', color: '#777' },
-  activeStepText: { color: 'white' },
-  stepLine: { flex: 0.2, height: 2, backgroundColor: '#E0E0E0' },
+  activeStep: {
+    backgroundColor: COLORS.green2,
+  },
+  stepNumber: {
+    color: COLORS.gray,
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  activeStepNumber: {
+    color: 'white',
+  },
+  stepLine: {
+    height: 2,
+    width: 50,
+    backgroundColor: COLORS.lightGray,
+  },
+  activeStepLine: {
+    backgroundColor: COLORS.green2,
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  scrollContainer: {
+    paddingBottom: 20,
+  },
+  sectionIcon: {
+    fontSize: 20,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 16,
-    color: COLORS.green2,
+    color: COLORS.black,
   },
-  selectionButton: {
+  sectionSubtitle: {
+    fontSize: 14,
+    color: COLORS.gray,
+    marginTop: 4,
+  },
+  radioContainer: {
     backgroundColor: COLORS.lightGreen,
-    padding: 10,
-    borderRadius: 5,
+    borderRadius: 12,
+    padding: 12,
+  },
+  radioTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.black,
+  },
+  radioSubtitle: {
+    fontSize: 14,
+    color: COLORS.gray,
+    marginTop: 2,
+  },
+  formLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.black,
     marginBottom: 8,
   },
-  selectedButton: { backgroundColor: COLORS.green },
-  selectionText: { color: COLORS.green2 },
-  selectedText: { color: 'white' },
-  calendarIcon: { width: 24, height: 24 },
-  centeredView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  helpText: {
+    fontSize: 12,
+    color: COLORS.gray,
+    marginBottom: 12,
   },
-  modalContainer: {
+  loadingText: {
+    fontSize: 14,
+    color: COLORS.gray,
+    marginTop: 8,
+  },
+  chipButton: {
+    backgroundColor: COLORS.lightGreen,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.green2,
+  },
+  selectedChip: {
+    backgroundColor: COLORS.green2,
+  },
+  chipText: {
+    fontSize: 14,
+    color: COLORS.green2,
+    fontWeight: '500',
+  },
+  selectedChipText: {
+    color: 'white',
+  },
+  feedIcon: {
+    fontSize: 18,
+  },
+  feedSectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.black,
+  },
+  dateButton: {
+    backgroundColor: COLORS.lightGreen,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  calendarIcon: {
+    width: 20,
+    height: 20,
+  },
+  timeChip: {
+    backgroundColor: COLORS.lightGreen,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginBottom: 8,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: COLORS.green2,
+  },
+  selectedTimeChip: {
+    backgroundColor: COLORS.green2,
+  },
+  timeChipText: {
+    fontSize: 14,
+    color: COLORS.green2,
+    fontWeight: '500',
+  },
+  selectedTimeChipText: {
+    color: 'white',
+  },
+  nextButton: {
+    backgroundColor: COLORS.green2,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  nextButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  backButton: {
+    backgroundColor: COLORS.lightGray,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  backButtonText: {
+    color: COLORS.gray,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  submitButton: {
+    backgroundColor: COLORS.green2,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+    minWidth: 140,
+    alignItems: 'center',
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  disabledButton: {
+    backgroundColor: COLORS.lightGray,
+    opacity: 0.6,
+  },
+  modalOverlay: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
     backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 20,
+    padding: 35,
     alignItems: 'center',
-  },
-  successIcon: {
-    width: 60,
-    height: 60,
-    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    minWidth: 300,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 8,
-    color: COLORS.green,
-  },
-  modalText: {
-    fontSize: 16,
+    marginBottom: 15,
     textAlign: 'center',
-    marginBottom: 16,
-    color: '#666',
+    color: COLORS.black,
+  },
+  modalMessage: {
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: COLORS.gray,
+  },
+  modalButton: {
+    backgroundColor: COLORS.green2,
+    borderRadius: 20,
+    padding: 15,
+    elevation: 2,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    fontSize: 16,
   },
 });
 

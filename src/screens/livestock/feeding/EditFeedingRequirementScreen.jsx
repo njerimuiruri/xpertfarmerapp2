@@ -1,11 +1,12 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Modal,
+  SafeAreaView,
+  ActivityIndicator,
   Alert,
 } from 'react-native';
 import {
@@ -18,191 +19,396 @@ import {
   FormControl,
   Radio,
   TextArea,
+  Center,
 } from 'native-base';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../../constants';
-import {COLORS} from '../../../constants/theme';
+import { icons } from '../../../constants';
+import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
+import { getLivestockForActiveFarm } from '../../../services/livestock';
+import { getFeedingProgramById, updateFeedingProgram } from '../../../services/feeding';
 
-const TIME_OPTIONS = ['Morning', 'Afternoon', 'Evening', 'Night'];
-const ANIMAL_TYPES = [
-  'Dairy Cattle',
-  'Beef Cattle',
-  'Poultry',
-  'Swine',
-  'Sheep',
-  'Goats',
-];
-const FREQUENCY_OPTIONS = [
-  'Once Daily',
-  'Twice Daily',
-  'Three Times Daily',
-  'Weekly',
-  'Free Choice',
-];
-const UNIT_OPTIONS = [
-  {label: 'kg', value: 'kg'},
-  {label: 'g', value: 'g'},
-  {label: 'kg per animal', value: 'kg per animal'},
-  {label: 'g per animal', value: 'g per animal'},
-];
-const FEED_SOURCES = [
-  'Personally Grown',
-  'Grown and Purchased',
-  'Purely Purchased',
-];
-const FEED_SCHEDULES = ['Daily', 'Twice Daily', 'Three Times Daily', 'Weekly'];
+const EditFeedingRequirementScreen = ({ navigation, route }) => {
+  const { programId } = route.params;
 
-// Helper functions
-const getLifecycleOptions = type => {
-  const options = {
-    'Dairy Cattle': ['Calf', 'Heifer', 'Lactating cows', 'Dry Cows'],
-    'Beef Cattle': ['Starter', 'Grower', 'Finisher'],
-    Swine: ['Starter', 'Grower', 'Finisher', 'Breeding herd'],
-    Sheep: ['Lambs and Kids', 'Growing', 'Production', 'Maintenance'],
-    Goats: ['Lambs and Kids', 'Growing', 'Production', 'Maintenance'],
-    Poultry: ['Starter', 'Grower', 'Finisher', 'Layer'],
-    Dairy: ['Calf', 'Heifer', 'Lactating cows', 'Dry Cows'],
-    Beef: ['Starter', 'Grower', 'Finisher'],
-    'Sheep and Goats': [
-      'Lambs and Kids',
-      'Growing',
-      'Production',
-      'Maintenance',
-    ],
-  };
-  return type ? options[type] || [] : [];
-};
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [livestock, setLivestock] = useState([]);
+  const [loadingLivestock, setLoadingLivestock] = useState(true);
 
-export default function EditFeedingRequirementScreen({navigation, route}) {
-  const {requirement} = route.params;
-  const initialTimeOfDay = requirement.timeOfDay || [];
-  const initialProgramType =
-    requirement.programDetails?.programType || 'Single Animal';
-
-  // Basic state
-  const [animalType, setAnimalType] = useState(requirement.animalType || '');
-  const [feedName, setFeedName] = useState(requirement.feedName || '');
-  const [frequency, setFrequency] = useState(requirement.frequency || '');
-  const [amount, setAmount] = useState(
-    requirement.amount?.replace(/[^0-9.]/g, '') || '',
-  );
-  const [unit, setUnit] = useState('kg');
-  const [timeOfDay, setTimeOfDay] = useState(initialTimeOfDay);
-  const [additionalNotes, setAdditionalNotes] = useState(
-    requirement.additionalNotes || '',
-  );
-
-  const [lastFedDate, setLastFedDate] = useState(
-    new Date(requirement.lastFed || new Date()),
-  );
-  const [nextFeedingDate, setNextFeedingDate] = useState(
-    new Date(requirement.nextFeeding || new Date()),
-  );
-
-  const [showLastFedDatePicker, setShowLastFedDatePicker] = useState(false);
-  const [showNextFeedingDatePicker, setShowNextFeedingDatePicker] =
-    useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-
-  // Program details state
-  const [programType, setProgramType] = useState(initialProgramType);
-  const [animalId, setAnimalId] = useState(
-    requirement.programDetails?.animalId || '',
-  );
-  const [groupId, setGroupId] = useState(
-    requirement.programDetails?.groupId || '',
-  );
-  const [lifecycleStages, setLifecycleStages] = useState(
-    requirement.programDetails?.lifecycleStages || [],
-  );
-  const [groupLifecycleStages, setGroupLifecycleStages] = useState(
-    requirement.programDetails?.groupLifecycleStages || [],
-  );
-  const [feedType, setFeedType] = useState(
-    requirement.programDetails?.feedType || 'Basal Feeds',
-  );
-
-  const [showBasalDatePicker, setShowBasalDatePicker] = useState(false);
-  const [showConcentrateDatePicker, setShowConcentrateDatePicker] =
-    useState(false);
-  const [showSupplementDatePicker, setShowSupplementDatePicker] =
-    useState(false);
-
-  const createInitialFeedState = detailsKey => ({
-    feedType: requirement.programDetails?.[detailsKey]?.feedType || '',
-    source: requirement.programDetails?.[detailsKey]?.source || '',
-    schedule: requirement.programDetails?.[detailsKey]?.schedule || '',
-    quantity: requirement.programDetails?.[detailsKey]?.quantity || '',
-    date: new Date(
-      requirement.programDetails?.[detailsKey]?.dateAcquired || new Date(),
-    ),
-    cost: requirement.programDetails?.[detailsKey]?.cost || '',
-    supplier: requirement.programDetails?.[detailsKey]?.supplier || '',
+  const [programData, setProgramData] = useState({
+    programType: '',
+    animalId: '',
+    animalType: '',
+    lifecycleStages: [],
+    groupId: '',
+    groupType: '',
+    groupLifecycleStages: [],
+    feedType: '',
+    timeOfDay: [],
+    notes: '',
   });
 
-  const [basalFeed, setBasalFeed] = useState(
-    createInitialFeedState('basalDetails'),
-  );
-  const [concentrateFeed, setConcentrateFeed] = useState(
-    createInitialFeedState('concentrateDetails'),
-  );
-  const [supplementFeed, setSupplementFeed] = useState(
-    createInitialFeedState('supplementDetails'),
-  );
+  const [feedData, setFeedData] = useState({
+    basal: {
+      id: null,
+      feedType: '',
+      source: '',
+      schedule: '',
+      quantity: '',
+      date: new Date(),
+      cost: '',
+      supplier: '',
+    },
+    concentrate: {
+      id: null,
+      feedType: '',
+      source: '',
+      schedule: '',
+      quantity: '',
+      date: new Date(),
+      cost: '',
+      supplier: '',
+    },
+    supplement: {
+      id: null,
+      feedType: '',
+      source: '',
+      schedule: '',
+      quantity: '',
+      date: new Date(),
+      cost: '',
+      supplier: '',
+    },
+  });
 
-  // Extract unit from amount on initial load
+  const [datePickerVisible, setDatePickerVisible] = useState({
+    basal: false,
+    concentrate: false,
+    supplement: false,
+  });
+
   useEffect(() => {
-    if (requirement.amount) {
-      const amountParts = requirement.amount.split(' ');
-      if (amountParts.length > 1) {
-        const unitPart = amountParts[amountParts.length - 1];
-        if (
-          unitPart === 'kg' ||
-          unitPart === 'g' ||
-          unitPart === 'per animal'
-        ) {
-          setUnit(unitPart);
-        } else {
-          setUnit('kg per animal');
+    const loadData = async () => {
+      await Promise.all([
+        fetchLivestock(),
+        fetchFeedingProgram()
+      ]);
+      setLoading(false);
+    };
+    loadData();
+  }, []);
+
+  const fetchLivestock = async () => {
+    try {
+      setLoadingLivestock(true);
+      const livestockData = await getLivestockForActiveFarm();
+      setLivestock(livestockData);
+    } catch (error) {
+      console.error('Error fetching livestock:', error);
+      Alert.alert('Error', 'Failed to load livestock data');
+    } finally {
+      setLoadingLivestock(false);
+    }
+  };
+
+  const fetchFeedingProgram = async () => {
+    try {
+      const response = await getFeedingProgramById(programId);
+      const program = response.data || response;
+
+      // Set program data
+      setProgramData({
+        programType: program.programType || '',
+        animalId: program.animalId || '',
+        animalType: program.animalType || '',
+        lifecycleStages: program.lifecycleStages || [],
+        groupId: program.groupId || '',
+        groupType: program.groupType || '',
+        groupLifecycleStages: program.groupLifecycleStages || [],
+        feedType: program.feedType || '',
+        timeOfDay: program.timeOfDay || [],
+        notes: program.notes || '',
+      });
+
+      // Transform feedDetails back to the component structure
+      const feedDetails = program.feedDetails || [];
+      const newFeedData = { ...feedData };
+
+      feedDetails.forEach(feed => {
+        const feedKey = feed.feedType.toLowerCase();
+        if (newFeedData[feedKey]) {
+          newFeedData[feedKey] = {
+            id: feed.id || null,
+            feedType: feed.feedType || '',
+            source: feed.source || '',
+            schedule: feed.schedule || '',
+            quantity: feed.quantity?.toString() || '',
+            date: feed.date ? new Date(feed.date) : new Date(),
+            cost: feed.cost?.toString() || '',
+            supplier: feed.supplier || '',
+          };
         }
+      });
+
+      setFeedData(newFeedData);
+    } catch (error) {
+      console.error('Error fetching feeding program:', error);
+      Alert.alert('Error', 'Failed to load feeding program data');
+      navigation.goBack();
+    }
+  };
+
+  const getAnimalOptions = () => {
+    if (programData.programType === 'Single Animal') {
+      return livestock
+        .filter(animal => animal.category === 'mammal')
+        .map(animal => ({
+          id: animal.id,
+          idNumber: animal.mammal?.idNumber || animal.id,
+          type: animal.type,
+          breedType: animal.mammal?.breedType || '',
+          gender: animal.mammal?.gender || '',
+        }));
+    } else if (programData.programType === 'Group') {
+      return livestock
+        .filter(animal => animal.category === 'poultry')
+        .map(animal => ({
+          id: animal.id,
+          flockId: animal.poultry?.flockId || animal.id,
+          type: animal.type,
+          breedType: animal.poultry?.breedType || '',
+          quantity: animal.poultry?.currentQuantity || animal.poultry?.initialQuantity || 0,
+        }));
+    }
+    return [];
+  };
+
+  const getAnimalTypeFromLivestockType = (livestockType) => {
+    const typeMapping = {
+      'dairyCattle': 'Dairy',
+      'beefCattle': 'Beef',
+      'swine': 'Swine',
+      'sheep': 'Sheep and Goats',
+      'goats': 'Sheep and Goats',
+      'poultry': 'Poultry',
+    };
+    return typeMapping[livestockType] || livestockType;
+  };
+
+  const getLifecycleOptions = (type) => {
+    const options = {
+      Dairy: ['Calf', 'Heifer', 'Lactating cows', 'Dry Cows'],
+      Beef: ['Starter', 'Grower', 'Finisher'],
+      Swine: ['Starter', 'Grower', 'Finisher', 'Breeding herd'],
+      'Sheep and Goats': [
+        'Lambs and Kids',
+        'Growing',
+        'Production',
+        'Maintenance',
+      ],
+      Poultry: ['Starter', 'Grower', 'Finisher', 'Layer'],
+    };
+    return type ? options[type] || [] : [];
+  };
+
+  const toggleSelection = (item, field) => {
+    setProgramData(prev => {
+      const current = prev[field];
+      return {
+        ...prev,
+        [field]: current.includes(item)
+          ? current.filter(i => i !== item)
+          : [...current, item],
+      };
+    });
+  };
+
+  const toggleTimeOfDay = time => {
+    setProgramData(prev => ({
+      ...prev,
+      timeOfDay: prev.timeOfDay.includes(time)
+        ? prev.timeOfDay.filter(t => t !== time)
+        : [...prev.timeOfDay, time],
+    }));
+  };
+
+  const handleDateChange = (feedKey, selectedDate) => {
+    setDatePickerVisible({ ...datePickerVisible, [feedKey]: false });
+    if (selectedDate) {
+      setFeedData(prev => ({
+        ...prev,
+        [feedKey]: { ...prev[feedKey], date: selectedDate },
+      }));
+    }
+  };
+
+  const updateFeedData = (feedKey, field, value) => {
+    setFeedData(prev => ({
+      ...prev,
+      [feedKey]: { ...prev[feedKey], [field]: value },
+    }));
+  };
+
+  const updateProgramData = (field, value) => {
+    setProgramData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAnimalSelection = (animalId) => {
+    const selectedAnimal = livestock.find(animal => animal.id === animalId);
+    if (selectedAnimal) {
+      const animalType = getAnimalTypeFromLivestockType(selectedAnimal.type);
+      setProgramData(prev => ({
+        ...prev,
+        animalId: animalId,
+        animalType: animalType,
+        lifecycleStages: [],
+      }));
+    }
+  };
+
+  const handleGroupSelection = (groupId) => {
+    const selectedGroup = livestock.find(animal => animal.id === groupId);
+    if (selectedGroup) {
+      const groupType = getAnimalTypeFromLivestockType(selectedGroup.type);
+      setProgramData(prev => ({
+        ...prev,
+        groupId: groupId,
+        groupType: groupType,
+        groupLifecycleStages: [],
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    if (!programData.programType) {
+      Alert.alert('Validation Error', 'Please select a program type');
+      return false;
+    }
+
+    if (programData.programType === 'Single Animal') {
+      if (!programData.animalId) {
+        Alert.alert('Validation Error', 'Please select an animal');
+        return false;
+      }
+      if (programData.lifecycleStages.length === 0) {
+        Alert.alert('Validation Error', 'Please select at least one lifecycle stage');
+        return false;
+      }
+    } else if (programData.programType === 'Group') {
+      if (!programData.groupId) {
+        Alert.alert('Validation Error', 'Please select a group');
+        return false;
+      }
+      if (programData.groupLifecycleStages.length === 0) {
+        Alert.alert('Validation Error', 'Please select at least one lifecycle stage');
+        return false;
       }
     }
-  }, [requirement.amount]);
 
-  // Generic toggle function
-  const toggleArrayItem = (arr, setArr, item) => {
-    setArr(arr.includes(item) ? arr.filter(i => i !== item) : [...arr, item]);
+    if (!programData.feedType) {
+      Alert.alert('Validation Error', 'Please select a feed type');
+      return false;
+    }
+
+    if (!feedData.basal.feedType || !feedData.basal.source || !feedData.basal.schedule) {
+      Alert.alert('Validation Error', 'Please complete all required basal feed fields');
+      return false;
+    }
+
+    if (programData.feedType === 'Basal Feed + Concentrates + Supplements') {
+      if (!feedData.concentrate.feedType || !feedData.concentrate.source || !feedData.concentrate.schedule) {
+        Alert.alert('Validation Error', 'Please complete all required concentrate feed fields');
+        return false;
+      }
+      if (!feedData.supplement.feedType || !feedData.supplement.source || !feedData.supplement.schedule) {
+        Alert.alert('Validation Error', 'Please complete all required supplement feed fields');
+        return false;
+      }
+    }
+
+    if (programData.timeOfDay.length === 0) {
+      Alert.alert('Validation Error', 'Please select at least one feeding time');
+      return false;
+    }
+
+    return true;
   };
 
-  // Date change handlers
-  const handleDateChange =
-    (setDate, setShowPicker) => (event, selectedDate) => {
-      setShowPicker(false);
-      if (selectedDate) setDate(selectedDate);
-    };
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
 
-  // Feed update handler
-  const updateFeed = (feed, setFeed) => (field, value) => {
-    setFeed(prev => ({...prev, [field]: value}));
+    setSubmitting(true);
+    try {
+      const updateData = {
+        programType: programData.programType,
+        animalId: programData.programType === 'Single Animal' ? programData.animalId : null,
+        animalType: programData.programType === 'Single Animal' ? programData.animalType : null,
+        lifecycleStages: programData.programType === 'Single Animal' ? programData.lifecycleStages : [],
+        groupId: programData.programType === 'Group' ? programData.groupId : null,
+        groupType: programData.programType === 'Group' ? programData.groupType : null,
+        groupLifecycleStages: programData.programType === 'Group' ? programData.groupLifecycleStages : [],
+        feedType: programData.feedType,
+        basal: {
+          id: feedData.basal.id,
+          ...feedData.basal,
+          quantity: parseFloat(feedData.basal.quantity) || 0,
+          cost: parseFloat(feedData.basal.cost) || 0,
+          date: feedData.basal.date.toISOString(),
+        },
+        concentrate: programData.feedType === 'Basal Feed + Concentrates + Supplements' ? {
+          id: feedData.concentrate.id,
+          ...feedData.concentrate,
+          quantity: parseFloat(feedData.concentrate.quantity) || 0,
+          cost: parseFloat(feedData.concentrate.cost) || 0,
+          date: feedData.concentrate.date.toISOString(),
+        } : null,
+        supplement: programData.feedType === 'Basal Feed + Concentrates + Supplements' ? {
+          id: feedData.supplement.id,
+          ...feedData.supplement,
+          quantity: parseFloat(feedData.supplement.quantity) || 0,
+          cost: parseFloat(feedData.supplement.cost) || 0,
+          date: feedData.supplement.date.toISOString(),
+        } : null,
+        timeOfDay: programData.timeOfDay,
+        notes: programData.notes,
+      };
+
+      console.log('Updating feeding program:', updateData);
+
+      const result = await updateFeedingProgram(programId, updateData);
+
+      if (result.error) {
+        Alert.alert('Error', result.error);
+      } else {
+        Alert.alert('Success', 'Feeding program updated successfully!', [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error updating feeding program:', error);
+      Alert.alert('Error', 'Failed to update feeding program. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  // Render components
   const renderSelectionButtons = (options, selectedValues, onToggle) => (
     <HStack flexWrap="wrap" space={2}>
-      {options.map(option => (
+      {options.map((option) => (
         <TouchableOpacity
           key={option}
           style={[
-            styles.selectionButton,
-            selectedValues.includes(option) && styles.selectedButton,
+            styles.chipButton,
+            selectedValues.includes(option) && styles.selectedChip,
+            { marginBottom: 8 }
           ]}
           onPress={() => onToggle(option)}>
           <Text
             style={[
-              styles.selectionText,
-              selectedValues.includes(option) && styles.selectedText,
+              styles.chipText,
+              selectedValues.includes(option) && styles.selectedChipText,
             ]}>
             {option}
           </Text>
@@ -211,585 +417,588 @@ export default function EditFeedingRequirementScreen({navigation, route}) {
     </HStack>
   );
 
-  // DateInput component for reuse
-  const DateInput = ({value, showPicker, setShowPicker, onChange}) => (
-    <HStack alignItems="center" space={2}>
-      <Input
-        flex={1}
-        backgroundColor={COLORS.lightGreen}
-        value={value.toLocaleDateString('en-GB')}
-        isReadOnly
-      />
-      <TouchableOpacity onPress={() => setShowPicker(true)}>
-        <FastImage
-          source={icons.calendar}
-          style={styles.calendarIcon}
-          tintColor={COLORS.green2}
-        />
-      </TouchableOpacity>
-      {showPicker && (
-        <DateTimePicker
-          value={value}
-          mode="date"
-          display="default"
-          onChange={onChange}
-        />
-      )}
-    </HStack>
-  );
+  const renderFeedForm = (feedKey, title, icon) => (
+    <Box bg="white" p={6} borderRadius={16} shadow={2} mb={6}>
+      <HStack alignItems="center" mb={4}>
+        <Box bg={COLORS.lightGreen} p={2} borderRadius={8} mr={3}>
+          <Text style={styles.feedIcon}>{icon}</Text>
+        </Box>
+        <Text style={styles.feedSectionTitle}>{title}</Text>
+      </HStack>
 
-  // Feed form component
-  const FeedForm = ({
-    feed,
-    updateFn,
-    title,
-    showDatePicker,
-    setShowDatePicker,
-    onDateChange,
-  }) => (
-    <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <VStack space={4}>
+        <HStack space={3}>
+          <FormControl flex={1} isRequired>
+            <FormControl.Label style={styles.formLabel}>Feed Type</FormControl.Label>
+            <Input
+              backgroundColor={COLORS.lightGreen}
+              borderColor="transparent"
+              borderRadius={12}
+              placeholder="e.g., Hay, Pellets, Grain"
+              value={feedData[feedKey].feedType}
+              onChangeText={value => updateFeedData(feedKey, 'feedType', value)}
+              fontSize={14}
+              _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+            />
+          </FormControl>
 
-      <FormControl mb={4}>
-        <FormControl.Label>Type of Feed</FormControl.Label>
-        <Input
-          backgroundColor={COLORS.lightGreen}
-          placeholder="Enter Feed Type"
-          value={feed.feedType}
-          onChangeText={value => updateFn('feedType', value)}
-        />
-      </FormControl>
+          <FormControl flex={1} isRequired>
+            <FormControl.Label style={styles.formLabel}>Source</FormControl.Label>
+            <Select
+              selectedValue={feedData[feedKey].source}
+              minWidth="100%"
+              backgroundColor={COLORS.lightGreen}
+              borderColor="transparent"
+              borderRadius={12}
+              placeholder="Select Source"
+              fontSize={14}
+              _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+              onValueChange={value => updateFeedData(feedKey, 'source', value)}>
+              {['Personally Grown', 'Grown and Purchased', 'Purely Purchased'].map(
+                source => (
+                  <Select.Item key={source} label={source} value={source} />
+                ),
+              )}
+            </Select>
+          </FormControl>
+        </HStack>
 
-      <FormControl mb={4}>
-        <FormControl.Label>Source of Feed</FormControl.Label>
-        <Select
-          selectedValue={feed.source}
-          minWidth="100%"
-          backgroundColor={COLORS.lightGreen}
-          placeholder="Select Source"
-          onValueChange={value => updateFn('source', value)}>
-          {FEED_SOURCES.map(source => (
-            <Select.Item key={source} label={source} value={source} />
-          ))}
-        </Select>
-      </FormControl>
+        <HStack space={3}>
+          <FormControl flex={1} isRequired>
+            <FormControl.Label style={styles.formLabel}>Schedule</FormControl.Label>
+            <Select
+              selectedValue={feedData[feedKey].schedule}
+              minWidth="100%"
+              backgroundColor={COLORS.lightGreen}
+              borderColor="transparent"
+              borderRadius={12}
+              placeholder="Select Schedule"
+              fontSize={14}
+              _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+              onValueChange={value => updateFeedData(feedKey, 'schedule', value)}>
+              {['Daily', 'Twice Daily', 'Three Times Daily', 'Weekly'].map(
+                schedule => (
+                  <Select.Item key={schedule} label={schedule} value={schedule} />
+                ),
+              )}
+            </Select>
+          </FormControl>
 
-      <FormControl mb={4}>
-        <FormControl.Label>Feeding Schedule</FormControl.Label>
-        <Select
-          selectedValue={feed.schedule}
-          minWidth="100%"
-          backgroundColor={COLORS.lightGreen}
-          placeholder="Select Schedule"
-          onValueChange={value => updateFn('schedule', value)}>
-          {FEED_SCHEDULES.map(schedule => (
-            <Select.Item key={schedule} label={schedule} value={schedule} />
-          ))}
-        </Select>
-      </FormControl>
+          <FormControl flex={1}>
+            <FormControl.Label style={styles.formLabel}>Quantity (kg)</FormControl.Label>
+            <Input
+              backgroundColor={COLORS.lightGreen}
+              borderColor="transparent"
+              borderRadius={12}
+              placeholder="Amount"
+              keyboardType="numeric"
+              fontSize={14}
+              value={feedData[feedKey].quantity}
+              onChangeText={value => updateFeedData(feedKey, 'quantity', value)}
+              _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+            />
+          </FormControl>
+        </HStack>
 
-      <FormControl mb={4}>
-        <FormControl.Label>Quantity (kg)</FormControl.Label>
-        <Input
-          backgroundColor={COLORS.lightGreen}
-          placeholder="Enter Quantity"
-          keyboardType="numeric"
-          value={feed.quantity}
-          onChangeText={value => updateFn('quantity', value)}
-        />
-      </FormControl>
+        <HStack space={3}>
+          <FormControl flex={1}>
+            <FormControl.Label style={styles.formLabel}>Date Acquired</FormControl.Label>
+            <HStack alignItems="center" space={2}>
+              <Input
+                flex={1}
+                backgroundColor={COLORS.lightGreen}
+                borderColor="transparent"
+                borderRadius={12}
+                fontSize={14}
+                value={feedData[feedKey].date.toLocaleDateString('en-GB')}
+                isReadOnly
+                _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+              />
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() =>
+                  setDatePickerVisible({ ...datePickerVisible, [feedKey]: true })
+                }>
+                <FastImage
+                  source={icons.calendar}
+                  style={styles.calendarIcon}
+                  tintColor={COLORS.green2}
+                />
+              </TouchableOpacity>
+            </HStack>
+            {datePickerVisible[feedKey] && (
+              <DateTimePicker
+                value={feedData[feedKey].date}
+                mode="date"
+                display="default"
+                onChange={(event, date) => handleDateChange(feedKey, date)}
+              />
+            )}
+          </FormControl>
 
-      <FormControl mb={4}>
-        <FormControl.Label>Date Acquired</FormControl.Label>
-        <DateInput
-          value={feed.date}
-          showPicker={showDatePicker}
-          setShowPicker={setShowDatePicker}
-          onChange={onDateChange}
-        />
-      </FormControl>
+          <FormControl flex={1}>
+            <FormControl.Label style={styles.formLabel}>Cost</FormControl.Label>
+            <Input
+              backgroundColor={COLORS.lightGreen}
+              borderColor="transparent"
+              borderRadius={12}
+              placeholder="Amount"
+              keyboardType="numeric"
+              fontSize={14}
+              value={feedData[feedKey].cost}
+              onChangeText={value => updateFeedData(feedKey, 'cost', value)}
+              _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+            />
+          </FormControl>
+        </HStack>
 
-      <FormControl mb={4}>
-        <FormControl.Label>Cost</FormControl.Label>
-        <Input
-          backgroundColor={COLORS.lightGreen}
-          placeholder="Enter Cost"
-          keyboardType="numeric"
-          value={feed.cost}
-          onChangeText={value => updateFn('cost', value)}
-        />
-      </FormControl>
-
-      <FormControl mb={4}>
-        <FormControl.Label>Supplier</FormControl.Label>
-        <Input
-          backgroundColor={COLORS.lightGreen}
-          placeholder="Enter Supplier"
-          value={feed.supplier}
-          onChangeText={value => updateFn('supplier', value)}
-        />
-      </FormControl>
+        <FormControl>
+          <FormControl.Label style={styles.formLabel}>Supplier</FormControl.Label>
+          <Input
+            backgroundColor={COLORS.lightGreen}
+            borderColor="transparent"
+            borderRadius={12}
+            placeholder="Enter supplier name"
+            fontSize={14}
+            value={feedData[feedKey].supplier}
+            onChangeText={value => updateFeedData(feedKey, 'supplier', value)}
+            _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+          />
+        </FormControl>
+      </VStack>
     </Box>
   );
 
-  const handleSubmit = () => {
-    // Validate inputs
-    if (
-      !animalType ||
-      !feedName ||
-      !frequency ||
-      !amount ||
-      timeOfDay.length === 0
-    ) {
-      Alert.alert(
-        'Incomplete Information',
-        'Please fill in all required fields and select at least one feeding time.',
-        [{text: 'OK'}],
-      );
-      return;
-    }
-
-    const updatedRequirement = {
-      ...requirement,
-      animalType,
-      feedName,
-      frequency,
-      amount: `${amount} ${unit}`,
-      lastFed: lastFedDate.toISOString().split('T')[0],
-      nextFeeding: nextFeedingDate.toISOString().split('T')[0],
-      timeOfDay,
-      additionalNotes,
-      programDetails: {
-        programType,
-        ...(programType === 'Single Animal'
-          ? {animalId, animalType, lifecycleStages}
-          : {groupId, groupType: animalType, groupLifecycleStages}),
-        feedType,
-        basalDetails: {
-          ...basalFeed,
-          dateAcquired: basalFeed.date.toISOString().split('T')[0],
-        },
-        ...(feedType === 'Basal Feed + Concentrates + Supplements' && {
-          concentrateDetails: {
-            ...concentrateFeed,
-            dateAcquired: concentrateFeed.date.toISOString().split('T')[0],
-          },
-          supplementDetails: {
-            ...supplementFeed,
-            dateAcquired: supplementFeed.date.toISOString().split('T')[0],
-          },
-        }),
-      },
-    };
-
-    setModalVisible(true);
-
-  
-  };
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SecondaryHeader
+          title="Edit Feeding Program"
+          onBackPress={() => navigation.goBack()}
+          backgroundColor={COLORS.lightGreen}
+        />
+        <Center flex={1}>
+          <ActivityIndicator size="large" color={COLORS.green2} />
+          <Text style={styles.loadingText}>Loading feeding program...</Text>
+        </Center>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
-      <SecondaryHeader title="Edit Feeding Requirement" />
-      <ScrollView contentContainerStyle={{flexGrow: 1, padding: 16}}>
-        {/* Program Type Selection */}
-        <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
-          <Text style={styles.sectionTitle}>Feeding Program Selection</Text>
-          <FormControl mb={4}>
-            <FormControl.Label>Program Type</FormControl.Label>
-            <Radio.Group
-              name="programType"
-              value={programType}
-              onChange={setProgramType}>
-              <VStack space={2}>
-                <Radio value="Single Animal" my={1}>
-                  Single Animal Feeding Program
+    <SafeAreaView style={styles.container}>
+      <SecondaryHeader
+        title="Edit Feeding Program"
+        onBackPress={() => navigation.goBack()}
+        backgroundColor={COLORS.lightGreen}
+      />
+
+      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContainer}>
+        {/* Program Type Section */}
+        <Box bg="white" p={6} borderRadius={16} shadow={2} mb={6}>
+          <HStack alignItems="center" mb={4}>
+            <Box bg={COLORS.lightGreen} p={2} borderRadius={8} mr={3}>
+              <Text style={styles.sectionIcon}>🎯</Text>
+            </Box>
+            <VStack flex={1}>
+              <Text style={styles.sectionTitle}>Program Type</Text>
+              <Text style={styles.sectionSubtitle}>Choose your feeding program type</Text>
+            </VStack>
+          </HStack>
+
+          <Radio.Group
+            name="programType"
+            value={programData.programType}
+            onChange={value => updateProgramData('programType', value)}>
+            <VStack space={3}>
+              <Box style={styles.radioContainer}>
+                <Radio value="Single Animal" my={1} colorScheme="green">
+                  <VStack ml={3}>
+                    <Text style={styles.radioTitle}>Single Animal</Text>
+                    <Text style={styles.radioSubtitle}>Create a feeding program for one animal</Text>
+                  </VStack>
                 </Radio>
-                <Radio value="Group" my={1}>
-                  Group Feeding Program
+              </Box>
+              <Box style={styles.radioContainer}>
+                <Radio value="Group" my={1} colorScheme="green">
+                  <VStack ml={3}>
+                    <Text style={styles.radioTitle}>Group</Text>
+                    <Text style={styles.radioSubtitle}>Create a feeding program for a group of animals</Text>
+                  </VStack>
                 </Radio>
-              </VStack>
-            </Radio.Group>
-          </FormControl>
+              </Box>
+            </VStack>
+          </Radio.Group>
         </Box>
 
-        {/* Animal/Group Information */}
-        <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
-          <Text style={styles.sectionTitle}>
-            {programType === 'Single Animal'
-              ? 'Animal Information'
-              : 'Group Information'}
-          </Text>
-
-          <FormControl mb={4}>
-            <FormControl.Label>
-              {programType === 'Single Animal' ? 'Animal ID' : 'Group ID'}
-            </FormControl.Label>
-            <Input
-              backgroundColor={COLORS.lightGreen}
-              placeholder={`Enter ${
-                programType === 'Single Animal' ? 'Animal' : 'Group'
-              } ID`}
-              value={programType === 'Single Animal' ? animalId : groupId}
-              onChangeText={
-                programType === 'Single Animal' ? setAnimalId : setGroupId
-              }
-            />
-          </FormControl>
-
-          <FormControl mb={4}>
-            <FormControl.Label>
-              {programType === 'Single Animal' ? 'Animal Type' : 'Group Type'}
-            </FormControl.Label>
-            <Select
-              selectedValue={animalType}
-              minWidth="100%"
-              backgroundColor={COLORS.lightGreen}
-              placeholder={`Select ${
-                programType === 'Single Animal' ? 'Animal' : 'Group'
-              } Type`}
-              onValueChange={setAnimalType}>
-              {ANIMAL_TYPES.map(type => (
-                <Select.Item key={type} label={type} value={type} />
-              ))}
-            </Select>
-          </FormControl>
-
-          {animalType && (
-            <FormControl mb={4}>
-              <FormControl.Label>Lifecycle Stage</FormControl.Label>
-              {renderSelectionButtons(
-                getLifecycleOptions(animalType),
-                programType === 'Single Animal'
-                  ? lifecycleStages
-                  : groupLifecycleStages,
-                item =>
-                  toggleArrayItem(
-                    programType === 'Single Animal'
-                      ? lifecycleStages
-                      : groupLifecycleStages,
-                    programType === 'Single Animal'
-                      ? setLifecycleStages
-                      : setGroupLifecycleStages,
-                    item,
-                  ),
-              )}
-            </FormControl>
-          )}
-        </Box>
-
-        {/* Feed Type Selection */}
-        <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
-          <Text style={styles.sectionTitle}>Feeding Types</Text>
-          <FormControl mb={4}>
-            <FormControl.Label>Type of Feeds</FormControl.Label>
-            <Radio.Group
-              name="feedType"
-              value={feedType}
-              onChange={setFeedType}>
-              <VStack space={2}>
-                <Radio value="Basal Feeds" my={1}>
-                  Basal Feeds
-                </Radio>
-                <Radio value="Basal Feed + Concentrates + Supplements" my={1}>
-                  Basal Feed + Concentrates + Supplements
-                </Radio>
+        {/* Animal/Group Selection Section */}
+        {programData.programType && (
+          <Box bg="white" p={6} borderRadius={16} shadow={2} mb={6}>
+            <HStack alignItems="center" mb={4}>
+              <Box bg={COLORS.lightGreen} p={2} borderRadius={8} mr={3}>
+                <Text style={styles.sectionIcon}>🐄</Text>
+              </Box>
+              <VStack flex={1}>
+                <Text style={styles.sectionTitle}>
+                  {programData.programType === 'Single Animal' ? 'Animal Selection' : 'Group Selection'}
+                </Text>
+                <Text style={styles.sectionSubtitle}>
+                  {programData.programType === 'Single Animal'
+                    ? 'Select the animal for this program'
+                    : 'Select the group for this program'}
+                </Text>
               </VStack>
-            </Radio.Group>
-          </FormControl>
+            </HStack>
+
+            {programData.programType === 'Single Animal' ? (
+              <VStack space={4}>
+                <FormControl>
+                  <FormControl.Label style={styles.formLabel}>Select Animal</FormControl.Label>
+                  {loadingLivestock ? (
+                    <Center py={8}>
+                      <ActivityIndicator size="large" color={COLORS.green2} />
+                      <Text style={styles.loadingText}>Loading animals...</Text>
+                    </Center>
+                  ) : (
+                    <Select
+                      selectedValue={programData.animalId}
+                      minWidth="100%"
+                      backgroundColor={COLORS.lightGreen}
+                      borderColor="transparent"
+                      borderRadius={12}
+                      placeholder="Choose an animal"
+                      fontSize={14}
+                      _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+                      onValueChange={handleAnimalSelection}>
+                      {getAnimalOptions().map(animal => (
+                        <Select.Item
+                          key={animal.id}
+                          label={`${animal.idNumber} - ${animal.type} (${animal.breedType})`}
+                          value={animal.id}
+                        />
+                      ))}
+                    </Select>
+                  )}
+                </FormControl>
+
+                {programData.animalType && (
+                  <FormControl>
+                    <FormControl.Label style={styles.formLabel}>Lifecycle Stages</FormControl.Label>
+                    <Text style={styles.helpText}>Select applicable stages for your animal</Text>
+                    {renderSelectionButtons(
+                      getLifecycleOptions(programData.animalType),
+                      programData.lifecycleStages,
+                      (stage) => toggleSelection(stage, 'lifecycleStages')
+                    )}
+                  </FormControl>
+                )}
+              </VStack>
+            ) : (
+              <VStack space={4}>
+                <FormControl>
+                  <FormControl.Label style={styles.formLabel}>Select Group</FormControl.Label>
+                  {loadingLivestock ? (
+                    <Center py={8}>
+                      <ActivityIndicator size="large" color={COLORS.green2} />
+                      <Text style={styles.loadingText}>Loading groups...</Text>
+                    </Center>
+                  ) : (
+                    <Select
+                      selectedValue={programData.groupId}
+                      minWidth="100%"
+                      backgroundColor={COLORS.lightGreen}
+                      borderColor="transparent"
+                      borderRadius={12}
+                      placeholder="Choose a group"
+                      fontSize={14}
+                      _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+                      onValueChange={handleGroupSelection}>
+                      {getAnimalOptions().map(group => (
+                        <Select.Item
+                          key={group.id}
+                          label={`${group.flockId} - ${group.type} (${group.quantity} birds)`}
+                          value={group.id}
+                        />
+                      ))}
+                    </Select>
+                  )}
+                </FormControl>
+
+                {programData.groupType && (
+                  <FormControl>
+                    <FormControl.Label style={styles.formLabel}>Lifecycle Stages</FormControl.Label>
+                    <Text style={styles.helpText}>Select applicable stages for your group</Text>
+                    {renderSelectionButtons(
+                      getLifecycleOptions(programData.groupType),
+                      programData.groupLifecycleStages,
+                      (stage) => toggleSelection(stage, 'groupLifecycleStages')
+                    )}
+                  </FormControl>
+                )}
+              </VStack>
+            )}
+          </Box>
+        )}
+
+        {/* Feed Type Section */}
+        <Box bg="white" p={6} borderRadius={16} shadow={2} mb={6}>
+          <HStack alignItems="center" mb={4}>
+            <Box bg={COLORS.lightGreen} p={2} borderRadius={8} mr={3}>
+              <Text style={styles.sectionIcon}>🌾</Text>
+            </Box>
+            <VStack flex={1}>
+              <Text style={styles.sectionTitle}>Feed Configuration</Text>
+              <Text style={styles.sectionSubtitle}>Choose your feed type and details</Text>
+            </VStack>
+          </HStack>
+
+          <Radio.Group
+            name="feedType"
+            value={programData.feedType}
+            onChange={value => updateProgramData('feedType', value)}>
+            <VStack space={3}>
+              <Box style={styles.radioContainer}>
+                <Radio value="Basal Feed Only" my={1} colorScheme="green">
+                  <VStack ml={3}>
+                    <Text style={styles.radioTitle}>Basal Feed Only</Text>
+                    <Text style={styles.radioSubtitle}>Simple feeding with basic feed</Text>
+                  </VStack>
+                </Radio>
+              </Box>
+              <Box style={styles.radioContainer}>
+                <Radio value="Basal Feed + Concentrates + Supplements" my={1} colorScheme="green">
+                  <VStack ml={3}>
+                    <Text style={styles.radioTitle}>Complete Feed Program</Text>
+                    <Text style={styles.radioSubtitle}>Basal feed with concentrates and supplements</Text>
+                  </VStack>
+                </Radio>
+              </Box>
+            </VStack>
+          </Radio.Group>
         </Box>
 
         {/* Feed Forms */}
-        <FeedForm
-          feed={basalFeed}
-          updateFn={updateFeed(basalFeed, setBasalFeed)}
-          title="Basal Feed Details"
-          showDatePicker={showBasalDatePicker}
-          setShowDatePicker={setShowBasalDatePicker}
-          onDateChange={handleDateChange(
-            date => setBasalFeed(prev => ({...prev, date})),
-            setShowBasalDatePicker,
-          )}
-        />
-
-        {feedType === 'Basal Feed + Concentrates + Supplements' && (
+        {programData.feedType && (
           <>
-            <FeedForm
-              feed={concentrateFeed}
-              updateFn={updateFeed(concentrateFeed, setConcentrateFeed)}
-              title="Concentrate Details"
-              showDatePicker={showConcentrateDatePicker}
-              setShowDatePicker={setShowConcentrateDatePicker}
-              onDateChange={handleDateChange(
-                date => setConcentrateFeed(prev => ({...prev, date})),
-                setShowConcentrateDatePicker,
-              )}
-            />
-            <FeedForm
-              feed={supplementFeed}
-              updateFn={updateFeed(supplementFeed, setSupplementFeed)}
-              title="Supplement Details"
-              showDatePicker={showSupplementDatePicker}
-              setShowDatePicker={setShowSupplementDatePicker}
-              onDateChange={handleDateChange(
-                date => setSupplementFeed(prev => ({...prev, date})),
-                setShowSupplementDatePicker,
-              )}
-            />
+            {renderFeedForm('basal', 'Basal Feed', '🌾')}
+
+            {programData.feedType === 'Basal Feed + Concentrates + Supplements' && (
+              <>
+                {renderFeedForm('concentrate', 'Concentrate Feed', '🥗')}
+                {renderFeedForm('supplement', 'Supplement Feed', '💊')}
+              </>
+            )}
           </>
         )}
 
-        {/* Basic Feeding Schedule */}
-        <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
-          <Text style={styles.sectionTitle}>Feeding Schedule</Text>
+        {/* Feeding Schedule Section */}
+        {programData.feedType && (
+          <Box bg="white" p={6} borderRadius={16} shadow={2} mb={6}>
+            <HStack alignItems="center" mb={4}>
+              <Box bg={COLORS.lightGreen} p={2} borderRadius={8} mr={3}>
+                <Text style={styles.sectionIcon}>⏰</Text>
+              </Box>
+              <VStack flex={1}>
+                <Text style={styles.sectionTitle}>Feeding Schedule</Text>
+                <Text style={styles.sectionSubtitle}>When do you plan to feed?</Text>
+              </VStack>
+            </HStack>
 
-          <FormControl mb={4}>
-            <FormControl.Label>Last Fed Date</FormControl.Label>
-            <DateInput
-              value={lastFedDate}
-              showPicker={showLastFedDatePicker}
-              setShowPicker={setShowLastFedDatePicker}
-              onChange={handleDateChange(
-                setLastFedDate,
-                setShowLastFedDatePicker,
-              )}
-            />
-          </FormControl>
-
-          <FormControl mb={4}>
-            <FormControl.Label>Next Feeding Date</FormControl.Label>
-            <DateInput
-              value={nextFeedingDate}
-              showPicker={showNextFeedingDatePicker}
-              setShowPicker={setShowNextFeedingDatePicker}
-              onChange={handleDateChange(
-                setNextFeedingDate,
-                setShowNextFeedingDatePicker,
-              )}
-            />
-          </FormControl>
-
-          <FormControl mb={4}>
-            <FormControl.Label>Time of Day</FormControl.Label>
-            <HStack flexWrap="wrap" space={2}>
-              {TIME_OPTIONS.map(time => (
-                <TouchableOpacity
-                  key={time}
-                  style={[
-                    styles.timeSlot,
-                    timeOfDay.includes(time) && styles.selectedTimeSlot,
-                  ]}
-                  onPress={() =>
-                    toggleArrayItem(timeOfDay, setTimeOfDay, time)
-                  }>
-                  <Text
+            <VStack space={3}>
+              <Text style={styles.formLabel}>Time of Day</Text>
+              <HStack flexWrap="wrap" space={2}>
+                {['Morning', 'Afternoon', 'Evening', 'Night'].map(time => (
+                  <TouchableOpacity
+                    key={time}
                     style={[
-                      styles.timeSlotText,
-                      timeOfDay.includes(time) && styles.selectedTimeSlotText,
-                    ]}>
-                    {time}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </HStack>
-          </FormControl>
-        </Box>
-
-        {/* Feed Name and Additional Info */}
-        <Box bg="white" p={4} borderRadius={8} shadow={1} mb={4}>
-          <Text style={styles.sectionTitle}>Additional Information</Text>
-
-          <FormControl mb={4}>
-            <FormControl.Label>Feed Name</FormControl.Label>
-            <Input
-              backgroundColor={COLORS.lightGreen}
-              placeholder="Enter Feed Name"
-              value={feedName}
-              onChangeText={setFeedName}
-            />
-          </FormControl>
-
-          <FormControl mb={4}>
-            <FormControl.Label>Feeding Frequency</FormControl.Label>
-            <Select
-              selectedValue={frequency}
-              minWidth="100%"
-              backgroundColor={COLORS.lightGreen}
-              placeholder="Select Frequency"
-              onValueChange={setFrequency}>
-              {FREQUENCY_OPTIONS.map(option => (
-                <Select.Item key={option} label={option} value={option} />
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl mb={4}>
-            <FormControl.Label>Amount</FormControl.Label>
-            <HStack space={2}>
-              <Input
-                flex={2}
-                backgroundColor={COLORS.lightGreen}
-                placeholder="Enter Amount"
-                keyboardType="numeric"
-                value={amount}
-                onChangeText={setAmount}
-              />
-              <Select
-                flex={1}
-                selectedValue={unit}
-                backgroundColor={COLORS.lightGreen}
-                onValueChange={setUnit}>
-                {UNIT_OPTIONS.map(option => (
-                  <Select.Item
-                    key={option.value}
-                    label={option.label}
-                    value={option.value}
-                  />
+                      styles.timeChip,
+                      programData.timeOfDay.includes(time) && styles.selectedTimeChip,
+                    ]}
+                    onPress={() => toggleTimeOfDay(time)}>
+                    <Text
+                      style={[
+                        styles.timeChipText,
+                        programData.timeOfDay.includes(time) && styles.selectedTimeChipText,
+                      ]}>
+                      {time}
+                    </Text>
+                  </TouchableOpacity>
                 ))}
-              </Select>
-            </HStack>
-          </FormControl>
+              </HStack>
+            </VStack>
+          </Box>
+        )}
 
-          <FormControl mb={4}>
-            <FormControl.Label>Additional Notes</FormControl.Label>
+        {/* Notes Section */}
+        <Box bg="white" p={6} borderRadius={16} shadow={2} mb={6}>
+          <HStack alignItems="center" mb={4}>
+            <Box bg={COLORS.lightGreen} p={2} borderRadius={8} mr={3}>
+              <Text style={styles.sectionIcon}>📝</Text>
+            </Box>
+            <VStack flex={1}>
+              <Text style={styles.sectionTitle}>Additional Notes</Text>
+              <Text style={styles.sectionSubtitle}>Any special instructions or observations</Text>
+            </VStack>
+          </HStack>
+
+          <FormControl>
             <TextArea
-              backgroundColor={COLORS.lightGreen}
               h={20}
-              placeholder="Additional notes or instructions..."
-              value={additionalNotes}
-              onChangeText={setAdditionalNotes}
+              placeholder="Enter any additional notes or special instructions..."
+              backgroundColor={COLORS.lightGreen}
+              borderColor="transparent"
+              borderRadius={12}
+              fontSize={14}
+              value={programData.notes}
+              onChangeText={value => updateProgramData('notes', value)}
+              _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
             />
           </FormControl>
         </Box>
 
-        <HStack space={4} justifyContent="center" mt={4} mb={8}>
+        {/* Submit Button */}
+        <Box mb={8}>
           <Button
-            variant="outline"
-            borderColor={COLORS.green}
-            _text={{color: COLORS.green}}
-            onPress={() => navigation.goBack()}>
-            Cancel
+            onPress={handleSubmit}
+            isLoading={submitting}
+            loadingText="Updating..."
+            bg={COLORS.green2}
+            borderRadius={12}
+            py={4}
+            _pressed={{ bg: COLORS.green2 }}
+            _loading={{ bg: COLORS.green2 }}>
+            <Text style={styles.buttonText}>Update Feeding Program</Text>
           </Button>
-          <Button backgroundColor={COLORS.green} onPress={handleSubmit}>
-            Save Changes
-          </Button>
-        </HStack>
+        </Box>
       </ScrollView>
-
-      {/* Success Modal */}
-      <Modal
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.iconContainer}>
-              <FastImage
-                source={icons.tick}
-                style={styles.successIcon}
-                resizeMode="contain"
-                tintColor={COLORS.green}
-              />
-            </View>
-            <Text style={styles.modalTitle}>Changes Saved</Text>
-            <Text style={styles.modalText}>
-              Feeding requirement has been updated successfully.
-            </Text>
-            <Button
-              backgroundColor={COLORS.green}
-              style={styles.modalButton}
-              onPress={() => {
-                setModalVisible(false);
-                navigation.goBack();
-              }}>
-              OK
-            </Button>
-          </View>
-        </View>
-      </Modal>
-    </View>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.lightGreen,
+  },
+  content: {
+    flex: 1,
+    backgroundColor: COLORS.lightGreen,
+  },
+  scrollContainer: {
+    padding: 16,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: COLORS.green2,
+    textAlign: 'center',
+  },
+  sectionIcon: {
+    fontSize: 20,
+  },
+  feedIcon: {
+    fontSize: 18,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 16,
+    color: COLORS.dark,
+    marginBottom: 2,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: COLORS.gray,
+  },
+  feedSectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.dark,
+  },
+  radioContainer: {
+    backgroundColor: COLORS.lightGreen,
+    borderRadius: 12,
+    padding: 12,
+  },
+  radioTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.dark,
+  },
+  radioSubtitle: {
+    fontSize: 14,
+    color: COLORS.gray,
+    marginTop: 2,
+  },
+  formLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.dark,
+    marginBottom: 4,
+  },
+  helpText: {
+    fontSize: 12,
+    color: COLORS.gray,
+    marginBottom: 8,
+  },
+  chipButton: {
+    backgroundColor: COLORS.lightGreen,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: COLORS.green2,
+    marginRight: 8,
+  },
+  selectedChip: {
+    backgroundColor: COLORS.green2,
+    borderColor: COLORS.green2,
+  },
+  chipText: {
+    fontSize: 14,
     color: COLORS.green2,
+    fontWeight: '500',
   },
-  timeSlot: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.green,
-    marginBottom: 8,
-  },
-  selectedTimeSlot: {
-    backgroundColor: COLORS.green,
-  },
-  timeSlotText: {
-    color: COLORS.green,
-  },
-  selectedTimeSlotText: {
+  selectedChipText: {
     color: 'white',
   },
-  selectionButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+  timeChip: {
+    backgroundColor: COLORS.lightGreen,
     borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderWidth: 1,
-    borderColor: COLORS.green,
+    borderColor: COLORS.green2,
+    marginRight: 8,
     marginBottom: 8,
   },
-  selectedButton: {
-    backgroundColor: COLORS.green,
+  selectedTimeChip: {
+    backgroundColor: COLORS.green2,
+    borderColor: COLORS.green2,
   },
-  selectionText: {
-    color: COLORS.green,
+  timeChipText: {
+    fontSize: 14,
+    color: COLORS.green2,
+    fontWeight: '500',
   },
-  selectedText: {
+  selectedTimeChipText: {
     color: 'white',
+  },
+  dateButton: {
+    backgroundColor: COLORS.lightGreen,
+    borderRadius: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: COLORS.green2,
   },
   calendarIcon: {
-    width: 24,
-    height: 24,
+    width: 20,
+    height: 20,
   },
-  // Add or update these in your styles
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 24,
-    alignItems: 'center',
-    elevation: 5,
-    width: '85%',
-  },
-  iconContainer: {
-    marginBottom: 16,
-  },
-  successIcon: {
-    width: 60,
-    height: 60,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: COLORS.green2,
-  },
-  modalText: {
+  buttonText: {
     fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 20,
-    color: '#333',
-  },
-  modalButton: {
-    minWidth: 120,
+    fontWeight: '600',
+    color: 'white',
   },
 });
+
+export default EditFeedingRequirementScreen;

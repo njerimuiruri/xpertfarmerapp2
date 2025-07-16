@@ -587,43 +587,33 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
   );
 
   const renderBreedingRecord = ({ item }) => {
-    // Debug logs for this specific record
     console.log(`Rendering record ${item.id}:`);
     console.log(`- damId: ${item.damId}`);
     console.log(`- sireId: ${item.sireId}`);
     console.log(`- Available livestock keys: ${Object.keys(livestockMap).slice(0, 5).join(', ')}...`);
 
-    // Try multiple ways to find the dam and sire
     let damInfo = livestockMap[item.damId];
     let sireInfo = livestockMap[item.sireId];
 
-    // If not found, try alternative lookups
-    if (!damInfo) {
-      // Try to find by idNumber, damCode, or other identifiers
-      damInfo = Object.values(livestockMap).find(animal =>
-        animal.id === item.damId ||
-        animal.idNumber === item.damId ||
-        animal.damCode === item.damId
-      );
-      if (damInfo) {
-        console.log(`Found dam by alternative lookup: ${JSON.stringify(damInfo)}`);
-      }
+    if (!damInfo && item.dam?.mammal) {
+      damInfo = {
+        name: item.dam.mammal.idNumber,
+        breedType: item.dam.mammal.breedType,
+        type: item.dam.type,
+        damCode: item.dam.mammal.damCode,
+      };
     }
 
-    if (!sireInfo && item.serviceType !== 'Artificial Insemination') {
-      sireInfo = Object.values(livestockMap).find(animal =>
-        animal.id === item.sireId ||
-        animal.idNumber === item.sireId ||
-        animal.sireCode === item.sireId
-      );
-      if (sireInfo) {
-        console.log(`Found sire by alternative lookup: ${JSON.stringify(sireInfo)}`);
-      }
+    if (!sireInfo && item.sire?.mammal) {
+      sireInfo = {
+        name: item.sire.mammal.idNumber,
+        breedType: item.sire.mammal.breedType,
+        type: item.sire.type,
+        sireCode: item.sire.mammal.sireCode,
+      };
     }
 
-    // Log what we found
-    console.log(`- Dam info: ${damInfo ? JSON.stringify(damInfo) : 'NOT FOUND'}`);
-    console.log(`- Sire info: ${sireInfo ? JSON.stringify(sireInfo) : 'NOT FOUND'}`);
+
 
     const pregnancyStatus = getPregnancyStatus(item);
 

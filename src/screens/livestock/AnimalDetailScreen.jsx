@@ -30,12 +30,10 @@ const AnimalDetailScreen = ({ route, navigation }) => {
   const [showToast, setShowToast] = useState(false);
   const [toastAnimation] = useState(new Animated.Value(-100));
 
-  // Health records state
   const [healthHistory, setHealthHistory] = useState([]);
   const [healthLoading, setHealthLoading] = useState(false);
   const [selectedHealthFilter, setSelectedHealthFilter] = useState('all');
 
-  // Fetch health history when health tab is selected
   useEffect(() => {
     if (activeTab === 'health') {
       fetchHealthHistory();
@@ -54,7 +52,6 @@ const AnimalDetailScreen = ({ route, navigation }) => {
       const livestock = await getLivestockById(livestockId);
       const events = livestock?.healthEvent || [];
 
-      // Sort events by date (newest first)
       const sortedEvents = [...events].sort((a, b) => new Date(b.date) - new Date(a.date));
       setHealthHistory(sortedEvents);
     } catch (error) {
@@ -344,7 +341,6 @@ const AnimalDetailScreen = ({ route, navigation }) => {
     </View>
   );
 
-  // Health Records Components
   const getFilteredHealthData = () => {
     if (selectedHealthFilter === 'all') {
       return healthHistory;
@@ -541,7 +537,6 @@ const AnimalDetailScreen = ({ route, navigation }) => {
           </View>
         </View>
 
-        {/* Health Records List */}
         <View style={styles.infoCard}>
           <View style={styles.cardHeader}>
             <View style={styles.recordsIconContainer}>
@@ -604,7 +599,6 @@ const AnimalDetailScreen = ({ route, navigation }) => {
     const isMale = animalData.gender?.toLowerCase() === 'male';
     const isPoultry = animalData.type === 'poultry' || animalData.livestockType === 'poultry';
 
-    // Poultry breeding is typically managed at flock level, not individual level
     if (isPoultry) {
       return (
         <View style={styles.contentSection}>
@@ -1319,7 +1313,6 @@ const styles = StyleSheet.create({
     color: '#2196F3',
   },
 
-  // Health Records Styles
   healthSummaryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1399,7 +1392,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  // Health Event Card Styles
   healthEventCard: {
     backgroundColor: '#F8F8F8',
     borderRadius: 12,

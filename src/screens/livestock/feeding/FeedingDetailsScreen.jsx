@@ -1,339 +1,411 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
   SafeAreaView,
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
+import {
+  Box,
+  HStack,
+  VStack,
+  Badge,
+  Divider,
+  Center,
+} from 'native-base';
 import FastImage from 'react-native-fast-image';
 import { icons } from '../../../constants';
 import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
+import { getFeedingProgramById } from '../../../services/feeding';
+import { getLivestockForActiveFarm } from '../../../services/livestock';
 
-const FeedingDetailsScreen = ({ route, navigation }) => {
-  const { feedingData } = route.params;
-  const [activeTab, setActiveTab] = useState('overview');
+const FeedingDetailsScreen = ({ navigation, route }) => {
+  const { programId } = route.params;
+  const [program, setProgram] = useState(null);
+  const [livestock, setLivestock] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const formatDate = dateString => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', {
+  useEffect(() => {
+    fetchProgramDetails();
+  }, [programId]);
+
+  const fetchProgramDetails = async () => {
+    try {
+      setLoading(true);
+      const [programData, livestockData] = await Promise.all([
+        getFeedingProgramById(programId),
+        getLivestockForActiveFarm(),
+      ]);
+
+      setProgram(programData);
+      setLivestock(livestockData);
+    } catch (error) {
+      console.error('Error fetching program details:', error);
+      Alert.alert('Error', 'Failed to load program details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchProgramDetails();
+    setRefreshing(false);
+  };
+
+  const getAnimalInfo = (program) => {
+    if (!program) return null;
+
+    if (program.programType === 'Single Animal' && program.animalId) {
+      const animal = livestock.find(l => l.id === program.animalId);
+      return {
+        name: animal?.mammal?.idNumber || program.animalId,
+        type: program.animalType,
+        category: 'Animal',
+        details: animal?.mammal,
+      };
+    } else if (program.programType === 'Group' && program.groupId) {
+      const group = livestock.find(l => l.id === program.groupId);
+      return {
+        name: group?.poultry?.flockId || program.groupId,
+        type: program.groupType,
+        category: 'Group',
+        quantity: group?.poultry?.currentQuantity || group?.poultry?.initialQuantity || 0,
+        details: group?.poultry,
+      };
+    }
+    return null;
+  };
+
+  const getFeedTypeColor = (feedType) => {
+    switch (feedType) {
+      case 'Basal Feed Only':
+        return COLORS.green2;
+      case 'Basal Feed + Concentrates + Supplements':
+        return COLORS.lightOrange;
+      case 'Concentrates Only':
+        return COLORS.primary;
+      default:
+        return COLORS.gray;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-GB', {
       day: '2-digit',
-      month: '2-digit',
+      month: 'short',
       year: 'numeric',
     });
   };
 
-  const renderOverviewTab = () => (
-    <View style={styles.tabContent}>
-      <View style={styles.infoCard}>
-        <Text style={styles.cardTitle}>Basic Information</Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Animal Type:</Text>
-          <Text style={styles.infoValue}>{feedingData.animalType}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Feed Name:</Text>
-          <Text style={styles.infoValue}>{feedingData.feedName}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Frequency:</Text>
-          <Text style={styles.infoValue}>{feedingData.frequency}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Amount:</Text>
-          <Text style={styles.infoValue}>{feedingData.amount}</Text>
-        </View>
-      </View>
+  const formatTime = (dateString) => {
+    return new Date(dateString).toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
-      <View style={styles.infoCard}>
-        <Text style={styles.cardTitle}>Schedule Information</Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Last Fed:</Text>
-          <Text style={styles.infoValue}>{formatDate(feedingData.lastFed)}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Next Feeding:</Text>
-          <Text style={styles.infoValue}>{formatDate(feedingData.nextFeeding)}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Time of Day:</Text>
-          <View style={styles.timeSlotContainer}>
-            {feedingData.timeOfDay.map(time => (
-              <View key={time} style={styles.timeChip}>
-                <Text style={styles.timeChipText}>{time}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      </View>
-    </View>
-  );
+  const calculateTotalCost = () => {
+    if (!program?.feedDetails) return 0;
+    return program.feedDetails.reduce((total, feed) => total + (feed.cost || 0), 0);
+  };
 
-  const renderDetailsTab = () => (
-    <View style={styles.tabContent}>
-      <View style={styles.infoCard}>
-        <Text style={styles.cardTitle}>Program Details</Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Program Type:</Text>
-          <Text style={styles.infoValue}>
-            {feedingData.id ? 'Single Animal' : 'Group'}
-          </Text>
-        </View>
-        {feedingData.id ? (
-          <>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Animal ID:</Text>
-              <Text style={styles.infoValue}>{feedingData.id}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Lifecycle Stage:</Text>
-              <View style={styles.chipContainer}>
-                {feedingData.lifecycleStages?.map(stage => (
-                  <View key={stage} style={styles.chip}>
-                    <Text style={styles.chipText}>{stage}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          </>
-        ) : (
-          <>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Group ID:</Text>
-              <Text style={styles.infoValue}>{feedingData.groupId}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Group Lifecycle:</Text>
-              <View style={styles.chipContainer}>
-                {feedingData.groupLifecycleStages?.map(stage => (
-                  <View key={stage} style={styles.chip}>
-                    <Text style={styles.chipText}>{stage}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          </>
-        )}
-      </View>
+  const calculateTotalQuantity = () => {
+    if (!program?.feedDetails) return 0;
+    return program.feedDetails.reduce((total, feed) => total + (feed.quantity || 0), 0);
+  };
 
-      <View style={styles.infoCard}>
-        <Text style={styles.cardTitle}>Feed Type Information</Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Feed Type Category:</Text>
-          <Text style={styles.infoValue}>{feedingData.feedTypeCategory || 'Basal Feeds'}</Text>
-        </View>
-      </View>
-    </View>
-  );
+  const renderHeader = () => {
+    const animalInfo = getAnimalInfo(program);
 
-  const renderFeedDetailsTab = () => (
-    <View style={styles.tabContent}>
-      <View style={styles.infoCard}>
-        <Text style={styles.cardTitle}>Basal Feed</Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Feed Type:</Text>
-          <Text style={styles.infoValue}>{feedingData.basal?.feedType || 'High-protein Mix'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Source:</Text>
-          <Text style={styles.infoValue}>{feedingData.basal?.source || 'Personally Grown'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Schedule:</Text>
-          <Text style={styles.infoValue}>{feedingData.basal?.schedule || feedingData.frequency}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Quantity:</Text>
-          <Text style={styles.infoValue}>{feedingData.basal?.quantity || feedingData.amount}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Date Acquired:</Text>
-          <Text style={styles.infoValue}>{formatDate(feedingData.basal?.date || '2025-03-01')}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Cost:</Text>
-          <Text style={styles.infoValue}>{feedingData.basal?.cost || '$450'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Supplier:</Text>
-          <Text style={styles.infoValue}>{feedingData.basal?.supplier || 'Farm Supply Co.'}</Text>
-        </View>
-      </View>
+    return (
+      <Box bg="white" borderRadius={16} shadow={2} mb={4} overflow="hidden">
+        <Box bg={COLORS.lightGreen} px={4} py={4}>
+          <HStack alignItems="center" space={3}>
+            <Box bg={getFeedTypeColor(program.feedType)} p={3} borderRadius={12}>
+              <Text style={styles.headerIcon}>
+                {program.programType === 'Single Animal' ? '🐄' : '🐔'}
+              </Text>
+            </Box>
+            <VStack flex={1}>
+              <Text style={styles.headerTitle}>
+                {animalInfo?.name || 'Unknown'}
+              </Text>
+              <HStack alignItems="center" space={2}>
+                <Badge
+                  bg={program.programType === 'Single Animal' ? COLORS.green2 : '#FF8C00'}
+                  borderRadius={12}
+                  _text={{ color: 'white', fontSize: 12, fontWeight: '600' }}>
+                  {program.programType}
+                </Badge>
+                <Text style={styles.headerSubtitle}>
+                  {animalInfo?.type}
+                  {animalInfo?.category === 'Group' && ` (${animalInfo.quantity} birds)`}
+                </Text>
+              </HStack>
+            </VStack>
+          </HStack>
+        </Box>
 
-      {(feedingData.feedTypeCategory === 'Basal Feed + Concentrates + Supplements' ||
-        feedingData.concentrate) && (
-          <View style={styles.infoCard}>
-            <Text style={styles.cardTitle}>Concentrate Feed</Text>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Feed Type:</Text>
-              <Text style={styles.infoValue}>{feedingData.concentrate?.feedType || 'Protein Supplement'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Source:</Text>
-              <Text style={styles.infoValue}>{feedingData.concentrate?.source || 'Purely Purchased'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Schedule:</Text>
-              <Text style={styles.infoValue}>{feedingData.concentrate?.schedule || 'Daily'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Quantity:</Text>
-              <Text style={styles.infoValue}>{feedingData.concentrate?.quantity || '2 kg per animal'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Date Acquired:</Text>
-              <Text style={styles.infoValue}>{formatDate(feedingData.concentrate?.date || '2025-03-01')}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Cost:</Text>
-              <Text style={styles.infoValue}>{feedingData.concentrate?.cost || '$180'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Supplier:</Text>
-              <Text style={styles.infoValue}>{feedingData.concentrate?.supplier || 'Premium Feeds Inc.'}</Text>
-            </View>
-          </View>
-        )}
+        <VStack p={4} space={3}>
+          <HStack alignItems="center" justifyContent="space-between">
+            <Text style={styles.labelText}>Feed Type</Text>
+            <Badge
+              bg={getFeedTypeColor(program.feedType)}
+              borderRadius={12}
+              _text={{ color: 'white', fontSize: 12, fontWeight: '600' }}>
+              {program.feedType}
+            </Badge>
+          </HStack>
 
-      {(feedingData.feedTypeCategory === 'Basal Feed + Concentrates + Supplements' ||
-        feedingData.supplement) && (
-          <View style={styles.infoCard}>
-            <Text style={styles.cardTitle}>Supplement Feed</Text>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Feed Type:</Text>
-              <Text style={styles.infoValue}>{feedingData.supplement?.feedType || 'Vitamin Mix'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Source:</Text>
-              <Text style={styles.infoValue}>{feedingData.supplement?.source || 'Purely Purchased'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Schedule:</Text>
-              <Text style={styles.infoValue}>{feedingData.supplement?.schedule || 'Daily'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Quantity:</Text>
-              <Text style={styles.infoValue}>{feedingData.supplement?.quantity || '0.5 kg per animal'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Date Acquired:</Text>
-              <Text style={styles.infoValue}>{formatDate(feedingData.supplement?.date || '2025-03-01')}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Cost:</Text>
-              <Text style={styles.infoValue}>{feedingData.supplement?.cost || '$120'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Supplier:</Text>
-              <Text style={styles.infoValue}>{feedingData.supplement?.supplier || 'Animal Health Solutions'}</Text>
-            </View>
-          </View>
-        )}
-    </View>
-  );
+          <HStack alignItems="center" justifyContent="space-between">
+            <Text style={styles.labelText}>Created</Text>
+            <Text style={styles.valueText}>{formatDate(program.createdAt)}</Text>
+          </HStack>
+
+          <HStack alignItems="center" justifyContent="space-between">
+            <Text style={styles.labelText}>Status</Text>
+            <HStack alignItems="center" space={2}>
+              <Box w={2} h={2} bg={COLORS.green2} borderRadius={1} />
+              <Text style={styles.activeText}>Active</Text>
+            </HStack>
+          </HStack>
+        </VStack>
+      </Box>
+    );
+  };
+
+  const renderLifecycleStages = () => {
+    const lifecycleStages = program.programType === 'Single Animal'
+      ? program.lifecycleStages || []
+      : program.groupLifecycleStages || [];
+
+    if (lifecycleStages.length === 0) return null;
+
+    return (
+      <Box bg="white" borderRadius={16} shadow={2} mb={4} p={4}>
+        <Text style={styles.sectionTitle}>Lifecycle Stages</Text>
+        <HStack flexWrap="wrap" space={2} mt={2}>
+          {lifecycleStages.map((stage, index) => (
+            <Badge
+              key={index}
+              bg={COLORS.green2}
+              borderRadius={8}
+              mb={2}
+              _text={{ color: 'white', fontSize: 12, fontWeight: '500' }}>
+              {stage}
+            </Badge>
+          ))}
+        </HStack>
+      </Box>
+    );
+  };
+
+  const renderFeedingSchedule = () => {
+    if (!program.timeOfDay || program.timeOfDay.length === 0) return null;
+
+    return (
+      <Box bg="white" borderRadius={16} shadow={2} mb={4} p={4}>
+        <Text style={styles.sectionTitle}>Feeding Schedule</Text>
+        <VStack space={2} mt={2}>
+          {program.timeOfDay.map((time, index) => (
+            <HStack key={index} alignItems="center" space={3}>
+              <Box bg="#FF8C00" p={2} borderRadius={8}>
+                <FastImage
+                  source={icons.clock}
+                  style={styles.scheduleIcon}
+                  tintColor="white"
+                />
+              </Box>
+              <Text style={styles.scheduleText}>{time}</Text>
+            </HStack>
+          ))}
+        </VStack>
+      </Box>
+    );
+  };
+
+  const renderFeedDetails = () => {
+    if (!program.feedDetails || program.feedDetails.length === 0) return null;
+
+    return (
+      <Box bg="white" borderRadius={16} shadow={2} mb={4} p={4}>
+        <Text style={styles.sectionTitle}>Feed Details</Text>
+        <VStack space={3} mt={3}>
+          {program.feedDetails.map((feed, index) => (
+            <Box key={index} bg={COLORS.lightGreen} p={3} borderRadius={12}>
+              <HStack alignItems="center" justifyContent="space-between" mb={2}>
+                <Text style={styles.feedTypeTitle}>{feed.feedType}</Text>
+                <Badge
+                  bg={getFeedTypeColor(feed.feedType)}
+                  borderRadius={8}
+                  _text={{ color: 'white', fontSize: 11, fontWeight: '600' }}>
+                  {feed.quantity}kg
+                </Badge>
+              </HStack>
+
+              <VStack space={1}>
+                <HStack alignItems="center" justifyContent="space-between">
+                  <Text style={styles.feedDetailLabel}>Source:</Text>
+                  <Text style={styles.feedDetailValue}>{feed.source || 'Not specified'}</Text>
+                </HStack>
+
+                <HStack alignItems="center" justifyContent="space-between">
+                  <Text style={styles.feedDetailLabel}>Schedule:</Text>
+                  <Text style={styles.feedDetailValue}>{feed.schedule || 'Not specified'}</Text>
+                </HStack>
+
+                <HStack alignItems="center" justifyContent="space-between">
+                  <Text style={styles.feedDetailLabel}>Cost:</Text>
+                  <Text style={styles.feedDetailValue}>
+                    ${feed.cost ? feed.cost.toFixed(2) : '0.00'}
+                  </Text>
+                </HStack>
+
+                {feed.supplier && (
+                  <HStack alignItems="center" justifyContent="space-between">
+                    <Text style={styles.feedDetailLabel}>Supplier:</Text>
+                    <Text style={styles.feedDetailValue}>{feed.supplier}</Text>
+                  </HStack>
+                )}
+
+                <HStack alignItems="center" justifyContent="space-between">
+                  <Text style={styles.feedDetailLabel}>Date:</Text>
+                  <Text style={styles.feedDetailValue}>{formatDate(feed.date)}</Text>
+                </HStack>
+              </VStack>
+            </Box>
+          ))}
+        </VStack>
+      </Box>
+    );
+  };
+
+  const renderCostSummary = () => {
+    const totalCost = calculateTotalCost();
+    const totalQuantity = calculateTotalQuantity();
+
+    return (
+      <Box bg="white" borderRadius={16} shadow={2} mb={4} p={4}>
+        <Text style={styles.sectionTitle}>Cost Summary</Text>
+        <VStack space={3} mt={3}>
+          <HStack alignItems="center" justifyContent="space-between">
+            <Text style={styles.summaryLabel}>Total Quantity:</Text>
+            <Text style={styles.summaryValue}>{totalQuantity.toFixed(2)} kg</Text>
+          </HStack>
+
+          <HStack alignItems="center" justifyContent="space-between">
+            <Text style={styles.summaryLabel}>Total Cost:</Text>
+            <Text style={[styles.summaryValue, { color: COLORS.green2, fontWeight: 'bold' }]}>
+              ${totalCost.toFixed(2)}
+            </Text>
+          </HStack>
+
+          <Divider />
+
+          <HStack alignItems="center" justifyContent="space-between">
+            <Text style={styles.summaryLabel}>Cost per kg:</Text>
+            <Text style={styles.summaryValue}>
+              ${totalQuantity > 0 ? (totalCost / totalQuantity).toFixed(2) : '0.00'}
+            </Text>
+          </HStack>
+        </VStack>
+      </Box>
+    );
+  };
+
+  const renderNotes = () => {
+    if (!program.notes) return null;
+
+    return (
+      <Box bg="white" borderRadius={16} shadow={2} mb={4} p={4}>
+        <Text style={styles.sectionTitle}>Notes</Text>
+        <Text style={styles.notesText}>{program.notes}</Text>
+      </Box>
+    );
+  };
 
   const renderActionButtons = () => (
-    <View style={styles.actionButtonsContainer}>
-      <TouchableOpacity
-        style={styles.actionButton}
-        onPress={() =>
-          navigation.navigate('EditFeedingRequirementScreen', { requirement: feedingData })
-        }
-      >
-        <FastImage
-          source={icons.submited}
-          style={styles.actionIcon}
-          tintColor={COLORS.white}
-        />
-        <Text style={styles.actionButtonText}>Edit</Text>
-      </TouchableOpacity>
+    <Box bg="white" borderRadius={16} shadow={2} mb={4} p={4}>
+      <HStack space={3}>
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: COLORS.green }]}
+          onPress={() => navigation.navigate('EditFeedingRequirementScreen', { programId: program.id })}>
+          <FastImage source={icons.edit} style={styles.actionIcon} tintColor="white" />
+          <Text style={styles.actionButtonText}>Edit Program</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.actionButton, styles.markFedButton]}
-        onPress={() => {
-          // Logic to mark as fed would go here
-          navigation.goBack();
-        }}
-      >
-        <FastImage
-          source={icons.tick}
-          style={styles.actionIcon}
-          tintColor={COLORS.white}
-        />
-        <Text style={styles.actionButtonText}>Mark as Fed</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: COLORS.red }]}
+          onPress={() => navigation.navigate('FeedingRecordScreen', { programId: program.id })}>
+          <FastImage source={icons.add} style={styles.actionIcon} tintColor="white" />
+          <Text style={styles.actionButtonText}>Delete Feed</Text>
+        </TouchableOpacity>
+      </HStack>
+    </Box>
   );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SecondaryHeader
+          title="Program Details"
+          onBackPress={() => navigation.goBack()}
+          backgroundColor={COLORS.lightGreen}
+        />
+        <Center flex={1}>
+          <ActivityIndicator size="large" color={COLORS.green2} />
+          <Text style={styles.loadingText}>Loading program details...</Text>
+        </Center>
+      </SafeAreaView>
+    );
+  }
+
+  if (!program) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SecondaryHeader
+          title="Program Details"
+          onBackPress={() => navigation.goBack()}
+          backgroundColor={COLORS.lightGreen}
+        />
+        <Center flex={1}>
+          <Text style={styles.errorText}>Program not found</Text>
+        </Center>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <SecondaryHeader
-        title="Feeding Details"
-        onBack={() => navigation.goBack()}
+        title="Program Details"
+        onBackPress={() => navigation.goBack()}
+        backgroundColor={COLORS.lightGreen}
       />
 
-      <View style={styles.feedInfoHeader}>
-        <View style={styles.feedInfoContainer}>
-          <Text style={styles.animalTypeHeading}>{feedingData.animalType}</Text>
-          <Text style={styles.feedNameHeading}>{feedingData.feedName}</Text>
-        </View>
-        <View style={styles.statusContainer}>
-          {new Date(feedingData.nextFeeding).toDateString() === new Date().toDateString() ? (
-            <View style={styles.feedTodayBadge}>
-              <Text style={styles.feedTodayText}>Feed Today</Text>
-            </View>
-          ) : (
-            <View style={styles.nextFeedContainer}>
-              <Text style={styles.nextFeedLabel}>Next Feed:</Text>
-              <Text style={styles.nextFeedDate}>{formatDate(feedingData.nextFeeding)}</Text>
-            </View>
-          )}
-        </View>
-      </View>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }>
 
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'overview' && styles.activeTabButton]}
-          onPress={() => setActiveTab('overview')}>
-          <Text style={[styles.tabButtonText, activeTab === 'overview' && styles.activeTabButtonText]}>
-            Overview
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'details' && styles.activeTabButton]}
-          onPress={() => setActiveTab('details')}>
-          <Text style={[styles.tabButtonText, activeTab === 'details' && styles.activeTabButtonText]}>
-            Program Details
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabButton, activeTab === 'feeds' && styles.activeTabButton]}
-          onPress={() => setActiveTab('feeds')}>
-          <Text style={[styles.tabButtonText, activeTab === 'feeds' && styles.activeTabButtonText]}>
-            Feed Details
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView style={styles.scrollContainer}>
-        {activeTab === 'overview' && renderOverviewTab()}
-        {activeTab === 'details' && renderDetailsTab()}
-        {activeTab === 'feeds' && renderFeedDetailsTab()}
-
-        <View style={styles.notesContainer}>
-          <Text style={styles.notesSectionTitle}>Notes</Text>
-          <View style={styles.notesCard}>
-            <Text style={styles.notesText}>
-              {feedingData.notes ||
-                "Ensure fresh water is always available. Monitor feed consumption and adjust quantities if necessary. Report any appetite changes immediately."}
-            </Text>
-          </View>
-        </View>
+        {renderHeader()}
+        {renderLifecycleStages()}
+        {renderFeedingSchedule()}
+        {renderFeedDetails()}
+        {renderCostSummary()}
+        {renderNotes()}
+        {renderActionButtons()}
       </ScrollView>
-
-      {renderActionButtons()}
     </SafeAreaView>
   );
 };
@@ -341,222 +413,118 @@ const FeedingDetailsScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: COLORS.lightGreen,
   },
-  feedInfoHeader: {
-    backgroundColor: COLORS.green2,
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  feedInfoContainer: {
+  content: {
     flex: 1,
   },
-  animalTypeHeading: {
-    fontSize: 22,
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 32,
+  },
+  headerIcon: {
+    fontSize: 20,
+  },
+  headerTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.white,
+    color: COLORS.black,
   },
-  feedNameHeading: {
-    fontSize: 16,
-    color: COLORS.white,
-    opacity: 0.9,
-    marginTop: 4,
-  },
-  statusContainer: {
-    alignItems: 'flex-end',
-  },
-  feedTodayBadge: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  feedTodayText: {
-    color: COLORS.green2,
-    fontWeight: 'bold',
+  headerSubtitle: {
     fontSize: 14,
+    color: COLORS.gray,
   },
-  nextFeedContainer: {
-    alignItems: 'flex-end',
-  },
-  nextFeedLabel: {
-    color: COLORS.white,
+  labelText: {
     fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.gray,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  nextFeedDate: {
-    color: COLORS.white,
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  activeTabButton: {
-    borderBottomWidth: 3,
-    borderBottomColor: COLORS.green2,
-  },
-  tabButtonText: {
+  valueText: {
     fontSize: 14,
-    color: '#666',
-  },
-  activeTabButtonText: {
-    color: COLORS.green2,
-    fontWeight: 'bold',
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  tabContent: {
-    padding: 16,
-  },
-  infoCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: 'bold',
-    color: COLORS.green2,
-    marginBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    paddingBottom: 8,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    marginBottom: 12,
-    alignItems: 'flex-start',
-  },
-  infoLabel: {
-    width: '35%',
-    fontSize: 14,
-    color: '#666',
+    color: COLORS.black,
     fontWeight: '500',
   },
-  infoValue: {
-    flex: 1,
-    fontSize: 14,
-    color: '#333',
+  activeText: {
+    fontSize: 12,
+    color: COLORS.green2,
     fontWeight: '600',
   },
-  chipContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  chip: {
-    backgroundColor: '#e0f2f1',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 16,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  chipText: {
-    fontSize: 12,
-    color: COLORS.green2,
-  },
-  timeSlotContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  timeChip: {
-    backgroundColor: '#e0f2f1',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 16,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  timeChipText: {
-    fontSize: 12,
-    color: COLORS.green2,
-  },
-  notesContainer: {
-    padding: 16,
-    paddingTop: 0,
-  },
-  notesSectionTitle: {
+  sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    color: COLORS.black,
+    marginBottom: 4,
   },
-  notesCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 80, // Extra space for action buttons
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  scheduleIcon: {
+    width: 16,
+    height: 16,
+  },
+  scheduleText: {
+    fontSize: 14,
+    color: COLORS.black,
+    fontWeight: '500',
+  },
+  feedTypeTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.black,
+  },
+  feedDetailLabel: {
+    fontSize: 12,
+    color: COLORS.gray,
+    fontWeight: '500',
+  },
+  feedDetailValue: {
+    fontSize: 12,
+    color: COLORS.black,
+    fontWeight: '500',
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: COLORS.black,
+    fontWeight: '500',
+  },
+  summaryValue: {
+    fontSize: 14,
+    color: COLORS.black,
+    fontWeight: '600',
   },
   notesText: {
     fontSize: 14,
-    color: '#666',
+    color: COLORS.black,
     lineHeight: 20,
-  },
-  actionButtonsContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    backgroundColor: COLORS.white,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    elevation: 4,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    marginTop: 8,
   },
   actionButton: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.green,
+    paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  markFedButton: {
-    backgroundColor: '#4CAF50',
-    marginRight: 0,
-    marginLeft: 8,
+    borderRadius: 12,
+    flex: 1,
+    justifyContent: 'center',
   },
   actionIcon: {
-    width: 18,
-    height: 18,
+    width: 16,
+    height: 16,
     marginRight: 8,
   },
   actionButtonText: {
-    color: COLORS.white,
-    fontWeight: 'bold',
     fontSize: 14,
+    color: 'white',
+    fontWeight: '600',
+  },
+  loadingText: {
+    fontSize: 14,
+    color: COLORS.gray,
+    marginTop: 12,
+  },
+  errorText: {
+    fontSize: 16,
+    color: COLORS.gray,
+    textAlign: 'center',
   },
 });
 
