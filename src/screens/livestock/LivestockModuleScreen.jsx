@@ -224,7 +224,10 @@ const LivestockModuleScreen = ({ navigation }) => {
         });
         break;
       case 'health':
-        navigation.navigate('HealthEventForm', { animalId: animal.id, animalData: animal });
+        navigation.navigate('HealthRecordsScreen', {
+          animalId: animal.id,
+          animalData: animal
+        });
         break;
       case 'delete':
         handleDeleteLivestock(animal);

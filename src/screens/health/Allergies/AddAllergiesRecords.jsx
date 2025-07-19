@@ -1,287 +1,543 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
-  Box,
+  SafeAreaView,
+  View,
   Text,
-  VStack,
+  TextInput,
+  TouchableOpacity,
   ScrollView,
-  Button,
-  HStack,
-  Input,
-} from 'native-base';
-import {View, StyleSheet, TouchableOpacity, Image} from 'react-native';
-import {COLORS} from '../../../constants/theme';
-import SecondaryHeader from '../../../components/headers/secondary-header';
+  StyleSheet,
+  Alert,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import FastImage from 'react-native-fast-image';
-import {icons} from '../../../constants';
+import LinearGradient from 'react-native-linear-gradient';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { icons } from '../../../constants';
+import { COLORS } from '../../../constants/theme';
+import SecondaryHeader from '../../../components/headers/secondary-header';
+import { createAllergy, validateAllergyData } from '../../../services/healthservice';
 
-export default function AddAllergiesRecords({navigation}) {
-  const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState('');
-  const [dateRecorded, setDateRecorded] = useState(new Date());
-  const [cause, setCause] = useState('');
-  const [remedy, setRemedy] = useState('');
-  const [availableIds] = useState(['ID 1', 'ID 2', 'ID 3', 'ID 4']);
-  const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+const { width } = Dimensions.get('window');
 
-  const handleSave = () => {
-    setShowSuccessModal(true);
-  };
+const AddAllergiesRecords = ({ navigation, route }) => {
+  // Add safety checks for route params
+  const { animalId, animalData, farmId } = route?.params || {};
 
-  const handleDone = () => {
-    navigation.navigate('AllergiesRecordsScreen');
-  };
-  const handleAddAnother = () => {
-    setShowSuccessModal(false);
-  };
-  const handleSelect = value => {
-    setAnimalIdOrFlockId(value);
-    setDropdownVisible(false);
-  };
+  // Add early return or error handling if required params are missing
+  if (!animalId) {
+    Alert.alert('Error', 'Animal ID is required to add allergy records.', [
+      { text: 'OK', onPress: () => navigation.goBack() }
+    ]);
+    return (
+      <SafeAreaView style={styles.container}>
+        <SecondaryHeader
+          title="Add Allergy Record"
+          showBack={true}
+          onBack={() => navigation.goBack()}
+        />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Missing required animal information</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const [formData, setFormData] = useState({
+    animalIdOrFlockId: animalId,
+    dateRecorded: new Date(),
+    cause: '',
+    remedy: '',
+    farmId: farmId || animalId,
+    livestockId: animalId,
+  });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: null }));
+    }
+  };
 
   const handleDateChange = (event, selectedDate) => {
-    if (selectedDate) {
-      setDateRecorded(selectedDate);
-    }
     setShowDatePicker(false);
+    if (selectedDate) {
+      setFormData(prev => ({ ...prev, dateRecorded: selectedDate }));
+    }
   };
-  return (
-    <View style={{flex: 1, backgroundColor: COLORS.lightGreen}}>
-      <SecondaryHeader title="Allergy Details" />
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: 'flex-start',
-          marginTop: 5,
-        }}>
-        <Box bg="white" p={6} borderRadius={8} shadow={1} mx={6} my={8}>
-          <Text
-            style={{
-              fontSize: 16,
-              color: 'black',
-              marginBottom: 16,
-              textAlign: 'center',
-            }}>
-            Fill in the allergy details
-          </Text>
-          <VStack space={5}>
-            {/* Combined Input and Select */}
-            <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={1}>
-                Animal ID or Flock ID
-              </Text>
-              <View>
-                <HStack
-                  alignItems="center"
-                  borderWidth={1}
-                  borderRadius={8}
-                  borderColor="gray.200">
-                  <Input
-                    flex={1}
-                    variant="unstyled"
-                    placeholder="Type or select ID"
-                    value={animalIdOrFlockId}
-                    onChangeText={text => setAnimalIdOrFlockId(text)}
-                    backgroundColor="transparent"
-                    borderColor="transparent"
-                  />
-                  <TouchableOpacity
-                    style={{padding: 10}}
-                    onPress={() => setDropdownVisible(prev => !prev)}>
-                    <Text style={{fontSize: 16, color: COLORS.green}}>▼</Text>
-                  </TouchableOpacity>
-                </HStack>
-                {dropdownVisible && (
-                  <Box
-                    bg="white"
-                    mt={1}
-                    borderWidth={1}
-                    borderColor="gray.200"
-                    borderRadius={8}>
-                    {availableIds.map((id, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={styles.dropdownItem}
-                        onPress={() => handleSelect(id)}>
-                        <Text style={styles.dropdownText}>{id}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </Box>
-                )}
-              </View>
-            </Box>
 
-            <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={1}>
-                Date Recorded
-              </Text>
-              <HStack alignItems="center">
-                <Input
-                  w="85%"
-                  backgroundColor={COLORS.lightGreen}
-                  value={dateRecorded.toLocaleDateString('en-GB')}
-                  placeholder="DD/MM/YY"
-                  isReadOnly
-                />
-                <TouchableOpacity
-                  onPress={() => setShowDatePicker(true)}
-                  style={{marginLeft: 10}}>
-                  <Image
-                    source={icons.calendar}
-                    resizeMode="contain"
-                    style={styles.calendarIcon}
-                  />
-                </TouchableOpacity>
-              </HStack>
-              {showDatePicker && (
-                <DateTimePicker
-                  testID="dateTimePicker"
-                  value={dateRecorded}
-                  mode="date"
-                  is24Hour={true}
-                  onChange={handleDateChange}
-                />
-              )}
-            </Box>
+  const validateForm = () => {
+    const newErrors = {};
 
-            <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={1}>
-                Cause
-              </Text>
-              <Input
-                variant="outline"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-                placeholder="Enter cause of allergy"
-                value={cause}
-                onChangeText={setCause}
-              />
-            </Box>
+    if (!formData.cause.trim()) {
+      newErrors.cause = 'Please specify the cause of the allergy';
+    }
 
-            {/* Remedy */}
-            <Box>
-              <Text
-                fontSize="sm"
-                fontWeight="500"
-                color={COLORS.darkGray3}
-                mb={1}>
-                Remedy
-              </Text>
-              <Input
-                variant="outline"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-                placeholder="Enter remedy"
-                value={remedy}
-                onChangeText={setRemedy}
-                multiline
-                numberOfLines={4}
-              />
-            </Box>
+    if (!formData.remedy.trim()) {
+      newErrors.remedy = 'Please enter the remedy or treatment';
+    }
 
-            {/* Buttons */}
-            <HStack justifyContent="center" mt={6} space={4}>
-              <Button
-                variant="outline"
-                borderWidth={1}
-                borderColor={COLORS.green}
-                borderRadius={8}
-                px={6}
-                py={3}
-                onPress={() => navigation.goBack()}>
-                Cancel
-              </Button>
-              <Button
-                backgroundColor={COLORS.green}
-                borderRadius={8}
-                px={6}
-                py={3}
-                _pressed={{
-                  bg: 'emerald.700',
-                }}
-                onPress={handleSave}>
-                Done
-              </Button>
-            </HStack>
-          </VStack>
-        </Box>
-      </ScrollView>
-      {showSuccessModal && (
-        <Box
-          position="absolute"
-          top="0"
-          bottom="0"
-          left="0"
-          right="0"
-          bg="rgba(0,0,0,0.5)"
-          justifyContent="center"
-          alignItems="center">
-          <Box bg="white" p={6} borderRadius={8} width="80%" maxWidth="400px">
-            <VStack space={4} alignItems="center">
-              <FastImage
-                source={icons.tick}
-                style={{width: 60, height: 60}}
-                resizeMode="contain"
-              />
-              <Text fontSize="lg" fontWeight="bold" textAlign="center">
-                Allergy Record Added Successfully!
-              </Text>
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-              <HStack space={4} mt={2}>
-                <Button
-                  flex={1}
-                  variant="outline"
-                  borderColor={COLORS.green}
-                  _text={{
-                    color: COLORS.green,
-                  }}
-                  onPress={handleDone}>
-                  OK
-                </Button>
-                <Button
-                  flex={1}
-                  bg={COLORS.green}
-                  _pressed={{
-                    bg: 'emerald.700',
-                  }}
-                  onPress={handleAddAnother}>
-                  Add Another
-                </Button>
-              </HStack>
-            </VStack>
-          </Box>
-        </Box>
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      Alert.alert('Validation Error', 'Please fill in all required fields correctly.');
+      return;
+    }
+
+    const validation = validateAllergyData({
+      cause: formData.cause,
+      remedy: formData.remedy,
+      dateRecorded: formData.dateRecorded,
+    });
+
+    if (!validation.isValid) {
+      Alert.alert('Validation Error', validation.errors.join('\n'));
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Prepare payload with ISO date string
+      const payload = {
+        ...formData,
+        dateRecorded: formData.dateRecorded.toISOString(),
+        cause: formData.cause.trim(),
+        remedy: formData.remedy.trim(),
+      };
+
+      console.log('Allergy payload:', payload);
+
+      // Call the actual API service
+      const result = await createAllergy(animalId, payload);
+
+      if (result.error) {
+        Alert.alert('Error', result.error);
+        return;
+      }
+
+      Alert.alert(
+        'Success',
+        'Allergy record has been added successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to add allergy record. Please try again.');
+      console.error('Error adding allergy:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const renderFormGroup = (title, children) => (
+    <View style={styles.formGroup}>
+      <Text style={styles.groupTitle}>{title}</Text>
+      <LinearGradient
+        colors={['#FFFFFF', '#F8FAFC']}
+        style={styles.groupContainer}>
+        {children}
+      </LinearGradient>
+    </View>
+  );
+
+  const renderInput = (label, field, options = {}) => (
+    <View style={styles.inputContainer}>
+      <Text style={styles.inputLabel}>
+        {label}
+        {options.required && <Text style={styles.required}> *</Text>}
+      </Text>
+      <TextInput
+        style={[
+          styles.textInput,
+          options.multiline && styles.textArea,
+          errors[field] && styles.inputError
+        ]}
+        value={formData[field]?.toString()}
+        onChangeText={(value) => handleInputChange(field, value)}
+        placeholder={options.placeholder || `Enter ${label.toLowerCase()}`}
+        keyboardType={options.keyboardType || 'default'}
+        multiline={options.multiline}
+        numberOfLines={options.numberOfLines || 1}
+        placeholderTextColor="#9CA3AF"
+        textAlignVertical={options.multiline ? 'top' : 'center'}
+        editable={!isLoading}
+      />
+      {errors[field] && (
+        <Text style={styles.errorText}>{errors[field]}</Text>
       )}
     </View>
   );
-}
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <SecondaryHeader
+        title="Add Allergy Record"
+        showBack={true}
+        onBack={() => navigation.goBack()}
+      />
+
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+
+          {/* Animal Info Header */}
+          <LinearGradient
+            colors={['#FFFFFF', '#F8FAFC']}
+            style={styles.animalInfoCard}>
+            <View style={styles.animalCardHeader}>
+              <LinearGradient
+                colors={['#EF4444', '#DC2626']}
+                style={styles.animalAvatarContainer}>
+                <FastImage
+                  source={icons.livestock || icons.account}
+                  style={styles.animalAvatar}
+                  tintColor="#FFFFFF"
+                />
+              </LinearGradient>
+              <View style={styles.animalInfo}>
+                <Text style={styles.animalName}>{animalData?.title || 'Animal'}</Text>
+                <Text style={styles.animalId}>ID: {animalData?.idNumber || animalId}</Text>
+                <Text style={styles.farmId}>Farm ID: {farmId}</Text>
+              </View>
+              <View style={styles.allergyIconContainer}>
+                <Text style={styles.allergyIcon}>🤧</Text>
+              </View>
+            </View>
+          </LinearGradient>
+
+          {renderFormGroup('Allergy Details', (
+            <>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>
+                  Date Recorded <Text style={styles.required}>*</Text>
+                </Text>
+                <TouchableOpacity
+                  style={[styles.dateInput, isLoading && styles.inputDisabled]}
+                  onPress={() => !isLoading && setShowDatePicker(true)}
+                  disabled={isLoading}>
+                  <Text style={styles.dateText}>
+                    {formData.dateRecorded.toLocaleDateString()}
+                  </Text>
+                  <FastImage source={icons.calendar} style={styles.calendarIcon} />
+                </TouchableOpacity>
+              </View>
+
+              {renderInput('Cause of Allergy', 'cause', {
+                required: true,
+                placeholder: 'e.g., Pollen, Dust, Food allergen, Medication',
+                multiline: true,
+                numberOfLines: 3
+              })}
+
+              {renderInput('Remedy/Treatment', 'remedy', {
+                required: true,
+                placeholder: 'e.g., Antihistamines, Corticosteroids, Avoid allergen',
+                multiline: true,
+                numberOfLines: 4
+              })}
+            </>
+          ))}
+
+          {/* Additional Notes Section */}
+          <View style={styles.notesSection}>
+            <LinearGradient
+              colors={['#FEF3C7', '#FDE68A']}
+              style={styles.notesCard}>
+              <View style={styles.notesHeader}>
+                <Text style={styles.notesIcon}>💡</Text>
+                <Text style={styles.notesTitle}>Tips for Recording Allergies</Text>
+              </View>
+              <Text style={styles.notesText}>
+                • Be specific about the allergen (e.g., "Spring pollen" vs just "pollen"){'\n'}
+                • Include symptoms observed if relevant{'\n'}
+                • Note if this is a recurring allergy{'\n'}
+                • Record any preventive measures taken
+              </Text>
+            </LinearGradient>
+          </View>
+
+          {/* Submit Button */}
+          <TouchableOpacity
+            style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+            onPress={handleSubmit}
+            disabled={isLoading}>
+            <LinearGradient
+              colors={isLoading ? ['#9CA3AF', '#6B7280'] : ['#EF4444', '#DC2626']}
+              style={styles.submitGradient}>
+              <Text style={styles.submitText}>
+                {isLoading ? 'Adding Allergy...' : 'Add Allergy Record'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <View style={styles.bottomSpace} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* Date Picker Modal */}
+      {showDatePicker && (
+        <DateTimePicker
+          value={formData.dateRecorded}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+          maximumDate={new Date()}
+        />
+      )}
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
-  dropdownItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+  container: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
   },
-  dropdownText: {
+  keyboardAvoid: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+
+  // Error container for missing params
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#EF4444',
+    textAlign: 'center',
+  },
+
+  // Animal Info Card
+  animalInfoCard: {
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  animalCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  animalAvatarContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  animalAvatar: {
+    width: 28,
+    height: 28,
+  },
+  animalInfo: {
+    flex: 1,
+  },
+  animalName: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  animalId: {
     fontSize: 14,
-    color: 'black',
+    color: '#6B7280',
+    fontWeight: '500',
   },
-  calendarIcon: {
+  farmId: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontWeight: '400',
+    marginTop: 2,
+  },
+  allergyIconContainer: {
     width: 40,
     height: 40,
-    tintColor: COLORS.green,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  allergyIcon: {
+    fontSize: 20,
+  },
+
+  // Form Groups
+  formGroup: {
+    marginBottom: 24,
+  },
+  groupTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1F2937',
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  groupContainer: {
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+
+  // Input Styles
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  required: {
+    color: '#EF4444',
+  },
+  textInput: {
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: '#1F2937',
+    backgroundColor: '#FFFFFF',
+    fontWeight: '500',
+  },
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  inputError: {
+    borderColor: '#EF4444',
+  },
+  inputDisabled: {
+    opacity: 0.6,
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#EF4444',
+    marginTop: 4,
+    fontWeight: '500',
+  },
+
+  // Date Input
+  dateInput: {
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#1F2937',
+    fontWeight: '500',
+  },
+  calendarIcon: {
+    width: 20,
+    height: 20,
+    tintColor: '#6B7280',
+  },
+
+  // Notes Section
+  notesSection: {
+    marginBottom: 24,
+  },
+  notesCard: {
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+  },
+  notesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  notesIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  notesTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#92400E',
+  },
+  notesText: {
+    fontSize: 14,
+    color: '#78350F',
+    lineHeight: 20,
+    fontWeight: '500',
+  },
+
+  // Submit Button
+  submitButton: {
+    marginTop: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  submitButtonDisabled: {
+    shadowOpacity: 0.1,
+  },
+  submitGradient: {
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  submitText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+
+  bottomSpace: {
+    height: 40,
   },
 });
+
+export default AddAllergiesRecords;

@@ -522,9 +522,9 @@ const AnimalDetailScreen = ({ route, navigation }) => {
             <TouchableOpacity
               style={styles.addRecordButton}
               onPress={() =>
-                navigation.navigate('HealthEventForm', {
-                  animalId: animalData.id,
-                  animalData: animalData
+                navigation.navigate('HealthRecordsScreen', {
+                  animalId: animal.id,
+                  animalData: animal
                 })
               }>
               <FastImage

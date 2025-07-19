@@ -67,6 +67,7 @@ import {
   //health
   AddHealthRecords,
   AddAllergiesRecords,
+  EditAllergyRecord,
   AddBoostersRecords,
   AddDewormingRecords,
   AddGeneticsDisorderRecords,
@@ -110,6 +111,7 @@ import {
 
   // inventory
   InventoryDashboard,
+  AddInventory,
   AddMachinery,
   AddGoodsInStock,
   AddUtilityDetails,
@@ -219,7 +221,6 @@ export default function App() {
                 component={EmailOtpScreen}
                 options={{headerShown: false}}
               />
-
               <Stack.Screen
                 name="HomeScreen"
                 component={HomeScreen}
@@ -361,7 +362,6 @@ export default function App() {
                 component={HealthHistoryScreen}
                 options={{headerShown: false}}
               />
-
               <Stack.Screen
                 name="OptionDetailsScreen"
                 component={OptionDetailsScreen}
@@ -433,6 +433,12 @@ export default function App() {
                 component={AllergiesRecordsScreen}
                 options={{headerShown: false}}
               />
+              <Stack.Screen
+                name="EditAllergyRecord"
+                component={EditAllergyRecord}
+                options={{headerShown: false}}
+              />
+
               <Stack.Screen
                 name="AddBoostersRecords"
                 component={AddBoostersRecords}
@@ -597,6 +603,11 @@ export default function App() {
               <Stack.Screen
                 name="InventoryDashboard"
                 component={InventoryDashboard}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="AddInventory"
+                component={AddInventory}
                 options={{headerShown: false}}
               />
               <Stack.Screen

@@ -1,474 +1,669 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
+  SafeAreaView,
+  View,
   Text,
-  Input,
-  Button,
-  VStack,
-  Select,
+  TextInput,
+  TouchableOpacity,
   ScrollView,
-  HStack,
-  Heading,
-  FormControl,
-  Icon,
-  Divider,
-  Toast,
-  IconButton,
-} from 'native-base';
-import { View, TouchableOpacity, StyleSheet, Image, Keyboard } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+  StyleSheet,
+  Alert,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+} from 'react-native';
 import FastImage from 'react-native-fast-image';
+import LinearGradient from 'react-native-linear-gradient';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { icons } from '../../../constants';
 import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
+import {
+  getVaccinationById,
+  updateVaccination,
+  validateVaccinationData
+} from '../../../services/healthservice';
 
-export default function VaccineEditScreen({ navigation, route }) {
-  const vaccineRecord = route.params?.record || {};
+const { width } = Dimensions.get('window');
 
-  const [animalIdOrFlockId, setAnimalIdOrFlockId] = useState(vaccineRecord.animalIdOrFlockId || '');
-  const [vaccinationAgainst, setVaccinationAgainst] = useState(vaccineRecord.vaccinationAgainst || '');
-  const [drugAdministered, setDrugAdministered] = useState(vaccineRecord.drugAdministered || '');
-  const [dateAdministered, setDateAdministered] = useState(
-    vaccineRecord.dateAdministered ? new Date(vaccineRecord.dateAdministered) : new Date()
-  );
-  const [dosage, setDosage] = useState(vaccineRecord.dosage || 1);
-  const [costOfVaccine, setCostOfVaccine] = useState(vaccineRecord.costOfVaccine || '');
-  const [administeredBy, setAdministeredBy] = useState(vaccineRecord.administeredBy || '');
-  const [practiceId, setPracticeId] = useState(vaccineRecord.practiceId || '');
-  const [costOfService, setCostOfService] = useState(vaccineRecord.costOfService || '');
+const VaccineEditScreen = ({ navigation, route }) => {
+  const { recordId, animalId, animalData } = route.params;
+
+  // Form state
+  const [formData, setFormData] = useState({
+    animalIdOrFlockId: '',
+    vaccinationAgainst: '',
+    drugAdministered: '',
+    dateAdministered: new Date(),
+    dosage: '',
+    costOfVaccine: '',
+    administeredBy: '',
+    practiceId: '',
+    costOfService: '',
+    livestockId: '',
+  });
+
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [originalData, setOriginalData] = useState(null);
 
-  const commonAnimals = ['Cow', 'Goat', 'Sheep', 'Chicken', 'Pig'];
+  // Fetch vaccination data on component mount
+  useEffect(() => {
+    fetchVaccinationData();
+  }, [recordId]);
+
+  const fetchVaccinationData = async () => {
+    try {
+      setIsLoadingData(true);
+      const result = await getVaccinationById(recordId);
+
+      if (result.error) {
+        Alert.alert('Error', result.error);
+        navigation.goBack();
+        return;
+      }
+
+      const vaccinationData = result.data;
+      setOriginalData(vaccinationData);
+
+      // Populate form with fetched data
+      setFormData({
+        animalIdOrFlockId: vaccinationData.animalIdOrFlockId || '',
+        vaccinationAgainst: vaccinationData.vaccinationAgainst || '',
+        drugAdministered: vaccinationData.drugAdministered || '',
+        dateAdministered: vaccinationData.dateAdministered
+          ? new Date(vaccinationData.dateAdministered)
+          : new Date(),
+        dosage: vaccinationData.dosage?.toString() || '',
+        costOfVaccine: vaccinationData.costOfVaccine?.toString() || '',
+        administeredBy: vaccinationData.administeredBy || '',
+        practiceId: vaccinationData.practiceId || '',
+        costOfService: vaccinationData.costOfService?.toString() || '',
+        livestockId: vaccinationData.livestockId || animalId,
+      });
+
+      console.log('Fetched vaccination data:', vaccinationData);
+    } catch (error) {
+      console.error('Error fetching vaccination data:', error);
+      Alert.alert('Error', 'Failed to load vaccination data. Please try again.');
+      navigation.goBack();
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: null }));
+    }
+  };
 
   const handleDateChange = (event, selectedDate) => {
-    if (selectedDate) {
-      setDateAdministered(selectedDate);
-    }
     setShowDatePicker(false);
+    if (selectedDate) {
+      setFormData(prev => ({ ...prev, dateAdministered: selectedDate }));
+    }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
 
+    if (!formData.vaccinationAgainst.trim()) {
+      newErrors.vaccinationAgainst = 'Please specify what the vaccination is against';
+    }
 
-  const handleUpdate = () => {
+    if (!formData.drugAdministered.trim()) {
+      newErrors.drugAdministered = 'Please enter the drug administered';
+    }
 
-    setShowUpdateModal(true);
+    if (!formData.dosage || isNaN(parseFloat(formData.dosage))) {
+      newErrors.dosage = 'Please enter a valid dosage';
+    }
 
+    if (!formData.administeredBy.trim()) {
+      newErrors.administeredBy = 'Please enter who administered the vaccine';
+    }
+
+    if (formData.costOfVaccine && isNaN(parseFloat(formData.costOfVaccine))) {
+      newErrors.costOfVaccine = 'Please enter a valid cost';
+    }
+
+    if (formData.costOfService && isNaN(parseFloat(formData.costOfService))) {
+      newErrors.costOfService = 'Please enter a valid service cost';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleDone = () => {
-    navigation.navigate('VaccineRecordsScreen');
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      Alert.alert('Validation Error', 'Please fill in all required fields correctly.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const payload = {
+        animalIdOrFlockId: formData.animalIdOrFlockId,
+        vaccinationAgainst: formData.vaccinationAgainst.trim(),
+        drugAdministered: formData.drugAdministered.trim(),
+        dateAdministered: formData.dateAdministered.toISOString(),
+        dosage: parseFloat(formData.dosage),
+        costOfVaccine: formData.costOfVaccine ? parseFloat(formData.costOfVaccine) : 0,
+        administeredBy: formData.administeredBy.trim(),
+        practiceId: formData.practiceId.trim(),
+        costOfService: formData.costOfService ? parseFloat(formData.costOfService) : 0,
+        livestockId: formData.livestockId || animalId,
+      };
+
+      const validation = validateVaccinationData(payload);
+      if (!validation.isValid) {
+        Alert.alert('Validation Error', validation.errors.join('\n'));
+        return;
+      }
+
+      console.log('Updating vaccination with payload:', payload);
+
+      const result = await updateVaccination(recordId, payload);
+
+      if (result.error) {
+        Alert.alert('Error', result.error);
+        return;
+      }
+
+      Alert.alert(
+        'Success',
+        'Vaccine record has been updated successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.goBack();
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Error updating vaccine:', error);
+      Alert.alert(
+        'Error',
+        'An unexpected error occurred. Please check your connection and try again.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  return (
-    <View style={{ flex: 1, backgroundColor: COLORS.lightGreen }}>
-      <SecondaryHeader title="Edit Vaccine Record" />
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled">
-        <Box bg="white" p={5} borderRadius={12} shadow={2} mx={4} my={4}>
-          <Heading size="md" mb={4} color={COLORS.darkGray3}>
-            Vaccination Details
-          </Heading>
-          <Divider mb={4} />
+  const handleReset = () => {
+    Alert.alert(
+      'Reset Form',
+      'Are you sure you want to reset all changes? This will restore the original values.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: () => {
+            if (originalData) {
+              setFormData({
+                animalIdOrFlockId: originalData.animalIdOrFlockId || '',
+                vaccinationAgainst: originalData.vaccinationAgainst || '',
+                drugAdministered: originalData.drugAdministered || '',
+                dateAdministered: originalData.dateAdministered
+                  ? new Date(originalData.dateAdministered)
+                  : new Date(),
+                dosage: originalData.dosage?.toString() || '',
+                costOfVaccine: originalData.costOfVaccine?.toString() || '',
+                administeredBy: originalData.administeredBy || '',
+                practiceId: originalData.practiceId || '',
+                costOfService: originalData.costOfService?.toString() || '',
+                livestockId: originalData.livestockId || animalId,
+              });
+              setErrors({});
+            }
+          },
+        },
+      ]
+    );
+  };
 
-          <VStack space={4}>
-            <FormControl isRequired isInvalid={'animalIdOrFlockId' in errors}>
-              <FormControl.Label _text={styles.labelText}>
-                Animal ID or Flock ID
-              </FormControl.Label>
-              <Select
-                selectedValue={animalIdOrFlockId}
-                minWidth="100%"
-                backgroundColor={COLORS.lightGreen}
-                borderRadius={8}
-                fontSize="md"
-                placeholder="Select Animal ID"
-                _selectedItem={{
-                  bg: 'emerald.100',
+  const renderFormGroup = (title, children) => (
+    <View style={styles.formGroup}>
+      <Text style={styles.groupTitle}>{title}</Text>
+      <LinearGradient
+        colors={['#FFFFFF', '#F8FAFC']}
+        style={styles.groupContainer}>
+        {children}
+      </LinearGradient>
+    </View>
+  );
 
-                }}
-                accessibilityLabel="Choose Animal ID"
-                onValueChange={setAnimalIdOrFlockId}>
-                {commonAnimals.map((animal, index) => (
-                  <Select.Item
-                    key={index}
-                    label={`${animal} ${index + 1}`}
-                    value={`${animal.charAt(0)}00${index + 1}`}
-                  />
-                ))}
-              </Select>
-
-              <FormControl.HelperText>
-                Select an animal from your registered livestock
-              </FormControl.HelperText>
-            </FormControl>
-
-            {/* Vaccination Type */}
-            <FormControl>
-              <FormControl.Label _text={styles.labelText}>
-                Vaccination Against
-              </FormControl.Label>
-              <Select
-                selectedValue={vaccinationAgainst}
-                minWidth="100%"
-                backgroundColor={COLORS.lightGreen}
-                borderRadius={8}
-                fontSize="md"
-                placeholder="Select disease or condition"
-                _selectedItem={{
-                  bg: 'emerald.100',
-
-                }}
-                onValueChange={setVaccinationAgainst}>
-                <Select.Item label="Foot and Mouth Disease" value="Foot and Mouth Disease" />
-                <Select.Item label="Anthrax" value="Anthrax" />
-                <Select.Item label="PPR" value="PPR" />
-                <Select.Item label="Brucellosis" value="Brucellosis" />
-                <Select.Item label="Newcastle Disease" value="Newcastle Disease" />
-              </Select>
-
-            </FormControl>
-
-            {/* Drug Name */}
-            <FormControl isRequired isInvalid={'drugAdministered' in errors}>
-              <FormControl.Label _text={styles.labelText}>
-                Drug Administered
-              </FormControl.Label>
-              <Input
-                variant="outline"
-                backgroundColor={COLORS.lightGreen}
-                borderRadius={8}
-                height={12}
-                fontSize="md"
-                placeholder="Enter vaccine or drug name"
-                value={drugAdministered}
-                onChangeText={setDrugAdministered}
-              />
-
-            </FormControl>
-
-            {/* Date Section */}
-            <FormControl>
-              <FormControl.Label _text={styles.labelText}>
-                Date Administered
-              </FormControl.Label>
-              <Box flexDirection="row" alignItems="center">
-                <Input
-                  flex={1}
-                  backgroundColor={COLORS.lightGreen}
-                  borderRadius={8}
-                  height={12}
-                  fontSize="md"
-                  value={dateAdministered.toLocaleDateString('en-GB')}
-                  placeholder="DD/MM/YY"
-                  isReadOnly
-                />
-                <TouchableOpacity
-                  onPress={() => setShowDatePicker(true)}
-                  style={styles.datePickerButton}>
-                  <Image
-                    source={icons.calendar}
-                    resizeMode="contain"
-                    style={styles.calendarIcon}
-                  />
-                </TouchableOpacity>
-              </Box>
-              {showDatePicker && (
-                <DateTimePicker
-                  testID="dateTimePicker"
-                  value={dateAdministered}
-                  mode="date"
-                  is24Hour={true}
-                  onChange={handleDateChange}
-                />
-              )}
-              <FormControl.HelperText>
-                Select the date when vaccination was given
-              </FormControl.HelperText>
-            </FormControl>
-
-            {/* Dosage with Stepper */}
-            <FormControl>
-              <FormControl.Label _text={styles.labelText}>
-                Dosage (ml)
-              </FormControl.Label>
-              <HStack alignItems="center" space={2}>
-                <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(dosage) || 1;
-                    setDosage(Math.max(currentValue - 0.5, 0.5));
-                  }}
-                  variant="outline"
-                  borderColor={COLORS.green}
-                  borderRadius="full"
-                  p={0}
-                  height={10}
-                  width={10}
-                  _text={{
-                    fontSize: "xl",
-                    fontWeight: "bold",
-                    color: COLORS.green,
-                  }}>
-                  -
-                </Button>
-                <Input
-                  flex={1}
-                  textAlign="center"
-                  variant="outline"
-                  backgroundColor={COLORS.lightGreen}
-                  borderColor="gray.200"
-                  borderRadius={8}
-                  height={12}
-                  fontSize="md"
-                  keyboardType="numeric"
-                  value={dosage.toString()}
-                  onChangeText={text => {
-                    const numericText = text.replace(/[^0-9.]/g, '');
-                    setDosage(numericText || 1);
-                  }}
-                  InputRightElement={
-                    <Text px={2} color={COLORS.darkGray3}>
-                      ml
-                    </Text>
-                  }
-                />
-                <Button
-                  onPress={() => {
-                    const currentValue = parseFloat(dosage) || 1;
-                    setDosage(currentValue + 0.5);
-                  }}
-                  variant="outline"
-                  borderColor={COLORS.green}
-                  borderRadius="full"
-                  p={0}
-                  height={10}
-                  width={10}
-                  _text={{
-                    fontSize: "xl",
-                    fontWeight: "bold",
-                    color: COLORS.green,
-                  }}>
-                  +
-                </Button>
-              </HStack>
-              <FormControl.HelperText>
-                Standard dose is typically 1-2ml per animal
-              </FormControl.HelperText>
-            </FormControl>
-
-            <Divider my={2} />
-            <Heading size="sm" mb={2} color={COLORS.darkGray3}>
-              Costs & Administration
-            </Heading>
-
-            {/* Cost of Vaccine */}
-            <FormControl>
-              <FormControl.Label _text={styles.labelText}>
-                Cost of Vaccine
-              </FormControl.Label>
-              <Input
-                variant="outline"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-                borderRadius={8}
-                height={12}
-                fontSize="md"
-                placeholder="0.00"
-                keyboardType="numeric"
-                value={costOfVaccine}
-                InputLeftElement={
-                  <Text px={3} color={COLORS.darkGray3}>
-                    $
-                  </Text>
-                }
-                onChangeText={text => {
-                  const numericText = text.replace(/[^0-9.]/g, '');
-                  setCostOfVaccine(numericText);
-                }}
-              />
-            </FormControl>
-
-            {/* Administrator */}
-            <FormControl>
-              <FormControl.Label _text={styles.labelText}>
-                Administered By
-              </FormControl.Label>
-              <Input
-                variant="outline"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-                borderRadius={8}
-                height={12}
-                fontSize="md"
-                placeholder="Veterinarian or staff name"
-                value={administeredBy}
-                onChangeText={setAdministeredBy}
-              />
-            </FormControl>
-
-            {/* Practice ID */}
-            <FormControl>
-              <FormControl.Label _text={styles.labelText}>
-                Practice ID
-              </FormControl.Label>
-              <Input
-                variant="outline"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-                borderRadius={8}
-                height={12}
-                fontSize="md"
-                placeholder="Veterinary practice ID"
-                value={practiceId}
-                onChangeText={setPracticeId}
-              />
-              <FormControl.HelperText>
-                ID number of the veterinary practice (if applicable)
-              </FormControl.HelperText>
-            </FormControl>
-
-            {/* Service Cost */}
-            <FormControl>
-              <FormControl.Label _text={styles.labelText}>
-                Cost of Service
-              </FormControl.Label>
-              <Input
-                variant="outline"
-                backgroundColor={COLORS.lightGreen}
-                borderColor="gray.200"
-                borderRadius={8}
-                height={12}
-                fontSize="md"
-                placeholder="0.00"
-                keyboardType="numeric"
-                value={costOfService}
-                InputLeftElement={
-                  <Text px={3} color={COLORS.darkGray3}>
-                    $
-                  </Text>
-                }
-                onChangeText={text => {
-                  const numericText = text.replace(/[^0-9.]/g, '');
-                  setCostOfService(numericText);
-                }}
-              />
-              <FormControl.HelperText>
-                Fee charged by veterinarian (if applicable)
-              </FormControl.HelperText>
-            </FormControl>
-
-            {/* Buttons */}
-            <HStack justifyContent="space-between" mt={6} space={4}>
-              <Button
-                flex={1}
-                variant="outline"
-                borderWidth={1}
-                borderColor={COLORS.green}
-                borderRadius={8}
-                py={3}
-                _text={{
-                  color: COLORS.green,
-                  fontWeight: "600",
-                }}
-                onPress={() => navigation.goBack()}>
-                Cancel
-              </Button>
-
-              <Button
-                flex={1}
-                backgroundColor={COLORS.green}
-                borderRadius={8}
-                py={3}
-                _pressed={{
-                  bg: 'emerald.700',
-                }}
-                _text={{
-                  fontWeight: "600",
-                }}
-                onPress={handleUpdate}>
-                Update Record
-              </Button>
-            </HStack>
-          </VStack>
-        </Box>
-      </ScrollView>
-
-      {/* Success Modal */}
-      {showUpdateModal && (
-        <Box
-          position="absolute"
-          top="0"
-          bottom="0"
-          left="0"
-          right="0"
-          bg="rgba(0,0,0,0.5)"
-          justifyContent="center"
-          alignItems="center"
-          zIndex={999}
-        >
-          <Box bg="white" p={6} borderRadius={16} width="80%" maxWidth="400px" shadow={5}>
-            <VStack space={4} alignItems="center">
-              <Box
-                bg="emerald.100"
-                p={4}
-                borderRadius="full"
-              >
-                <FastImage
-                  source={icons.tick}
-                  style={{ width: 60, height: 60 }}
-                  resizeMode="contain"
-                />
-              </Box>
-              <Text fontSize="xl" fontWeight="bold" textAlign="center" color={COLORS.darkGray3}>
-                Success!
-              </Text>
-              <Text fontSize="md" textAlign="center" color="gray.600">
-                Vaccine record updated successfully
-              </Text>
-
-              <Button
-                width="100%"
-                bg={COLORS.green}
-                borderRadius={8}
-                py={3}
-                _pressed={{
-                  bg: 'emerald.700',
-                }}
-                _text={{
-                  fontWeight: "600",
-                }}
-                onPress={handleDone}>
-                Done
-              </Button>
-            </VStack>
-          </Box>
-        </Box>
+  const renderInput = (label, field, options = {}) => (
+    <View style={styles.inputContainer}>
+      <Text style={styles.inputLabel}>
+        {label}
+        {options.required && <Text style={styles.required}> *</Text>}
+      </Text>
+      <TextInput
+        style={[styles.textInput, errors[field] && styles.inputError]}
+        value={formData[field]?.toString()}
+        onChangeText={(value) => handleInputChange(field, value)}
+        placeholder={options.placeholder || `Enter ${label.toLowerCase()}`}
+        keyboardType={options.keyboardType || 'default'}
+        multiline={options.multiline}
+        numberOfLines={options.numberOfLines || 1}
+        placeholderTextColor="#9CA3AF"
+        editable={!isLoading && !isLoadingData}
+      />
+      {errors[field] && (
+        <Text style={styles.errorText}>{errors[field]}</Text>
       )}
     </View>
   );
-}
+
+  // Loading state
+  if (isLoadingData) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SecondaryHeader
+          title="Edit Vaccine Record"
+          showBack={true}
+          onBack={() => navigation.goBack()}
+        />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#10B981" />
+          <Text style={styles.loadingText}>Loading vaccination data...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <SecondaryHeader
+        title="Edit Vaccine Record"
+        showBack={true}
+        onBack={() => navigation.goBack()}
+        rightComponent={
+          <TouchableOpacity onPress={handleReset} disabled={isLoading}>
+            <FastImage
+              source={icons.refresh || icons.reload}
+              style={[styles.resetIcon, isLoading && styles.iconDisabled]}
+              tintColor="#6B7280"
+            />
+          </TouchableOpacity>
+        }
+      />
+
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+
+          {/* Animal Info Header */}
+          <LinearGradient
+            colors={['#FFFFFF', '#F8FAFC']}
+            style={styles.animalInfoCard}>
+            <View style={styles.animalCardHeader}>
+              <LinearGradient
+                colors={['#3B82F6', '#2563EB']}
+                style={styles.animalAvatarContainer}>
+                <FastImage
+                  source={icons.livestock || icons.account}
+                  style={styles.animalAvatar}
+                  tintColor="#FFFFFF"
+                />
+              </LinearGradient>
+              <View style={styles.animalInfo}>
+                <Text style={styles.animalName}>{animalData?.title || 'Animal'}</Text>
+                <Text style={styles.animalId}>ID: {animalData?.idNumber || animalId}</Text>
+                <View style={styles.recordBadge}>
+                  <Text style={styles.recordBadgeText}>Editing Record #{recordId}</Text>
+                </View>
+              </View>
+            </View>
+          </LinearGradient>
+
+          {/* Vaccine Information */}
+          {renderFormGroup('Vaccine Information', (
+            <>
+              {renderInput('Vaccination Against', 'vaccinationAgainst', {
+                required: true,
+                placeholder: 'e.g., Newcastle Disease, Fowl Pox, etc.'
+              })}
+              {renderInput('Drug Administered', 'drugAdministered', {
+                required: true,
+                placeholder: 'e.g., Lasota, La Sota, etc.'
+              })}
+              {renderInput('Dosage', 'dosage', {
+                required: true,
+                placeholder: 'e.g., 0.5ml, 1 drop, etc.'
+              })}
+            </>
+          ))}
+
+          {/* Administration Details */}
+          {renderFormGroup('Administration Details', (
+            <>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>
+                  Date Administered <Text style={styles.required}>*</Text>
+                </Text>
+                <TouchableOpacity
+                  style={[styles.dateInput, (isLoading || isLoadingData) && styles.inputDisabled]}
+                  onPress={() => !isLoading && !isLoadingData && setShowDatePicker(true)}
+                  disabled={isLoading || isLoadingData}>
+                  <Text style={styles.dateText}>
+                    {formData.dateAdministered.toLocaleDateString()}
+                  </Text>
+                  <FastImage source={icons.calendar} style={styles.calendarIcon} />
+                </TouchableOpacity>
+              </View>
+
+              {renderInput('Administered By', 'administeredBy', {
+                required: true,
+                placeholder: 'e.g., Dr. Smith, Farm Manager, etc.'
+              })}
+              {renderInput('Practice ID', 'practiceId', {
+                placeholder: 'e.g., VET12345 (optional)'
+              })}
+            </>
+          ))}
+
+          {/* Cost Information */}
+          {renderFormGroup('Cost Information (Optional)', (
+            <>
+              {renderInput('Cost of Vaccine', 'costOfVaccine', {
+                keyboardType: 'numeric',
+                placeholder: '25.00'
+              })}
+              {renderInput('Cost of Service', 'costOfService', {
+                keyboardType: 'numeric',
+                placeholder: '100.00'
+              })}
+            </>
+          ))}
+
+          {/* Action Buttons */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.cancelButton, isLoading && styles.buttonDisabled]}
+              onPress={() => navigation.goBack()}
+              disabled={isLoading}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+              onPress={handleSubmit}
+              disabled={isLoading}>
+              <LinearGradient
+                colors={isLoading ? ['#9CA3AF', '#6B7280'] : ['#3B82F6', '#2563EB']}
+                style={styles.submitGradient}>
+                <Text style={styles.submitText}>
+                  {isLoading ? 'Updating...' : 'Update Record'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.bottomSpace} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* Date Picker Modal */}
+      {showDatePicker && (
+        <DateTimePicker
+          value={formData.dateAdministered}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+          maximumDate={new Date()}
+        />
+      )}
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
-  scrollContainer: {
-    flexGrow: 1,
-    paddingVertical: 10,
+  container: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
   },
-  labelText: {
+  keyboardAvoid: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+
+  // Loading State
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  loadingText: {
+    marginTop: 16,
     fontSize: 16,
+    color: '#6B7280',
     fontWeight: '500',
-    color: COLORS.darkGray3,
   },
-  datePickerButton: {
-    marginLeft: 8,
-    padding: 6,
-    backgroundColor: COLORS.lightGreen,
-    borderRadius: 8,
+
+  // Header Icons
+  resetIcon: {
+    width: 24,
+    height: 24,
+  },
+  iconDisabled: {
+    opacity: 0.5,
+  },
+
+  // Animal Info Card
+  animalInfoCard: {
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  animalCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  animalAvatarContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  animalAvatar: {
+    width: 28,
+    height: 28,
+  },
+  animalInfo: {
+    flex: 1,
+  },
+  animalName: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  animalId: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  recordBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  recordBadgeText: {
+    fontSize: 12,
+    color: '#92400E',
+    fontWeight: '600',
+  },
+
+  // Form Groups
+  formGroup: {
+    marginBottom: 24,
+  },
+  groupTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1F2937',
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  groupContainer: {
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+
+  // Input Styles
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  required: {
+    color: '#EF4444',
+  },
+  textInput: {
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: '#1F2937',
+    backgroundColor: '#FFFFFF',
+    fontWeight: '500',
+  },
+  inputError: {
+    borderColor: '#EF4444',
+  },
+  inputDisabled: {
+    opacity: 0.6,
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#EF4444',
+    marginTop: 4,
+    fontWeight: '500',
+  },
+
+  // Date Input
+  dateInput: {
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#1F2937',
+    fontWeight: '500',
   },
   calendarIcon: {
-    width: 32,
-    height: 32,
-    tintColor: COLORS.green,
+    width: 20,
+    height: 20,
+    tintColor: '#6B7280',
+  },
+
+  // Button Container
+  buttonContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
+    gap: 12,
+  },
+
+  // Cancel Button
+  cancelButton: {
+    flex: 1,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderRadius: 16,
+    paddingVertical: 18,
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  cancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+
+  // Submit Button
+  submitButton: {
+    flex: 2,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  submitButtonDisabled: {
+    shadowOpacity: 0.1,
+  },
+  submitGradient: {
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  submitText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  bottomSpace: {
+    height: 40,
   },
 });
+
+export default VaccineEditScreen;

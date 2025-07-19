@@ -90,6 +90,8 @@ import GeneticDisorderEditScreen from './health/Disorders/GeneticDisorderEditScr
 //Allergies
 import AddAllergiesRecords from './health/Allergies/AddAllergiesRecords';
 
+import EditAllergyRecord from './health/Allergies/EditAllergyRecord';
+
 import AllergiesRecordsScreen from './health/Allergies/AllergiesRecordsScreen';
 
 //Boosters
@@ -133,6 +135,9 @@ import SheepGoatDetailsScreen from './production/sheepandgoat/SheepGoatDetailsSc
 // inventory
 import InventoryDashboard from './inventory/InventoryDashboard';
 import AddMachinery from './inventory/AddMachinery';
+
+import AddInventory from './inventory/AddInventory';
+
 import AddGoodsInStock from './inventory/AddGoodsInStock';
 import AddUtilityDetails from './inventory/AddUtilityDetails';
 
@@ -221,6 +226,7 @@ export {
   GeneticDisorderRecordsScreen,
   GeneticDisorderEditScreen,
   AllergiesRecordsScreen,
+  EditAllergyRecord,
   BoostersRecordScreen,
 
   //home
@@ -243,6 +249,7 @@ export {
   ProductionModuleLandingScreen,
   //inventory
   InventoryDashboard,
+  AddInventory,
   AddMachinery,
   AddGoodsInStock,
   AddUtilityDetails,
