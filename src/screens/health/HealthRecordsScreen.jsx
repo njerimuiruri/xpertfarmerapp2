@@ -22,7 +22,6 @@ const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
 
 const HealthRecordsScreen = ({ navigation, route }) => {
-  const { animalId, animalData } = route.params;
   const [vaccinationCount, setVaccinationCount] = useState(0);
   const [allergiesCount, setAllergiesCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -30,29 +29,29 @@ const HealthRecordsScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     fetchHealthCounts();
-  }, [animalId]);
+  }, []);
 
   const fetchHealthCounts = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const vaccinationResponse = await getVaccinationsForLivestock(animalId);
+      const vaccinationResponse = await getVaccinationsForLivestock();
       if (vaccinationResponse.error) {
         console.error('Error fetching vaccinations:', vaccinationResponse.error);
       } else {
         const vacCount = vaccinationResponse.data ? vaccinationResponse.data.length : 0;
         setVaccinationCount(vacCount);
-        console.log(`Found ${vacCount} vaccination records for animal ${animalId}`);
+        console.log(`Found ${vacCount} vaccination records`);
       }
 
-      const allergiesResponse = await getAllergiesForLivestock(animalId);
+      const allergiesResponse = await getAllergiesForLivestock();
       if (allergiesResponse.error) {
         console.error('Error fetching allergies:', allergiesResponse.error);
       } else {
         const allergyCount = allergiesResponse.data ? allergiesResponse.data.length : 0;
         setAllergiesCount(allergyCount);
-        console.log(`Found ${allergyCount} allergy records for animal ${animalId}`);
+        console.log(`Found ${allergyCount} allergy records`);
       }
 
     } catch (err) {
@@ -130,10 +129,7 @@ const HealthRecordsScreen = ({ navigation, route }) => {
   const thisMonthRecords = Math.floor(totalRecords * 0.3);
 
   const handleCategoryPress = (category) => {
-    navigation.navigate(category.screen, {
-      animalId: animalId,
-      animalData: animalData,
-    });
+    navigation.navigate(category.screen);
   };
 
   const renderCategoryCard = ({ item, index }) => (
@@ -197,52 +193,30 @@ const HealthRecordsScreen = ({ navigation, route }) => {
     <View style={styles.headerContent}>
       <LinearGradient
         colors={['#FFFFFF', '#F8FAFC']}
-        style={styles.animalInfoCard}
+        style={styles.welcomeCard}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}>
 
-        <View style={styles.animalCardHeader}>
-          <View style={[styles.animalAvatarContainer, { backgroundColor: COLORS.green3 }]}>
+        <View style={styles.welcomeCardHeader}>
+          <View style={[styles.healthIconContainer, { backgroundColor: COLORS.green3 }]}>
             <FastImage
               source={icons.livestock || icons.account}
-              style={styles.animalAvatar}
+              style={styles.healthIcon}
               tintColor="#FFFFFF"
             />
             <View style={styles.statusIndicator} />
           </View>
 
-          <View style={styles.animalInfo}>
-            <Text style={styles.animalName}>{animalData?.title || 'Animal'}</Text>
-            <View style={styles.animalMetaContainer}>
-              <View style={styles.animalMeta}>
-                <Text style={styles.animalMetaLabel}>ID</Text>
-                <Text style={styles.animalMetaValue}>
-                  {animalData?.idNumber || animalId}
-                </Text>
-              </View>
-              <View style={styles.animalMetaDivider} />
-              <View style={styles.animalMeta}>
-                <Text style={styles.animalMetaLabel}>Breed</Text>
-                <Text style={styles.animalMetaValue}>
-                  {animalData?.breed || 'Unknown'}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.statusBadge}>
-              <View style={styles.statusDot} />
-              <Text style={styles.statusText}>Healthy</Text>
-            </View>
+          <View style={styles.welcomeInfo}>
+            <Text style={styles.welcomeTitle}>Health Categories</Text>
+            <Text style={styles.welcomeSubtitle}>
+              Tap any category to view and manage records
+            </Text>
+
           </View>
         </View>
 
       </LinearGradient>
-
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Health Categories</Text>
-        <Text style={styles.sectionSubtitle}>
-          Tap any category to view and manage records
-        </Text>
-      </View>
 
       {error && (
         <View style={styles.errorContainer}>
@@ -269,7 +243,7 @@ const HealthRecordsScreen = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <SecondaryHeader
-        title="Health Dashboard"
+        title="Health Records"
         showBack={true}
         onBack={() => navigation.goBack()}
       />
@@ -306,12 +280,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     marginTop: 20,
   },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  animalInfoCard: {
+  welcomeCard: {
     borderRadius: 28,
     padding: 28,
     marginBottom: 32,
@@ -321,12 +290,12 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 12,
   },
-  animalCardHeader: {
+  welcomeCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 24,
   },
-  animalAvatarContainer: {
+  healthIconContainer: {
     width: 80,
     height: 80,
     borderRadius: 40,
@@ -340,7 +309,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  animalAvatar: {
+  healthIcon: {
     width: 40,
     height: 40,
   },
@@ -355,42 +324,21 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: '#FFFFFF',
   },
-  animalInfo: {
+  welcomeInfo: {
     flex: 1,
   },
-  animalName: {
+  welcomeTitle: {
     fontSize: 26,
     fontWeight: '900',
     color: '#1F2937',
     marginBottom: 8,
     letterSpacing: -0.3,
   },
-  animalMetaContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  animalMeta: {
-    alignItems: 'center',
-  },
-  animalMetaLabel: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    fontWeight: '600',
-    marginBottom: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  animalMetaValue: {
+  welcomeSubtitle: {
     fontSize: 16,
-    color: '#374151',
-    fontWeight: '800',
-  },
-  animalMetaDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: '#E5E7EB',
-    marginHorizontal: 20,
+    color: '#6B7280',
+    fontWeight: '500',
+    marginBottom: 12,
   },
   statusBadge: {
     flexDirection: 'row',

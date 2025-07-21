@@ -260,7 +260,6 @@ const AllergiesRecordsScreen = ({ navigation, route }) => {
             <Text style={styles.allergyRemedy}>{item.remedy}</Text>
           </View>
 
-          {/* Action Buttons */}
           <View style={styles.cardActions}>
             <TouchableOpacity
               style={styles.cardActionButton}
@@ -294,7 +293,6 @@ const AllergiesRecordsScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Card Body */}
         <View style={styles.cardBody}>
           <View style={styles.detailRow}>
             <FastImage source={icons.calendar} style={styles.detailIcon} tintColor="#6B7280" />
@@ -308,14 +306,13 @@ const AllergiesRecordsScreen = ({ navigation, route }) => {
             </Text>
           </View>
 
-          <View style={styles.detailRow}>
+          {/* <View style={styles.detailRow}>
             <FastImage source={icons.livestock} style={styles.detailIcon} tintColor="#6B7280" />
             <Text style={styles.detailLabel}>Animal ID:</Text>
             <Text style={styles.detailValue}>{item.animalIdOrFlockId}</Text>
-          </View>
+          </View> */}
         </View>
 
-        {/* View More Button */}
         <TouchableOpacity
           style={styles.viewMoreButton}
           onPress={() => handleRecordPress(item)}>
@@ -364,13 +361,11 @@ const AllergiesRecordsScreen = ({ navigation, route }) => {
         {selectedRecord && (
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
 
-            {/* Status Card */}
             <View style={styles.modalStatusCard}>
               <Text style={styles.modalAllergyName}>{selectedRecord.cause}</Text>
               <Text style={styles.modalStatusText}>Allergy Record</Text>
             </View>
 
-            {/* Basic Information */}
             <View style={styles.modalSection}>
               <Text style={styles.modalSectionTitle}>Basic Information</Text>
 
@@ -379,10 +374,10 @@ const AllergiesRecordsScreen = ({ navigation, route }) => {
                 <Text style={styles.modalDetailValue}>{selectedRecord.cause}</Text>
               </View>
 
-              <View style={styles.modalDetailRow}>
+              {/* <View style={styles.modalDetailRow}>
                 <Text style={styles.modalDetailLabel}>Animal ID</Text>
                 <Text style={styles.modalDetailValue}>{selectedRecord.animalIdOrFlockId}</Text>
-              </View>
+              </View> */}
 
               <View style={styles.modalDetailRow}>
                 <Text style={styles.modalDetailLabel}>Date Recorded</Text>

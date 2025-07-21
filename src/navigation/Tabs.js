@@ -18,8 +18,8 @@ const TabArr = [
     Component: HomeScreen,
   },
   {
-    route: 'Crops',
-    label: 'Crops',
+    route: 'Business Analytics',
+    label: 'Business Analytics',
     activeIcon: icons.crops,
     inActiveIcon: icons.crops,
     Component: HomeScreen,

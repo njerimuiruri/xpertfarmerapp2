@@ -224,10 +224,7 @@ const LivestockModuleScreen = ({ navigation }) => {
         });
         break;
       case 'health':
-        navigation.navigate('HealthRecordsScreen', {
-          animalId: animal.id,
-          animalData: animal
-        });
+        navigation.navigate('HealthRecordsScreen');
         break;
       case 'delete':
         handleDeleteLivestock(animal);
@@ -1092,7 +1089,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
   },
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
   View,
@@ -11,6 +11,9 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  Modal,
+  FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import LinearGradient from 'react-native-linear-gradient';
@@ -18,17 +21,24 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { icons } from '../../../constants';
 import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
-// Import your vaccination service
 import { createVaccination, validateVaccinationData } from '../../../services/healthservice';
+import { getLivestockForActiveFarm } from '../../../services/livestock';
 
 const { width } = Dimensions.get('window');
 
 const AddVaccineRecords = ({ navigation, route }) => {
-  const { animalId, animalData, farmId } = route.params;
+  // Get optional params if coming from specific livestock
+  const routeParams = route?.params || {};
+
+  // Livestock state
+  const [livestock, setLivestock] = useState([]);
+  const [selectedLivestock, setSelectedLivestock] = useState(null);
+  const [showLivestockPicker, setShowLivestockPicker] = useState(false);
+  const [loadingLivestock, setLoadingLivestock] = useState(true);
 
   // Form state
   const [formData, setFormData] = useState({
-    animalIdOrFlockId: animalId,
+    animalIdOrFlockId: '',
     vaccinationAgainst: '',
     drugAdministered: '',
     dateAdministered: new Date(),
@@ -37,13 +47,71 @@ const AddVaccineRecords = ({ navigation, route }) => {
     administeredBy: '',
     practiceId: '',
     costOfService: '',
-    farmId: farmId || animalId,
-    livestockId: animalId,
+    farmId: '',
+    livestockId: '',
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+
+  // Load livestock on component mount
+  useEffect(() => {
+    loadLivestock();
+  }, []);
+
+  // Pre-select livestock if coming from specific livestock screen
+  useEffect(() => {
+    if (routeParams.animalId && routeParams.animalData && livestock.length > 0) {
+      const preSelectedLivestock = livestock.find(
+        item => item.id === routeParams.animalId
+      );
+      if (preSelectedLivestock) {
+        setSelectedLivestock(preSelectedLivestock);
+        updateFormWithLivestock(preSelectedLivestock);
+      }
+    }
+  }, [livestock, routeParams]);
+
+  const loadLivestock = async () => {
+    try {
+      setLoadingLivestock(true);
+      const livestockData = await getLivestockForActiveFarm();
+
+      if (Array.isArray(livestockData)) {
+        setLivestock(livestockData);
+      } else {
+        console.error('Expected array but got:', livestockData);
+        setLivestock([]);
+      }
+    } catch (error) {
+      console.error('Failed to load livestock:', error);
+      Alert.alert('Error', 'Failed to load livestock. Please try again.');
+      setLivestock([]);
+    } finally {
+      setLoadingLivestock(false);
+    }
+  };
+
+  const updateFormWithLivestock = (selectedAnimal) => {
+    setFormData(prev => ({
+      ...prev,
+      animalIdOrFlockId: selectedAnimal.id,
+      livestockId: selectedAnimal.id,
+      farmId: selectedAnimal.farmId,
+    }));
+  };
+
+  const handleLivestockSelection = (animal) => {
+    setSelectedLivestock(animal);
+    updateFormWithLivestock(animal);
+    setShowLivestockPicker(false);
+
+    // Clear livestock selection error if it exists
+    if (errors.livestock) {
+      setErrors(prev => ({ ...prev, livestock: null }));
+    }
+  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -62,6 +130,11 @@ const AddVaccineRecords = ({ navigation, route }) => {
 
   const validateForm = () => {
     const newErrors = {};
+
+    // Validate livestock selection
+    if (!selectedLivestock) {
+      newErrors.livestock = 'Please select a livestock/animal';
+    }
 
     if (!formData.vaccinationAgainst.trim()) {
       newErrors.vaccinationAgainst = 'Please specify what the vaccination is against';
@@ -120,7 +193,7 @@ const AddVaccineRecords = ({ navigation, route }) => {
 
       console.log('Creating vaccination with payload:', payload);
 
-      const result = await createVaccination(animalId, payload);
+      const result = await createVaccination(selectedLivestock.id, payload);
 
       if (result.error) {
         Alert.alert('Error', result.error);
@@ -135,7 +208,6 @@ const AddVaccineRecords = ({ navigation, route }) => {
             text: 'OK',
             onPress: () => {
               navigation.goBack();
-
             },
           },
         ]
@@ -149,6 +221,24 @@ const AddVaccineRecords = ({ navigation, route }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const formatLivestockDisplayName = (animal) => {
+    if (animal.category === 'poultry' && animal.poultry) {
+      return `${animal.type.toUpperCase()} - Flock ID: ${animal.poultry.flockId || 'N/A'}`;
+    } else if (animal.category === 'mammal' && animal.mammal) {
+      return `${animal.type.toUpperCase()} - ID: ${animal.mammal.idNumber || 'N/A'}`;
+    }
+    return `${animal.type.toUpperCase()} - ID: ${animal.id}`;
+  };
+
+  const formatLivestockSubtitle = (animal) => {
+    if (animal.category === 'poultry' && animal.poultry) {
+      return `${animal.poultry.breedType || 'Unknown breed'} • ${animal.poultry.gender || 'Unknown gender'}`;
+    } else if (animal.category === 'mammal' && animal.mammal) {
+      return `${animal.mammal.breedType || 'Unknown breed'} • ${animal.mammal.gender || 'Unknown gender'}`;
+    }
+    return 'Livestock details';
   };
 
   const renderFormGroup = (title, children) => (
@@ -185,6 +275,79 @@ const AddVaccineRecords = ({ navigation, route }) => {
     </View>
   );
 
+  const renderLivestockPicker = () => (
+    <Modal
+      visible={showLivestockPicker}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setShowLivestockPicker(false)}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Livestock</Text>
+            <TouchableOpacity
+              onPress={() => setShowLivestockPicker(false)}
+              style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>×</Text>
+            </TouchableOpacity>
+          </View>
+
+          {loadingLivestock ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#10B981" />
+              <Text style={styles.loadingText}>Loading livestock...</Text>
+            </View>
+          ) : livestock.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No livestock found</Text>
+              <Text style={styles.emptySubtext}>
+                Add some livestock to your farm first
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={livestock}
+              keyExtractor={(item) => item.id.toString()}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.livestockItem,
+                    selectedLivestock?.id === item.id && styles.selectedLivestockItem
+                  ]}
+                  onPress={() => handleLivestockSelection(item)}>
+                  <View style={styles.livestockIcon}>
+                    <FastImage
+                      source={icons.livestock || icons.account}
+                      style={styles.livestockIconImage}
+                      tintColor="#10B981"
+                    />
+                  </View>
+                  <View style={styles.livestockInfo}>
+                    <Text style={styles.livestockName}>
+                      {formatLivestockDisplayName(item)}
+                    </Text>
+                    <Text style={styles.livestockSubtitle}>
+                      {formatLivestockSubtitle(item)}
+                    </Text>
+                  </View>
+                  {selectedLivestock?.id === item.id && (
+                    <FastImage
+                      source={icons.check || icons.account}
+                      style={styles.checkIcon}
+                      tintColor="#10B981"
+                    />
+                  )}
+                </TouchableOpacity>
+              )}
+              contentContainerStyle={styles.modalList}
+            />
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <SecondaryHeader
@@ -202,27 +365,54 @@ const AddVaccineRecords = ({ navigation, route }) => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
 
-          {/* Animal Info Header */}
-          <LinearGradient
-            colors={['#FFFFFF', '#F8FAFC']}
-            style={styles.animalInfoCard}>
-            <View style={styles.animalCardHeader}>
-              <LinearGradient
-                colors={['#10B981', '#059669']}
-                style={styles.animalAvatarContainer}>
+          {/* Livestock Selection */}
+          {renderFormGroup('Select Livestock', (
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>
+                Select Animal/Livestock <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.livestockSelector,
+                  errors.livestock && styles.inputError,
+                  isLoading && styles.inputDisabled
+                ]}
+                onPress={() => !isLoading && setShowLivestockPicker(true)}
+                disabled={isLoading}>
+                {selectedLivestock ? (
+                  <View style={styles.selectedLivestockDisplay}>
+                    <View style={styles.selectedLivestockIcon}>
+                      <FastImage
+                        source={icons.livestock || icons.account}
+                        style={styles.selectedLivestockIconImage}
+                        tintColor="#10B981"
+                      />
+                    </View>
+                    <View style={styles.selectedLivestockInfo}>
+                      <Text style={styles.selectedLivestockName}>
+                        {formatLivestockDisplayName(selectedLivestock)}
+                      </Text>
+                      <Text style={styles.selectedLivestockSubtitle}>
+                        {formatLivestockSubtitle(selectedLivestock)}
+                      </Text>
+                    </View>
+                  </View>
+                ) : (
+                  <Text style={styles.placeholderText}>
+                    {loadingLivestock ? 'Loading livestock...' : 'Tap to select livestock'}
+                  </Text>
+                )}
                 <FastImage
-                  source={icons.livestock || icons.account}
-                  style={styles.animalAvatar}
-                  tintColor="#FFFFFF"
+                  source={icons.dropdown || icons.account}
+                  style={styles.dropdownIcon}
+                  tintColor="#6B7280"
                 />
-              </LinearGradient>
-              <View style={styles.animalInfo}>
-                <Text style={styles.animalName}>{animalData?.title || 'Animal'}</Text>
-                <Text style={styles.animalId}>ID: {animalData?.idNumber || animalId}</Text>
-                <Text style={styles.farmId}>Farm ID: {farmId}</Text>
-              </View>
+              </TouchableOpacity>
+              {errors.livestock && (
+                <Text style={styles.errorText}>{errors.livestock}</Text>
+              )}
             </View>
-          </LinearGradient>
+          ))}
 
           {/* Vaccine Information */}
           {renderFormGroup('Vaccine Information', (
@@ -286,11 +476,18 @@ const AddVaccineRecords = ({ navigation, route }) => {
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+            style={[
+              styles.submitButton,
+              (isLoading || !selectedLivestock) && styles.submitButtonDisabled
+            ]}
             onPress={handleSubmit}
-            disabled={isLoading}>
+            disabled={isLoading || !selectedLivestock}>
             <LinearGradient
-              colors={isLoading ? ['#9CA3AF', '#6B7280'] : ['#10B981', '#059669']}
+              colors={
+                isLoading || !selectedLivestock
+                  ? ['#9CA3AF', '#6B7280']
+                  : ['#10B981', '#059669']
+              }
               style={styles.submitGradient}>
               <Text style={styles.submitText}>
                 {isLoading ? 'Adding Vaccine Record...' : 'Add Vaccine Record'}
@@ -312,6 +509,9 @@ const AddVaccineRecords = ({ navigation, route }) => {
           maximumDate={new Date()}
         />
       )}
+
+      {/* Livestock Picker Modal */}
+      {renderLivestockPicker()}
     </SafeAreaView>
   );
 };
@@ -330,54 +530,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 20,
-  },
-
-  // Animal Info Card
-  animalInfoCard: {
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  animalCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  animalAvatarContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  animalAvatar: {
-    width: 28,
-    height: 28,
-  },
-  animalInfo: {
-    flex: 1,
-  },
-  animalName: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  animalId: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  farmId: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    fontWeight: '400',
-    marginTop: 2,
   },
 
   // Form Groups
@@ -437,6 +589,59 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
+  // Livestock Selector
+  livestockSelector: {
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    minHeight: 56,
+  },
+  selectedLivestockDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  selectedLivestockIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F0FDF4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  selectedLivestockIconImage: {
+    width: 20,
+    height: 20,
+  },
+  selectedLivestockInfo: {
+    flex: 1,
+  },
+  selectedLivestockName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  selectedLivestockSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  placeholderText: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    fontWeight: '500',
+  },
+  dropdownIcon: {
+    width: 20,
+    height: 20,
+  },
+
   // Date Input
   dateInput: {
     borderWidth: 2,
@@ -483,6 +688,125 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: 0.5,
+  },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '80%',
+    minHeight: '60%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1F2937',
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: '#6B7280',
+    fontWeight: '300',
+  },
+  modalList: {
+    padding: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+
+  // Livestock Item
+  livestockItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: '#F8FAFC',
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+  },
+  selectedLivestockItem: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#10B981',
+  },
+  livestockIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  livestockIconImage: {
+    width: 24,
+    height: 24,
+  },
+  livestockInfo: {
+    flex: 1,
+  },
+  livestockName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  livestockSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  checkIcon: {
+    width: 24,
+    height: 24,
+    marginLeft: 12,
   },
 
   bottomSpace: {

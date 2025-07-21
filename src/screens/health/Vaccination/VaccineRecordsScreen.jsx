@@ -1,19 +1,18 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
+  SafeAreaView,
   View,
   Text,
-  FlatList,
   TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  TextInput,
-  Alert,
-  Modal,
-  SafeAreaView,
-  Dimensions,
   ScrollView,
-  RefreshControl,
+  StyleSheet,
+  Alert,
+  Dimensions,
+  Modal,
+  FlatList,
   ActivityIndicator,
+  RefreshControl,
+  TextInput,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import LinearGradient from 'react-native-linear-gradient';
@@ -21,725 +20,630 @@ import { icons } from '../../../constants';
 import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 import {
+  getVaccinationsForActiveFarm,
   getVaccinationsForLivestock,
-  deleteVaccination,
   getVaccinationById
 } from '../../../services/healthservice';
+import { getLivestockForActiveFarm } from '../../../services/livestock';
 
 const { width } = Dimensions.get('window');
 
 const VaccineRecordsScreen = ({ navigation, route }) => {
-  const { animalId, animalData } = route.params;
+  const routeParams = route?.params || {};
+  const viewMode = routeParams.viewMode || 'farm';
+  const livestockId = routeParams.livestockId;
 
   const [vaccineRecords, setVaccineRecords] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [livestock, setLivestock] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('date');
+  const [sortBy, setSortBy] = useState('dateAdministered');
   const [sortOrder, setSortOrder] = useState('desc');
-  const [filterCategory, setFilterCategory] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterByAnimal, setFilterByAnimal] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
+
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [error, setError] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
-  // Load vaccination records on component mount
   useEffect(() => {
-    loadVaccinationRecords();
-  }, [animalId]);
+    loadData();
+  }, []);
 
-  // Refresh data when coming back to this screen (e.g., after adding a new vaccine)
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadVaccinationRecords();
-    });
-
-    return unsubscribe;
-  }, [navigation, animalId]);
-
-  const loadVaccinationRecords = async () => {
+  const loadData = async () => {
     try {
-      setLoading(true);
-      setError(null);
+      setIsLoading(true);
+      await Promise.all([loadVaccineRecords(), loadLivestock()]);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      const result = await getVaccinationsForLivestock(animalId);
+  const loadVaccineRecords = async () => {
+    try {
+      let result;
+      if (viewMode === 'livestock' && livestockId) {
+        result = await getVaccinationsForLivestock(livestockId);
+      } else {
+        result = await getVaccinationsForActiveFarm();
+      }
 
       if (result.error) {
-        setError(result.error);
         Alert.alert('Error', result.error);
-      } else {
-        // Transform the data to match your UI expectations
-        const transformedData = result.data.map(record => ({
-          ...record,
-          // Map API fields to UI fields if they're different
-          id: record.id || record._id,
-          animalId: record.livestockId,
-          animalType: animalData?.type || 'Livestock',
-          // Add any missing fields with defaults
-          category: record.category || determineCategory(record.vaccinationAgainst),
-          status: record.status || determineStatus(record.dateAdministered, record.nextDueDate),
-          nextDueDate: record.nextDueDate || calculateNextDueDate(record.dateAdministered, record.vaccinationAgainst),
-          batchNumber: record.batchNumber || 'N/A',
-          manufacturer: record.manufacturer || 'N/A',
-          notes: record.notes || '',
-          priority: record.priority || 'medium',
-        }));
-
-        setVaccineRecords(transformedData);
+        return;
       }
-    } catch (err) {
-      console.error('Error loading vaccination records:', err);
-      setError('Failed to load vaccination records');
-      Alert.alert('Error', 'Failed to load vaccination records');
-    } finally {
-      setLoading(false);
+
+      setVaccineRecords(result.data || []);
+    } catch (error) {
+      console.error('Failed to load vaccine records:', error);
+      Alert.alert('Error', 'Failed to load vaccine records. Please try again.');
+    }
+  };
+
+  const loadLivestock = async () => {
+    try {
+      const result = await getLivestockForActiveFarm();
+      if (Array.isArray(result)) {
+        setLivestock(result);
+      } else {
+        setLivestock([]);
+      }
+    } catch (error) {
+      console.error('Failed to load livestock:', error);
+      setLivestock([]);
     }
   };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadVaccinationRecords();
+    await loadData();
     setRefreshing(false);
-  }, [animalId]);
+  }, []);
 
-  // Helper function to determine category based on vaccination type
-  const determineCategory = (vaccinationAgainst) => {
-    const vaccination = vaccinationAgainst?.toLowerCase() || '';
-    if (vaccination.includes('newcastle') || vaccination.includes('influenza') || vaccination.includes('fmd')) {
-      return 'viral';
-    } else if (vaccination.includes('anthrax') || vaccination.includes('blackleg') || vaccination.includes('brucell')) {
-      return 'bacterial';
-    } else if (vaccination.includes('worm') || vaccination.includes('parasite')) {
-      return 'parasitic';
-    }
-    return 'other';
+  const getAnimalInfo = (animalId) => {
+    return livestock.find(animal => animal.id === animalId);
   };
 
-  // Helper function to determine status based on dates
-  const determineStatus = (dateAdministered, nextDueDate) => {
-    if (!nextDueDate) return 'completed';
+  const formatAnimalDisplayName = (animal) => {
+    if (!animal) return 'Unknown Animal';
 
+    if (animal.category === 'poultry' && animal.poultry) {
+      return `${animal.type.toUpperCase()} - Flock ID: ${animal.poultry.flockId || 'N/A'}`;
+    } else if (animal.category === 'mammal' && animal.mammal) {
+      return `${animal.type.toUpperCase()} - ID: ${animal.mammal.idNumber || 'N/A'}`;
+    }
+    return `${animal.type.toUpperCase()} - ID: ${animal.id}`;
+  };
+
+  const formatCurrency = (amount) => {
+    return amount ? `KES ${parseFloat(amount).toLocaleString()}` : 'N/A';
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatWeight = (weight) => {
+    return weight ? `${weight} kg` : 'N/A';
+  };
+
+  const calculateAge = (dateOfBirth) => {
+    if (!dateOfBirth) return 'Unknown';
+
+    const birth = new Date(dateOfBirth);
     const now = new Date();
-    const dueDate = new Date(nextDueDate);
-    const daysDiff = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+    const diffTime = Math.abs(now - birth);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (daysDiff < 0) return 'overdue';
-    if (daysDiff <= 30) return 'due_soon';
-    return 'completed';
-  };
-
-  // Helper function to calculate next due date (this would be better handled by your backend)
-  const calculateNextDueDate = (dateAdministered, vaccinationAgainst) => {
-    const adminDate = new Date(dateAdministered);
-    const vaccination = vaccinationAgainst?.toLowerCase() || '';
-
-    // Add different intervals based on vaccination type
-    let monthsToAdd = 12; // Default to annual
-    if (vaccination.includes('fmd')) monthsToAdd = 6;
-    if (vaccination.includes('newcastle')) monthsToAdd = 4;
-
-    adminDate.setMonth(adminDate.getMonth() + monthsToAdd);
-    return adminDate.toISOString();
-  };
-
-  const categories = ['all', 'viral', 'bacterial', 'parasitic', 'other'];
-  const statuses = ['all', 'completed', 'due_soon', 'overdue'];
-
-  const sortedAndFilteredRecords = useMemo(() => {
-    return vaccineRecords
-      .filter(record => {
-        const matchesSearch =
-          searchQuery === '' ||
-          record.vaccinationAgainst?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          record.drugAdministered?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          record.administeredBy?.toLowerCase().includes(searchQuery.toLowerCase());
-
-        const matchesCategory = filterCategory === 'all' || record.category === filterCategory;
-        const matchesStatus = filterStatus === 'all' || record.status === filterStatus;
-
-        return matchesSearch && matchesCategory && matchesStatus;
-      })
-      .sort((a, b) => {
-        if (sortBy === 'date') {
-          return sortOrder === 'desc'
-            ? new Date(b.dateAdministered) - new Date(a.dateAdministered)
-            : new Date(a.dateAdministered) - new Date(b.dateAdministered);
-        } else if (sortBy === 'vaccine') {
-          return sortOrder === 'asc'
-            ? a.vaccinationAgainst?.localeCompare(b.vaccinationAgainst)
-            : b.vaccinationAgainst?.localeCompare(a.vaccinationAgainst);
-        } else if (sortBy === 'cost') {
-          const costA = (parseInt(a.costOfVaccine) || 0) + (parseInt(a.costOfService) || 0);
-          const costB = (parseInt(b.costOfVaccine) || 0) + (parseInt(b.costOfService) || 0);
-          return sortOrder === 'desc' ? costB - costA : costA - costB;
-        }
-        return 0;
-      });
-  }, [vaccineRecords, searchQuery, sortBy, sortOrder, filterCategory, filterStatus]);
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completed': return '#22C55E';
-      case 'due_soon': return '#F59E0B';
-      case 'overdue': return '#EF4444';
-      default: return '#6B7280';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'completed': return 'Completed';
-      case 'due_soon': return 'Due Soon';
-      case 'overdue': return 'Overdue';
-      default: return 'Unknown';
-    }
-  };
-
-  const getCategoryColor = (category) => {
-    switch (category) {
-      case 'viral': return '#8B5CF6';
-      case 'bacterial': return '#06B6D4';
-      case 'parasitic': return '#F97316';
-      default: return '#6B7280';
-    }
-  };
-
-  const toggleSort = useCallback((newSortBy) => {
-    if (sortBy === newSortBy) {
-      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    if (diffDays < 30) {
+      return `${diffDays} days`;
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30);
+      return `${months} month${months > 1 ? 's' : ''}`;
     } else {
-      setSortBy(newSortBy);
-      setSortOrder('desc');
+      const years = Math.floor(diffDays / 365);
+      const remainingMonths = Math.floor((diffDays % 365) / 30);
+      return `${years} year${years > 1 ? 's' : ''}${remainingMonths > 0 ? ` ${remainingMonths} month${remainingMonths > 1 ? 's' : ''}` : ''}`;
     }
-  }, [sortBy]);
+  };
 
-  const handleRecordPress = async (record) => {
-    try {
-      const detailResult = await getVaccinationById(record.id);
+  const getFilteredAndSortedRecords = () => {
+    let filtered = [...vaccineRecords];
 
-      if (detailResult.error) {
-        Alert.alert('Error', 'Failed to load vaccination details');
-        setSelectedRecord(record);
-      } else {
-        setSelectedRecord(detailResult.data);
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(record =>
+        record.vaccinationAgainst?.toLowerCase().includes(query) ||
+        record.drugAdministered?.toLowerCase().includes(query) ||
+        record.administeredBy?.toLowerCase().includes(query)
+      );
+    }
+
+    if (filterByAnimal !== 'all') {
+      filtered = filtered.filter(record => record.livestockId === filterByAnimal);
+    }
+
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortBy) {
+        case 'dateAdministered':
+          aValue = new Date(a.dateAdministered);
+          bValue = new Date(b.dateAdministered);
+          break;
+        case 'vaccinationAgainst':
+          aValue = a.vaccinationAgainst?.toLowerCase() || '';
+          bValue = b.vaccinationAgainst?.toLowerCase() || '';
+          break;
+        case 'cost':
+          aValue = (parseFloat(a.costOfVaccine) || 0) + (parseFloat(a.costOfService) || 0);
+          bValue = (parseFloat(b.costOfVaccine) || 0) + (parseFloat(b.costOfService) || 0);
+          break;
+        default:
+          aValue = a[sortBy] || '';
+          bValue = b[sortBy] || '';
       }
 
-      setShowDetailModal(true);
-    } catch (error) {
-      console.error('Error fetching vaccination details:', error);
-      setSelectedRecord(record); // Use cached data
-      setShowDetailModal(true);
-    }
+      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return filtered;
   };
 
-  const handleDelete = useCallback(async (id) => {
+  const handleViewDetails = (record) => {
+    navigation.navigate('VaccineDetailScreen', {
+      recordId: record.id,
+      recordData: record
+    });
+  };
+  const handleEdit = (record) => {
+    setShowDetailModal(false);
+    navigation.navigate('VaccineEditScreen', {
+      recordId: record.id,
+      recordData: record
+    });
+  };
+
+  const handleDelete = (record) => {
     Alert.alert(
       'Delete Vaccine Record',
-      'Are you sure you want to delete this vaccine record?',
+      'Are you sure you want to delete this vaccination record? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              const result = await deleteVaccination(id);
-
-              if (result.error) {
-                Alert.alert('Error', result.error);
-              } else {
-                // Remove from local state
-                setVaccineRecords(prev => prev.filter(record => record.id !== id));
-                Alert.alert('Success', 'Vaccination record deleted successfully');
-                setShowDetailModal(false);
-              }
-            } catch (error) {
-              console.error('Error deleting vaccination:', error);
-              Alert.alert('Error', 'Failed to delete vaccination record');
-            }
-          },
-        },
-      ],
+          onPress: () => confirmDelete(record)
+        }
+      ]
     );
-  }, []);
+  };
 
-  const renderHeader = () => (
-    <View style={styles.headerContainer}>
-      <LinearGradient
-        colors={['#FFFFFF', '#F8FAFC']}
-        style={styles.animalCard}>
-        <View style={styles.animalCardContent}>
+  const confirmDelete = async (record) => {
+    try {
+      Alert.alert('Success', 'Vaccine record deleted successfully');
+      await loadVaccineRecords();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to delete vaccine record');
+    }
+  };
 
-          <View style={[styles.animalAvatar, { backgroundColor: COLORS.green3 }]}>
-            <FastImage
-              source={icons.livestock || icons.account}
-              style={styles.animalAvatarIcon}
-              tintColor="#FFFFFF"
-            />
-            <View style={styles.statusIndicator} />
-          </View>
-          <View style={styles.animalInfo}>
-            <Text style={styles.animalName}>{animalData?.title || animalData?.name || 'Animal'}</Text>
-            <Text style={styles.animalBreed}>{animalData?.breed || 'Unknown Breed'}</Text>
-          </View>
-        </View>
-      </LinearGradient>
+  const renderVaccineCard = ({ item }) => {
+    const animal = getAnimalInfo(item.livestockId);
+    const totalCost = (parseFloat(item.costOfVaccine) || 0) + (parseFloat(item.costOfService) || 0);
 
-      {/* Error Message */}
-      {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={loadVaccinationRecords} style={styles.retryButton}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <FastImage
-          source={icons.search}
-          style={styles.searchIcon}
-          tintColor={COLORS.gray}
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search vaccines, drugs, veterinarian..."
-          placeholderTextColor={COLORS.gray}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        {searchQuery ? (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <FastImage
-              source={icons.close}
-              style={styles.clearIcon}
-              tintColor={COLORS.gray}
-            />
-          </TouchableOpacity>
-        ) : null}
-      </View>
-
-      {/* Action Bar */}
-      <View style={styles.actionBar}>
-        <TouchableOpacity
-          style={[styles.actionButton, showFilters && styles.activeActionButton]}
-          onPress={() => setShowFilters(!showFilters)}>
-          <FastImage
-            source={icons.filter}
-            style={styles.actionIcon}
-            tintColor={showFilters ? COLORS.white : COLORS.black}
-          />
-          <Text style={[styles.actionText, showFilters && styles.activeActionText]}>
-            Filters {(filterCategory !== 'all' || filterStatus !== 'all') && '●'}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => toggleSort('date')}>
-          <FastImage
-            source={icons.calendar}
-            style={styles.actionIcon}
-            tintColor={COLORS.black}
-          />
-          <Text style={styles.actionText}>
-            {sortBy === 'date' ? (sortOrder === 'desc' ? 'Newest' : 'Oldest') : 'Date'}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => toggleSort('cost')}>
-          <FastImage
-            source={icons.money}
-            style={styles.actionIcon}
-            tintColor={COLORS.black}
-          />
-          <Text style={styles.actionText}>
-            {sortBy === 'cost' ? (sortOrder === 'desc' ? 'High Cost' : 'Low Cost') : 'Cost'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Filter Options */}
-      {showFilters && (
-        <View style={styles.filterContainer}>
-          <View style={styles.filterSection}>
-            <Text style={styles.filterLabel}>Category</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.filterOptions}>
-                {categories.map(category => (
-                  <TouchableOpacity
-                    key={category}
-                    style={[
-                      styles.filterOption,
-                      filterCategory === category && styles.activeFilter
-                    ]}
-                    onPress={() => setFilterCategory(category)}>
-                    <Text style={[
-                      styles.filterOptionText,
-                      filterCategory === category && styles.activeFilterText
-                    ]}>
-                      {category.charAt(0).toUpperCase() + category.slice(1)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-
-          <View style={styles.filterSection}>
-            <Text style={styles.filterLabel}>Status</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.filterOptions}>
-                {statuses.map(status => (
-                  <TouchableOpacity
-                    key={status}
-                    style={[
-                      styles.filterOption,
-                      filterStatus === status && styles.activeFilter
-                    ]}
-                    onPress={() => setFilterStatus(status)}>
-                    <Text style={[
-                      styles.filterOptionText,
-                      filterStatus === status && styles.activeFilterText
-                    ]}>
-                      {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      )}
-
-      <View style={styles.resultsContainer}>
-        <Text style={styles.resultsText}>
-          {sortedAndFilteredRecords.length} vaccination record{sortedAndFilteredRecords.length !== 1 ? 's' : ''}
-        </Text>
-      </View>
-    </View>
-  );
-
-  const renderVaccineCard = ({ item }) => (
-    <TouchableOpacity
-      style={styles.vaccineCard}
-      onPress={() => handleRecordPress(item)}
-      activeOpacity={0.85}>
-
-      <LinearGradient
-        colors={['#FFFFFF', '#F8FAFC']}
-        style={styles.cardGradient}>
-
-        <View style={styles.cardHeader}>
-          <View style={styles.vaccineInfo}>
-            <Text style={styles.vaccineName}>{item.vaccinationAgainst}</Text>
-            <Text style={styles.vaccineDrug}>{item.drugAdministered}</Text>
-          </View>
-
-          <View style={styles.cardHeaderRight}>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-              <Text style={styles.statusText}>{getStatusText(item.status)}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Card Body */}
-        <View style={styles.cardBody}>
-          <View style={styles.detailRow}>
-            <FastImage source={icons.calendar} style={styles.detailIcon} tintColor="#6B7280" />
-            <Text style={styles.detailLabel}>Administered:</Text>
-            <Text style={styles.detailValue}>
-              {new Date(item.dateAdministered).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-              })}
-            </Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <FastImage source={icons.user} style={styles.detailIcon} tintColor="#6B7280" />
-            <Text style={styles.detailLabel}>Veterinarian:</Text>
-            <Text style={styles.detailValue}>{item.administeredBy}</Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <FastImage source={icons.medicine} style={styles.detailIcon} tintColor="#6B7280" />
-            <Text style={styles.detailLabel}>Dosage:</Text>
-            <Text style={styles.detailValue}>{item.dosage}</Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <FastImage source={icons.money} style={styles.detailIcon} tintColor="#6B7280" />
-            <Text style={styles.detailLabel}>Total Cost:</Text>
-            <Text style={styles.costValue}>
-              KES {((parseInt(item.costOfVaccine) || 0) + (parseInt(item.costOfService) || 0)).toLocaleString()}
-            </Text>
-          </View>
-        </View>
-
-        {/* Card Footer */}
-        <View style={styles.cardFooter}>
-          <View style={styles.categoryTag}>
-            <View style={[styles.categoryDot, { backgroundColor: getCategoryColor(item.category) }]} />
-            <Text style={styles.categoryText}>{item.category?.charAt(0).toUpperCase() + item.category?.slice(1)}</Text>
-          </View>
-
-          {item.nextDueDate && (
-            <Text style={styles.nextDueText}>
-              Next due: {new Date(item.nextDueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            </Text>
-          )}
-        </View>
-
-      </LinearGradient>
-    </TouchableOpacity>
-  );
-
-  if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <SecondaryHeader
-          title="Health Records"
-          showBack={true}
-          onBack={() => navigation.goBack()}
-        />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#10B981" />
-          <Text style={styles.loadingText}>Loading vaccination records...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+      <View style={styles.vaccineCard}>
+        <LinearGradient
+          colors={['#F0FDF4', '#FFFFFF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cardGradient}>
 
-  const renderDetailModal = () => (
-    <Modal
-      visible={showDetailModal}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={() => setShowDetailModal(false)}>
+          <View style={styles.statusBadge}>
+            <View style={styles.statusDot} />
+            <Text style={styles.statusText}>Completed</Text>
+          </View>
 
-      <SafeAreaView style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>Vaccination Details</Text>
-          <TouchableOpacity onPress={() => setShowDetailModal(false)}>
-            <FastImage source={icons.close} style={styles.modalCloseIcon} tintColor={COLORS.black} />
-          </TouchableOpacity>
-        </View>
-
-        {selectedRecord && (
-          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-
-            {/* Status Card */}
-            <View style={[styles.modalStatusCard, { borderLeftColor: getStatusColor(selectedRecord.status) }]}>
-              <Text style={styles.modalVaccineName}>{selectedRecord.vaccinationAgainst}</Text>
-              <Text style={styles.modalStatusText}>{getStatusText(selectedRecord.status)}</Text>
+          <View style={styles.cardContent}>
+            <View style={styles.cardHeader}>
+              <View style={styles.vaccineInfo}>
+                <Text style={styles.vaccinationAgainst}>{item.vaccinationAgainst}</Text>
+                <Text style={styles.drugAdministered}>{item.drugAdministered}</Text>
+              </View>
+              <View style={styles.dateContainer}>
+                <FastImage source={icons.calendar} style={styles.calendarIcon} tintColor={COLORS.success || '#10B981'} />
+                <Text style={styles.dateText}>{formatDate(item.dateAdministered)}</Text>
+              </View>
             </View>
 
-            {/* Basic Information */}
-            <View style={styles.modalSection}>
-              <Text style={styles.modalSectionTitle}>Basic Information</Text>
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Drug Administered</Text>
-                <Text style={styles.modalDetailValue}>{selectedRecord.drugAdministered}</Text>
-              </View>
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Date Administered</Text>
-                <Text style={styles.modalDetailValue}>
-                  {new Date(selectedRecord.dateAdministered).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </Text>
-              </View>
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Dosage</Text>
-                <Text style={styles.modalDetailValue}>{selectedRecord.dosage}</Text>
-              </View>
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Category</Text>
-                <View style={styles.modalCategoryContainer}>
-                  <View style={[styles.categoryDot, { backgroundColor: getCategoryColor(selectedRecord.category) }]} />
-                  <Text style={styles.modalDetailValue}>{selectedRecord.category?.charAt(0).toUpperCase() + selectedRecord.category?.slice(1)}</Text>
+            {/* Animal Info with Enhanced Design */}
+            {animal && (
+              <View style={styles.animalSection}>
+                <View style={styles.animalIconContainer}>
+                  <LinearGradient
+                    colors={[COLORS.success || '#10B981', '#059669']}
+                    style={styles.animalIcon}>
+                    <FastImage
+                      source={icons.livestock || icons.account}
+                      style={styles.animalIconImage}
+                      tintColor="#FFFFFF"
+                    />
+                  </LinearGradient>
                 </View>
-              </View>
-            </View>
-
-            {/* Veterinarian Information */}
-            <View style={styles.modalSection}>
-              <Text style={styles.modalSectionTitle}>Veterinarian Information</Text>
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Administered By</Text>
-                <Text style={styles.modalDetailValue}>{selectedRecord.administeredBy}</Text>
-              </View>
-
-              {selectedRecord.practiceId && (
-                <View style={styles.modalDetailRow}>
-                  <Text style={styles.modalDetailLabel}>Practice ID</Text>
-                  <Text style={styles.modalDetailValue}>{selectedRecord.practiceId}</Text>
-                </View>
-              )}
-            </View>
-
-            {/* Vaccine Information */}
-            <View style={styles.modalSection}>
-              <Text style={styles.modalSectionTitle}>Vaccine Information</Text>
-
-              {selectedRecord.batchNumber && selectedRecord.batchNumber !== 'N/A' && (
-                <View style={styles.modalDetailRow}>
-                  <Text style={styles.modalDetailLabel}>Batch Number</Text>
-                  <Text style={styles.modalDetailValue}>{selectedRecord.batchNumber}</Text>
-                </View>
-              )}
-
-              {selectedRecord.manufacturer && selectedRecord.manufacturer !== 'N/A' && (
-                <View style={styles.modalDetailRow}>
-                  <Text style={styles.modalDetailLabel}>Manufacturer</Text>
-                  <Text style={styles.modalDetailValue}>{selectedRecord.manufacturer}</Text>
-                </View>
-              )}
-            </View>
-
-            {/* Cost Information */}
-            <View style={styles.modalSection}>
-              <Text style={styles.modalSectionTitle}>Cost Breakdown</Text>
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Vaccine Cost</Text>
-                <Text style={styles.modalDetailValue}>KES {(parseInt(selectedRecord.costOfVaccine) || 0).toLocaleString()}</Text>
-              </View>
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Service Cost</Text>
-                <Text style={styles.modalDetailValue}>KES {(parseInt(selectedRecord.costOfService) || 0).toLocaleString()}</Text>
-              </View>
-
-              <View style={[styles.modalDetailRow, styles.totalCostRow]}>
-                <Text style={styles.modalTotalLabel}>Total Cost</Text>
-                <Text style={styles.modalTotalValue}>
-                  KES {((parseInt(selectedRecord.costOfVaccine) || 0) + (parseInt(selectedRecord.costOfService) || 0)).toLocaleString()}
-                </Text>
-              </View>
-            </View>
-
-            {/* Schedule Information */}
-            {selectedRecord.nextDueDate && (
-              <View style={styles.modalSection}>
-                <Text style={styles.modalSectionTitle}>Schedule</Text>
-
-                <View style={styles.modalDetailRow}>
-                  <Text style={styles.modalDetailLabel}>Next Due Date</Text>
-                  <Text style={styles.modalDetailValue}>
-                    {new Date(selectedRecord.nextDueDate).toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
+                <View style={styles.animalInfo}>
+                  <Text style={styles.animalName}>{formatAnimalDisplayName(animal)}</Text>
+                  <Text style={styles.animalBreed}>
+                    {animal.category === 'poultry' && animal.poultry?.breedType ||
+                      animal.category === 'mammal' && animal.mammal?.breedType ||
+                      'Unknown breed'}
                   </Text>
                 </View>
               </View>
             )}
 
-            {/* Notes */}
-            {selectedRecord.notes && (
-              <View style={styles.modalSection}>
-                <Text style={styles.modalSectionTitle}>Notes</Text>
-                <Text style={styles.modalNotes}>{selectedRecord.notes}</Text>
+            {/* Enhanced Quick Info Row */}
+            <View style={styles.quickInfoRow}>
+              <View style={styles.quickInfoItem}>
+                <View style={styles.infoIconContainer}>
+                  <FastImage source={icons.medical || icons.health} style={styles.infoIcon} tintColor="#6366F1" />
+                </View>
+                <Text style={styles.quickInfoLabel}>Dosage</Text>
+                <Text style={styles.quickInfoValue}>{item.dosage}</Text>
               </View>
-            )}
+              <View style={styles.quickInfoItem}>
+                <View style={styles.infoIconContainer}>
+                  <FastImage source={icons.user || icons.account} style={styles.infoIcon} tintColor="#8B5CF6" />
+                </View>
+                <Text style={styles.quickInfoLabel}>By</Text>
+                <Text style={styles.quickInfoValue}>{item.administeredBy}</Text>
+              </View>
+              {totalCost > 0 && (
+                <View style={styles.quickInfoItem}>
+                  <View style={styles.infoIconContainer}>
+                    <FastImage source={icons.dollar || icons.money} style={styles.infoIcon} tintColor="#059669" />
+                  </View>
+                  <Text style={styles.quickInfoLabel}>Cost</Text>
+                  <Text style={styles.costValue}>{formatCurrency(totalCost)}</Text>
+                </View>
+              )}
+            </View>
+          </View>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalActionButton}
-                onPress={() => {
-                  setShowDetailModal(false);
-                  navigation.navigate('VaccineEditScreen', {
-                    recordId: selectedRecord.id,
-                    animalId,
-                    animalData
-                  });
-                }}>
-                <FastImage source={icons.edit} style={styles.modalActionIcon} tintColor="#2196F3" />
-                <Text style={[styles.modalActionText, { color: '#2196F3' }]}>Edit Record</Text>
-              </TouchableOpacity>
+          {/* Action Buttons Row */}
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.viewButton]}
+              onPress={() => handleViewDetails(item)}
+              activeOpacity={0.8}>
+              <FastImage source={icons.eye || icons.view} style={styles.actionIcon} tintColor="#3B82F6" />
+              <Text style={[styles.actionButtonText, styles.viewButtonText]}>View Details</Text>
+            </TouchableOpacity>
 
+            <TouchableOpacity
+              style={[styles.actionButton, styles.editButton]}
+              onPress={() => handleEdit(item)}
+              activeOpacity={0.8}>
+              <FastImage source={icons.edit} style={styles.actionIcon} tintColor="#059669" />
+              <Text style={[styles.actionButtonText, styles.editButtonText]}>Edit</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionButton, styles.deleteButton]}
+              onPress={() => handleDelete(item)}
+              activeOpacity={0.8}>
+              <FastImage source={icons.trash} style={styles.actionIcon} tintColor="#EF4444" />
+              <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+
+        </LinearGradient>
+        {/* <TouchableOpacity
+          style={styles.emptyActionButton}
+          onPress={() => navigation.navigate('AddVaccineRecords')}
+          activeOpacity={0.8}>
+          <FastImage
+            source={icons.plus || icons.add}
+            style={styles.emptyActionIcon}
+            tintColor={COLORS.white}
+          />
+          <Text style={styles.emptyActionText}>Add First Record</Text>
+        </TouchableOpacity> */}
+      </View>
+    );
+  };
+
+  const renderFiltersModal = () => (
+    <Modal
+      visible={showFilters}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setShowFilters(false)}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.filtersModal}>
+          <LinearGradient
+            colors={['#FFFFFF', '#F8FAFC']}
+            style={styles.modalGradient}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filter & Sort</Text>
               <TouchableOpacity
-                style={styles.modalActionButton}
-                onPress={() => handleDelete(selectedRecord.id)}>
-                <FastImage source={icons.remove} style={styles.modalActionIcon} tintColor="#EF4444" />
-                <Text style={[styles.modalActionText, { color: '#EF4444' }]}>Delete Record</Text>
+                onPress={() => setShowFilters(false)}
+                style={styles.closeButton}>
+                <FastImage source={icons.close || icons.x} style={styles.closeIcon} tintColor="#6B7280" />
               </TouchableOpacity>
             </View>
 
-          </ScrollView>
-        )}
-      </SafeAreaView>
+            <ScrollView style={styles.filtersContent}>
+              {/* Sort Section */}
+              <View style={styles.filterSection}>
+                <Text style={styles.sectionTitle}>Sort By</Text>
+                {[
+                  { key: 'dateAdministered', label: 'Date Administered' },
+                  { key: 'vaccinationAgainst', label: 'Vaccination Against' },
+                  { key: 'cost', label: 'Total Cost' }
+                ].map(option => (
+                  <TouchableOpacity
+                    key={option.key}
+                    style={[
+                      styles.filterOption,
+                      sortBy === option.key && styles.selectedOption
+                    ]}
+                    onPress={() => setSortBy(option.key)}>
+                    <Text style={[
+                      styles.filterOptionText,
+                      sortBy === option.key && styles.selectedOptionText
+                    ]}>
+                      {option.label}
+                    </Text>
+                    {sortBy === option.key && (
+                      <FastImage source={icons.check} style={styles.checkIcon} tintColor={COLORS.success || '#10B981'} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Sort Order Section */}
+              <View style={styles.filterSection}>
+                <Text style={styles.sectionTitle}>Sort Order</Text>
+                {[
+                  { key: 'desc', label: 'Newest First' },
+                  { key: 'asc', label: 'Oldest First' }
+                ].map(option => (
+                  <TouchableOpacity
+                    key={option.key}
+                    style={[
+                      styles.filterOption,
+                      sortOrder === option.key && styles.selectedOption
+                    ]}
+                    onPress={() => setSortOrder(option.key)}>
+                    <Text style={[
+                      styles.filterOptionText,
+                      sortOrder === option.key && styles.selectedOptionText
+                    ]}>
+                      {option.label}
+                    </Text>
+                    {sortOrder === option.key && (
+                      <FastImage source={icons.check} style={styles.checkIcon} tintColor={COLORS.success || '#10B981'} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Filter by Animal Section */}
+              {viewMode === 'farm' && livestock.length > 0 && (
+                <View style={styles.filterSection}>
+                  <Text style={styles.sectionTitle}>Filter by Animal</Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.filterOption,
+                      filterByAnimal === 'all' && styles.selectedOption
+                    ]}
+                    onPress={() => setFilterByAnimal('all')}>
+                    <Text style={[
+                      styles.filterOptionText,
+                      filterByAnimal === 'all' && styles.selectedOptionText
+                    ]}>
+                      All Animals
+                    </Text>
+                    {filterByAnimal === 'all' && (
+                      <FastImage source={icons.check} style={styles.checkIcon} tintColor={COLORS.success || '#10B981'} />
+                    )}
+                  </TouchableOpacity>
+                  {livestock.map(animal => (
+                    <TouchableOpacity
+                      key={animal.id}
+                      style={[
+                        styles.filterOption,
+                        filterByAnimal === animal.id && styles.selectedOption
+                      ]}
+                      onPress={() => setFilterByAnimal(animal.id)}>
+                      <Text style={[
+                        styles.filterOptionText,
+                        filterByAnimal === animal.id && styles.selectedOptionText
+                      ]}>
+                        {formatAnimalDisplayName(animal)}
+                      </Text>
+                      {filterByAnimal === animal.id && (
+                        <FastImage source={icons.check} style={styles.checkIcon} tintColor={COLORS.success || '#10B981'} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </ScrollView>
+
+            <View style={styles.filterActions}>
+              <TouchableOpacity
+                style={styles.clearFiltersButton}
+                onPress={() => {
+                  setSearchQuery('');
+                  setSortBy('dateAdministered');
+                  setSortOrder('desc');
+                  setFilterByAnimal('all');
+                }}>
+                <Text style={styles.clearFiltersText}>Clear All</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.applyFiltersButton}
+                onPress={() => setShowFilters(false)}>
+                <LinearGradient
+                  colors={[COLORS.success || '#10B981', '#059669']}
+                  style={styles.applyGradient}>
+                  <Text style={styles.applyFiltersText}>Apply</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        </View>
+      </View>
     </Modal>
   );
 
+
   const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <FastImage source={icons.medicine} style={styles.emptyStateIcon} tintColor={COLORS.gray} />
-      <Text style={styles.emptyStateTitle}>No Vaccination Records</Text>
-      <Text style={styles.emptyStateMessage}>
-        This animal doesn't have any vaccination records yet.
-      </Text>
-      <TouchableOpacity
-        style={styles.emptyStateButton}
-        onPress={() => navigation.navigate('AddVaccineRecords', { animalId, animalData })}>
-        <Text style={styles.emptyStateButtonText}>Add First Record</Text>
-      </TouchableOpacity>
+    <View style={styles.emptyContainer}>
+      <LinearGradient
+        colors={['#F8FAFC', '#FFFFFF']}
+        style={styles.emptyGradient}>
+        <FastImage
+          source={icons.medical || icons.health}
+          style={styles.emptyIcon}
+          tintColor="#9CA3AF"
+        />
+        <Text style={styles.emptyTitle}>No Vaccine Records</Text>
+        <Text style={styles.emptySubtitle}>
+          {viewMode === 'livestock'
+            ? 'This animal has no vaccination records yet.'
+            : 'No vaccination records found for your farm.'
+          }
+        </Text>
+        <TouchableOpacity
+          style={styles.addFirstRecordButton}
+          onPress={() => navigation.navigate('AddVaccineRecords')}
+          activeOpacity={0.8}>
+          <LinearGradient
+            colors={[COLORS.success || '#10B981', '#059669']}
+            style={styles.addFirstGradient}>
+            <FastImage source={icons.plus || icons.add} style={styles.addFirstIcon} tintColor="#FFFFFF" />
+            <Text style={styles.addFirstText}>Add First Record</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+      </LinearGradient>
     </View>
   );
+
+  const filteredRecords = getFilteredAndSortedRecords();
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SecondaryHeader
+          title="Vaccine Records"
+          onBackPress={() => navigation.goBack()}
+          showNotification={true}
+        />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.success || '#10B981'} />
+          <Text style={styles.loadingText}>Loading vaccine records...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <SecondaryHeader
-        title="Health Records"
-        showBack={true}
-        onBack={() => navigation.goBack()}
+        title={viewMode === 'livestock' ? 'Animal Vaccines' : 'Vaccine Records'}
+        onBackPress={() => navigation.goBack()}
+        showNotification={true}
       />
 
-      {sortedAndFilteredRecords.length > 0 ? (
-        <FlatList
-          data={sortedAndFilteredRecords}
-          renderItem={renderVaccineCard}
-          keyExtractor={item => item.id}
-          ListHeaderComponent={renderHeader}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        />
+      {/* Search and Filter Bar */}
+      <View style={styles.searchFilterContainer}>
+        <LinearGradient
+          colors={['#FFFFFF', '#F8FAFC']}
+          style={styles.searchGradient}>
+          <View style={styles.searchContainer}>
+            <FastImage source={icons.search} style={styles.searchIcon} tintColor="#6B7280" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search vaccines..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#9CA3AF"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery('')}
+                style={styles.clearSearchButton}>
+                <FastImage source={icons.close || icons.x} style={styles.clearSearchIcon} tintColor="#6B7280" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={() => setShowFilters(true)}
+            activeOpacity={0.8}>
+            <LinearGradient
+              colors={['#EFF6FF', '#DBEAFE']}
+              style={styles.filterGradient}>
+              <FastImage source={icons.filter} style={styles.filterIcon} tintColor="#3B82F6" />
+              <Text style={styles.filterButtonText}>Filter</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </LinearGradient>
+      </View>
+
+      <View style={styles.headerActions}>
+        <Text style={styles.recordsCount}>
+          {filteredRecords.length} record{filteredRecords.length !== 1 ? 's' : ''} found
+        </Text>
+
+      </View>
+
+      {/* Records List */}
+      {filteredRecords.length === 0 ? (
+        renderEmptyState()
       ) : (
-        <ScrollView
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          contentContainerStyle={{ flex: 1 }}>
-          {renderHeader()}
-          {renderEmptyState()}
-        </ScrollView>
+        <FlatList
+          data={filteredRecords}
+          renderItem={renderVaccineCard}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS.success || '#10B981']}
+              tintColor={COLORS.success || '#10B981'}
+            />
+          }
+          showsVerticalScrollIndicator={false}
+        />
       )}
 
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('AddVaccineRecords', { animalId, animalData })}>
-        <FastImage source={icons.plus} style={styles.fabIcon} tintColor="#FFFFFF" />
+        onPress={() => navigation.navigate('AddLivestockScreen')}>
+        <FastImage
+          source={icons.plus || icons.add}
+          style={styles.fabIcon}
+          tintColor={COLORS.white}
+        />
       </TouchableOpacity>
-
-      {renderDetailModal()}
+      {renderFiltersModal()}
     </SafeAreaView>
   );
 };
@@ -747,461 +651,552 @@ const VaccineRecordsScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F9FAFB',
   },
 
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#F9FAFB',
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
     color: '#6B7280',
+    fontFamily: 'Inter-Medium',
   },
 
-  errorContainer: {
-    backgroundColor: '#FEF2F2',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#FECACA',
-  },
-  errorText: {
-    color: '#DC2626',
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  retryButton: {
-    backgroundColor: '#DC2626',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
-  },
-  retryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-
-  listContent: {
-    paddingBottom: 100,
-  },
-
-  headerContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-
-  animalCard: {
-    borderRadius: 16,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  animalCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-  },
-  animalAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  animalAvatarIcon: {
-    width: 30,
-    height: 30,
-  },
-  animalInfo: {
-    flex: 1,
-  },
-  animalName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  animalId: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 2,
-  },
-  animalBreed: {
-    fontSize: 14,
-    color: '#10B981',
-    fontWeight: '500',
-  },
-
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+  searchFilterContainer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    marginBottom: 16,
+  },
+  searchGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    padding: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowRadius: 2,
     elevation: 2,
+  },
+  searchContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginRight: 12,
   },
   searchIcon: {
     width: 20,
     height: 20,
-    marginRight: 12,
+    marginRight: 8,
   },
   searchInput: {
     flex: 1,
+    height: 40,
     fontSize: 16,
-    color: '#111827',
+    color: '#1F2937',
+    fontFamily: 'Inter-Regular',
   },
-  clearIcon: {
-    width: 20,
-    height: 20,
-    marginLeft: 8,
+  clearSearchButton: {
+    padding: 4,
   },
-
-  actionBar: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  activeActionButton: {
-    backgroundColor: '#111827',
-  },
-  actionIcon: {
+  clearSearchIcon: {
     width: 16,
     height: 16,
-    marginRight: 6,
   },
-  actionText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#111827',
+  filterButton: {
+    borderRadius: 8,
+    overflow: 'hidden',
   },
-  activeActionText: {
-    color: '#FFFFFF',
-  },
-
-  filterContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  filterSection: {
-    marginBottom: 16,
-  },
-  filterLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  filterOptions: {
+  filterGradient: {
     flexDirection: 'row',
-    paddingRight: 16,
-  },
-  filterOption: {
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 16,
-    backgroundColor: '#F3F4F6',
-    marginRight: 8,
   },
-  activeFilter: {
-    backgroundColor: '#10B981',
+  filterIcon: {
+    width: 18,
+    height: 18,
+    marginRight: 6,
   },
-  filterOptionText: {
+  filterButtonText: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
-  },
-  activeFilterText: {
-    color: '#FFFFFF',
+    color: '#3B82F6',
+    fontFamily: 'Inter-Medium',
   },
 
-  resultsContainer: {
+  // Header Actions styles
+  headerActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
     marginBottom: 16,
   },
-  resultsText: {
+  recordsCount: {
     fontSize: 14,
     color: '#6B7280',
-    fontWeight: '500',
+    fontFamily: 'Inter-Medium',
+  },
+  addButton: {
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  addGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  addIcon: {
+    width: 18,
+    height: 18,
+    marginRight: 6,
+  },
+  addButtonText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontFamily: 'Inter-SemiBold',
+  },
+
+  listContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
   },
 
   vaccineCard: {
     marginBottom: 16,
-    marginHorizontal: 16,
-  },
-  cardGradient: {
     borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+    overflow: 'hidden',
+  },
+  cardGradient: {
+    padding: 16,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginBottom: 12,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 12,
+    color: '#059669',
+    fontFamily: 'Inter-Medium',
+  },
+
+  cardContent: {
+    marginBottom: 16,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    padding: 20,
-    paddingBottom: 16,
+    marginBottom: 16,
   },
   vaccineInfo: {
     flex: 1,
     marginRight: 12,
   },
-  vaccineName: {
+  vaccinationAgainst: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
+    fontFamily: 'Inter-SemiBold',
+    color: '#1F2937',
     marginBottom: 4,
   },
-  vaccineDrug: {
+  drugAdministered: {
     fontSize: 14,
     color: '#6B7280',
-    fontWeight: '500',
+    fontFamily: 'Inter-Regular',
   },
-  cardHeaderRight: {
-    alignItems: 'flex-end',
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-
-  cardBody: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-  },
-  detailRow: {
+  dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
-  detailIcon: {
-    width: 16,
-    height: 16,
-    marginRight: 8,
+  calendarIcon: {
+    width: 14,
+    height: 14,
+    marginRight: 4,
   },
-  detailLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginRight: 8,
-    minWidth: 80,
-  },
-  detailValue: {
-    fontSize: 14,
-    color: '#111827',
-    fontWeight: '500',
-    flex: 1,
-  },
-  costValue: {
-    fontSize: 14,
-    color: '#10B981',
-    fontWeight: '600',
-    flex: 1,
+  dateText: {
+    fontSize: 12,
+    color: '#059669',
+    fontFamily: 'Inter-Medium',
   },
 
-  cardFooter: {
+  animalSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  animalIconContainer: {
+    marginRight: 12,
+  },
+  animalIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  animalIconImage: {
+    width: 18,
+    height: 18,
+  },
+  animalInfo: {
+    flex: 1,
+  },
+  animalName: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  animalBreed: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontFamily: 'Inter-Regular',
+  },
+
+  quickInfoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
   },
-  categoryTag: {
+  quickInfoItem: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  infoIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  infoIcon: {
+    width: 16,
+    height: 16,
+  },
+  quickInfoLabel: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    fontFamily: 'Inter-Medium',
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  quickInfoValue: {
+    fontSize: 13,
+    color: '#1F2937',
+    fontFamily: 'Inter-SemiBold',
+    textAlign: 'center',
+  },
+  costValue: {
+    fontSize: 13,
+    color: '#059669',
+    fontFamily: 'Inter-Bold',
+    textAlign: 'center',
+  },
+
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  actionButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    marginHorizontal: 4,
+    borderRadius: 8,
+    borderWidth: 1,
   },
-  categoryDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  viewButton: {
+    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+  },
+  editButton: {
+    backgroundColor: 'rgba(5, 150, 105, 0.05)',
+    borderColor: 'rgba(5, 150, 105, 0.2)',
+  },
+  deleteButton: {
+    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+    borderColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  actionIcon: {
+    width: 14,
+    height: 14,
     marginRight: 6,
   },
-  categoryText: {
+  actionButtonText: {
     fontSize: 12,
-    color: '#6B7280',
-    fontWeight: '500',
+    fontFamily: 'Inter-Medium',
   },
-  nextDueText: {
-    fontSize: 12,
-    color: '#F59E0B',
-    fontWeight: '500',
+  viewButtonText: {
+    color: '#3B82F6',
   },
-
-  fab: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#10B981',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+  editButtonText: {
+    color: '#059669',
   },
-  fabIcon: {
-    width: 24,
-    height: 24,
+  deleteButtonText: {
+    color: '#EF4444',
   },
 
-  emptyState: {
+  modalOverlay: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 64,
-  },
-  emptyStateIcon: {
-    width: 80,
-    height: 80,
-    marginBottom: 24,
-  },
-  emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptyStateMessage: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  emptyStateButton: {
-    backgroundColor: '#10B981',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
-  },
-  emptyStateButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
   },
 
-  // Modal Styles
-  modalContainer: {
+  filtersModal: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '80%',
+    overflow: 'hidden',
+  },
+  modalGradient: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
+    fontSize: 20,
+    fontFamily: 'Inter-SemiBold',
+    color: '#1F2937',
   },
-  modalCloseIcon: {
-    width: 24,
-    height: 24,
+  closeButton: {
+    padding: 8,
+  },
+  closeIcon: {
+    width: 20,
+    height: 20,
   },
 
-  modalContent: {
+  filtersContent: {
     flex: 1,
-    paddingHorizontal: 20,
-  },
-  modalStatusCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
     padding: 20,
-    marginVertical: 16,
-    borderLeftWidth: 4,
+  },
+  filterSection: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#1F2937',
+    marginBottom: 12,
+  },
+  filterOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  selectedOption: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderColor: '#10B981',
+  },
+  filterOptionText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontFamily: 'Inter-Regular',
+  },
+  selectedOptionText: {
+    color: '#059669',
+    fontFamily: 'Inter-Medium',
+  },
+  checkIcon: {
+    width: 16,
+    height: 16,
+  },
+
+  filterActions: {
+    flexDirection: 'row',
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  clearFiltersButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginRight: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    alignItems: 'center',
+  },
+  clearFiltersText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontFamily: 'Inter-Medium',
+  },
+  applyFiltersButton: {
+    flex: 1,
+    marginLeft: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  applyGradient: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  applyFiltersText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontFamily: 'Inter-SemiBold',
+  },
+
+  detailModal: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '90%',
+    overflow: 'hidden',
+  },
+
+  detailContent: {
+    flex: 1,
+    padding: 20,
+  },
+  detailSection: {
+    marginBottom: 24,
+  },
+  detailSectionTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#1F2937',
+    marginBottom: 12,
+  },
+
+  enhancedAnimalCard: {
+    borderRadius: 12,
+    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
     elevation: 2,
   },
-  modalVaccineName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
+  animalCardGradient: {
+    padding: 16,
+  },
+  animalCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  animalHeaderInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  animalCardName: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#1F2937',
     marginBottom: 4,
   },
-  modalStatusText: {
+  animalCardCategory: {
     fontSize: 14,
-    fontWeight: '600',
     color: '#6B7280',
+    fontFamily: 'Inter-Regular',
   },
 
-  modalSection: {
+  animalDetailsGrid: {
+    gap: 8,
+  },
+  detailGridRow: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  detailGridItem: {
+    flex: 1,
+  },
+  detailGridLabel: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontFamily: 'Inter-Medium',
+    marginBottom: 4,
+  },
+  detailGridValue: {
+    fontSize: 14,
+    color: '#1F2937',
+    fontFamily: 'Inter-Regular',
+  },
+
+  detailCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  modalSectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 16,
-  },
-
-  modalDetailRow: {
+  detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1209,79 +1204,183 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
   },
-  modalDetailLabel: {
+  detailKey: {
     fontSize: 14,
     color: '#6B7280',
-    fontWeight: '500',
+    fontFamily: 'Inter-Medium',
     flex: 1,
   },
-  modalDetailValue: {
+  detailText: {
     fontSize: 14,
-    color: '#111827',
-    fontWeight: '600',
-    flex: 2,
+    color: '#1F2937',
+    fontFamily: 'Inter-Regular',
+    flex: 1,
     textAlign: 'right',
   },
-  modalCategoryContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flex: 2,
-  },
-
-  totalCostRow: {
+  totalRow: {
     borderBottomWidth: 0,
-    paddingTop: 12,
     borderTopWidth: 2,
     borderTopColor: '#E5E7EB',
+    marginTop: 8,
+    paddingTop: 12,
   },
-  modalTotalLabel: {
+  totalKey: {
     fontSize: 16,
-    color: '#111827',
-    fontWeight: '700',
+    color: '#1F2937',
+    fontFamily: 'Inter-SemiBold',
     flex: 1,
   },
-  modalTotalValue: {
+  totalText: {
     fontSize: 16,
-    color: '#10B981',
-    fontWeight: '700',
-    flex: 2,
+    color: '#059669',
+    fontFamily: 'Inter-Bold',
+    flex: 1,
     textAlign: 'right',
   },
 
-  modalNotes: {
-    fontSize: 14,
-    color: '#374151',
-    lineHeight: 20,
-  },
-
-  modalActions: {
+  detailModalActions: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 20,
-    marginBottom: 20,
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
   },
-  modalActionButton: {
+  editModalButton: {
+    flex: 1,
+    marginRight: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  editGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
+    justifyContent: 'center',
     paddingVertical: 12,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    paddingHorizontal: 16,
+  },
+  editModalButtonText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontFamily: 'Inter-SemiBold',
+    marginLeft: 8,
+  },
+  deleteModalButton: {
+    flex: 1,
+    marginLeft: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+  },
+  deleteButtonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  deleteModalButtonText: {
+    fontSize: 14,
+    color: '#EF4444',
+    fontFamily: 'Inter-SemiBold',
+    marginLeft: 8,
   },
   modalActionIcon: {
+    width: 16,
+    height: 16,
+  },
+
+  emptyContainer: {
+    flex: 1,
+    margin: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  emptyGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontFamily: 'Inter-SemiBold',
+    color: '#1F2937',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontFamily: 'Inter-Regular',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  addFirstRecordButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  addFirstGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+  },
+  addFirstIcon: {
     width: 20,
     height: 20,
     marginRight: 8,
   },
-  modalActionText: {
-    fontSize: 14,
+  addFirstText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontFamily: 'Inter-SemiBold',
+  },
+  emptyActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.success || '#10B981',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  emptyActionIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+  },
+  emptyActionText: {
+    fontSize: 16,
     fontWeight: '600',
+    color: COLORS.white,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.success || '#10B981',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: COLORS.black,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  fabIcon: {
+    width: 24,
+    height: 24,
   },
 });
 

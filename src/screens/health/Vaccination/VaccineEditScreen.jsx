@@ -13,6 +13,9 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import {
+  useToast
+} from 'native-base';
 import FastImage from 'react-native-fast-image';
 import LinearGradient from 'react-native-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -29,6 +32,7 @@ const { width } = Dimensions.get('window');
 
 const VaccineEditScreen = ({ navigation, route }) => {
   const { recordId, animalId, animalData } = route.params;
+  const toast = useToast();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -50,7 +54,6 @@ const VaccineEditScreen = ({ navigation, route }) => {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [originalData, setOriginalData] = useState(null);
 
-  // Fetch vaccination data on component mount
   useEffect(() => {
     fetchVaccinationData();
   }, [recordId]);
@@ -69,7 +72,6 @@ const VaccineEditScreen = ({ navigation, route }) => {
       const vaccinationData = result.data;
       setOriginalData(vaccinationData);
 
-      // Populate form with fetched data
       setFormData({
         animalIdOrFlockId: vaccinationData.animalIdOrFlockId || '',
         vaccinationAgainst: vaccinationData.vaccinationAgainst || '',
@@ -97,7 +99,6 @@ const VaccineEditScreen = ({ navigation, route }) => {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
     }
@@ -178,18 +179,16 @@ const VaccineEditScreen = ({ navigation, route }) => {
         return;
       }
 
-      Alert.alert(
-        'Success',
-        'Vaccine record has been updated successfully!',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.goBack();
-            },
-          },
-        ]
-      );
+      toast.show({
+        title: 'Success',
+        description: 'Vaccine record has been updated successfully!',
+        status: 'success',
+        placement: 'top',
+        duration: 3000,
+        backgroundColor: COLORS.green2,
+        color: COLORS.white,
+      });
+      navigation.goBack();
     } catch (error) {
       console.error('Error updating vaccine:', error);
       Alert.alert(
@@ -268,7 +267,6 @@ const VaccineEditScreen = ({ navigation, route }) => {
     </View>
   );
 
-  // Loading state
   if (isLoadingData) {
     return (
       <SafeAreaView style={styles.container}>
@@ -311,7 +309,6 @@ const VaccineEditScreen = ({ navigation, route }) => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
 
-          {/* Animal Info Header */}
           <LinearGradient
             colors={['#FFFFFF', '#F8FAFC']}
             style={styles.animalInfoCard}>
@@ -422,7 +419,6 @@ const VaccineEditScreen = ({ navigation, route }) => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Date Picker Modal */}
       {showDatePicker && (
         <DateTimePicker
           value={formData.dateAdministered}

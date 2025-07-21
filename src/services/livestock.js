@@ -28,7 +28,6 @@ export async function createLivestock(data) {
       };
     }
 
-    // Transform the payload to match backend expectations
     let payload;
 
     if (data.livestockType === 'poultry') {

@@ -103,7 +103,7 @@ export async function createVaccination(livestockId, vaccinationData) {
   }
 }
 
-export async function getVaccinationsForLivestock(livestockId) {
+export async function getVaccinationsForLivestock(livestockId = null) {
   try {
     const token = await AsyncStorage.getItem('token');
 
@@ -114,15 +114,14 @@ export async function getVaccinationsForLivestock(livestockId) {
       };
     }
 
-    if (!livestockId) {
-      return {
-        data: [],
-        error: 'Livestock ID is required',
-      };
+    // Build params object conditionally
+    const params = {};
+    if (livestockId) {
+      params.livestockId = livestockId;
     }
 
     const response = await api.get('/health/vaccinations', {
-      params: {livestockId},
+      params,
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -131,7 +130,11 @@ export async function getVaccinationsForLivestock(livestockId) {
     const vaccinationData = response.data?.data || response.data || [];
 
     console.log(
-      `[getVaccinationsForLivestock] Found ${vaccinationData.length} vaccination records for livestock ${livestockId}`,
+      `[getVaccinationsForLivestock] Found ${
+        vaccinationData.length
+      } vaccination records${
+        livestockId ? ` for livestock ${livestockId}` : ' (all livestock)'
+      }`,
     );
 
     return {data: vaccinationData, error: null};
@@ -725,7 +728,7 @@ export async function getAllergiesForActiveFarm() {
   }
 }
 
-export async function getAllergiesForLivestock(livestockId) {
+export async function getAllergiesForLivestock(livestockId = null) {
   try {
     const token = await AsyncStorage.getItem('token');
 
@@ -736,15 +739,13 @@ export async function getAllergiesForLivestock(livestockId) {
       };
     }
 
-    if (!livestockId) {
-      return {
-        data: [],
-        error: 'Livestock ID is required',
-      };
+    const params = {};
+    if (livestockId) {
+      params.livestockId = livestockId;
     }
 
     const response = await api.get('/health/allergies', {
-      params: {livestockId},
+      params,
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -753,7 +754,9 @@ export async function getAllergiesForLivestock(livestockId) {
     const allergyData = response.data?.data || response.data || [];
 
     console.log(
-      `[getAllergiesForLivestock] Found ${allergyData.length} allergy records for livestock ${livestockId}`,
+      `[getAllergiesForLivestock] Found ${allergyData.length} allergy records${
+        livestockId ? ` for livestock ${livestockId}` : ' (all livestock)'
+      }`,
     );
 
     return {data: allergyData, error: null};
@@ -781,7 +784,6 @@ export async function getAllergiesForLivestock(livestockId) {
     };
   }
 }
-
 export async function getAllergyById(allergyId) {
   try {
     const token = await AsyncStorage.getItem('token');
