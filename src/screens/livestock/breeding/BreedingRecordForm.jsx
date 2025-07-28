@@ -195,22 +195,19 @@ const BreedingRecordForm = ({ navigation }) => {
     }
   }, [formData.serviceDate, formData.gestationDays]);
 
-  // Auto-fill sire code when sire is selected and service type is AI
   useEffect(() => {
     if (formData.sireId) {
       const selectedSire = livestock.find(animal => animal.id === formData.sireId);
 
       if (selectedSire?.mammal?.sireCode) {
-        // Use existing sire code if available
         setFormData(prev => ({
           ...prev,
           sireCode: selectedSire.mammal.sireCode,
         }));
       } else {
-        // Generate sire code if sire doesn't have one
         const sireIdNumber = selectedSire?.mammal?.idNumber || 'UNKNOWN';
-        const servicePrefix = formData.serviceType === 'Artificial Insemination' ? 'AI' : 'NM';
-        const sireCode = `${servicePrefix}-${sireIdNumber}-${new Date().getFullYear()}`;
+        const currentYear = new Date().getFullYear();
+        const sireCode = `${sireIdNumber}-${currentYear}`;
         setFormData(prev => ({
           ...prev,
           sireCode: sireCode,
@@ -235,7 +232,6 @@ const BreedingRecordForm = ({ navigation }) => {
       }));
     }
   }, [formData.sireId, formData.serviceType, livestock]);
-
   const loadLivestock = async () => {
     try {
       setLoadingLivestock(true);
@@ -283,47 +279,80 @@ const BreedingRecordForm = ({ navigation }) => {
   };
 
   const validateForm = () => {
+    console.log('=== FORM VALIDATION STARTED ===');
     const newErrors = {};
 
+    // Basic required field validation
     if (!formData.damId) newErrors.damId = 'Dam is required';
     if (!formData.sireId) newErrors.sireId = 'Sire is required';
     if (!formData.purpose) newErrors.purpose = 'Breeding purpose is required';
     if (!formData.strategy) newErrors.strategy = 'Breeding strategy is required';
     if (!formData.serviceType) newErrors.serviceType = 'Service type is required';
-    if (!formData.numServices || formData.numServices < 1) newErrors.numServices = 'Number of services must be at least 1';
-    if (!formData.gestationDays || formData.gestationDays < 1) newErrors.gestationDays = 'Gestation days must be valid';
 
-    // Always require sire code regardless of service type
-    if (!formData.sireCode) newErrors.sireCode = 'Sire code is required';
+    // Numeric validation
+    if (!formData.numServices || formData.numServices < 1) {
+      newErrors.numServices = 'Number of services must be at least 1';
+    }
+    if (!formData.gestationDays || formData.gestationDays < 1) {
+      newErrors.gestationDays = 'Gestation days must be valid';
+    }
 
-    // Validate dam is female
+    // Sire code validation
+    if (!formData.sireCode?.trim()) {
+      newErrors.sireCode = 'Sire code is required';
+    }
+
+    // Date validation
+    const currentDate = new Date();
+    if (formData.serviceDate > currentDate) {
+      newErrors.serviceDate = 'Service date cannot be in the future';
+    }
+    if (formData.firstHeatDate > currentDate) {
+      newErrors.firstHeatDate = 'First heat date cannot be in the future';
+    }
+
+    // Animal validation
     const selectedDam = livestock.find(animal => animal.id === formData.damId);
+    const selectedSire = livestock.find(animal => animal.id === formData.sireId);
+
+    console.log('=== ANIMAL VALIDATION ===');
+    console.log('Dam found:', !!selectedDam);
+    console.log('Dam gender:', selectedDam?.mammal?.gender);
+    console.log('Sire found:', !!selectedSire);
+    console.log('Sire gender:', selectedSire?.mammal?.gender);
+
     if (selectedDam && selectedDam.mammal?.gender?.toLowerCase() !== 'female') {
       newErrors.damId = 'Dam must be a female animal';
+      console.log('Dam gender validation failed');
     }
 
-    // Validate sire is male
-    const selectedSire = livestock.find(animal => animal.id === formData.sireId);
     if (selectedSire && selectedSire.mammal?.gender?.toLowerCase() !== 'male') {
       newErrors.sireId = 'Sire must be a male animal';
+      console.log('Sire gender validation failed');
     }
 
-    // Validate same animal not selected for both dam and sire
+    // Same animal validation
     if (formData.damId === formData.sireId && formData.damId) {
       newErrors.sireId = 'Dam and Sire cannot be the same animal';
+      console.log('Same animal selected for dam and sire');
     }
 
-    // Validate AI specific fields only for Artificial Insemination
+    // AI specific validation
     if (formData.serviceType === 'Artificial Insemination') {
       if (!formData.aiType) newErrors.aiType = 'AI Type is required for Artificial Insemination';
       if (!formData.aiSource) newErrors.aiSource = 'AI Source is required for Artificial Insemination';
-      if (!formData.aiCost || parseFloat(formData.aiCost) < 0) newErrors.aiCost = 'AI Cost must be a valid positive number';
+      if (!formData.aiCost || parseFloat(formData.aiCost) < 0) {
+        newErrors.aiCost = 'AI Cost must be a valid positive number';
+      }
     }
+
+    console.log('=== VALIDATION RESULTS ===');
+    console.log('Errors found:', Object.keys(newErrors).length);
+    console.log('Validation errors:', newErrors);
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
 
   const handleSubmit = async () => {
     if (!validateForm()) {
@@ -337,19 +366,22 @@ const BreedingRecordForm = ({ navigation }) => {
       const selectedDam = livestock.find(animal => animal.id === formData.damId);
       const selectedSire = livestock.find(animal => animal.id === formData.sireId);
 
+      console.log('=== FORM SUBMIT DEBUG ===');
+      console.log('Selected Dam:', selectedDam?.id);
+      console.log('Selected Sire:', selectedSire?.id);
+
       const payload = {
         damId: formData.damId,
         sireId: formData.sireId,
         purpose: formData.purpose,
         strategy: formData.strategy,
         serviceType: formData.serviceType,
-        serviceDate: formData.serviceDate.toISOString(),
+        serviceDate: formData.serviceDate,
         numServices: parseInt(formData.numServices),
-        firstHeatDate: formData.firstHeatDate.toISOString(),
+        firstHeatDate: formData.firstHeatDate,
         gestationDays: parseInt(formData.gestationDays),
-        expectedBirthDate: formData.expectedBirthDate.toISOString(),
+        expectedBirthDate: formData.expectedBirthDate,
         sireCode: formData.sireCode,
-        damCode: selectedDam?.mammal?.damCode || selectedDam?.mammal?.idNumber || '', // 👈 Add this
       };
 
       if (formData.serviceType === 'Artificial Insemination') {
@@ -358,23 +390,33 @@ const BreedingRecordForm = ({ navigation }) => {
         payload.aiCost = parseFloat(formData.aiCost);
       }
 
-      console.log('Submitting breeding record:', payload);
+
+      console.log('Payload being sent:', JSON.stringify(payload, (key, value) => {
+        if (value instanceof Date) {
+          return value.toISOString();
+        }
+        return value;
+      }, 2));
 
       const { data, error } = await createBreedingRecord(payload);
 
       if (error) {
+        console.error('Service error:', error);
         Alert.alert('Error', error);
         return;
       }
 
+      console.log('Success:', data);
       setShowSuccessModal(true);
+
     } catch (error) {
-      console.error('Error creating breeding record:', error);
+      console.error('Unexpected error:', error);
       Alert.alert('Error', 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
   };
+
 
   const getAvailableDams = () => livestock.filter(animal =>
     animal.mammal?.gender?.toLowerCase() === 'female'

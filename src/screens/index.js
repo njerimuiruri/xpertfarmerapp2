@@ -6,6 +6,8 @@ import ResetPassword from '../screens/Auth/reset-password';
 import EmailOtpScreen from '../screens/Auth/Email-Otp-Screen';
 
 import HomeScreen from './Home/home';
+import BusinessAnalyticsScreen from './Home/BusinessAnalyticsScreen';
+
 // personal information
 import ProfileScreen from './Home/profile-screen';
 import PersonalInformation from './Home/PersonalInformation';
@@ -82,6 +84,8 @@ import DewormingEditScreen from './health/Deworming/DewormingEditScreen';
 import CurativeTreatmentEditScreen from './health/Treatment/CurativeTreatmentEditScreen';
 import AddCurativeTreatmentRecords from './health/Treatment/AddCurativeTreatmentRecords';
 import CurativeTreatmentRecordsScreen from './health/Treatment/CurativeTreatmentRecordsScreen';
+import TreatmentDetailScreen from './health/Treatment/TreatmentDetailScreen';
+
 //Genetic Disorders
 import AddGeneticsDisorderRecords from './health/Disorders/AddGeneticsDisorderRecords';
 import GeneticDisorderRecordsScreen from './health/Disorders/GeneticDisorderRecordsScreen';
@@ -93,11 +97,18 @@ import AddAllergiesRecords from './health/Allergies/AddAllergiesRecords';
 import EditAllergyRecord from './health/Allergies/EditAllergyRecord';
 
 import AllergiesRecordsScreen from './health/Allergies/AllergiesRecordsScreen';
+import AllergyDetailScreen from './health/Allergies/AllergyDetailScreen';
 
 //Boosters
 import AddBoostersRecords from './health/Boosters/AddBoostersRecords';
 
 import BoostersRecordScreen from './health/Boosters/BoostersRecordScreen';
+
+import BoosterDetailScreen from './health/Boosters/BoosterDetailScreen';
+
+import DewormingDetailScreen from './health/Deworming/DewormingDetailScreen';
+
+import GeneticDisorderDetailScreen from './health/Disorders/GeneticDisorderDetailScreen';
 
 import FarmHealthRecords from './health/health-record/record';
 import HealthRecordsScreen from './health/HealthRecordsScreen';
@@ -136,6 +147,8 @@ import SheepGoatDetailsScreen from './production/sheepandgoat/SheepGoatDetailsSc
 import InventoryDashboard from './inventory/InventoryDashboard';
 import AddMachinery from './inventory/AddMachinery';
 
+import InventoryDetails from './inventory/InventoryDetails';
+
 import AddInventory from './inventory/AddInventory';
 
 import AddGoodsInStock from './inventory/AddGoodsInStock';
@@ -155,6 +168,7 @@ export {
   VerifyOtp,
   ForgotPasswordScreen,
   HomeScreen,
+  BusinessAnalyticsScreen,
   Otp,
   OnboardingScreen,
   ResetPassword,
@@ -221,6 +235,7 @@ export {
   DewormingRecordsScreen,
   DewormingEditScreen,
   CurativeTreatmentRecordsScreen,
+  TreatmentDetailScreen,
   CurativeTreatmentEditScreen,
   VaccineDetailScreen,
   GeneticDisorderRecordsScreen,
@@ -228,6 +243,10 @@ export {
   AllergiesRecordsScreen,
   EditAllergyRecord,
   BoostersRecordScreen,
+  AllergyDetailScreen,
+  BoosterDetailScreen,
+  DewormingDetailScreen,
+  GeneticDisorderDetailScreen,
 
   //home
 
@@ -256,4 +275,5 @@ export {
   EditMachinery,
   EditInventoryItem,
   EditUtility,
+  InventoryDetails,
 };

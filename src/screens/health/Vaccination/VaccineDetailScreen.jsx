@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import LinearGradient from 'react-native-linear-gradient';
@@ -18,42 +19,83 @@ import {
   getVaccinationById,
   deleteVaccination
 } from '../../../services/healthservice';
-import { getLivestockById } from '../../../services/livestock';
+import { getLivestockForActiveFarm } from '../../../services/livestock';
 
 const VaccineDetailScreen = ({ navigation, route }) => {
   const { recordId, recordData } = route.params;
 
-  const [record, setRecord] = useState(recordData || null);
-  const [animal, setAnimal] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [vaccineRecord, setVaccineRecord] = useState(recordData || null);
+  const [livestock, setLivestock] = useState([]);
+  const [isLoading, setIsLoading] = useState(!recordData);
+  const [refreshing, setRefreshing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    loadDetailedData();
+    loadData();
   }, []);
 
-  const loadDetailedData = async () => {
-    setIsLoading(true);
+  const loadData = async () => {
     try {
-      // Load detailed record data
-      const recordResult = await getVaccinationById(recordId);
-      if (recordResult && !recordResult.error && recordResult.data) {
-        setRecord(recordResult.data);
-
-        // Load animal data if livestockId exists
-        if (recordResult.data.livestockId) {
-          const animalResult = await getLivestockById(recordResult.data.livestockId);
-          if (animalResult && !animalResult.error) {
-            setAnimal(animalResult.data);
-          }
-        }
+      if (!recordData) {
+        setIsLoading(true);
       }
+
+      await Promise.all([
+        loadVaccineRecord(),
+        loadLivestock()
+      ]);
     } catch (error) {
-      console.error('Error loading detailed data:', error);
-      Alert.alert('Error', 'Failed to load vaccine details');
+      console.error('Error loading data:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const loadVaccineRecord = async () => {
+    if (recordData) {
+      setVaccineRecord(recordData);
+      return;
+    }
+
+    try {
+      const result = await getVaccinationById(recordId);
+
+      if (result.error) {
+        Alert.alert('Error', result.error);
+        navigation.goBack();
+        return;
+      }
+
+      setVaccineRecord(result.data);
+    } catch (error) {
+      console.error('Failed to load vaccine record:', error);
+      Alert.alert('Error', 'Failed to load vaccine record details.');
+      navigation.goBack();
+    }
+  };
+
+  const loadLivestock = async () => {
+    try {
+      const result = await getLivestockForActiveFarm();
+      if (Array.isArray(result)) {
+        setLivestock(result);
+      } else {
+        setLivestock([]);
+      }
+    } catch (error) {
+      console.error('Failed to load livestock:', error);
+      setLivestock([]);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+
+  const getAnimalInfo = (livestockId) => {
+    return livestock.find(animal => animal.id === livestockId);
   };
 
   const formatAnimalDisplayName = (animal) => {
@@ -68,14 +110,16 @@ const VaccineDetailScreen = ({ navigation, route }) => {
   };
 
   const formatCurrency = (amount) => {
-    return amount ? `KES ${parseFloat(amount).toLocaleString()}` : 'N/A';
+    return amount ? `KES ${parseFloat(amount).toLocaleString()}` : 'KES 0';
   };
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
@@ -104,9 +148,9 @@ const VaccineDetailScreen = ({ navigation, route }) => {
   };
 
   const handleEdit = () => {
-    navigation.navigate('EditVaccineRecord', {
-      recordId: record.id,
-      recordData: record
+    navigation.navigate('VaccineEditScreen', {
+      recordId: recordId,
+      recordData: vaccineRecord
     });
   };
 
@@ -126,32 +170,34 @@ const VaccineDetailScreen = ({ navigation, route }) => {
   };
 
   const confirmDelete = async () => {
-    setIsDeleting(true);
     try {
+      setDeleting(true);
       const result = await deleteVaccination(recordId);
-      if (result && !result.error) {
-        Alert.alert(
-          'Success',
-          'Vaccine record deleted successfully',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.goBack()
-            }
-          ]
-        );
-      } else {
-        Alert.alert('Error', result.error || 'Failed to delete vaccine record');
+
+      if (result.error) {
+        Alert.alert('Error', result.error);
+        return;
       }
+
+      Alert.alert(
+        'Success',
+        'Vaccine record deleted successfully',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack()
+          }
+        ]
+      );
     } catch (error) {
-      console.error('Error deleting record:', error);
+      console.error('Delete error:', error);
       Alert.alert('Error', 'Failed to delete vaccine record');
     } finally {
-      setIsDeleting(false);
+      setDeleting(false);
     }
   };
 
-  if (isLoading || !record) {
+  if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <SecondaryHeader
@@ -167,7 +213,36 @@ const VaccineDetailScreen = ({ navigation, route }) => {
     );
   }
 
-  const totalCost = (parseFloat(record.costOfVaccine) || 0) + (parseFloat(record.costOfService) || 0);
+  if (!vaccineRecord) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SecondaryHeader
+          title="Vaccine Details"
+          onBackPress={() => navigation.goBack()}
+          showNotification={true}
+        />
+        <View style={styles.errorContainer}>
+          <FastImage
+            source={icons.warning || icons.alert}
+            style={styles.errorIcon}
+            tintColor="#EF4444"
+          />
+          <Text style={styles.errorTitle}>Record Not Found</Text>
+          <Text style={styles.errorSubtitle}>
+            The vaccination record could not be loaded.
+          </Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => navigation.goBack()}>
+            <Text style={styles.retryButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const animal = getAnimalInfo(vaccineRecord.livestockId);
+  const totalCost = (parseFloat(vaccineRecord.costOfVaccine) || 0) + (parseFloat(vaccineRecord.costOfService) || 0);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -177,37 +252,61 @@ const VaccineDetailScreen = ({ navigation, route }) => {
         showNotification={true}
       />
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[COLORS.success || '#10B981']}
+            tintColor={COLORS.success || '#10B981'}
+          />
+        }
+        showsVerticalScrollIndicator={false}>
+
         {/* Header Card */}
         <View style={styles.headerCard}>
           <LinearGradient
-            colors={['#F0FDF4', '#FFFFFF']}
+            colors={['#10B981', '#059669']}
             style={styles.headerGradient}>
-            <View style={styles.statusBadge}>
-              <View style={styles.statusDot} />
-              <Text style={styles.statusText}>Completed</Text>
-            </View>
-
-            <Text style={styles.vaccinationTitle}>{record.vaccinationAgainst}</Text>
-            <Text style={styles.drugName}>{record.drugAdministered}</Text>
-
-            <View style={styles.dateContainer}>
-              <FastImage source={icons.calendar} style={styles.calendarIcon} tintColor={COLORS.success || '#10B981'} />
-              <Text style={styles.dateText}>{formatDate(record.dateAdministered)}</Text>
+            <View style={styles.headerContent}>
+              <View style={styles.vaccineIconContainer}>
+                <FastImage
+                  source={icons.medical || icons.health}
+                  style={styles.vaccineIcon}
+                  tintColor="#FFFFFF"
+                />
+              </View>
+              <View style={styles.headerInfo}>
+                <Text style={styles.headerTitle}>{vaccineRecord.vaccinationAgainst}</Text>
+                <Text style={styles.headerSubtitle}>{vaccineRecord.drugAdministered}</Text>
+                <View style={styles.statusBadge}>
+                  <View style={styles.statusDot} />
+                  <Text style={styles.statusText}>Completed</Text>
+                </View>
+              </View>
             </View>
           </LinearGradient>
         </View>
 
-        {/* Animal Information Section */}
+        {/* Animal Information Card */}
         {animal && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Animal Information</Text>
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <FastImage
+                source={icons.livestock || icons.account}
+                style={styles.cardIcon}
+                tintColor={COLORS.success || '#10B981'}
+              />
+              <Text style={styles.cardTitle}>Animal Information</Text>
+            </View>
+
             <View style={styles.animalCard}>
               <LinearGradient
-                colors={['#F8FAFC', '#FFFFFF']}
+                colors={['#F0FDF4', '#ECFDF5']}
                 style={styles.animalCardGradient}>
-
-                <View style={styles.animalHeader}>
+                <View style={styles.animalCardHeader}>
                   <View style={styles.animalIconContainer}>
                     <LinearGradient
                       colors={[COLORS.success || '#10B981', '#059669']}
@@ -222,7 +321,9 @@ const VaccineDetailScreen = ({ navigation, route }) => {
                   <View style={styles.animalHeaderInfo}>
                     <Text style={styles.animalName}>{formatAnimalDisplayName(animal)}</Text>
                     <Text style={styles.animalCategory}>
-                      {animal.category === 'poultry' ? 'Poultry' : 'Mammal'} • {animal.type}
+                      {animal.category === 'poultry' && animal.poultry?.breedType ||
+                        animal.category === 'mammal' && animal.mammal?.breedType ||
+                        'Unknown breed'}
                     </Text>
                   </View>
                 </View>
@@ -230,75 +331,25 @@ const VaccineDetailScreen = ({ navigation, route }) => {
                 <View style={styles.animalDetailsGrid}>
                   <View style={styles.detailGridRow}>
                     <View style={styles.detailGridItem}>
-                      <Text style={styles.detailLabel}>Breed</Text>
-                      <Text style={styles.detailValue}>
-                        {animal.category === 'poultry' && animal.poultry?.breedType ||
-                          animal.category === 'mammal' && animal.mammal?.breedType ||
-                          'Not specified'}
-                      </Text>
+                      <Text style={styles.detailGridLabel}>Category</Text>
+                      <Text style={styles.detailGridValue}>{animal.category?.toUpperCase()}</Text>
                     </View>
                     <View style={styles.detailGridItem}>
-                      <Text style={styles.detailLabel}>Gender</Text>
-                      <Text style={styles.detailValue}>
-                        {animal.category === 'poultry' ? 'Mixed' :
-                          animal.category === 'mammal' && animal.mammal?.gender ||
-                          'Not specified'}
-                      </Text>
+                      <Text style={styles.detailGridLabel}>Type</Text>
+                      <Text style={styles.detailGridValue}>{animal.type?.toUpperCase()}</Text>
                     </View>
                   </View>
 
-                  <View style={styles.detailGridRow}>
-                    <View style={styles.detailGridItem}>
-                      <Text style={styles.detailLabel}>Age</Text>
-                      <Text style={styles.detailValue}>
-                        {animal.category === 'poultry' && animal.poultry?.dateOfHatch ?
-                          calculateAge(animal.poultry.dateOfHatch) :
-                          animal.category === 'mammal' && animal.mammal?.dateOfBirth ?
-                            calculateAge(animal.mammal.dateOfBirth) :
-                            'Not specified'}
-                      </Text>
-                    </View>
-                    <View style={styles.detailGridItem}>
-                      <Text style={styles.detailLabel}>Weight</Text>
-                      <Text style={styles.detailValue}>
-                        {animal.category === 'poultry' && animal.poultry?.weight ?
-                          formatWeight(animal.poultry.weight) :
-                          animal.category === 'mammal' && animal.mammal?.currentWeight ?
-                            formatWeight(animal.mammal.currentWeight) :
-                            'Not specified'}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {animal.category === 'poultry' && animal.poultry && (
+                  {animal.dateOfBirth && (
                     <View style={styles.detailGridRow}>
                       <View style={styles.detailGridItem}>
-                        <Text style={styles.detailLabel}>Flock Size</Text>
-                        <Text style={styles.detailValue}>
-                          {animal.poultry.numberOfBirds || 'Not specified'}
-                        </Text>
+                        <Text style={styles.detailGridLabel}>Age</Text>
+                        <Text style={styles.detailGridValue}>{calculateAge(animal.dateOfBirth)}</Text>
                       </View>
                       <View style={styles.detailGridItem}>
-                        <Text style={styles.detailLabel}>Purpose</Text>
-                        <Text style={styles.detailValue}>
-                          {animal.poultry.purpose || 'Not specified'}
-                        </Text>
-                      </View>
-                    </View>
-                  )}
-
-                  {animal.category === 'mammal' && animal.mammal && (
-                    <View style={styles.detailGridRow}>
-                      <View style={styles.detailGridItem}>
-                        <Text style={styles.detailLabel}>Color/Markings</Text>
-                        <Text style={styles.detailValue}>
-                          {animal.mammal.colorAndMarkings || 'Not specified'}
-                        </Text>
-                      </View>
-                      <View style={styles.detailGridItem}>
-                        <Text style={styles.detailLabel}>Purpose</Text>
-                        <Text style={styles.detailValue}>
-                          {animal.mammal.purpose || 'Not specified'}
+                        <Text style={styles.detailGridLabel}>Weight</Text>
+                        <Text style={styles.detailGridValue}>
+                          {animal.category === 'mammal' ? formatWeight(animal.mammal?.weight) : 'N/A'}
                         </Text>
                       </View>
                     </View>
@@ -309,127 +360,120 @@ const VaccineDetailScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Vaccination Details Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Vaccination Details</Text>
-          <View style={styles.detailCard}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailKey}>Vaccination Against:</Text>
-              <Text style={styles.detailText}>{record.vaccinationAgainst || 'N/A'}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailKey}>Drug Administered:</Text>
-              <Text style={styles.detailText}>{record.drugAdministered || 'N/A'}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailKey}>Dosage:</Text>
-              <Text style={styles.detailText}>{record.dosage || 'N/A'}</Text>
-            </View>
-            <View style={[styles.detailRow, styles.lastRow]}>
-              <Text style={styles.detailKey}>Date Administered:</Text>
-              <Text style={styles.detailText}>
-                {record.dateAdministered ? formatDate(record.dateAdministered) : 'N/A'}
-              </Text>
-            </View>
+        {/* Vaccination Details Card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <FastImage
+              source={icons.medical || icons.health}
+              style={styles.cardIcon}
+              tintColor={COLORS.success || '#10B981'}
+            />
+            <Text style={styles.cardTitle}>Vaccination Details</Text>
           </View>
-        </View>
 
-        {/* Administration Details Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Administration Details</Text>
           <View style={styles.detailCard}>
             <View style={styles.detailRow}>
-              <Text style={styles.detailKey}>Administered By:</Text>
-              <Text style={styles.detailText}>{record.administeredBy || 'N/A'}</Text>
+              <Text style={styles.detailKey}>Vaccination Against</Text>
+              <Text style={styles.detailText}>{vaccineRecord.vaccinationAgainst}</Text>
             </View>
-            {record.practiceId && (
-              <View style={[styles.detailRow, styles.lastRow]}>
-                <Text style={styles.detailKey}>Practice ID:</Text>
-                <Text style={styles.detailText}>{record.practiceId}</Text>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailKey}>Drug Administered</Text>
+              <Text style={styles.detailText}>{vaccineRecord.drugAdministered}</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailKey}>Date Administered</Text>
+              <Text style={styles.detailText}>{formatDate(vaccineRecord.dateAdministered)}</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailKey}>Dosage</Text>
+              <Text style={styles.detailText}>{vaccineRecord.dosage} ml</Text>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailKey}>Administered By</Text>
+              <Text style={styles.detailText}>{vaccineRecord.administeredBy}</Text>
+            </View>
+
+            {vaccineRecord.practiceId && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailKey}>Practice ID</Text>
+                <Text style={styles.detailText}>{vaccineRecord.practiceId}</Text>
+              </View>
+            )}
+
+            {vaccineRecord.animalIdOrFlockId && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailKey}>Animal/Flock ID</Text>
+                <Text style={styles.detailText}>{vaccineRecord.animalIdOrFlockId}</Text>
               </View>
             )}
           </View>
         </View>
 
-        {/* Cost Information Section */}
-        {totalCost > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Cost Information</Text>
-            <View style={styles.costCard}>
-              <LinearGradient
-                colors={['#F0FDF4', '#FFFFFF']}
-                style={styles.costGradient}>
-                {record.costOfVaccine > 0 && (
-                  <View style={styles.costRow}>
-                    <View style={styles.costIconContainer}>
-                      <FastImage source={icons.medical || icons.health} style={styles.costIcon} tintColor="#059669" />
-                    </View>
-                    <View style={styles.costInfo}>
-                      <Text style={styles.costLabel}>Vaccine Cost</Text>
-                      <Text style={styles.costValue}>{formatCurrency(record.costOfVaccine)}</Text>
-                    </View>
-                  </View>
-                )}
+        {/* Cost Breakdown Card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <FastImage
+              source={icons.dollar || icons.money}
+              style={styles.cardIcon}
+              tintColor={COLORS.success || '#10B981'}
+            />
+            <Text style={styles.cardTitle}>Cost Breakdown</Text>
+          </View>
 
-                {record.costOfService > 0 && (
-                  <View style={styles.costRow}>
-                    <View style={styles.costIconContainer}>
-                      <FastImage source={icons.user || icons.account} style={styles.costIcon} tintColor="#059669" />
-                    </View>
-                    <View style={styles.costInfo}>
-                      <Text style={styles.costLabel}>Service Cost</Text>
-                      <Text style={styles.costValue}>{formatCurrency(record.costOfService)}</Text>
-                    </View>
-                  </View>
-                )}
+          <View style={styles.detailCard}>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailKey}>Cost of Vaccine</Text>
+              <Text style={styles.detailText}>{formatCurrency(vaccineRecord.costOfVaccine)}</Text>
+            </View>
 
-                <View style={styles.totalCostContainer}>
-                  <View style={styles.totalCostRow}>
-                    <Text style={styles.totalLabel}>Total Cost</Text>
-                    <Text style={styles.totalValue}>{formatCurrency(totalCost)}</Text>
-                  </View>
-                </View>
-              </LinearGradient>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailKey}>Cost of Service</Text>
+              <Text style={styles.detailText}>{formatCurrency(vaccineRecord.costOfService)}</Text>
+            </View>
+
+            <View style={[styles.detailRow, styles.totalRow]}>
+              <Text style={styles.totalKey}>Total Cost</Text>
+              <Text style={styles.totalText}>{formatCurrency(totalCost)}</Text>
             </View>
           </View>
-        )}
+        </View>
+
       </ScrollView>
 
       {/* Action Buttons */}
       <View style={styles.actionContainer}>
-        <LinearGradient
-          colors={['#FFFFFF', '#F8FAFC']}
-          style={styles.actionGradient}>
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={handleEdit}
-            disabled={isDeleting}
-            activeOpacity={0.8}>
-            <LinearGradient
-              colors={[COLORS.success || '#10B981', '#059669']}
-              style={styles.editGradient}>
-              <FastImage source={icons.edit} style={styles.actionIcon} tintColor="#FFFFFF" />
-              <Text style={styles.editButtonText}>Edit Record</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.editButton]}
+          onPress={handleEdit}
+          activeOpacity={0.8}>
+          <LinearGradient
+            colors={[COLORS.success || '#10B981', '#059669']}
+            style={styles.editGradient}>
+            <FastImage source={icons.edit} style={styles.modalActionIcon} tintColor="#FFFFFF" />
+            <Text style={styles.editButtonText}>Edit Record</Text>
+          </LinearGradient>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={handleDelete}
-            disabled={isDeleting}
-            activeOpacity={0.8}>
-            <View style={styles.deleteContainer}>
-              {isDeleting ? (
-                <ActivityIndicator size="small" color="#EF4444" />
-              ) : (
-                <FastImage source={icons.trash} style={styles.actionIcon} tintColor="#EF4444" />
-              )}
-              <Text style={styles.deleteButtonText}>
-                {isDeleting ? 'Deleting...' : 'Delete Record'}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </LinearGradient>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.deleteButton]}
+          onPress={handleDelete}
+          disabled={deleting}
+          activeOpacity={0.8}>
+          <View style={styles.deleteButtonContainer}>
+            {deleting ? (
+              <ActivityIndicator size="small" color="#EF4444" />
+            ) : (
+              <FastImage source={icons.trash} style={styles.modalActionIcon} tintColor="#EF4444" />
+            )}
+            <Text style={styles.deleteButtonText}>
+              {deleting ? 'Deleting...' : 'Delete Record'}
+            </Text>
+          </View>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -445,6 +489,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#F9FAFB',
   },
   loadingText: {
     marginTop: 16,
@@ -453,110 +498,162 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Medium',
   },
 
-  content: {
+  errorContainer: {
     flex: 1,
-    padding: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  errorIcon: {
+    width: 64,
+    height: 64,
+    marginBottom: 16,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontFamily: 'Inter-SemiBold',
+    color: '#1F2937',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  errorSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontFamily: 'Inter-Regular',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  retryButton: {
+    backgroundColor: COLORS.success || '#10B981',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
   },
 
-  // Header Card Styles
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 100,
+  },
+
   headerCard: {
-    marginBottom: 20,
+    marginBottom: 16,
     borderRadius: 16,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 4,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 6,
-    overflow: 'hidden',
+    shadowRadius: 8,
+    elevation: 4,
   },
   headerGradient: {
     padding: 20,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  vaccineIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  vaccineIcon: {
+    width: 30,
+    height: 30,
+  },
+  headerInfo: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontFamily: 'Inter-Bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 8,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    marginBottom: 16,
   },
   statusDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#10B981',
+    backgroundColor: '#FFFFFF',
     marginRight: 6,
   },
   statusText: {
     fontSize: 12,
-    color: '#059669',
-    fontFamily: 'Inter-SemiBold',
-  },
-  vaccinationTitle: {
-    fontSize: 24,
-    fontFamily: 'Inter-Bold',
-    color: '#1F2937',
-    marginBottom: 8,
-  },
-  drugName: {
-    fontSize: 16,
-    color: '#6B7280',
+    color: '#FFFFFF',
     fontFamily: 'Inter-Medium',
-    marginBottom: 16,
-  },
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  calendarIcon: {
-    width: 16,
-    height: 16,
-    marginRight: 6,
-  },
-  dateText: {
-    fontSize: 14,
-    color: '#059669',
-    fontFamily: 'Inter-SemiBold',
   },
 
-  // Section Styles
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
-    color: '#1F2937',
-    marginBottom: 12,
-  },
-
-  // Animal Card Styles
-  animalCard: {
+  card: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  cardIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 12,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#1F2937',
+  },
+
+  animalCard: {
+    margin: 16,
+    borderRadius: 12,
     overflow: 'hidden',
   },
   animalCardGradient: {
     padding: 16,
   },
-  animalHeader: {
+  animalCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
@@ -600,33 +697,20 @@ const styles = StyleSheet.create({
   detailGridItem: {
     flex: 1,
   },
-  detailLabel: {
+  detailGridLabel: {
     fontSize: 12,
     color: '#9CA3AF',
     fontFamily: 'Inter-Medium',
     marginBottom: 4,
   },
-  detailValue: {
+  detailGridValue: {
     fontSize: 14,
     color: '#1F2937',
-    fontFamily: 'Inter-Regular',
+    fontFamily: 'Inter-SemiBold',
   },
 
-  // Detail Card Styles
   detailCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
     padding: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   detailRow: {
     flexDirection: 'row',
@@ -635,9 +719,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
-  },
-  lastRow: {
-    borderBottomWidth: 0,
   },
   detailKey: {
     fontSize: 14,
@@ -652,79 +733,35 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'right',
   },
-
-  // Cost Card Styles
-  costCard: {
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-    overflow: 'hidden',
-  },
-  costGradient: {
-    padding: 16,
-  },
-  costRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  costIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  costIcon: {
-    width: 20,
-    height: 20,
-  },
-  costInfo: {
-    flex: 1,
-  },
-  costLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontFamily: 'Inter-Medium',
-    marginBottom: 2,
-  },
-  costValue: {
-    fontSize: 16,
-    color: '#059669',
-    fontFamily: 'Inter-SemiBold',
-  },
-  totalCostContainer: {
+  totalRow: {
+    borderBottomWidth: 0,
     borderTopWidth: 2,
     borderTopColor: '#E5E7EB',
-    paddingTop: 16,
     marginTop: 8,
+    paddingTop: 16,
   },
-  totalCostRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  totalLabel: {
+  totalKey: {
     fontSize: 16,
     color: '#1F2937',
     fontFamily: 'Inter-SemiBold',
+    flex: 1,
   },
-  totalValue: {
-    fontSize: 20,
+  totalText: {
+    fontSize: 16,
     color: '#059669',
     fontFamily: 'Inter-Bold',
+    flex: 1,
+    textAlign: 'right',
   },
 
-  // Action Container Styles
   actionContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    padding: 16,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
     shadowColor: '#000',
@@ -732,21 +769,17 @@ const styles = StyleSheet.create({
       width: 0,
       height: -2,
     },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 8,
-    overflow: 'hidden',
+    elevation: 4,
   },
-  actionGradient: {
-    flexDirection: 'row',
-    padding: 16,
-    paddingBottom: 20,
-    gap: 12,
-  },
-  editButton: {
+  actionButton: {
     flex: 1,
     borderRadius: 12,
     overflow: 'hidden',
+  },
+  editButton: {
+    marginRight: 8,
   },
   editGradient: {
     flexDirection: 'row',
@@ -762,13 +795,12 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   deleteButton: {
-    flex: 1,
-    borderRadius: 12,
-    borderWidth: 2,
+    marginLeft: 8,
+    borderWidth: 1,
     borderColor: '#FECACA',
     backgroundColor: 'rgba(239, 68, 68, 0.05)',
   },
-  deleteContainer: {
+  deleteButtonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -781,9 +813,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     marginLeft: 8,
   },
-  actionIcon: {
-    width: 20,
-    height: 20,
+  modalActionIcon: {
+    width: 18,
+    height: 18,
   },
 });
 

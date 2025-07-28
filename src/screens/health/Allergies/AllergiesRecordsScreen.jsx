@@ -1,762 +1,1108 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+"use client"
+
+import { useState, useEffect, useCallback, useRef } from "react"
 import {
+  SafeAreaView,
   View,
   Text,
-  FlatList,
   TouchableOpacity,
-  StyleSheet,
-  TextInput,
-  Alert,
-  Modal,
-  SafeAreaView,
-  Dimensions,
   ScrollView,
-  RefreshControl,
+  StyleSheet,
+  Alert,
+  Dimensions,
+  Modal,
+  FlatList,
   ActivityIndicator,
-} from 'react-native';
-import FastImage from 'react-native-fast-image';
-import LinearGradient from 'react-native-linear-gradient';
-import { icons } from '../../../constants';
-import { COLORS } from '../../../constants/theme';
-import SecondaryHeader from '../../../components/headers/secondary-header';
-import {
-  getAllergiesForLivestock,
-  deleteAllergy,
-} from '../../../services/healthservice';
+  RefreshControl,
+  TextInput,
+} from "react-native"
+import FastImage from "react-native-fast-image"
+import LinearGradient from "react-native-linear-gradient"
+import { icons } from "../../../constants"
+import { COLORS } from "../../../constants/theme"
+import SecondaryHeader from "../../../components/headers/secondary-header"
+import { getAllergiesForActiveFarm, getAllergiesForLivestock, deleteAllergy } from "../../../services/healthservice"
+import { getLivestockForActiveFarm } from "../../../services/livestock"
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window")
 
 const AllergiesRecordsScreen = ({ navigation, route }) => {
-  const { animalId, animalData } = route.params;
+  const routeParams = route?.params || {}
+  const viewMode = routeParams.viewMode || "farm"
+  const livestockId = routeParams.livestockId
 
-  const [allergyRecords, setAllergyRecords] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('date');
-  const [sortOrder, setSortOrder] = useState('desc');
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [error, setError] = useState(null);
+  const [allergyRecords, setAllergyRecords] = useState([])
+  const [livestock, setLivestock] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [isRefreshingHeader, setIsRefreshingHeader] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [sortBy, setSortBy] = useState("dateRecorded")
+  const [sortOrder, setSortOrder] = useState("desc")
+  const [filterByAnimal, setFilterByAnimal] = useState("all")
+  const [showFilters, setShowFilters] = useState(false)
+  const [selectedRecord, setSelectedRecord] = useState(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [loadingDetail, setLoadingDetail] = useState(false)
 
-  // Load allergy records on component mount
+  // Auto-refresh functionality
+  const [lastRecordCount, setLastRecordCount] = useState(0)
+  const [isScreenFocused, setIsScreenFocused] = useState(true)
+  const refreshIntervalRef = useRef(null)
+
   useEffect(() => {
-    loadAllergyRecords();
-  }, [animalId]);
+    loadData()
 
-  // Refresh data when coming back to this screen
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadAllergyRecords();
-    });
+    const unsubscribeFocus = navigation.addListener("focus", () => {
+      setIsScreenFocused(true)
+      loadData()
+      startAutoRefresh()
+    })
 
-    return unsubscribe;
-  }, [navigation, animalId]);
+    const unsubscribeBlur = navigation.addListener("blur", () => {
+      setIsScreenFocused(false)
+      stopAutoRefresh()
+    })
 
-  const loadAllergyRecords = async () => {
+    startAutoRefresh()
+
+    return () => {
+      unsubscribeFocus()
+      unsubscribeBlur()
+      stopAutoRefresh()
+    }
+  }, [])
+
+  const startAutoRefresh = () => {
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current)
+    }
+
+    refreshIntervalRef.current = setInterval(() => {
+      if (isScreenFocused) {
+        loadData(true) // Silent refresh
+      }
+    }, 30000) // Refresh every 30 seconds
+  }
+
+  const stopAutoRefresh = () => {
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current)
+      refreshIntervalRef.current = null
+    }
+  }
+
+  const loadData = async (silent = false) => {
     try {
-      setLoading(true);
-      setError(null);
+      if (!silent) {
+        setIsLoading(true)
+      }
+      await Promise.all([loadAllergyRecords(silent), loadLivestock()])
+    } catch (error) {
+      console.error("Error loading data:", error)
+      if (!silent) {
+        Alert.alert("Error", "Failed to load data. Please try again.")
+      }
+    } finally {
+      if (!silent) {
+        setIsLoading(false)
+      }
+    }
+  }
 
-      const result = await getAllergiesForLivestock(animalId);
+  const loadAllergyRecords = async (silent = false) => {
+    try {
+      let result
+      if (viewMode === "livestock" && livestockId) {
+        result = await getAllergiesForLivestock(livestockId)
+      } else {
+        result = await getAllergiesForActiveFarm()
+      }
 
       if (result.error) {
-        setError(result.error);
-        Alert.alert('Error', result.error);
-      } else {
-        setAllergyRecords(result.data || []);
+        if (!silent) {
+          Alert.alert("Error", result.error)
+        }
+        return
       }
-    } catch (err) {
-      console.error('Error loading allergy records:', err);
-      setError('Failed to load allergy records');
-      Alert.alert('Error', 'Failed to load allergy records');
-    } finally {
-      setLoading(false);
+
+      const newRecords = result.data || []
+      setAllergyRecords(newRecords)
+
+      // Check for new records
+      if (lastRecordCount > 0 && newRecords.length > lastRecordCount) {
+        console.log(`New allergy records detected: ${newRecords.length - lastRecordCount} new records`)
+      }
+      setLastRecordCount(newRecords.length)
+    } catch (error) {
+      console.error("Failed to load allergy records:", error)
+      if (!silent) {
+        Alert.alert("Error", "Failed to load allergy records. Please try again.")
+      }
     }
-  };
+  }
+
+  const loadLivestock = async () => {
+    try {
+      const result = await getLivestockForActiveFarm()
+      if (Array.isArray(result)) {
+        setLivestock(result)
+      } else {
+        setLivestock([])
+      }
+    } catch (error) {
+      console.error("Failed to load livestock:", error)
+      setLivestock([])
+    }
+  }
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadAllergyRecords();
-    setRefreshing(false);
-  }, [animalId]);
+    setRefreshing(true)
+    await loadData()
+    setRefreshing(false)
+  }, [])
 
-  const sortedAndFilteredRecords = useMemo(() => {
-    return allergyRecords
-      .filter(record => {
-        const matchesSearch =
-          searchQuery === '' ||
-          record.cause?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          record.remedy?.toLowerCase().includes(searchQuery.toLowerCase());
+  const onHeaderRefresh = useCallback(async () => {
+    setIsRefreshingHeader(true)
+    await loadData()
+    setIsRefreshingHeader(false)
+  }, [])
 
-        return matchesSearch;
-      })
-      .sort((a, b) => {
-        if (sortBy === 'date') {
-          return sortOrder === 'desc'
-            ? new Date(b.dateRecorded) - new Date(a.dateRecorded)
-            : new Date(a.dateRecorded) - new Date(b.dateRecorded);
-        } else if (sortBy === 'cause') {
-          return sortOrder === 'asc'
-            ? a.cause?.localeCompare(b.cause)
-            : b.cause?.localeCompare(a.cause);
-        }
-        return 0;
-      });
-  }, [allergyRecords, searchQuery, sortBy, sortOrder]);
+  const getAnimalInfo = (animalId) => {
+    return livestock.find((animal) => animal.id === animalId)
+  }
 
-  const toggleSort = useCallback((newSortBy) => {
-    if (sortBy === newSortBy) {
-      setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortBy(newSortBy);
-      setSortOrder('desc');
+  const formatAnimalDisplayName = (animal) => {
+    if (!animal) return "Unknown Animal"
+    if (animal.category === "poultry" && animal.poultry) {
+      return `${animal.type.toUpperCase()} - Flock ID: ${animal.poultry.flockId || "N/A"}`
+    } else if (animal.category === "mammal" && animal.mammal) {
+      return `${animal.type.toUpperCase()} - ID: ${animal.mammal.idNumber || "N/A"}`
     }
-  }, [sortBy]);
+    return `${animal.type.toUpperCase()} - ID: ${animal.id}`
+  }
 
-  const handleRecordPress = async (record) => {
-    setSelectedRecord(record);
-    setShowDetailModal(true);
-  };
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  }
 
-  const handleDelete = useCallback(async (id) => {
+  const getFilteredAndSortedRecords = () => {
+    let filtered = [...allergyRecords]
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(
+        (record) =>
+          record.cause?.toLowerCase().includes(query) ||
+          record.remedy?.toLowerCase().includes(query) ||
+          record.animalIdOrFlockId?.toLowerCase().includes(query),
+      )
+    }
+
+    if (filterByAnimal !== "all") {
+      filtered = filtered.filter((record) => record.livestockId === filterByAnimal)
+    }
+
+    filtered.sort((a, b) => {
+      let aValue, bValue
+      switch (sortBy) {
+        case "dateRecorded":
+          aValue = new Date(a.dateRecorded)
+          bValue = new Date(b.dateRecorded)
+          break
+        case "cause":
+          aValue = a.cause?.toLowerCase() || ""
+          bValue = b.cause?.toLowerCase() || ""
+          break
+        case "remedy":
+          aValue = a.remedy?.toLowerCase() || ""
+          bValue = b.remedy?.toLowerCase() || ""
+          break
+        default:
+          aValue = a[sortBy] || ""
+          bValue = b[sortBy] || ""
+      }
+
+      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
+      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
+      return 0
+    })
+
+    return filtered
+  }
+
+  const handleViewDetails = (record) => {
+    navigation.navigate("AllergyDetailScreen", {
+      recordId: record.id,
+      recordData: record,
+    })
+  }
+
+  const handleEdit = (record) => {
+    setShowDetailModal(false)
+    navigation.navigate("AllergyEditScreen", {
+      recordId: record.id,
+      recordData: record,
+    })
+  }
+
+  const handleDelete = (record) => {
     Alert.alert(
-      'Delete Allergy Record',
-      'Are you sure you want to delete this allergy record?',
+      "Delete Allergy Record",
+      "Are you sure you want to delete this allergy record? This action cannot be undone.",
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const result = await deleteAllergy(id);
-
-              if (result.error) {
-                Alert.alert('Error', result.error);
-              } else {
-                // Remove from local state
-                setAllergyRecords(prev => prev.filter(record => record.id !== id));
-                Alert.alert('Success', 'Allergy record deleted successfully');
-                setShowDetailModal(false);
-              }
-            } catch (error) {
-              console.error('Error deleting allergy:', error);
-              Alert.alert('Error', 'Failed to delete allergy record');
-            }
-          },
+          text: "Delete",
+          style: "destructive",
+          onPress: () => confirmDelete(record),
         },
       ],
-    );
-  }, []);
+    )
+  }
 
-  const renderHeader = () => (
-    <View style={styles.headerContainer}>
-      <LinearGradient
-        colors={['#FFFFFF', '#F8FAFC']}
-        style={styles.animalCard}>
-        <View style={styles.animalCardContent}>
-          <View style={[styles.animalAvatar, { backgroundColor: COLORS.green3 }]}>
-            <FastImage
-              source={icons.livestock || icons.account}
-              style={styles.animalAvatarIcon}
-              tintColor="#FFFFFF"
-            />
-            <View style={styles.statusIndicator} />
+  const confirmDelete = async (record) => {
+    try {
+      const result = await deleteAllergy(record.id)
+      if (result.error) {
+        Alert.alert("Error", result.error)
+        return
+      }
+      Alert.alert("Success", "Allergy record deleted successfully")
+      await loadAllergyRecords()
+    } catch (error) {
+      Alert.alert("Error", "Failed to delete allergy record")
+    }
+  }
+
+  const renderAllergyCard = ({ item }) => {
+    const animal = getAnimalInfo(item.livestockId)
+    return (
+      <View style={styles.allergyCard}>
+        <LinearGradient
+          colors={["#F0FDF4", "#FFFFFF"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cardGradient}
+        >
+          <View style={styles.statusBadge}>
+            <View style={[styles.statusDot, { backgroundColor: COLORS.green3 }]} />
+            <Text style={[styles.statusText, { color: COLORS.green3 }]}>Recorded</Text>
           </View>
-          <View style={styles.animalInfo}>
-            <Text style={styles.animalName}>{animalData?.title || animalData?.name || 'Animal'}</Text>
-            <Text style={styles.animalBreed}>{animalData?.breed || 'Unknown Breed'}</Text>
+
+          <View style={styles.cardContent}>
+            <View style={styles.cardHeader}>
+              <View style={styles.allergyInfo}>
+                <Text style={styles.allergyCause}>{item.cause}</Text>
+                <Text style={styles.allergyId}>ID: {item.animalIdOrFlockId}</Text>
+              </View>
+              <View style={styles.dateContainer}>
+                <FastImage source={icons.calendar} style={styles.calendarIcon} tintColor={COLORS.green3} />
+                <Text style={[styles.dateText, { color: COLORS.green3 }]}>{formatDate(item.dateRecorded)}</Text>
+              </View>
+            </View>
+
+            {/* Animal Info */}
+            {animal && (
+              <View style={styles.animalSection}>
+                <View style={styles.animalIconContainer}>
+                  <LinearGradient colors={[COLORS.green3, COLORS.green3]} style={styles.animalIcon}>
+                    <FastImage
+                      source={icons.livestock || icons.account}
+                      style={styles.animalIconImage}
+                      tintColor="#FFFFFF"
+                    />
+                  </LinearGradient>
+                </View>
+                <View style={styles.animalInfo}>
+                  <Text style={styles.animalName}>{formatAnimalDisplayName(animal)}</Text>
+                  <Text style={styles.animalBreed}>
+                    {(animal.category === "poultry" && animal.poultry?.breedType) ||
+                      (animal.category === "mammal" && animal.mammal?.breedType) ||
+                      "Unknown breed"}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Remedy Info */}
+            <View style={styles.remedySection}>
+              <View style={styles.remedyHeader}>
+                <View style={styles.remedyIconContainer}>
+                  <FastImage
+                    source={icons.medical || icons.health}
+                    style={styles.remedyIcon}
+                    tintColor={COLORS.green3}
+                  />
+                </View>
+                <Text style={styles.remedyLabel}>Treatment/Remedy</Text>
+              </View>
+              <Text style={styles.remedyText} numberOfLines={3}>
+                {item.remedy}
+              </Text>
+            </View>
           </View>
-        </View>
-      </LinearGradient>
 
-      {/* Error Message */}
-      {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={loadAllergyRecords} style={styles.retryButton}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <FastImage
-          source={icons.search}
-          style={styles.searchIcon}
-          tintColor={COLORS.gray}
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search cause, remedy..."
-          placeholderTextColor={COLORS.gray}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        {searchQuery ? (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <FastImage
-              source={icons.close}
-              style={styles.clearIcon}
-              tintColor={COLORS.gray}
-            />
-          </TouchableOpacity>
-        ) : null}
+          {/* Action Buttons Row */}
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.viewButton]}
+              onPress={() => handleViewDetails(item)}
+              activeOpacity={0.8}
+            >
+              <FastImage source={icons.eye || icons.view} style={styles.actionIcon} tintColor="#3B82F6" />
+              <Text style={[styles.actionButtonText, styles.viewButtonText]}>View Details</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.editButton]}
+              onPress={() => handleEdit(item)}
+              activeOpacity={0.8}
+            >
+              <FastImage source={icons.edit} style={styles.actionIcon} tintColor={COLORS.green3} />
+              <Text style={[styles.actionButtonText, styles.editButtonText]}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.deleteButton]}
+              onPress={() => handleDelete(item)}
+              activeOpacity={0.8}
+            >
+              <FastImage source={icons.trash} style={styles.actionIcon} tintColor="#EF4444" />
+              <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
       </View>
+    )
+  }
 
-      {/* Action Bar */}
-      <View style={styles.actionBar}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => toggleSort('date')}>
-          <FastImage
-            source={icons.calendar}
-            style={styles.actionIcon}
-            tintColor={COLORS.black}
-          />
-          <Text style={styles.actionText}>
-            {sortBy === 'date' ? (sortOrder === 'desc' ? 'Newest' : 'Oldest') : 'Date'}
-          </Text>
-        </TouchableOpacity>
+  const renderFiltersModal = () => (
+    <Modal visible={showFilters} animationType="slide" transparent={true} onRequestClose={() => setShowFilters(false)}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.filtersModal}>
+          <LinearGradient colors={["#FFFFFF", "#F0FDF4"]} style={styles.modalGradient}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filter & Sort</Text>
+              <TouchableOpacity onPress={() => setShowFilters(false)} style={styles.closeButton}>
+                <FastImage source={icons.close || icons.x} style={styles.closeIcon} tintColor="#6B7280" />
+              </TouchableOpacity>
+            </View>
 
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => toggleSort('cause')}>
-          <FastImage
-            source={icons.medicine}
-            style={styles.actionIcon}
-            tintColor={COLORS.black}
-          />
-          <Text style={styles.actionText}>
-            {sortBy === 'cause' ? (sortOrder === 'desc' ? 'Z-A' : 'A-Z') : 'Cause'}
-          </Text>
-        </TouchableOpacity>
+            <ScrollView style={styles.filtersContent}>
+              {/* Sort Section */}
+              <View style={styles.filterSection}>
+                <Text style={styles.sectionTitle}>Sort By</Text>
+                {[
+                  { key: "dateRecorded", label: "Date Recorded" },
+                  { key: "cause", label: "Allergy Cause" },
+                  { key: "remedy", label: "Treatment/Remedy" },
+                ].map((option) => (
+                  <TouchableOpacity
+                    key={option.key}
+                    style={[styles.filterOption, sortBy === option.key && styles.selectedOption]}
+                    onPress={() => setSortBy(option.key)}
+                  >
+                    <Text style={[styles.filterOptionText, sortBy === option.key && styles.selectedOptionText]}>
+                      {option.label}
+                    </Text>
+                    {sortBy === option.key && (
+                      <FastImage source={icons.check} style={styles.checkIcon} tintColor={COLORS.green3} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Sort Order Section */}
+              <View style={styles.filterSection}>
+                <Text style={styles.sectionTitle}>Sort Order</Text>
+                {[
+                  { key: "desc", label: "Newest First" },
+                  { key: "asc", label: "Oldest First" },
+                ].map((option) => (
+                  <TouchableOpacity
+                    key={option.key}
+                    style={[styles.filterOption, sortOrder === option.key && styles.selectedOption]}
+                    onPress={() => setSortOrder(option.key)}
+                  >
+                    <Text style={[styles.filterOptionText, sortOrder === option.key && styles.selectedOptionText]}>
+                      {option.label}
+                    </Text>
+                    {sortOrder === option.key && (
+                      <FastImage source={icons.check} style={styles.checkIcon} tintColor={COLORS.green3} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Filter by Animal Section */}
+              {viewMode === "farm" && livestock.length > 0 && (
+                <View style={styles.filterSection}>
+                  <Text style={styles.sectionTitle}>Filter by Animal</Text>
+                  <TouchableOpacity
+                    style={[styles.filterOption, filterByAnimal === "all" && styles.selectedOption]}
+                    onPress={() => setFilterByAnimal("all")}
+                  >
+                    <Text style={[styles.filterOptionText, filterByAnimal === "all" && styles.selectedOptionText]}>
+                      All Animals
+                    </Text>
+                    {filterByAnimal === "all" && (
+                      <FastImage source={icons.check} style={styles.checkIcon} tintColor={COLORS.green3} />
+                    )}
+                  </TouchableOpacity>
+                  {livestock.map((animal) => (
+                    <TouchableOpacity
+                      key={animal.id}
+                      style={[styles.filterOption, filterByAnimal === animal.id && styles.selectedOption]}
+                      onPress={() => setFilterByAnimal(animal.id)}
+                    >
+                      <Text
+                        style={[styles.filterOptionText, filterByAnimal === animal.id && styles.selectedOptionText]}
+                      >
+                        {formatAnimalDisplayName(animal)}
+                      </Text>
+                      {filterByAnimal === animal.id && (
+                        <FastImage source={icons.check} style={styles.checkIcon} tintColor={COLORS.green3} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </ScrollView>
+
+            <View style={styles.filterActions}>
+              <TouchableOpacity
+                style={styles.clearFiltersButton}
+                onPress={() => {
+                  setSearchQuery("")
+                  setSortBy("dateRecorded")
+                  setSortOrder("desc")
+                  setFilterByAnimal("all")
+                }}
+              >
+                <Text style={styles.clearFiltersText}>Clear All</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.applyFiltersButton} onPress={() => setShowFilters(false)}>
+                <LinearGradient colors={[COLORS.green3, COLORS.green3]} style={styles.applyGradient}>
+                  <Text style={styles.applyFiltersText}>Apply</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        </View>
       </View>
+    </Modal>
+  )
 
-      <View style={styles.resultsContainer}>
-        <Text style={styles.resultsText}>
-          {sortedAndFilteredRecords.length} allergy record{sortedAndFilteredRecords.length !== 1 ? 's' : ''}
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <LinearGradient colors={["#F0FDF4", "#FFFFFF"]} style={styles.emptyGradient}>
+        <FastImage source={icons.medical || icons.health} style={styles.emptyIcon} tintColor="#9CA3AF" />
+        <Text style={styles.emptyTitle}>No Allergy Records</Text>
+        <Text style={styles.emptySubtitle}>
+          {viewMode === "livestock"
+            ? "This animal has no allergy records yet."
+            : "No allergy records found for your farm."}
         </Text>
-      </View>
-    </View>
-  );
-
-  const renderAllergyCard = ({ item }) => (
-    <TouchableOpacity
-      style={styles.allergyCard}
-      onPress={() => handleRecordPress(item)}
-      activeOpacity={0.85}>
-
-      <LinearGradient
-        colors={['#FFFFFF', '#F8FAFC']}
-        style={styles.cardGradient}>
-
-        <View style={styles.cardHeader}>
-          <View style={styles.allergyInfo}>
-            <Text style={styles.allergyName}>{item.cause}</Text>
-            <Text style={styles.allergyRemedy}>{item.remedy}</Text>
-          </View>
-
-          <View style={styles.cardActions}>
-            <TouchableOpacity
-              style={styles.cardActionButton}
-              onPress={(e) => {
-                e.stopPropagation();
-                navigation.navigate('EditAllergyRecord', {
-                  recordId: item.id,
-                  animalId,
-                  animalData
-                });
-              }}>
-              <FastImage
-                source={icons.edit}
-                style={styles.cardActionIcon}
-                tintColor="#2196F3"
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.cardActionButton}
-              onPress={(e) => {
-                e.stopPropagation();
-                handleDelete(item.id);
-              }}>
-              <FastImage
-                source={icons.remove}
-                style={styles.cardActionIcon}
-                tintColor="#EF4444"
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.cardBody}>
-          <View style={styles.detailRow}>
-            <FastImage source={icons.calendar} style={styles.detailIcon} tintColor="#6B7280" />
-            <Text style={styles.detailLabel}>Recorded:</Text>
-            <Text style={styles.detailValue}>
-              {new Date(item.dateRecorded).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-              })}
-            </Text>
-          </View>
-
-          {/* <View style={styles.detailRow}>
-            <FastImage source={icons.livestock} style={styles.detailIcon} tintColor="#6B7280" />
-            <Text style={styles.detailLabel}>Animal ID:</Text>
-            <Text style={styles.detailValue}>{item.animalIdOrFlockId}</Text>
-          </View> */}
-        </View>
-
         <TouchableOpacity
-          style={styles.viewMoreButton}
-          onPress={() => handleRecordPress(item)}>
-          <Text style={styles.viewMoreText}>View Details</Text>
-          <FastImage
-            source={icons.rightArrow}
-            style={styles.viewMoreIcon}
-            tintColor="#6B7280"
-          />
+          style={styles.addFirstRecordButton}
+          onPress={() => navigation.navigate("AddAllergiesRecords")}
+          activeOpacity={0.8}
+        >
+          <LinearGradient colors={[COLORS.green3, COLORS.green3]} style={styles.addFirstGradient}>
+            <FastImage source={icons.plus || icons.add} style={styles.addFirstIcon} tintColor="#FFFFFF" />
+            <Text style={styles.addFirstText}>Add First Record</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </LinearGradient>
-    </TouchableOpacity>
-  );
+    </View>
+  )
 
-  if (loading) {
+  const filteredRecords = getFilteredAndSortedRecords()
+
+  if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <SecondaryHeader
-          title="Allergy Records"
-          showBack={true}
-          onBack={() => navigation.goBack()}
-        />
+        <SecondaryHeader title="Allergy Records" onBackPress={() => navigation.goBack()} showNotification={true} />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#10B981" />
+          <ActivityIndicator size="large" color={COLORS.green3} />
           <Text style={styles.loadingText}>Loading allergy records...</Text>
         </View>
       </SafeAreaView>
-    );
+    )
   }
-
-  const renderDetailModal = () => (
-    <Modal
-      visible={showDetailModal}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={() => setShowDetailModal(false)}>
-
-      <SafeAreaView style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>Allergy Details</Text>
-          <TouchableOpacity onPress={() => setShowDetailModal(false)}>
-            <FastImage source={icons.close} style={styles.modalCloseIcon} tintColor={COLORS.black} />
-          </TouchableOpacity>
-        </View>
-
-        {selectedRecord && (
-          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-
-            <View style={styles.modalStatusCard}>
-              <Text style={styles.modalAllergyName}>{selectedRecord.cause}</Text>
-              <Text style={styles.modalStatusText}>Allergy Record</Text>
-            </View>
-
-            <View style={styles.modalSection}>
-              <Text style={styles.modalSectionTitle}>Basic Information</Text>
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Allergen/Cause</Text>
-                <Text style={styles.modalDetailValue}>{selectedRecord.cause}</Text>
-              </View>
-
-              {/* <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Animal ID</Text>
-                <Text style={styles.modalDetailValue}>{selectedRecord.animalIdOrFlockId}</Text>
-              </View> */}
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Date Recorded</Text>
-                <Text style={styles.modalDetailValue}>
-                  {new Date(selectedRecord.dateRecorded).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </Text>
-              </View>
-            </View>
-
-            {/* Treatment Information */}
-            <View style={styles.modalSection}>
-              <Text style={styles.modalSectionTitle}>Treatment Information</Text>
-
-              <View style={styles.modalDetailRow}>
-                <Text style={styles.modalDetailLabel}>Remedy/Treatment</Text>
-                <Text style={styles.modalDetailValue}>{selectedRecord.remedy}</Text>
-              </View>
-            </View>
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalActionButton}
-                onPress={() => {
-                  setShowDetailModal(false);
-                  navigation.navigate('EditAllergyRecord', {
-                    recordId: selectedRecord.id,
-                    animalId,
-                    animalData
-                  });
-                }}>
-                <FastImage source={icons.edit} style={styles.modalActionIcon} tintColor="#2196F3" />
-                <Text style={[styles.modalActionText, { color: '#2196F3' }]}>Edit Record</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.modalActionButton}
-                onPress={() => handleDelete(selectedRecord.id)}>
-                <FastImage source={icons.remove} style={styles.modalActionIcon} tintColor="#EF4444" />
-                <Text style={[styles.modalActionText, { color: '#EF4444' }]}>Delete Record</Text>
-              </TouchableOpacity>
-            </View>
-
-          </ScrollView>
-        )}
-      </SafeAreaView>
-    </Modal>
-  );
-
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <FastImage source={icons.medicine} style={styles.emptyStateIcon} tintColor={COLORS.gray} />
-      <Text style={styles.emptyStateTitle}>No Allergy Records</Text>
-      <Text style={styles.emptyStateMessage}>
-        This animal doesn't have any allergy records yet.
-      </Text>
-      <TouchableOpacity
-        style={styles.emptyStateButton}
-        onPress={() => navigation.navigate('AddAllergiesRecords', { animalId, animalData })}>
-        <Text style={styles.emptyStateButtonText}>Add First Record</Text>
-      </TouchableOpacity>
-    </View>
-  );
 
   return (
     <SafeAreaView style={styles.container}>
       <SecondaryHeader
-        title="Allergy Records"
-        showBack={true}
-        onBack={() => navigation.goBack()}
+        title={viewMode === "livestock" ? "Animal Allergies" : "Allergy Records"}
+        onBackPress={() => navigation.goBack()}
+        showNotification={true}
       />
 
-      {sortedAndFilteredRecords.length > 0 ? (
-        <FlatList
-          data={sortedAndFilteredRecords}
-          renderItem={renderAllergyCard}
-          keyExtractor={item => item.id}
-          ListHeaderComponent={renderHeader}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        />
+      {/* Search and Filter Bar */}
+      <View style={styles.searchFilterContainer}>
+        <LinearGradient colors={["#FFFFFF", "#F0FDF4"]} style={styles.searchGradient}>
+          <View style={styles.searchContainer}>
+            <FastImage source={icons.search} style={styles.searchIcon} tintColor="#6B7280" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search allergies..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#9CA3AF"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery("")} style={styles.clearSearchButton}>
+                <FastImage source={icons.close || icons.x} style={styles.clearSearchIcon} tintColor="#6B7280" />
+              </TouchableOpacity>
+            )}
+          </View>
+          <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(true)} activeOpacity={0.8}>
+            <LinearGradient colors={["rgba(34, 197, 94, 0.1)", "rgba(34, 197, 94, 0.2)"]} style={styles.filterGradient}>
+              <FastImage source={icons.filter} style={styles.filterIcon} tintColor={COLORS.green3} />
+              <Text style={[styles.filterButtonText, { color: COLORS.green3 }]}>Filter</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </LinearGradient>
+      </View>
+
+      <View style={styles.headerActions}>
+        <Text style={styles.recordsCount}>
+          {filteredRecords.length} record{filteredRecords.length !== 1 ? "s" : ""} found
+        </Text>
+        <TouchableOpacity
+          style={styles.refreshButton}
+          onPress={onHeaderRefresh}
+          disabled={isRefreshingHeader}
+          activeOpacity={0.8}
+        >
+          {isRefreshingHeader ? (
+            <ActivityIndicator size="small" color={COLORS.green3} />
+          ) : (
+            <FastImage source={icons.refresh} style={styles.refreshIcon} tintColor={COLORS.green3} />
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Records List */}
+      {filteredRecords.length === 0 ? (
+        renderEmptyState()
       ) : (
-        <ScrollView
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          contentContainerStyle={{ flex: 1 }}>
-          {renderHeader()}
-          {renderEmptyState()}
-        </ScrollView>
+        <FlatList
+          data={filteredRecords}
+          renderItem={renderAllergyCard}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS.green3]}
+              tintColor={COLORS.green3}
+            />
+          }
+          showsVerticalScrollIndicator={false}
+        />
       )}
 
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('AddAllergiesRecords', { animalId, animalData })}>
-        <FastImage source={icons.plus} style={styles.fabIcon} tintColor="#FFFFFF" />
+      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate("AddAllergiesRecords")}>
+        <FastImage source={icons.plus || icons.add} style={styles.fabIcon} tintColor={COLORS.white} />
       </TouchableOpacity>
 
-      {renderDetailModal()}
+      {renderFiltersModal()}
     </SafeAreaView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: "#F9FAFB",
   },
-
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#6B7280',
+    color: "#6B7280",
+    fontFamily: "Inter-Medium",
   },
-
-  errorContainer: {
-    backgroundColor: '#FEF2F2',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#FECACA',
-  },
-  errorText: {
-    color: '#DC2626',
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  retryButton: {
-    backgroundColor: '#DC2626',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
-  },
-  retryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-
-  listContent: {
-    paddingBottom: 100,
-  },
-
-  headerContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-
-  animalCard: {
-    borderRadius: 16,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  animalCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-  },
-  animalAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  animalAvatarIcon: {
-    width: 30,
-    height: 30,
-  },
-  animalInfo: {
-    flex: 1,
-  },
-  animalName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  animalBreed: {
-    fontSize: 14,
-    color: '#10B981',
-    fontWeight: '500',
-  },
-
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+  searchFilterContainer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+  },
+  searchGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 12,
+    padding: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowRadius: 2,
     elevation: 2,
+  },
+  searchContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginRight: 12,
   },
   searchIcon: {
     width: 20,
     height: 20,
-    marginRight: 12,
+    marginRight: 8,
   },
   searchInput: {
     flex: 1,
+    height: 40,
     fontSize: 16,
-    color: '#111827',
+    color: "#1F2937",
+    fontFamily: "Inter-Regular",
   },
-  clearIcon: {
-    width: 20,
-    height: 20,
-    marginLeft: 12,
+  clearSearchButton: {
+    padding: 4,
   },
-
-  actionBar: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  actionIcon: {
+  clearSearchIcon: {
     width: 16,
     height: 16,
+  },
+  filterButton: {
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  filterGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  filterIcon: {
+    width: 18,
+    height: 18,
     marginRight: 6,
   },
-  actionText: {
+  filterButtonText: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
+    fontFamily: "Inter-Medium",
   },
-
-  resultsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  headerActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
     marginBottom: 16,
   },
-  resultsText: {
+  recordsCount: {
     fontSize: 14,
-    color: '#6B7280',
-    fontWeight: '500',
+    color: "#6B7280",
+    fontFamily: "Inter-Medium",
   },
-
+  refreshButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+  },
+  refreshIcon: {
+    width: 20,
+    height: 20,
+  },
+  listContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
   allergyCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 16,
     borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+    overflow: "hidden",
   },
   cardGradient: {
-    borderRadius: 16,
     padding: 16,
   },
-
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
     marginBottom: 12,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 12,
+    fontFamily: "Inter-Medium",
+  },
+  cardContent: {
+    marginBottom: 16,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 16,
   },
   allergyInfo: {
     flex: 1,
     marginRight: 12,
   },
-  allergyName: {
+  allergyCause: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
+    fontFamily: "Inter-SemiBold",
+    color: "#1F2937",
     marginBottom: 4,
   },
-  allergyRemedy: {
+  allergyId: {
     fontSize: 14,
-    color: '#6B7280',
-    fontWeight: '500',
+    color: "#6B7280",
+    fontFamily: "Inter-Regular",
   },
-
-  cardBody: {
-    marginBottom: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  detailIcon: {
-    width: 16,
-    height: 16,
-    marginRight: 8,
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginRight: 6,
-    minWidth: 80,
-  },
-  detailValue: {
-    fontSize: 14,
-    color: '#111827',
-    fontWeight: '500',
-    flex: 1,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  cardActionButton: {
-    padding: 8,
-    marginLeft: 4,
+  dateContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 8,
-    backgroundColor: '#F3F4F6',
   },
-  cardActionIcon: {
-    width: 16,
-    height: 16,
-  },
-  viewMoreButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    marginTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
-  viewMoreText: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontWeight: '500',
+  calendarIcon: {
+    width: 14,
+    height: 14,
     marginRight: 4,
   },
-  viewMoreIcon: {
-    width: 12,
-    height: 12,
+  dateText: {
+    fontSize: 12,
+    fontFamily: "Inter-Medium",
+  },
+  animalSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.2)",
+  },
+  animalIconContainer: {
+    marginRight: 12,
+  },
+  animalIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  animalIconImage: {
+    width: 18,
+    height: 18,
+  },
+  animalInfo: {
+    flex: 1,
+  },
+  animalName: {
+    fontSize: 14,
+    fontFamily: "Inter-SemiBold",
+    color: "#1F2937",
+    marginBottom: 2,
+  },
+  animalBreed: {
+    fontSize: 12,
+    color: "#6B7280",
+    fontFamily: "Inter-Regular",
+  },
+  remedySection: {
+    backgroundColor: "rgba(240, 253, 244, 0.7)",
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.2)",
+  },
+  remedyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  remedyIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  remedyIcon: {
+    width: 14,
+    height: 14,
+  },
+  remedyLabel: {
+    fontSize: 12,
+    color: COLORS.green3,
+    fontFamily: "Inter-SemiBold",
+  },
+  remedyText: {
+    fontSize: 14,
+    color: "#1F2937",
+    fontFamily: "Inter-Regular",
+    lineHeight: 20,
+  },
+  actionButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    marginHorizontal: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  viewButton: {
+    backgroundColor: "rgba(59, 130, 246, 0.05)",
+    borderColor: "rgba(59, 130, 246, 0.2)",
+  },
+  editButton: {
+    backgroundColor: "rgba(34, 197, 94, 0.05)",
+    borderColor: "rgba(34, 197, 94, 0.2)",
+  },
+  deleteButton: {
+    backgroundColor: "rgba(239, 68, 68, 0.05)",
+    borderColor: "rgba(239, 68, 68, 0.2)",
+  },
+  actionIcon: {
+    width: 14,
+    height: 14,
+    marginRight: 6,
+  },
+  actionButtonText: {
+    fontSize: 12,
+    fontFamily: "Inter-Medium",
+  },
+  viewButtonText: {
+    color: "#3B82F6",
+  },
+  editButtonText: {
+    color: COLORS.green3,
+  },
+  deleteButtonText: {
+    color: "#EF4444",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  filtersModal: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: "80%",
+    overflow: "hidden",
+  },
+  modalGradient: {
+    flex: 1,
+    minHeight: 400,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: "Inter-SemiBold",
+    color: "#1F2937",
+  },
+  closeButton: {
+    padding: 8,
+  },
+  closeIcon: {
+    width: 20,
+    height: 20,
+  },
+  filtersContent: {
+    flex: 1,
+    padding: 20,
+  },
+  filterSection: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: "Inter-SemiBold",
+    color: "#1F2937",
+    marginBottom: 12,
+  },
+  filterOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  selectedOption: {
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    borderColor: COLORS.green3,
+  },
+  filterOptionText: {
+    fontSize: 14,
+    color: "#6B7280",
+    fontFamily: "Inter-Regular",
+  },
+  selectedOptionText: {
+    color: COLORS.green3,
+    fontFamily: "Inter-Medium",
+  },
+  checkIcon: {
+    width: 16,
+    height: 16,
+  },
+  filterActions: {
+    flexDirection: "row",
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+  },
+  clearFiltersButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginRight: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    alignItems: "center",
+  },
+  clearFiltersText: {
+    fontSize: 14,
+    color: "#6B7280",
+    fontFamily: "Inter-Medium",
+  },
+  applyFiltersButton: {
+    flex: 1,
+    marginLeft: 8,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  applyGradient: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  applyFiltersText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontFamily: "Inter-SemiBold",
+  },
+  emptyContainer: {
+    flex: 1,
+    margin: 16,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  emptyGradient: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontFamily: "Inter-SemiBold",
+    color: "#1F2937",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+    fontFamily: "Inter-Regular",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  addFirstRecordButton: {
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  addFirstGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+  },
+  addFirstIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+  },
+  addFirstText: {
+    fontSize: 16,
+    color: "#FFFFFF",
+    fontFamily: "Inter-SemiBold",
   },
   fab: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
+    position: "absolute",
+    bottom: 24,
+    right: 24,
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#10B981',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    backgroundColor: COLORS.green3,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: COLORS.black,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
@@ -765,170 +1111,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
   },
+})
 
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  emptyStateIcon: {
-    width: 64,
-    height: 64,
-    marginBottom: 16,
-  },
-  emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptyStateMessage: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 24,
-  },
-  emptyStateButton: {
-    backgroundColor: '#10B981',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  emptyStateButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-
-  // Modal Styles
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  modalCloseIcon: {
-    width: 24,
-    height: 24,
-  },
-
-  modalContent: {
-    flex: 1,
-    padding: 20,
-  },
-
-  modalStatusCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: '#10B981',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  modalAllergyName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  modalStatusText: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-
-  modalSection: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  modalSectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 12,
-  },
-
-  modalDetailRow: {
-    marginBottom: 12,
-  },
-  modalDetailLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 4,
-    fontWeight: '500',
-  },
-  modalDetailValue: {
-    fontSize: 16,
-    color: '#111827',
-    fontWeight: '500',
-  },
-
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 20,
-  },
-  modalActionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  modalActionIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 8,
-  },
-  modalActionText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-
-  statusIndicator: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#22C55E',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-});
-
-export default AllergiesRecordsScreen;
+export default AllergiesRecordsScreen

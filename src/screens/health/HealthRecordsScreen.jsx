@@ -70,7 +70,7 @@ const HealthRecordsScreen = ({ navigation, route }) => {
       gradient: ['#F4EBD0', '#4C7153'],
       description: 'Manage vaccination records',
       screen: 'VaccineRecordsScreen',
-      count: vaccinationCount,
+      // count: vaccinationCount,
       icon: '💉',
     },
     {
@@ -80,7 +80,7 @@ const HealthRecordsScreen = ({ navigation, route }) => {
       gradient: ['#BD91D7', '#4C7153'],
       description: 'Track deworming treatments',
       screen: 'DewormingRecordsScreen',
-      count: 2,
+      // count: 2,
       icon: '🪱',
     },
     {
@@ -90,7 +90,7 @@ const HealthRecordsScreen = ({ navigation, route }) => {
       gradient: ['#CBD18F', '#4C7153'],
       description: 'Record medical treatments',
       screen: 'CurativeTreatmentRecordsScreen',
-      count: 5,
+      // count: 5,
       icon: '🏥',
     },
     {
@@ -100,7 +100,7 @@ const HealthRecordsScreen = ({ navigation, route }) => {
       gradient: ['#CDD9CD', '#4C7153'],
       description: 'Document health disorders',
       screen: 'GeneticDisorderRecordsScreen',
-      count: 1,
+      // count: 1,
       icon: '⚕️',
     },
     {
@@ -110,7 +110,7 @@ const HealthRecordsScreen = ({ navigation, route }) => {
       gradient: ['#D79F91', '#4C7153'],
       description: 'Track allergies & reactions',
       screen: 'AllergiesRecordsScreen',
-      count: allergiesCount,
+      // count: allergiesCount,
       icon: '🚨',
     },
     {
@@ -120,7 +120,7 @@ const HealthRecordsScreen = ({ navigation, route }) => {
       gradient: ['#91D79E', '#4C7153'],
       description: 'Booster shot records',
       screen: 'BoostersRecordScreen',
-      count: 2,
+      // count: 2,
       icon: '🛡️',
     },
   ];

@@ -40,7 +40,11 @@ export async function createEmployee(employeeData) {
       JSON.stringify(response.data, null, 2),
     );
 
-    return {data: response.data, error: null};
+    // Return the actual employee data from the response
+    return {
+      data: response.data?.data || response.data, // Handle both possible response structures
+      error: null,
+    };
   } catch (error) {
     console.error(
       '[createEmployee] Error:',
@@ -71,14 +75,38 @@ export async function getFarmEmployees() {
       };
     }
 
+    console.log(
+      '[getFarmEmployees] Fetching employees for farm:',
+      activeFarm.id,
+    );
+
     const response = await api.get(`/employees?farmId=${activeFarm.id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
+    console.log(
+      '[getFarmEmployees] Response:',
+      JSON.stringify(response.data, null, 2),
+    );
+
+    // Handle different possible response structures
+    let employees = [];
+    if (response.data?.data) {
+      employees = Array.isArray(response.data.data) ? response.data.data : [];
+    } else if (Array.isArray(response.data)) {
+      employees = response.data;
+    } else if (response.data?.employees) {
+      employees = Array.isArray(response.data.employees)
+        ? response.data.employees
+        : [];
+    }
+
+    console.log('[getFarmEmployees] Processed employees:', employees.length);
+
     return {
-      data: response.data?.data || [],
+      data: employees,
       error: null,
     };
   } catch (error) {
@@ -108,7 +136,7 @@ export async function getEmployeeById(employeeId) {
       headers: {Authorization: `Bearer ${token}`},
     });
 
-    return response.data;
+    return response.data?.data || response.data;
   } catch (error) {
     console.error(
       '[getEmployeeById] Error:',
@@ -140,7 +168,10 @@ export async function updateEmployee(employeeId, updateData) {
       },
     });
 
-    return {data: response.data, error: null};
+    return {
+      data: response.data?.data || response.data,
+      error: null,
+    };
   } catch (error) {
     console.error(
       '[updateEmployee] Error:',
@@ -191,12 +222,37 @@ export async function deleteEmployee(employeeId) {
 
 async function getActiveFarm() {
   try {
+    // First try to get from activeFarm storage
+    const activeFarmString = await AsyncStorage.getItem('activeFarm');
+    if (activeFarmString) {
+      const activeFarm = JSON.parse(activeFarmString);
+      if (activeFarm?.id) {
+        console.log('[getActiveFarm] Found activeFarm in storage:', activeFarm);
+        return {
+          id: activeFarm.id,
+          name: activeFarm.name,
+          location: activeFarm.location || activeFarm.administrativeLocation,
+          size: activeFarm.size || `${activeFarm.size} acres`,
+          animals: Array.isArray(activeFarm.animals)
+            ? activeFarm.animals
+            : Array.isArray(activeFarm.farmingTypes)
+            ? activeFarm.farmingTypes
+            : [],
+        };
+      }
+    }
+
+    // Fallback to user's first farm
     const user = JSON.parse((await AsyncStorage.getItem('user')) || '{}');
     const farms = user?.farms || [];
 
-    if (farms.length === 0) return null;
+    if (farms.length === 0) {
+      console.log('[getActiveFarm] No farms found');
+      return null;
+    }
 
     const farm = farms[0];
+    console.log('[getActiveFarm] Using first farm from user:', farm);
 
     return {
       id: farm.id,
@@ -280,5 +336,9 @@ export function formatEmployeeData(formData, employeeType) {
     }
   }
 
+  console.log(
+    '[formatEmployeeData] Formatted data:',
+    JSON.stringify(baseData, null, 2),
+  );
   return baseData;
 }

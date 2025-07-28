@@ -13,6 +13,7 @@ const Stack = createNativeStackNavigator();
 import {
   LoginScreen,
   HomeScreen,
+  BusinessAnalyticsScreen,
   Otp,
   SignupScreen,
   ForgotPasswordScreen,
@@ -75,6 +76,7 @@ import {
   VaccineEditScreen,
   DewormingRecordsScreen,
   DewormingEditScreen,
+  TreatmentDetailScreen,
   CurativeTreatmentRecordsScreen,
   CurativeTreatmentEditScreen,
   GeneticDisorderRecordsScreen,
@@ -85,7 +87,10 @@ import {
   AllergiesRecordsScreen,
   VaccineDetailScreen,
   BoostersRecordScreen,
-
+  AllergyDetailScreen,
+  BoosterDetailScreen,
+  DewormingDetailScreen,
+  GeneticDisorderDetailScreen,
   //Production
   AddDairyDetailsScreen,
   AddBeefDetailsScreen,
@@ -113,6 +118,7 @@ import {
   InventoryDashboard,
   AddInventory,
   AddMachinery,
+  InventoryDetails,
   AddGoodsInStock,
   AddUtilityDetails,
   EditMachinery,
@@ -226,6 +232,12 @@ export default function App() {
                 component={HomeScreen}
                 options={{headerShown: false}}
               />
+              <Stack.Screen
+                name="BusinessAnalyticsScreen"
+                component={BusinessAnalyticsScreen}
+                options={{headerShown: false}}
+              />
+
               <Stack.Screen
                 name="ProfileScreen"
                 component={ProfileScreen}
@@ -393,6 +405,11 @@ export default function App() {
                 options={{headerShown: false}}
               />
               <Stack.Screen
+                name="GeneticDisorderDetailScreen"
+                component={GeneticDisorderDetailScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
                 name="AnimalFeedingProgramScreen"
                 component={AnimalFeedingProgramScreen}
                 options={{headerShown: false}}
@@ -438,7 +455,6 @@ export default function App() {
                 component={EditAllergyRecord}
                 options={{headerShown: false}}
               />
-
               <Stack.Screen
                 name="AddBoostersRecords"
                 component={AddBoostersRecords}
@@ -495,6 +511,16 @@ export default function App() {
                 options={{headerShown: false}}
               />
               <Stack.Screen
+                name="TreatmentDetailScreen"
+                component={TreatmentDetailScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="AllergyDetailScreen"
+                component={AllergyDetailScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
                 name="CurativeTreatmentEditScreen"
                 component={CurativeTreatmentEditScreen}
                 options={{headerShown: false}}
@@ -502,6 +528,16 @@ export default function App() {
               <Stack.Screen
                 name="GeneticDisorderRecordsScreen"
                 component={GeneticDisorderRecordsScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="BoosterDetailScreen"
+                component={BoosterDetailScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="DewormingDetailScreen"
+                component={DewormingDetailScreen}
                 options={{headerShown: false}}
               />
               <Stack.Screen
@@ -638,6 +674,11 @@ export default function App() {
               <Stack.Screen
                 name="AddUtilityDetails"
                 component={AddUtilityDetails}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="InventoryDetails"
+                component={InventoryDetails}
                 options={{headerShown: false}}
               />
             </Stack.Navigator>

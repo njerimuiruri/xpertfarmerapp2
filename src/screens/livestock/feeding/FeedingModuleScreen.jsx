@@ -55,7 +55,7 @@ const FeedingModuleScreen = ({ navigation }) => {
       const timer = setTimeout(() => {
         setShowSuccessToast(false)
         setSuccessMessage("")
-      }, 2500)
+      }, 3000)
       return () => clearTimeout(timer)
     }
   }, [showSuccessToast])
@@ -71,7 +71,7 @@ const FeedingModuleScreen = ({ navigation }) => {
       setLivestock(livestockData)
     } catch (error) {
       console.error("Error fetching data:", error)
-      Alert.alert("Error", "Failed to load feeding programs")
+      Alert.alert("Oops!", "We couldn't load your feeding programs. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -140,10 +140,10 @@ const FeedingModuleScreen = ({ navigation }) => {
 
   const handleDelete = async (programId) => {
     Alert.alert(
-      "Delete Feeding Program",
-      "Are you sure you want to delete this feeding program? This action cannot be undone.",
+      "Delete Feeding Program?",
+      "This will permanently remove this feeding program and cannot be undone.",
       [
-        { text: "Cancel", style: "cancel" },
+        { text: "Keep Program", style: "cancel" },
         {
           text: "Delete",
           style: "destructive",
@@ -154,7 +154,7 @@ const FeedingModuleScreen = ({ navigation }) => {
               setSuccessMessage("Feeding program deleted successfully!")
               setShowSuccessToast(true)
             } catch (error) {
-              Alert.alert("Error", error.toString())
+              Alert.alert("Error", "Couldn't delete the program. Please try again.")
             }
           },
         },
@@ -170,7 +170,7 @@ const FeedingModuleScreen = ({ navigation }) => {
       setSelectedProgram(detailedProgram)
     } catch (error) {
       console.error("Error fetching program details:", error)
-      Alert.alert("Error", "Failed to load program details")
+      Alert.alert("Error", "Couldn't load program details. Please try again.")
       setDetailsModalVisible(false)
     } finally {
       setLoadingDetails(false)
@@ -188,297 +188,316 @@ const FeedingModuleScreen = ({ navigation }) => {
   const getFeedTypeColor = (feedType) => {
     switch (feedType) {
       case "Basal Feed Only":
-        return COLORS.green2
+        return "#22c55e"
       case "Basal Feed + Concentrates + Supplements":
-        return COLORS.lightOrange
+        return "#f59e0b"
       case "Concentrates Only":
-        return COLORS.primary
+        return "#3b82f6"
       default:
-        return COLORS.gray
+        return "#6b7280"
     }
   }
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-GB", {
-      day: "2-digit",
+      day: "numeric",
       month: "short",
       year: "numeric",
     })
   }
 
+  // Enhanced search and filter component
   const renderSearchAndFilter = () => (
-    <Box bg="white" borderRadius={16} shadow={2} mb={4} p={4}>
-      <HStack alignItems="center" space={3} mb={3}>
-        <Box flex={1} bg={COLORS.lightGreen} borderRadius={12} px={3} py={2}>
-          <HStack alignItems="center" space={2}>
-            <FastImage source={icons.search} style={styles.searchIcon} tintColor={COLORS.green2} />
-            <TextInput
-              placeholder="Search programs..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              style={styles.searchInput}
-              placeholderTextColor={COLORS.gray}
-            />
-          </HStack>
-        </Box>
+    <Box bg="white" borderRadius={20} shadow={1} mb={6} p={5}>
+      {/* Search Bar */}
+      <Box bg="#f8fafc" borderRadius={16} px={4} py={3} mb={4}>
+        <HStack alignItems="center" space={3}>
+          <FastImage source={icons.search} style={styles.searchIcon} tintColor="#64748b" />
+          <TextInput
+            placeholder="Search by animal name, feed type, or notes..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={styles.searchInput}
+            placeholderTextColor="#94a3b8"
+          />
+          {searchQuery ? (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <Text style={styles.clearSearchText}>Clear</Text>
+            </TouchableOpacity>
+          ) : null}
+        </HStack>
+      </Box>
+
+      {/* Quick Stats */}
+      <HStack justifyContent="space-between" alignItems="center" mb={4}>
+        <VStack>
+          <Text style={styles.statsNumber}>{filteredPrograms.length}</Text>
+          <Text style={styles.statsLabel}>Programs Found</Text>
+        </VStack>
+        <VStack alignItems="center">
+          <Text style={styles.statsNumber}>{feedingPrograms.filter(p => p.programType === "Single Animal").length}</Text>
+          <Text style={styles.statsLabel}>Individual</Text>
+        </VStack>
+        <VStack alignItems="center">
+          <Text style={styles.statsNumber}>{feedingPrograms.filter(p => p.programType === "Group").length}</Text>
+          <Text style={styles.statsLabel}>Groups</Text>
+        </VStack>
         <TouchableOpacity
           onPress={() => setShowFilters(!showFilters)}
-          style={[styles.filterButton, { backgroundColor: showFilters ? COLORS.green : COLORS.lightGreen }]}
+          style={[styles.filterToggle, { backgroundColor: showFilters ? "#3b82f6" : "#f1f5f9" }]}
         >
           <FastImage
             source={icons.filter}
-            style={styles.filterIcon}
-            tintColor={showFilters ? "white" : COLORS.green2}
+            style={styles.filterToggleIcon}
+            tintColor={showFilters ? "white" : "#64748b"}
           />
         </TouchableOpacity>
       </HStack>
+
+      {/* Expandable Filters */}
       {showFilters && (
-        <VStack space={3}>
-          <HStack space={3} alignItems="center">
+        <VStack space={4} pt={4} borderTopWidth={1} borderTopColor="#e2e8f0">
+          <HStack space={3}>
             <Box flex={1}>
-              <Text style={styles.filterLabel}>Type</Text>
+              <Text style={styles.filterLabel}>Filter by Type</Text>
               <Select
                 selectedValue={filterType}
                 onValueChange={setFilterType}
-                bg={COLORS.lightGreen}
-                borderRadius={8}
-                _selectedItem={{
-                  bg: COLORS.green3,
-                  endIcon: <CheckIcon size="5" color="white" />,
-                }}
-                dropdownIcon={
-                  <Icon as={FastImage} source={icons.arrowDown} style={styles.dropdownIcon} tintColor={COLORS.green2} />
-                }
-                placeholder="Select Type"
+                bg="#f8fafc"
+                borderWidth={0}
+                borderRadius={12}
                 fontSize={14}
-                color={COLORS.black}
+                _selectedItem={{
+                  bg: "#3b82f6",
+                  endIcon: <CheckIcon size="4" color="white" />,
+                }}
               >
-                <Select.Item label="All Types" value="All" />
-                <Select.Item label="Single Animal" value="Single Animal" />
-                <Select.Item label="Group" value="Group" />
+                <Select.Item label="All Programs" value="All" />
+                <Select.Item label="Individual Animals" value="Single Animal" />
+                <Select.Item label="Animal Groups" value="Group" />
               </Select>
             </Box>
             <Box flex={1}>
-              <Text style={styles.filterLabel}>Sort By</Text>
+              <Text style={styles.filterLabel}>Sort Order</Text>
               <Select
                 selectedValue={sortBy}
                 onValueChange={setSortBy}
-                bg={COLORS.lightGreen}
-                borderRadius={8}
-                _selectedItem={{
-                  bg: COLORS.green3,
-                  endIcon: <CheckIcon size="5" color="white" />,
-                }}
-                dropdownIcon={
-                  <Icon as={FastImage} source={icons.arrowDown} style={styles.dropdownIcon} tintColor={COLORS.green2} />
-                }
-                placeholder="Sort By"
+                bg="#f8fafc"
+                borderWidth={0}
+                borderRadius={12}
                 fontSize={14}
-                color={COLORS.black}
+                _selectedItem={{
+                  bg: "#3b82f6",
+                  endIcon: <CheckIcon size="4" color="white" />,
+                }}
               >
-                <Select.Item label="Most Recent" value="Recent" />
+                <Select.Item label="Newest First" value="Recent" />
                 <Select.Item label="Oldest First" value="Oldest" />
-                <Select.Item label="Name A-Z" value="Name" />
+                <Select.Item label="By Name" value="Name" />
               </Select>
             </Box>
           </HStack>
-          <HStack justifyContent="space-between" alignItems="center" mt={2}>
-            <Text style={styles.resultsText}>
-              {filteredPrograms.length} of {feedingPrograms.length} programs
-            </Text>
-            <TouchableOpacity
-              onPress={() => {
-                setSearchQuery("")
-                setFilterType("All")
-                setSortBy("Recent")
-              }}
-              style={styles.clearButton}
-            >
-              <Text style={styles.clearButtonText}>Clear All</Text>
-            </TouchableOpacity>
-          </HStack>
+
+          <TouchableOpacity
+            onPress={() => {
+              setSearchQuery("")
+              setFilterType("All")
+              setSortBy("Recent")
+              setShowFilters(false)
+            }}
+            style={styles.resetFiltersButton}
+          >
+            <Text style={styles.resetFiltersText}>Reset All Filters</Text>
+          </TouchableOpacity>
         </VStack>
       )}
     </Box>
   )
 
-  const renderActionButtons = (program) => (
-    <HStack space={2} mt={4} justifyContent="space-between">
-      <TouchableOpacity
-        style={[styles.actionButton, { backgroundColor: COLORS.skyBlue }]}
-        onPress={() => handleViewDetails(program)}
-      >
-        <FastImage source={icons.eye} style={styles.actionIcon} tintColor="white" />
-        <Text style={styles.actionButtonText}>View</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.actionButton, { backgroundColor: COLORS.green }]}
-        onPress={() => handleEdit(program)}
-      >
-        <FastImage source={icons.edit} style={styles.actionIcon} tintColor="white" />
-        <Text style={styles.actionButtonText}>Edit</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.actionButton, { backgroundColor: COLORS.red }]}
-        onPress={() => handleDelete(program.id)}
-      >
-        <FastImage source={icons.delete} style={styles.actionIcon} tintColor="white" />
-        <Text style={styles.actionButtonText}>Delete</Text>
-      </TouchableOpacity>
-    </HStack>
-  )
-
+  // Enhanced program card
   const renderFeedingProgramCard = (program) => {
     const animalInfo = getAnimalInfo(program)
     const lifecycleStages =
       program.programType === "Single Animal" ? program.lifecycleStages || [] : program.groupLifecycleStages || []
+
     return (
       <TouchableOpacity
         key={program.id}
-        activeOpacity={0.8}
+        activeOpacity={0.7}
         onPress={() => handleCardPress(program)}
-        style={styles.cardContainer}
+        style={styles.modernCard}
       >
-        <Box
-          bg="white"
-          borderRadius={16}
-          shadow={2}
-          mb={4}
-          overflow="hidden"
-          borderWidth={1}
-          borderColor={COLORS.lightGreen}
-        >
-          <HStack bg={COLORS.lightGreen} px={4} py={3} alignItems="center" justifyContent="space-between">
-            <HStack alignItems="center" flex={1}>
-              <Box bg={getFeedTypeColor(program.feedType)} p={2} borderRadius={8} mr={3}>
-                <Text style={styles.cardIcon}>{program.programType === "Single Animal" ? "🐄" : "🐔"}</Text>
+        <Box bg="white" borderRadius={20} shadow={2} mb={5} overflow="hidden">
+          <HStack bg="#f8fafc" px={5} py={4} alignItems="center" justifyContent="space-between">
+            <HStack alignItems="center" flex={1} space={3}>
+              <Box
+                bg={getFeedTypeColor(program.feedType)}
+                p={3}
+                borderRadius={16}
+                style={styles.cardIconContainer}
+              >
+                <Text style={styles.modernCardIcon}>
+                  {program.programType === "Single Animal" ? "🐄" : "🐔"}
+                </Text>
               </Box>
               <VStack flex={1}>
-                <Text style={styles.cardTitle} numberOfLines={1}>
-                  {animalInfo?.name || "Unknown"}
+                <Text style={styles.modernCardTitle} numberOfLines={1}>
+                  {animalInfo?.name || "Unknown Animal"}
                 </Text>
                 <HStack alignItems="center" space={2} mt={1}>
                   <Badge
-                    bg={program.programType === "Single Animal" ? COLORS.green2 : "#FF8C00"}
-                    borderRadius={12}
-                    _text={{ color: "white", fontSize: 10, fontWeight: "600" }}
+                    bg={program.programType === "Single Animal" ? "#22c55e" : "#f59e0b"}
+                    borderRadius={16}
+                    px={3}
+                    py={1}
+                    _text={{ color: "white", fontSize: 11, fontWeight: "600" }}
                   >
-                    {program.programType}
+                    {program.programType === "Single Animal" ? "Individual" : "Group"}
                   </Badge>
-                  <Text style={styles.cardSubtitle}>
+                  <Text style={styles.modernCardSubtitle}>
                     {animalInfo?.type}
-                    {animalInfo?.category === "Group" && ` (${animalInfo.quantity} birds)`}
+                    {animalInfo?.category === "Group" && ` • ${animalInfo.quantity} animals`}
                   </Text>
                 </HStack>
               </VStack>
             </HStack>
+
+            {/* Quick Actions Menu */}
             <Menu
               trigger={(triggerProps) => (
-                <Pressable accessibilityLabel="More options" {...triggerProps}>
-                  <Box p={2} backgroundColor={COLORS.green2} borderRadius={8}>
-                    <FastImage source={icons.dots3} style={styles.moreIcon} tintColor="white" />
-                  </Box>
+                <Pressable {...triggerProps} style={styles.modernMenuButton}>
+                  <FastImage source={icons.dots3} style={styles.modernMenuIcon} tintColor="#64748b" />
                 </Pressable>
               )}
             >
               <Menu.Item onPress={() => handleViewDetails(program)}>
-                <HStack alignItems="center" space={2}>
-                  <FastImage source={icons.eye} style={styles.menuIcon} tintColor={COLORS.green2} />
-                  <Text style={styles.menuText}>View Details</Text>
+                <HStack alignItems="center" space={3}>
+                  <FastImage source={icons.eye} style={styles.menuActionIcon} tintColor="#3b82f6" />
+                  <Text style={styles.menuActionText}>Quick View</Text>
                 </HStack>
               </Menu.Item>
               <Menu.Item onPress={() => handleEdit(program)}>
-                <HStack alignItems="center" space={2}>
-                  <FastImage source={icons.edit} style={styles.menuIcon} tintColor="#FF8C00" />
-                  <Text style={styles.menuText}>Edit Program</Text>
+                <HStack alignItems="center" space={3}>
+                  <FastImage source={icons.edit} style={styles.menuActionIcon} tintColor="#f59e0b" />
+                  <Text style={styles.menuActionText}>Edit Program</Text>
                 </HStack>
               </Menu.Item>
               <Menu.Item onPress={() => handleCardPress(program)}>
-                <HStack alignItems="center" space={2}>
-                  <FastImage source={icons.info} style={styles.menuIcon} tintColor="#FFD700" />
-                  <Text style={styles.menuText}>Full Details</Text>
+                <HStack alignItems="center" space={3}>
+                  <FastImage source={icons.info} style={styles.menuActionIcon} tintColor="#8b5cf6" />
+                  <Text style={styles.menuActionText}>Full Details</Text>
                 </HStack>
               </Menu.Item>
-              <Divider my="2" _light={{ bg: COLORS.lightGreen }} />
+              <Divider my={1} />
               <Menu.Item onPress={() => handleDelete(program.id)}>
-                <HStack alignItems="center" space={2}>
-                  <FastImage source={icons.delete} style={styles.menuIcon} tintColor={COLORS.red} />
-                  <Text style={[styles.menuText, { color: COLORS.red }]}>Delete</Text>
+                <HStack alignItems="center" space={3}>
+                  <FastImage source={icons.delete} style={styles.menuActionIcon} tintColor="#ef4444" />
+                  <Text style={[styles.menuActionText, { color: "#ef4444" }]}>Delete</Text>
                 </HStack>
               </Menu.Item>
             </Menu>
           </HStack>
-          <VStack p={4} space={3}>
+
+          {/* Card Content */}
+          <VStack p={5} space={4}>
+            {/* Feed Type Badge */}
             <HStack alignItems="center" justifyContent="space-between">
-              <Text style={styles.labelText}>Feed Type:</Text>
+              <Text style={styles.modernSectionLabel}>Feed Program</Text>
               <Badge
                 bg={getFeedTypeColor(program.feedType)}
-                borderRadius={12}
-                _text={{ color: "white", fontSize: 11, fontWeight: "600" }}
+                borderRadius={16}
+                px={4}
+                py={2}
+                _text={{ color: "white", fontSize: 12, fontWeight: "600" }}
               >
-                {program.feedType}
+                {program.feedType?.replace("Basal Feed + Concentrates + Supplements", "Complete Program") || "Standard"}
               </Badge>
             </HStack>
-            {lifecycleStages.length > 0 && (
+
+            {/* Feeding Schedule */}
+            {program.timeOfDay && program.timeOfDay.length > 0 && (
               <VStack space={2}>
-                <Text style={styles.labelText}>Lifecycle Stages:</Text>
-                <HStack flexWrap="wrap" space={1}>
-                  {lifecycleStages.map((stage, index) => (
-                    <Badge
+                <Text style={styles.modernSectionLabel}>Daily Schedule</Text>
+                <HStack flexWrap="wrap" space={2}>
+                  {program.timeOfDay.map((time, index) => (
+                    <Box
                       key={index}
-                      background={COLORS.green3}
-                      borderRadius={8}
+                      bg="#fef3c7"
+                      px={3}
+                      py={1}
+                      borderRadius={12}
+                      borderWidth={1}
+                      borderColor="#f59e0b"
                       mb={1}
-                      _text={{ color: "white", fontSize: 10, fontWeight: "500" }}
                     >
-                      {stage}
-                    </Badge>
+                      <Text style={styles.scheduleTimeText}>{time}</Text>
+                    </Box>
                   ))}
                 </HStack>
               </VStack>
             )}
-            <VStack space={2}>
-              <Text style={styles.labelText}>Feeding Schedule:</Text>
-              <HStack flexWrap="wrap" space={1}>
-                {(program.timeOfDay || []).map((time, index) => (
-                  <HStack key={index} alignItems="center" space={1} mb={1}>
-                    <Box w={2} h={2} bg="#FF8C00" borderRadius={1} />
-                    <Text style={styles.scheduleText}>{time}</Text>
-                  </HStack>
-                ))}
-              </HStack>
-            </VStack>
-            <VStack space={2}>
-              <Text style={styles.labelText}>Feed Details:</Text>
-              <VStack space={1}>
-                {(program.feedDetails || []).slice(0, 2).map((feed, index) => (
-                  <HStack key={index} alignItems="center" space={1}>
-                    <Text style={styles.feedDetailText}>
-                      {feed.feedType}: {feed.quantity}kg
+
+            {/* Feed Summary */}
+            {program.feedDetails && program.feedDetails.length > 0 && (
+              <VStack space={2}>
+                <Text style={styles.modernSectionLabel}>Feed Components</Text>
+                <VStack space={1}>
+                  {program.feedDetails.slice(0, 3).map((feed, index) => (
+                    <HStack key={index} alignItems="center" justifyContent="space-between">
+                      <Text style={styles.feedComponentName}>{feed.feedType}</Text>
+                      <Text style={styles.feedComponentAmount}>{feed.quantity}kg</Text>
+                    </HStack>
+                  ))}
+                  {program.feedDetails.length > 3 && (
+                    <Text style={styles.moreComponentsText}>
+                      +{program.feedDetails.length - 3} more components
                     </Text>
-                    {feed.schedule && <Text style={styles.scheduleDetailText}>({feed.schedule})</Text>}
-                  </HStack>
-                ))}
-                {(program.feedDetails || []).length > 2 && (
-                  <Text style={styles.moreText}>+{(program.feedDetails || []).length - 2} more</Text>
-                )}
+                  )}
+                </VStack>
               </VStack>
-            </VStack>
+            )}
+
+            {/* Notes Preview */}
             {program.notes && (
               <VStack space={2}>
-                <Text style={styles.labelText}>Notes:</Text>
-                <Text style={styles.notesText} numberOfLines={2}>
+                <Text style={styles.modernSectionLabel}>Notes</Text>
+                <Text style={styles.modernNotesText} numberOfLines={2}>
                   {program.notes}
                 </Text>
               </VStack>
             )}
-            {renderActionButtons(program)}
-            <Divider my="2" _light={{ bg: COLORS.lightGreen }} />
-            <HStack alignItems="center" justifyContent="space-between">
-              <Text style={styles.footerText}>Created: {formatDate(program.createdAt)}</Text>
-              <HStack alignItems="center" space={1}>
-                <Box w={2} h={2} bg={COLORS.green2} borderRadius={1} />
-                <Text style={styles.activeText}>Active</Text>
+
+            {/* Action Buttons */}
+            <HStack space={3} mt={4}>
+              <TouchableOpacity
+                style={[styles.modernActionButton, { backgroundColor: "#3b82f6" }]}
+                onPress={() => handleViewDetails(program)}
+              >
+                <FastImage source={icons.eye} style={styles.actionButtonIcon} tintColor="white" />
+                <Text style={styles.actionButtonText}>View</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modernActionButton, { backgroundColor: "#f59e0b" }]}
+                onPress={() => handleEdit(program)}
+              >
+                <FastImage source={icons.edit} style={styles.actionButtonIcon} tintColor="white" />
+                <Text style={styles.actionButtonText}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modernActionButton, { backgroundColor: "#ef4444" }]}
+                onPress={() => handleDelete(program.id)}
+              >
+                <FastImage source={icons.delete} style={styles.actionButtonIcon} tintColor="white" />
+                <Text style={styles.actionButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </HStack>
+
+            {/* Card Footer */}
+            <HStack alignItems="center" justifyContent="space-between" pt={3} borderTopWidth={1} borderTopColor="#f1f5f9">
+              <Text style={styles.modernFooterText}>Created {formatDate(program.createdAt)}</Text>
+              <HStack alignItems="center" space={2}>
+                <Box w={2} h={2} bg="#22c55e" borderRadius={1} />
+                <Text style={styles.modernActiveText}>Active</Text>
               </HStack>
             </HStack>
           </VStack>
@@ -487,100 +506,142 @@ const FeedingModuleScreen = ({ navigation }) => {
     )
   }
 
+  // Enhanced details modal
   const renderDetailsModal = () => (
     <Modal
-      animationType="fade"
+      animationType="slide"
       transparent={true}
       visible={detailsModalVisible}
       onRequestClose={() => setDetailsModalVisible(false)}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <HStack alignItems="center" justifyContent="space-between" mb={4}>
-            <Text style={styles.modalTitle}>Program Details</Text>
-            <TouchableOpacity onPress={() => setDetailsModalVisible(false)} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>×</Text>
+      <View style={styles.modernModalOverlay}>
+        <View style={styles.modernModalContent}>
+          {/* Modal Header */}
+          <HStack alignItems="center" justifyContent="space-between" mb={6}>
+            <VStack>
+              <Text style={styles.modernModalTitle}>Program Details</Text>
+              <Text style={styles.modernModalSubtitle}>Quick overview of feeding program</Text>
+            </VStack>
+            <TouchableOpacity onPress={() => setDetailsModalVisible(false)} style={styles.modernCloseButton}>
+              <Text style={styles.modernCloseButtonText}>×</Text>
             </TouchableOpacity>
           </HStack>
+
           {loadingDetails ? (
-            <Center py={10}>
-              <ActivityIndicator size="large" color={COLORS.green2} />
-              <Text style={styles.loadingText}>Loading details...</Text>
+            <Center py={20}>
+              <ActivityIndicator size="large" color="#3b82f6" />
+              <Text style={styles.modernLoadingText}>Loading program details...</Text>
             </Center>
           ) : selectedProgram ? (
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <VStack space={4}>
-                <Box bg={COLORS.lightGreen} p={4} borderRadius={12}>
-                  <VStack space={2}>
-                    <Text style={styles.detailLabel}>Program Type:</Text>
-                    <Text style={styles.detailValue}>{selectedProgram.programType}</Text>
-                    <Text style={styles.detailLabel}>Feed Type:</Text>
-                    <Text style={styles.detailValue}>{selectedProgram.feedType}</Text>
-                    <Text style={styles.detailLabel}>Animal/Group:</Text>
-                    <Text style={styles.detailValue}>{getAnimalInfo(selectedProgram)?.name || "Unknown"}</Text>
+            <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScrollView}>
+              <VStack space={6}>
+                {/* Program Overview */}
+                <Box bg="#f8fafc" p={5} borderRadius={16}>
+                  <Text style={styles.modalSectionTitle}>Program Overview</Text>
+                  <VStack space={3} mt={3}>
+                    <HStack alignItems="center" justifyContent="space-between">
+                      <Text style={styles.modalDetailLabel}>Type:</Text>
+                      <Badge
+                        bg={selectedProgram.programType === "Single Animal" ? "#22c55e" : "#f59e0b"}
+                        borderRadius={12}
+                        _text={{ color: "white", fontSize: 12, fontWeight: "600" }}
+                      >
+                        {selectedProgram.programType}
+                      </Badge>
+                    </HStack>
+                    <HStack alignItems="center" justifyContent="space-between">
+                      <Text style={styles.modalDetailLabel}>Feed Type:</Text>
+                      <Text style={styles.modalDetailValue}>{selectedProgram.feedType}</Text>
+                    </HStack>
+                    <HStack alignItems="center" justifyContent="space-between">
+                      <Text style={styles.modalDetailLabel}>Animal/Group:</Text>
+                      <Text style={styles.modalDetailValue}>{getAnimalInfo(selectedProgram)?.name || "Unknown"}</Text>
+                    </HStack>
                   </VStack>
                 </Box>
-                <HStack space={2} mt={2}>
+
+                {/* Action Buttons */}
+                <HStack space={3}>
                   <TouchableOpacity
-                    style={[styles.modalActionButton, { backgroundColor: "#FF8C00" }]}
+                    style={[styles.modernModalButton, { backgroundColor: "#f59e0b" }]}
                     onPress={() => {
                       setDetailsModalVisible(false)
                       handleEdit(selectedProgram)
                     }}
                   >
-                    <Text style={styles.modalActionText}>Edit Program</Text>
+                    <FastImage source={icons.edit} style={styles.modalButtonIcon} tintColor="white" />
+                    <Text style={styles.modernModalButtonText}>Edit Program</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.modalActionButton, { backgroundColor: "#FFD700" }]}
+                    style={[styles.modernModalButton, { backgroundColor: "#8b5cf6" }]}
                     onPress={() => {
                       setDetailsModalVisible(false)
                       handleCardPress(selectedProgram)
                     }}
                   >
-                    <Text style={styles.modalActionText}>Full Details</Text>
+                    <FastImage source={icons.info} style={styles.modalButtonIcon} tintColor="white" />
+                    <Text style={styles.modernModalButtonText}>Full Details</Text>
                   </TouchableOpacity>
                 </HStack>
-                <VStack space={3}>
-                  <Text style={styles.sectionTitle}>Feed Details</Text>
-                  {(selectedProgram.feedDetails || []).map((feed, index) => (
-                    <Box key={index} bg="white" p={4} borderRadius={12} borderWidth={1} borderColor={COLORS.lightGreen}>
-                      <VStack space={2}>
-                        <HStack alignItems="center" justifyContent="space-between">
-                          <Text style={styles.feedTypeTitle}>{feed.feedType}</Text>
-                          <Badge bg={getFeedTypeColor(feed.feedType)} borderRadius={8}>
-                            <Text style={styles.badgeText}>{feed.quantity}kg</Text>
-                          </Badge>
-                        </HStack>
-                        <Text style={styles.feedDetailLabel}>Source: {feed.source}</Text>
-                        <Text style={styles.feedDetailLabel}>Schedule: {feed.schedule}</Text>
-                        <Text style={styles.feedDetailLabel}>Cost: ${feed.cost}</Text>
-                        {feed.supplier && <Text style={styles.feedDetailLabel}>Supplier: {feed.supplier}</Text>}
-                        <Text style={styles.feedDetailLabel}>Date: {formatDate(feed.date)}</Text>
-                      </VStack>
-                    </Box>
-                  ))}
-                </VStack>
-                <VStack space={2}>
-                  <Text style={styles.sectionTitle}>Feeding Schedule</Text>
-                  <HStack flexWrap="wrap" space={2}>
-                    {(selectedProgram.timeOfDay || []).map((time, index) => (
-                      <Badge
-                        key={index}
-                        bg="#FF8C00"
-                        borderRadius={12}
-                        mb={1}
-                        _text={{ color: "white", fontSize: 12, fontWeight: "600" }}
-                      >
-                        {time}
-                      </Badge>
+
+                {/* Feed Details */}
+                {selectedProgram.feedDetails && selectedProgram.feedDetails.length > 0 && (
+                  <VStack space={4}>
+                    <Text style={styles.modalSectionTitle}>Feed Components</Text>
+                    {selectedProgram.feedDetails.map((feed, index) => (
+                      <Box key={index} bg="white" p={4} borderRadius={16} borderWidth={1} borderColor="#e2e8f0">
+                        <VStack space={3}>
+                          <HStack alignItems="center" justifyContent="space-between">
+                            <Text style={styles.feedComponentTitle}>{feed.feedType}</Text>
+                            <Badge
+                              bg={getFeedTypeColor(feed.feedType)}
+                              borderRadius={12}
+                              _text={{ color: "white", fontSize: 12, fontWeight: "600" }}
+                            >
+                              {feed.quantity}kg
+                            </Badge>
+                          </HStack>
+                          <VStack space={1}>
+                            <Text style={styles.feedDetailInfo}>Source: {feed.source || "Not specified"}</Text>
+                            <Text style={styles.feedDetailInfo}>Schedule: {feed.schedule || "As needed"}</Text>
+                            <Text style={styles.feedDetailInfo}>Cost: ${feed.cost || "0"}</Text>
+                            {feed.supplier && <Text style={styles.feedDetailInfo}>Supplier: {feed.supplier}</Text>}
+                          </VStack>
+                        </VStack>
+                      </Box>
                     ))}
-                  </HStack>
-                </VStack>
+                  </VStack>
+                )}
+
+                {/* Feeding Schedule */}
+                {selectedProgram.timeOfDay && selectedProgram.timeOfDay.length > 0 && (
+                  <VStack space={3}>
+                    <Text style={styles.modalSectionTitle}>Daily Schedule</Text>
+                    <HStack flexWrap="wrap" space={2}>
+                      {selectedProgram.timeOfDay.map((time, index) => (
+                        <Box
+                          key={index}
+                          bg="#dbeafe"
+                          px={4}
+                          py={2}
+                          borderRadius={16}
+                          borderWidth={1}
+                          borderColor="#3b82f6"
+                          mb={2}
+                        >
+                          <Text style={styles.modalScheduleTime}>{time}</Text>
+                        </Box>
+                      ))}
+                    </HStack>
+                  </VStack>
+                )}
+
+                {/* Notes */}
                 {selectedProgram.notes && (
-                  <VStack space={2}>
-                    <Text style={styles.sectionTitle}>Notes</Text>
-                    <Box bg={COLORS.lightGreen} p={4} borderRadius={12}>
-                      <Text style={styles.notesDetailText}>{selectedProgram.notes}</Text>
+                  <VStack space={3}>
+                    <Text style={styles.modalSectionTitle}>Additional Notes</Text>
+                    <Box bg="#f8fafc" p={4} borderRadius={16}>
+                      <Text style={styles.modalNotesText}>{selectedProgram.notes}</Text>
                     </Box>
                   </VStack>
                 )}
@@ -592,73 +653,113 @@ const FeedingModuleScreen = ({ navigation }) => {
     </Modal>
   )
 
-  // New render function for the success toast
+  // Enhanced success toast
   const renderSuccessToast = () => (
     <Modal animationType="fade" transparent={true} visible={showSuccessToast}>
-      <View style={styles.toastOverlay}>
-        <Box style={styles.toastContent} bg="white" borderRadius={12} shadow={4} p={4}>
+      <View style={styles.modernToastOverlay}>
+        <Box style={styles.modernToastContent}>
           <HStack alignItems="center" space={3}>
-            <FastImage source={icons.check} style={styles.toastIcon} tintColor={COLORS.green} />
-            <Text style={styles.toastText}>{successMessage}</Text>
+            <Box bg="#22c55e" p={2} borderRadius={12}>
+              <FastImage source={icons.check} style={styles.toastIcon} tintColor="white" />
+            </Box>
+            <VStack flex={1}>
+              <Text style={styles.modernToastTitle}>Success!</Text>
+              <Text style={styles.modernToastMessage}>{successMessage}</Text>
+            </VStack>
           </HStack>
         </Box>
       </View>
     </Modal>
   )
 
+  // Enhanced empty state
+  const renderEmptyState = () => (
+    <Center py={20}>
+      <VStack alignItems="center" space={6}>
+        <Box bg="#f8fafc" p={8} borderRadius={32}>
+          <Text style={styles.emptyStateIcon}>🌾</Text>
+        </Box>
+        <VStack alignItems="center" space={3}>
+          <Text style={styles.modernEmptyTitle}>
+            {searchQuery || filterType !== "All" ? "No matching programs" : "No feeding programs yet"}
+          </Text>
+          <Text style={styles.modernEmptyText}>
+            {searchQuery || filterType !== "All"
+              ? "Try adjusting your search or filter criteria to find what you're looking for."
+              : "Create your first feeding program to start managing your livestock nutrition effectively."}
+          </Text>
+        </VStack>
+        {!searchQuery && filterType === "All" && (
+          <TouchableOpacity
+            style={styles.modernCreateButton}
+            onPress={() => navigation.navigate("FarmFeedsScreen")}
+          >
+            <FastImage source={icons.plus} style={styles.createButtonIcon} tintColor="white" />
+            <Text style={styles.modernCreateButtonText}>Create Your First Program</Text>
+          </TouchableOpacity>
+        )}
+      </VStack>
+    </Center>
+  )
+
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.modernContainer}>
         <SecondaryHeader
           title="Feeding Programs"
           onBackPress={() => navigation.goBack()}
-          backgroundColor={COLORS.lightGreen}
+          backgroundColor="white"
         />
         <Center flex={1}>
-          <ActivityIndicator size="large" color={COLORS.green2} />
-          <Text style={styles.loadingText}>Loading feeding programs...</Text>
+          <VStack alignItems="center" space={4}>
+            <ActivityIndicator size="large" color="#3b82f6" />
+            <VStack alignItems="center" space={1}>
+              <Text style={styles.modernLoadingTitle}>Loading your programs</Text>
+              <Text style={styles.modernLoadingText}>This will just take a moment...</Text>
+            </VStack>
+          </VStack>
         </Center>
       </SafeAreaView>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.modernContainer}>
       <SecondaryHeader
         title="Feeding Programs"
         onBackPress={() => navigation.goBack()}
-        backgroundColor={COLORS.lightGreen}
+        backgroundColor="white"
       />
       <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.green2} />}
+        style={styles.modernContent}
+        contentContainerStyle={styles.modernScrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#3b82f6"
+            colors={["#3b82f6"]}
+          />
+        }
       >
         {renderSearchAndFilter()}
+
         {filteredPrograms.length === 0 ? (
-          <Center py={10}>
-            <FastImage source={icons.emptyState} style={styles.emptyStateIcon} tintColor={COLORS.gray} />
-            <Text style={styles.emptyStateTitle}>
-              {searchQuery || filterType !== "All" ? "No programs match your search" : "No Feeding Programs Yet"}
-            </Text>
-            <Text style={styles.emptyStateText}>
-              {searchQuery || filterType !== "All"
-                ? "Try adjusting your search or filter criteria"
-                : "Create your first feeding program to get started"}
-            </Text>
-            {!searchQuery && filterType === "All" && (
-              <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate("FarmFeeds")}>
-                <Text style={styles.createButtonText}>Create Program</Text>
-              </TouchableOpacity>
-            )}
-          </Center>
+          renderEmptyState()
         ) : (
           filteredPrograms.map(renderFeedingProgramCard)
         )}
       </ScrollView>
-      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate("FarmFeedsScreen")}>
-        <FastImage source={icons.plus} style={styles.fabIcon} tintColor="#fff" />
+
+      {/* Modern FAB */}
+      <TouchableOpacity
+        style={styles.modernFab}
+        onPress={() => navigation.navigate("FarmFeedsScreen")}
+        activeOpacity={0.8}
+      >
+        <FastImage source={icons.plus} style={styles.modernFabIcon} tintColor="white" />
       </TouchableOpacity>
+
       {renderDetailsModal()}
       {renderSuccessToast()}
     </SafeAreaView>
@@ -666,16 +767,16 @@ const FeedingModuleScreen = ({ navigation }) => {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  modernContainer: {
     flex: 1,
     backgroundColor: COLORS.lightGreen,
   },
-  content: {
+  modernContent: {
     flex: 1,
   },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 80,
+  modernScrollContent: {
+    padding: 20,
+    paddingBottom: 100,
   },
   searchIcon: {
     width: 18,
@@ -683,306 +784,378 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
-    color: COLORS.black,
-    paddingVertical: 0,
-    height: 36,
+    fontSize: 16,
+    color: "#1e293b",
+    fontFamily: "Inter-Medium",
   },
-  filterButton: {
+  clearSearchText: {
+    color: "#3b82f6",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  statsNumber: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1e293b",
+    fontFamily: "Inter-Bold",
+  },
+  statsLabel: {
+    fontSize: 12,
+    color: "#64748b",
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  filterToggle: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 20,
+    alignItems: "center",
     justifyContent: "center",
+  },
+  filterToggleIcon: {
+    width: 18,
+    height: 18,
+  },
+  filterLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 8,
+  },
+  resetFiltersButton: {
+    backgroundColor: "#f1f5f9",
+    padding: 12,
+    borderRadius: 12,
     alignItems: "center",
   },
-  filterIcon: {
-    width: 20,
-    height: 20,
+  resetFiltersText: {
+    color: "#64748b",
+    fontSize: 14,
+    fontWeight: "600",
   },
-  dropdownIcon: {
+  modernCard: {
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  cardIconContainer: {
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  modernCardIcon: {
+    fontSize: 20,
+  },
+  modernCardTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1e293b",
+    fontFamily: "Inter-Bold",
+  },
+  modernCardSubtitle: {
+    fontSize: 13,
+    color: "#64748b",
+    fontWeight: "500",
+  },
+  modernMenuButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#f1f5f9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modernMenuIcon: {
+    width: 16,
+    height: 16,
+  },
+  menuActionIcon: {
+    width: 16,
+    height: 16,
+  },
+  menuActionText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#374151",
+  },
+  modernSectionLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  scheduleTimeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#f59e0b",
+  },
+  feedComponentName: {
+    fontSize: 14,
+    color: "#374151",
+    fontWeight: "500",
+    flex: 1,
+  },
+  feedComponentAmount: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1e293b",
+  },
+  moreComponentsText: {
+    fontSize: 12,
+    color: "#64748b",
+    fontStyle: "italic",
+    textAlign: "center",
+    marginTop: 4,
+  },
+  modernNotesText: {
+    fontSize: 14,
+    color: "#64748b",
+    lineHeight: 20,
+  },
+  modernActionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    borderRadius: 12,
+    space: 2,
+  },
+  actionButtonIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 6,
+  },
+  actionButtonText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  modernFooterText: {
+    fontSize: 12,
+    color: "#94a3b8",
+    fontWeight: "500",
+  },
+  modernActiveText: {
+    fontSize: 12,
+    color: "#22c55e",
+    fontWeight: "600",
+  },
+  modernModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "flex-end",
+  },
+  modernModalContent: {
+    backgroundColor: "white",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: "80%",
+    minHeight: "50%",
+  },
+  modernModalTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1e293b",
+    fontFamily: "Inter-Bold",
+  },
+  modernModalSubtitle: {
+    fontSize: 14,
+    color: "#64748b",
+    marginTop: 4,
+  },
+  modernCloseButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#f1f5f9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modernCloseButtonText: {
+    fontSize: 20,
+    color: "#64748b",
+    fontWeight: "600",
+  },
+  modernLoadingText: {
+    fontSize: 14,
+    color: "#64748b",
+    marginTop: 8,
+    textAlign: "center",
+  },
+  modalScrollView: {
+    flex: 1,
+  },
+  modalSectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1e293b",
+    fontFamily: "Inter-Bold",
+  },
+  modalDetailLabel: {
+    fontSize: 14,
+    color: "#64748b",
+    fontWeight: "500",
+  },
+  modalDetailValue: {
+    fontSize: 14,
+    color: "#1e293b",
+    fontWeight: "600",
+    textAlign: "right",
+    flex: 1,
+  },
+  modernModalButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 16,
+  },
+  modalButtonIcon: {
     width: 16,
     height: 16,
     marginRight: 8,
   },
-  filterLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: COLORS.gray,
-    marginBottom: 4,
-    textTransform: "uppercase",
-  },
-  resultsText: {
-    fontSize: 12,
-    color: COLORS.gray,
-    fontStyle: "italic",
-  },
-  clearButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: COLORS.green2,
-  },
-  clearButtonText: {
-    fontSize: 12,
+  modernModalButtonText: {
     color: "white",
+    fontSize: 14,
     fontWeight: "600",
   },
-  cardContainer: {
+  feedComponentTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1e293b",
+  },
+  feedDetailInfo: {
+    fontSize: 13,
+    color: "#64748b",
+  },
+  modalScheduleTime: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#3b82f6",
+  },
+  modalNotesText: {
+    fontSize: 14,
+    color: "#374151",
+    lineHeight: 20,
+  },
+  modernToastOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    justifyContent: "flex-end",
+    paddingBottom: 100,
+    paddingHorizontal: 20,
+  },
+  modernToastContent: {
+    backgroundColor: "white",
     borderRadius: 16,
+    padding: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  cardIcon: {
-    fontSize: 20,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: COLORS.black,
-  },
-  cardSubtitle: {
-    fontSize: 12,
-    color: COLORS.gray,
-  },
-  moreIcon: {
-    width: 20,
-    height: 20,
-  },
-  menuIcon: {
+  toastIcon: {
     width: 16,
     height: 16,
   },
-  menuText: {
-    fontSize: 14,
-    color: COLORS.black,
-  },
-  labelText: {
-    fontSize: 11,
+  modernToastTitle: {
+    fontSize: 16,
     fontWeight: "700",
-    color: COLORS.gray,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    color: "#1e293b",
   },
-  scheduleText: {
-    fontSize: 12,
-    color: "#FF8C00",
-    fontWeight: "500",
-  },
-  feedDetailText: {
-    fontSize: 13,
-    color: COLORS.black,
-    fontWeight: "500",
-  },
-  scheduleDetailText: {
-    fontSize: 11,
-    color: COLORS.gray,
-  },
-  moreText: {
-    fontSize: 11,
-    color: "#FFD700",
-    fontWeight: "600",
-    fontStyle: "italic",
-    marginTop: 4,
-  },
-  notesText: {
-    fontSize: 13,
-    color: COLORS.gray,
-    lineHeight: 18,
-  },
-  footerText: {
-    fontSize: 11,
-    color: COLORS.gray,
-  },
-  activeText: {
-    fontSize: 11,
-    color: COLORS.green2,
-    fontWeight: "600",
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    flex: 1,
-    justifyContent: "center",
-  },
-  actionIcon: {
-    width: 14,
-    height: 14,
-    marginRight: 4,
-  },
-  actionButtonText: {
-    fontSize: 12,
-    color: "white",
-    fontWeight: "600",
+  modernToastMessage: {
+    fontSize: 14,
+    color: "#64748b",
+    marginTop: 2,
   },
   emptyStateIcon: {
-    width: 80,
-    height: 80,
-    marginBottom: 20,
+    fontSize: 48,
   },
-  emptyStateTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: COLORS.gray,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  emptyStateText: {
-    fontSize: 14,
-    color: COLORS.gray,
-    textAlign: "center",
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  createButton: {
-    backgroundColor: "#FF8C00",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  createButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 24,
-    width: width * 0.9,
-    maxHeight: "85%",
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: COLORS.black,
-  },
-  closeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.lightGreen,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  closeButtonText: {
-    fontSize: 24,
-    color: COLORS.gray,
-    fontWeight: "bold",
-  },
-  loadingText: {
-    fontSize: 14,
-    color: COLORS.gray,
-    marginTop: 10,
-  },
-  detailLabel: {
-    fontSize: 12,
+  modernEmptyTitle: {
+    fontSize: 20,
     fontWeight: "700",
-    color: COLORS.gray,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    color: "#1e293b",
+    textAlign: "center",
+    fontFamily: "Inter-Bold",
   },
-  detailValue: {
-    fontSize: 16,
-    color: COLORS.black,
-    fontWeight: "500",
-    marginBottom: 8,
-  },
-  modalActionButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  modalActionText: {
-    color: "white",
+  modernEmptyText: {
     fontSize: 14,
-    fontWeight: "600",
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: COLORS.black,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  feedTypeTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: COLORS.black,
-  },
-  badgeText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  feedDetailLabel: {
-    fontSize: 13,
-    color: COLORS.gray,
-  },
-  notesDetailText: {
-    fontSize: 14,
-    color: COLORS.black,
+    color: "#64748b",
+    textAlign: "center",
     lineHeight: 20,
+    marginHorizontal: 20,
   },
-  fab: {
+  modernCreateButton: {
+    backgroundColor: COLORS.green3,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 16,
+    shadowColor: COLORS.green3,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  createButtonIcon: {
+    width: 18,
+    height: 18,
+    marginRight: 8,
+  },
+  modernCreateButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  modernLoadingTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1e293b",
+    textAlign: "center",
+  },
+  modernFab: {
     position: "absolute",
-    bottom: 24,
-    right: 16,
+    right: 20,
+    bottom: 30,
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: COLORS.green,
-    justifyContent: "center",
+    backgroundColor: COLORS.green3,
     alignItems: "center",
+    justifyContent: "center",
+    shadowColor: COLORS.green3,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
     elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
   },
-  fabIcon: {
+  modernFabIcon: {
     width: 24,
     height: 24,
-  },
-  toastOverlay: {
-    flex: 1,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    paddingBottom: 50,
-    backgroundColor: "rgba(0,0,0,0.0)",
-  },
-  toastContent: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    backgroundColor: "white",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    maxWidth: width * 0.8,
-  },
-  toastIcon: {
-    width: 20,
-    height: 20,
-  },
-  toastText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: COLORS.black,
   },
 })
 

@@ -848,7 +848,7 @@ const BreedingModuleLandingScreen = ({ navigation }) => {
           </Text>
           <TouchableOpacity
             style={styles.createFirstRecordButton}
-            onPress={() => navigation.navigate('CreateBreedingRecordScreen')}
+            onPress={() => navigation.navigate('BreedingRecordForm')}
           >
             <FastImage source={icons.plus} style={styles.createFirstRecordIcon} tintColor={COLORS.white} />
             <Text style={styles.createFirstRecordText}>Create First Record</Text>

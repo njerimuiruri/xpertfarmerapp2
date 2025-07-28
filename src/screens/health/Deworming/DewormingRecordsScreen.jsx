@@ -1,596 +1,1190 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+"use client"
+
+import { useState, useEffect, useCallback, useRef } from "react"
 import {
+  SafeAreaView,
   View,
   Text,
-  FlatList,
   TouchableOpacity,
+  ScrollView,
   StyleSheet,
-  StatusBar,
-  TextInput,
   Alert,
+  Dimensions,
   Modal,
-  SafeAreaView,
+  FlatList,
   ActivityIndicator,
-  ToastAndroid,
-} from 'react-native';
-import FastImage from 'react-native-fast-image';
-import { icons } from '../../../constants';
-import { COLORS } from '../../../constants/theme';
-import SecondaryHeader from '../../../components/headers/secondary-header';
+  RefreshControl,
+  TextInput,
+} from "react-native"
+import FastImage from "react-native-fast-image"
+import LinearGradient from "react-native-linear-gradient"
+import { icons } from "../../../constants"
+import { COLORS } from "../../../constants/theme"
+import SecondaryHeader from "../../../components/headers/secondary-header"
+import {
+  getDewormingRecordsForActiveFarm,
+  getDewormingRecordsForLivestock,
+  deleteDewormingRecord,
+} from "../../../services/healthservice"
+import { getLivestockForActiveFarm } from "../../../services/livestock"
 
-const initialDewormingData = [
-  {
-    id: '1',
-    animalIdOrFlockId: 'A001',
-    dewormingAgainst: 'Roundworms',
-    drugAdministered: 'Ivermectin',
-    dateAdministered: '2023-05-10',
-    dosage: '5',
-    costOfVaccine: '150',
-    administeredBy: 'Dr. Jane Doe',
-    practiceId: 'VET2023',
-    costOfService: '50',
-  },
-  {
-    id: '2',
-    animalIdOrFlockId: 'A002',
-    dewormingAgainst: 'Tapeworms',
-    drugAdministered: 'Praziquantel',
-    dateAdministered: '2023-06-15',
-    dosage: '3',
-    costOfVaccine: '100',
-    administeredBy: 'Dr. John Smith',
-    practiceId: 'VET2024',
-    costOfService: '30',
-  },
-];
+const { width } = Dimensions.get("window")
 
-const DewormingRecordsScreen = ({ navigation }) => {
-  const [dewormingRecords, setDewormingRecords] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('date');
-  const [sortOrder, setSortOrder] = useState('desc');
-  const [filterDewormingType, setFilterDewormingType] = useState('');
-  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
-  const [activeFilters, setActiveFilters] = useState(0);
+const DewormingRecordsScreen = ({ navigation, route }) => {
+  const routeParams = route?.params || {}
+  const viewMode = routeParams.viewMode || "farm"
+  const livestockId = routeParams.livestockId
+
+  const [dewormingRecords, setDewormingRecords] = useState([])
+  const [livestock, setLivestock] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [isRefreshingHeader, setIsRefreshingHeader] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [sortBy, setSortBy] = useState("dateAdministered")
+  const [sortOrder, setSortOrder] = useState("desc")
+  const [filterByAnimal, setFilterByAnimal] = useState("all")
+  const [showFilters, setShowFilters] = useState(false)
+  const [selectedRecord, setSelectedRecord] = useState(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [loadingDetail, setLoadingDetail] = useState(false)
+
+  // Auto-refresh functionality
+  const [lastRecordCount, setLastRecordCount] = useState(0)
+  const [isScreenFocused, setIsScreenFocused] = useState(true)
+  const autoRefreshInterval = useRef(null)
 
   useEffect(() => {
-    setTimeout(() => {
-      setDewormingRecords(initialDewormingData);
-    });
-  }, []);
+    loadData()
 
-  useEffect(() => {
-    let count = 0;
-    if (filterDewormingType) count++;
-    if (searchQuery) count++;
-    setActiveFilters(count);
-  }, [filterDewormingType, searchQuery]);
+    // Set up navigation focus listener
+    const unsubscribeFocus = navigation.addListener("focus", () => {
+      setIsScreenFocused(true)
+      loadData(true) // Silent refresh when screen comes into focus
+      startAutoRefresh()
+    })
 
-  const sortedAndFilteredRecords = useMemo(() => {
-    return dewormingRecords
-      .filter(record => {
-        const matchesSearch =
-          searchQuery === '' ||
-          record.animalIdOrFlockId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          record.dewormingAgainst.toLowerCase().includes(searchQuery.toLowerCase());
+    const unsubscribeBlur = navigation.addListener("blur", () => {
+      setIsScreenFocused(false)
+      stopAutoRefresh()
+    })
 
-        const matchesDewormingType =
-          filterDewormingType === '' || record.dewormingAgainst === filterDewormingType;
+    // Start auto-refresh
+    startAutoRefresh()
 
-        return matchesSearch && matchesDewormingType;
-      })
-      .sort((a, b) => {
-        if (sortBy === 'date') {
-          return sortOrder === 'desc'
-            ? new Date(b.dateAdministered) - new Date(a.dateAdministered)
-            : new Date(a.dateAdministered) - new Date(b.dateAdministered);
-        } else if (sortBy === 'animalId') {
-          return sortOrder === 'asc'
-            ? a.animalIdOrFlockId.localeCompare(b.animalIdOrFlockId)
-            : b.animalIdOrFlockId.localeCompare(a.animalIdOrFlockId);
-        }
-        return 0;
-      });
-  }, [dewormingRecords, searchQuery, sortBy, sortOrder, filterDewormingType]);
+    return () => {
+      unsubscribeFocus()
+      unsubscribeBlur()
+      stopAutoRefresh()
+    }
+  }, [])
 
- 
-  const showToast = message => {
-    ToastAndroid.show(message, ToastAndroid.SHORT);
-  };
+  // Auto-refresh functions
+  const startAutoRefresh = () => {
+    if (autoRefreshInterval.current) {
+      clearInterval(autoRefreshInterval.current)
+    }
 
-  const handleDelete = useCallback(id => {
-  
-            showToast('Record deleted successfully');
-        
-  }, []);
-
-  const handleEdit = useCallback(
-    record => {
-      navigation.navigate('DewormingEditScreen', { record });
-    },
-    [navigation],
-  );
-
-  const toggleSort = useCallback(
-    newSortBy => {
-      if (sortBy === newSortBy) {
-        setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
-      } else {
-        setSortBy(newSortBy);
-        setSortOrder('desc');
+    autoRefreshInterval.current = setInterval(() => {
+      if (isScreenFocused) {
+        loadData(true) // Silent refresh
       }
-      showToast(`Sorted by ${newSortBy === 'date' ? 'date' : 'animal ID'} (${sortOrder})`);
-    },
-    [sortBy, sortOrder],
-  );
+    }, 30000) // Refresh every 30 seconds
+  }
 
-  const resetAllFilters = () => {
-    setFilterDewormingType('');
-    setSearchQuery('');
-    setSortBy('date');
-    setSortOrder('desc');
-    setIsFilterModalVisible(false);
-    showToast('All filters reset');
-  };
+  const stopAutoRefresh = () => {
+    if (autoRefreshInterval.current) {
+      clearInterval(autoRefreshInterval.current)
+      autoRefreshInterval.current = null
+    }
+  }
 
-  const renderHeader = () => (
-    <View style={styles.header}>
-      <View style={styles.searchContainer}>
-        <FastImage source={icons.search} style={styles.searchIcon} tintColor={COLORS.black} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by ID or deworming..."
-          placeholderTextColor={COLORS.gray}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          clearButtonMode="while-editing"
-        />
-        {searchQuery ? (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <FastImage source={icons.close} style={styles.clearIcon} tintColor={COLORS.gray} />
-          </TouchableOpacity>
-        ) : null}
-      </View>
-      <View style={styles.actionBar}>
-        <TouchableOpacity
-          style={[styles.actionButton, activeFilters > 0 && styles.activeFilterButton]}
-          onPress={() => setIsFilterModalVisible(true)}>
-          <FastImage source={icons.filter} style={styles.actionIcon} tintColor={activeFilters > 0 ? COLORS.white : COLORS.black} />
-          <Text style={[styles.actionText, activeFilters > 0 && styles.activeFilterText]}>
-            Filters {activeFilters > 0 ? `(${activeFilters})` : ''}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => toggleSort('date')}>
-          <FastImage source={sortBy === 'date' ? icons.calendar : icons.sort} style={styles.actionIcon} tintColor={COLORS.black} />
-          <Text style={styles.actionText}>
-            {sortBy === 'date' && sortOrder === 'desc' ? 'Newest' : sortBy === 'date' && sortOrder === 'asc' ? 'Oldest' : 'Sort'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+  const loadData = async (silent = false) => {
+    try {
+      if (!silent) {
+        setIsLoading(true)
+      }
+      await Promise.all([loadDewormingRecords(silent), loadLivestock(silent)])
+    } catch (error) {
+      console.error("Error loading data:", error)
+      if (!silent) {
+        Alert.alert("Error", "Failed to load data. Please try again.")
+      }
+    } finally {
+      if (!silent) {
+        setIsLoading(false)
+      }
+    }
+  }
 
- 
+  const loadDewormingRecords = async (silent = false) => {
+    try {
+      let result
+      if (viewMode === "livestock" && livestockId) {
+        result = await getDewormingRecordsForLivestock(livestockId)
+      } else {
+        result = await getDewormingRecordsForActiveFarm()
+      }
 
-  const renderDewormingCard = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.animalInfo}>
-          <Text style={styles.animalId}>{item.animalIdOrFlockId}</Text>
-        </View>
-        <View style={styles.dateContainer}>
-          <Text style={styles.dateText}>{new Date(item.dateAdministered).toLocaleDateString()}</Text>
-        </View>
-      </View>
-  
-      <View style={styles.vaccineStatusContainer}>
-        <View style={styles.vaccineBadgeContainer}>
-          <View style={styles.vaccineBadge}>
-            <Text style={styles.vaccineBadgeText}>
-              {item.dewormingAgainst}
-            </Text>
-          </View>
-        </View>
-        
-        <View style={styles.statusRow}>
-          <View style={styles.statusItem}>
-            <Text style={styles.statusLabel}>Drug:</Text>
-            <Text style={styles.statusValue}>{item.drugAdministered}</Text>
-          </View>
-          <View style={styles.statusItem}>
-            <Text style={styles.statusLabel}>Dosage:</Text>
-            <Text style={styles.statusValue}>{item.dosage} ml</Text>
-          </View>
-        </View>
-        
-        <View style={styles.statusRow}>
-          <View style={styles.statusItem}>
-            <Text style={styles.statusLabel}>Admin By:</Text>
-            <Text style={styles.statusValue}>{item.administeredBy}</Text>
-          </View>
-          <View style={styles.statusItem}>
-            <Text style={styles.statusLabel}>Cost:</Text>
-            <Text style={styles.statusValue}>
-              ${(parseInt(item.costOfVaccine) + parseInt(item.costOfService)).toLocaleString()}
-            </Text>
-          </View>
-        </View>
-      </View>
-  
-      <View style={styles.cardActions}>
-        <TouchableOpacity onPress={() => handleEdit(item)} style={styles.cardActionButton}>
-          <FastImage source={icons.edit} style={styles.actionButtonIcon} tintColor="#2196F3" />
-          <Text style={[styles.actionButtonText, { color: '#2196F3' }]}>Edit</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.cardActionButton}>
-          <FastImage source={icons.remove} style={styles.actionButtonIcon} tintColor="#F44336" />
-          <Text style={[styles.actionButtonText, { color: '#F44336' }]}>Delete</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-  const renderFilterModal = () => {
-    const dewormingTypes = [
-      'Roundworms',
-      'Tapeworms',
-    ];
-    
+      if (result.error) {
+        if (!silent) {
+          Alert.alert("Error", result.error)
+        }
+        return
+      }
+
+      const newRecords = result.data || []
+      setDewormingRecords(newRecords)
+
+      // Check for new records
+      if (lastRecordCount > 0 && newRecords.length > lastRecordCount) {
+        console.log(`New deworming records detected: ${newRecords.length - lastRecordCount} new record(s)`)
+      }
+      setLastRecordCount(newRecords.length)
+    } catch (error) {
+      console.error("Failed to load deworming records:", error)
+      if (!silent) {
+        Alert.alert("Error", "Failed to load deworming records. Please try again.")
+      }
+    }
+  }
+
+  const loadLivestock = async (silent = false) => {
+    try {
+      const result = await getLivestockForActiveFarm()
+      if (Array.isArray(result)) {
+        setLivestock(result)
+      } else {
+        setLivestock([])
+      }
+    } catch (error) {
+      console.error("Failed to load livestock:", error)
+      if (!silent) {
+        setLivestock([])
+      }
+    }
+  }
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await loadData()
+    setRefreshing(false)
+  }, [])
+
+  const onHeaderRefresh = useCallback(async () => {
+    setIsRefreshingHeader(true)
+    await loadData(true)
+    setIsRefreshingHeader(false)
+  }, [])
+
+  const getAnimalInfo = (animalId) => {
+    return livestock.find((animal) => animal.id === animalId)
+  }
+
+  const formatAnimalDisplayName = (animal) => {
+    if (!animal) return "Unknown Animal"
+    if (animal.category === "poultry" && animal.poultry) {
+      return `${animal.type.toUpperCase()} - Flock ID: ${animal.poultry.flockId || "N/A"}`
+    } else if (animal.category === "mammal" && animal.mammal) {
+      return `${animal.type.toUpperCase()} - ID: ${animal.mammal.idNumber || "N/A"}`
+    }
+    return `${animal.type.toUpperCase()} - ID: ${animal.id}`
+  }
+
+  const formatCurrency = (amount) => {
+    return amount ? `KES ${Number.parseFloat(amount).toLocaleString()}` : "N/A"
+  }
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  }
+
+  const formatWeight = (weight) => {
+    return weight ? `${weight} kg` : "N/A"
+  }
+
+  const calculateAge = (dateOfBirth) => {
+    if (!dateOfBirth) return "Unknown"
+    const birth = new Date(dateOfBirth)
+    const now = new Date()
+    const diffTime = Math.abs(now - birth)
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    if (diffDays < 30) {
+      return `${diffDays} days`
+    } else if (diffDays < 365) {
+      const months = Math.floor(diffDays / 30)
+      return `${months} month${months > 1 ? "s" : ""}`
+    } else {
+      const years = Math.floor(diffDays / 365)
+      const remainingMonths = Math.floor((diffDays % 365) / 30)
+      return `${years} year${years > 1 ? "s" : ""}${remainingMonths > 0 ? ` ${remainingMonths} month${remainingMonths > 1 ? "s" : ""}` : ""}`
+    }
+  }
+
+  const getFilteredAndSortedRecords = () => {
+    let filtered = [...dewormingRecords]
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(
+        (record) =>
+          record.dewormingAgainst?.toLowerCase().includes(query) ||
+          record.drugAdministered?.toLowerCase().includes(query) ||
+          record.administeredByName?.toLowerCase().includes(query),
+      )
+    }
+
+    if (filterByAnimal !== "all") {
+      filtered = filtered.filter((record) => record.livestockId === filterByAnimal)
+    }
+
+    filtered.sort((a, b) => {
+      let aValue, bValue
+      switch (sortBy) {
+        case "dateAdministered":
+          aValue = new Date(a.dateAdministered)
+          bValue = new Date(b.dateAdministered)
+          break
+        case "dewormingAgainst":
+          aValue = a.dewormingAgainst?.toLowerCase() || ""
+          bValue = b.dewormingAgainst?.toLowerCase() || ""
+          break
+        case "cost":
+          aValue = (Number.parseFloat(a.costOfVaccine) || 0) + (Number.parseFloat(a.costOfService) || 0)
+          bValue = (Number.parseFloat(b.costOfVaccine) || 0) + (Number.parseFloat(b.costOfService) || 0)
+          break
+        default:
+          aValue = a[sortBy] || ""
+          bValue = b[sortBy] || ""
+      }
+      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1
+      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1
+      return 0
+    })
+
+    return filtered
+  }
+
+  const handleViewDetails = (record) => {
+    navigation.navigate("DewormingDetailScreen", {
+      recordId: record.id,
+      recordData: record,
+    })
+  }
+
+  const handleEdit = (record) => {
+    setShowDetailModal(false)
+    navigation.navigate("DewormingEditScreen", {
+      recordId: record.id,
+      recordData: record,
+    })
+  }
+
+  const handleDelete = (record) => {
+    Alert.alert(
+      "Delete Deworming Record",
+      "Are you sure you want to delete this deworming record? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => confirmDelete(record),
+        },
+      ],
+    )
+  }
+
+  const confirmDelete = async (record) => {
+    try {
+      const result = await deleteDewormingRecord(record.id)
+      if (result.error) {
+        Alert.alert("Error", result.error)
+      } else {
+        Alert.alert("Success", "Deworming record deleted successfully")
+        await loadDewormingRecords()
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to delete deworming record")
+    }
+  }
+
+  const renderDewormingCard = ({ item }) => {
+    const animal = getAnimalInfo(item.livestockId)
+    const totalCost = (Number.parseFloat(item.costOfVaccine) || 0) + (Number.parseFloat(item.costOfService) || 0)
+
     return (
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isFilterModalVisible}
-        onRequestClose={() => setIsFilterModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Filter by Deworming Type</Text>
-            
-            {dewormingTypes.map(option => (
-              <TouchableOpacity
-                key={option}
-                style={[styles.filterOption, filterDewormingType === option && styles.selectedFilterOption]}
-                onPress={() => {
-                  setFilterDewormingType(prev => (prev === option ? '' : option));
-                }}>
-                <Text style={[styles.filterOptionText, filterDewormingType === option && styles.selectedFilterOptionText]}>
-                  {option}
-                </Text>
-              </TouchableOpacity>
-            ))}
+      <View style={styles.dewormingCard}>
+        <LinearGradient
+          colors={["#F0FDF4", "#FFFFFF"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cardGradient}
+        >
+          <View style={styles.statusBadge}>
+            <View style={styles.statusDot} />
+            <Text style={styles.statusText}>Completed</Text>
+          </View>
 
-            <View style={styles.filterButtonsContainer}>
-              <TouchableOpacity style={styles.applyButton} onPress={() => {
-                setIsFilterModalVisible(false);
-                if (filterDewormingType) {
-                  showToast('Filters applied');
-                }
-              }}>
-                <Text style={styles.applyButtonText}>Apply Filters</Text>
-              </TouchableOpacity>
+          <View style={styles.cardContent}>
+            <View style={styles.cardHeader}>
+              <View style={styles.dewormingInfo}>
+                <Text style={styles.dewormingAgainst}>{item.dewormingAgainst}</Text>
+                <Text style={styles.drugAdministered}>{item.drugAdministered}</Text>
+              </View>
+              <View style={styles.dateContainer}>
+                <FastImage source={icons.calendar} style={styles.calendarIcon} tintColor={COLORS.green3} />
+                <Text style={styles.dateText}>{formatDate(item.dateAdministered)}</Text>
+              </View>
+            </View>
 
-              <TouchableOpacity style={styles.resetButton} onPress={resetAllFilters}>
-                <Text style={styles.resetButtonText}>Reset All</Text>
-              </TouchableOpacity>
+            {animal && (
+              <View style={styles.animalSection}>
+                <View style={styles.animalIconContainer}>
+                  <LinearGradient colors={[COLORS.green3, "#059669"]} style={styles.animalIcon}>
+                    <FastImage
+                      source={icons.livestock || icons.account}
+                      style={styles.animalIconImage}
+                      tintColor="#FFFFFF"
+                    />
+                  </LinearGradient>
+                </View>
+                <View style={styles.animalInfo}>
+                  <Text style={styles.animalName}>{formatAnimalDisplayName(animal)}</Text>
+                  <Text style={styles.animalBreed}>
+                    {(animal.category === "poultry" && animal.poultry?.breedType) ||
+                      (animal.category === "mammal" && animal.mammal?.breedType) ||
+                      "Unknown breed"}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Enhanced Quick Info Row */}
+            <View style={styles.quickInfoRow}>
+              <View style={styles.quickInfoItem}>
+                <View style={styles.infoIconContainer}>
+                  <FastImage source={icons.medical || icons.health} style={styles.infoIcon} tintColor="#6366F1" />
+                </View>
+                <Text style={styles.quickInfoLabel}>Dosage</Text>
+                <Text style={styles.quickInfoValue}>{item.dosage}</Text>
+              </View>
+              <View style={styles.quickInfoItem}>
+                <View style={styles.infoIconContainer}>
+                  <FastImage source={icons.user || icons.account} style={styles.infoIcon} tintColor="#8B5CF6" />
+                </View>
+                <Text style={styles.quickInfoLabel}>By</Text>
+                <Text style={styles.quickInfoValue}>{item.administeredByName}</Text>
+              </View>
+              {totalCost > 0 && (
+                <View style={styles.quickInfoItem}>
+                  <View style={styles.infoIconContainer}>
+                    <FastImage source={icons.dollar || icons.money} style={styles.infoIcon} tintColor="#059669" />
+                  </View>
+                  <Text style={styles.quickInfoLabel}>Cost</Text>
+                  <Text style={styles.costValue}>{formatCurrency(totalCost)}</Text>
+                </View>
+              )}
             </View>
           </View>
-        </View>
-      </Modal>
-    );
-  };
 
-  
+          {/* Action Buttons Row */}
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.viewButton]}
+              onPress={() => handleViewDetails(item)}
+              activeOpacity={0.8}
+            >
+              <FastImage source={icons.eye || icons.view} style={styles.actionIcon} tintColor="#3B82F6" />
+              <Text style={[styles.actionButtonText, styles.viewButtonText]}>View Details</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.editButton]}
+              onPress={() => handleEdit(item)}
+              activeOpacity={0.8}
+            >
+              <FastImage source={icons.edit} style={styles.actionIcon} tintColor={COLORS.green3} />
+              <Text style={[styles.actionButtonText, styles.editButtonText]}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.deleteButton]}
+              onPress={() => handleDelete(item)}
+              activeOpacity={0.8}
+            >
+              <FastImage source={icons.trash} style={styles.actionIcon} tintColor="#EF4444" />
+              <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+      </View>
+    )
+  }
+
+  const renderFiltersModal = () => (
+    <Modal visible={showFilters} animationType="slide" transparent={true} onRequestClose={() => setShowFilters(false)}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.filtersModal}>
+          <LinearGradient colors={["#FFFFFF", "#F8FAFC"]} style={styles.modalGradient}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filter & Sort</Text>
+              <TouchableOpacity onPress={() => setShowFilters(false)} style={styles.closeButton}>
+                <FastImage source={icons.close || icons.x} style={styles.closeIcon} tintColor="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.filtersContent}>
+              {/* Sort Section */}
+              <View style={styles.filterSection}>
+                <Text style={styles.sectionTitle}>Sort By</Text>
+                {[
+                  { key: "dateAdministered", label: "Date Administered" },
+                  { key: "dewormingAgainst", label: "Deworming Against" },
+                  { key: "cost", label: "Total Cost" },
+                ].map((option) => (
+                  <TouchableOpacity
+                    key={option.key}
+                    style={[styles.filterOption, sortBy === option.key && styles.selectedOption]}
+                    onPress={() => setSortBy(option.key)}
+                  >
+                    <Text style={[styles.filterOptionText, sortBy === option.key && styles.selectedOptionText]}>
+                      {option.label}
+                    </Text>
+                    {sortBy === option.key && (
+                      <FastImage source={icons.check} style={styles.checkIcon} tintColor={COLORS.green3} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Sort Order Section */}
+              <View style={styles.filterSection}>
+                <Text style={styles.sectionTitle}>Sort Order</Text>
+                {[
+                  { key: "desc", label: "Newest First" },
+                  { key: "asc", label: "Oldest First" },
+                ].map((option) => (
+                  <TouchableOpacity
+                    key={option.key}
+                    style={[styles.filterOption, sortOrder === option.key && styles.selectedOption]}
+                    onPress={() => setSortOrder(option.key)}
+                  >
+                    <Text style={[styles.filterOptionText, sortOrder === option.key && styles.selectedOptionText]}>
+                      {option.label}
+                    </Text>
+                    {sortOrder === option.key && (
+                      <FastImage source={icons.check} style={styles.checkIcon} tintColor={COLORS.green3} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {viewMode === "farm" && livestock.length > 0 && (
+                <View style={styles.filterSection}>
+                  <Text style={styles.sectionTitle}>Filter by Animal</Text>
+                  <TouchableOpacity
+                    style={[styles.filterOption, filterByAnimal === "all" && styles.selectedOption]}
+                    onPress={() => setFilterByAnimal("all")}
+                  >
+                    <Text style={[styles.filterOptionText, filterByAnimal === "all" && styles.selectedOptionText]}>
+                      All Animals
+                    </Text>
+                    {filterByAnimal === "all" && (
+                      <FastImage source={icons.check} style={styles.checkIcon} tintColor={COLORS.green3} />
+                    )}
+                  </TouchableOpacity>
+                  {livestock.map((animal) => (
+                    <TouchableOpacity
+                      key={animal.id}
+                      style={[styles.filterOption, filterByAnimal === animal.id && styles.selectedOption]}
+                      onPress={() => setFilterByAnimal(animal.id)}
+                    >
+                      <Text
+                        style={[styles.filterOptionText, filterByAnimal === animal.id && styles.selectedOptionText]}
+                      >
+                        {formatAnimalDisplayName(animal)}
+                      </Text>
+                      {filterByAnimal === animal.id && (
+                        <FastImage source={icons.check} style={styles.checkIcon} tintColor={COLORS.green3} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </ScrollView>
+
+            <View style={styles.filterActions}>
+              <TouchableOpacity
+                style={styles.clearFiltersButton}
+                onPress={() => {
+                  setSearchQuery("")
+                  setSortBy("dateAdministered")
+                  setSortOrder("desc")
+                  setFilterByAnimal("all")
+                }}
+              >
+                <Text style={styles.clearFiltersText}>Clear All</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.applyFiltersButton} onPress={() => setShowFilters(false)}>
+                <LinearGradient colors={[COLORS.green3, "#059669"]} style={styles.applyGradient}>
+                  <Text style={styles.applyFiltersText}>Apply</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        </View>
+      </View>
+    </Modal>
+  )
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <LinearGradient colors={["#F8FAFC", "#FFFFFF"]} style={styles.emptyGradient}>
+        <FastImage source={icons.medical || icons.health} style={styles.emptyIcon} tintColor="#9CA3AF" />
+        <Text style={styles.emptyTitle}>No Deworming Records</Text>
+        <Text style={styles.emptySubtitle}>
+          {viewMode === "livestock"
+            ? "This animal has no deworming records yet."
+            : "No deworming records found for your farm."}
+        </Text>
+        <TouchableOpacity
+          style={styles.addFirstRecordButton}
+          onPress={() => navigation.navigate("AddDewormingRecords")}
+          activeOpacity={0.8}
+        >
+          <LinearGradient colors={[COLORS.green3, "#059669"]} style={styles.addFirstGradient}>
+            <FastImage source={icons.plus || icons.add} style={styles.addFirstIcon} tintColor="#FFFFFF" />
+            <Text style={styles.addFirstText}>Add First Record</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </LinearGradient>
+    </View>
+  )
+
+  const filteredRecords = getFilteredAndSortedRecords()
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SecondaryHeader title="Deworming Records" onBackPress={() => navigation.goBack()} showNotification={true} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.green3} />
+          <Text style={styles.loadingText}>Loading deworming records...</Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <SecondaryHeader title="Deworming Records" />
-      <StatusBar translucent backgroundColor={COLORS.green2} animated={true} barStyle={'light-content'} />
-      
-      {renderHeader()}
-      
-      <FlatList
-        data={sortedAndFilteredRecords}
-        renderItem={renderDewormingCard}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-      
+      <SecondaryHeader
+        title={viewMode === "livestock" ? "Animal Deworming" : "Deworming Records"}
+        onBackPress={() => navigation.goBack()}
+        showNotification={true}
       />
-      
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('AddDewormingRecords')}>
-        <FastImage source={icons.plus} style={styles.fabIcon} tintColor="#fff" />
+
+      {/* Search and Filter Bar */}
+      <View style={styles.searchFilterContainer}>
+        <LinearGradient colors={["#FFFFFF", "#F8FAFC"]} style={styles.searchGradient}>
+          <View style={styles.searchContainer}>
+            <FastImage source={icons.search} style={styles.searchIcon} tintColor="#6B7280" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search deworming records..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#9CA3AF"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery("")} style={styles.clearSearchButton}>
+                <FastImage source={icons.close || icons.x} style={styles.clearSearchIcon} tintColor="#6B7280" />
+              </TouchableOpacity>
+            )}
+          </View>
+          <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(true)} activeOpacity={0.8}>
+            <LinearGradient colors={["#F0FDF4", "#DCFCE7"]} style={styles.filterGradient}>
+              <FastImage source={icons.filter} style={styles.filterIcon} tintColor={COLORS.green3} />
+              <Text style={[styles.filterButtonText, { color: COLORS.green3 }]}>Filter</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </LinearGradient>
+      </View>
+
+      <View style={styles.headerActions}>
+        <Text style={styles.recordsCount}>
+          {filteredRecords.length} record{filteredRecords.length !== 1 ? "s" : ""} found
+        </Text>
+        <TouchableOpacity
+          style={styles.refreshButton}
+          onPress={onHeaderRefresh}
+          disabled={isRefreshingHeader}
+          activeOpacity={0.8}
+        >
+          <LinearGradient colors={["#F0FDF4", "#DCFCE7"]} style={styles.refreshGradient}>
+            {isRefreshingHeader ? (
+              <ActivityIndicator size="small" color={COLORS.green3} />
+            ) : (
+              <FastImage source={icons.refresh} style={styles.refreshIcon} tintColor={COLORS.green3} />
+            )}
+            <Text style={[styles.refreshText, { color: COLORS.green3 }]}>
+              {isRefreshingHeader ? "Refreshing..." : "Refresh"}
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+
+      {/* Records List */}
+      {filteredRecords.length === 0 ? (
+        renderEmptyState()
+      ) : (
+        <FlatList
+          data={filteredRecords}
+          renderItem={renderDewormingCard}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS.green3]}
+              tintColor={COLORS.green3}
+            />
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
+      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate("AddDewormingRecords")}>
+        <FastImage source={icons.plus || icons.add} style={styles.fabIcon} tintColor={COLORS.white} />
       </TouchableOpacity>
-      
-      {renderFilterModal()}
+
+      {renderFiltersModal()}
     </SafeAreaView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.lightGreen,
+    backgroundColor: "#F9FAFB",
   },
- 
-  header: {
-    backgroundColor: COLORS.white,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6B7280",
+    fontFamily: "Inter-Medium",
+  },
+  searchFilterContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  searchGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 12,
     padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray3,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.lightGray2,
-    borderRadius: 10,
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    borderRadius: 8,
     paddingHorizontal: 12,
-    marginBottom: 16,
+    marginRight: 12,
   },
   searchIcon: {
     width: 20,
     height: 20,
     marginRight: 8,
   },
-  clearIcon: {
-    width: 18,
-    height: 18,
-    padding: 4,
-  },
   searchInput: {
     flex: 1,
-    height: 42,
+    height: 40,
     fontSize: 16,
-    color: COLORS.black,
+    color: "#1F2937",
+    fontFamily: "Inter-Regular",
   },
-  actionBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  clearSearchButton: {
+    padding: 4,
   },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: COLORS.lightGray2,
+  clearSearchIcon: {
+    width: 16,
+    height: 16,
   },
-  activeFilterButton: {
-    backgroundColor: COLORS.green,
-  },
-  actionIcon: {
-    width: 18,
-    height: 18,
-    marginRight: 8,
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: COLORS.black,
-  },
-  activeFilterText: {
-    color: COLORS.white,
-  },
-  listContent: {
-    padding: 16,
-    flexGrow: 1,
-  },
-  
- 
-  
-  card: {
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 3,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  animalInfo: {
-    flex: 1,
-  },
-  animalId: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.black,
-  },
-  dateContainer: {
-    padding: 6,
-    backgroundColor: COLORS.lightGreen,
-    borderRadius: 6,
-  },
-  dateText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: COLORS.green,
-  },
-  dewormingDetails: {
-    marginTop: 8,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  detailIcon: {
-    width: 18,
-    height: 18,
-    marginRight: 8,
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: COLORS.gray,
-    width: 80,
-  },
-  detailText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: COLORS.black,
-    flex: 1,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 16,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.gray3,
-  },
-  cardActionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
+  filterButton: {
     borderRadius: 8,
+    overflow: "hidden",
   },
-  actionButtonIcon: {
+  filterGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  filterIcon: {
     width: 18,
     height: 18,
     marginRight: 6,
   },
-  actionButtonText: {
+  filterButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: "Inter-Medium",
+  },
+  headerActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  recordsCount: {
+    fontSize: 14,
+    color: "#6B7280",
+    fontFamily: "Inter-Medium",
+  },
+  refreshButton: {
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  refreshGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  refreshIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 6,
+  },
+  refreshText: {
+    fontSize: 12,
+    fontFamily: "Inter-Medium",
+  },
+  listContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  dewormingCard: {
+    marginBottom: 16,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    overflow: "hidden",
+  },
+  cardGradient: {
+    padding: 16,
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginBottom: 12,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.green3,
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 12,
+    color: COLORS.green3,
+    fontFamily: "Inter-Medium",
+  },
+  cardContent: {
+    marginBottom: 16,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 16,
+  },
+  dewormingInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  dewormingAgainst: {
+    fontSize: 18,
+    fontFamily: "Inter-SemiBold",
+    color: "#1F2937",
+    marginBottom: 4,
+  },
+  drugAdministered: {
+    fontSize: 14,
+    color: "#6B7280",
+    fontFamily: "Inter-Regular",
+  },
+  dateContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  calendarIcon: {
+    width: 14,
+    height: 14,
+    marginRight: 4,
+  },
+  dateText: {
+    fontSize: 12,
+    color: COLORS.green3,
+    fontFamily: "Inter-Medium",
+  },
+  animalSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(16, 185, 129, 0.2)",
+  },
+  animalIconContainer: {
+    marginRight: 12,
+  },
+  animalIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  animalIconImage: {
+    width: 18,
+    height: 18,
+  },
+  animalInfo: {
+    flex: 1,
+  },
+  animalName: {
+    fontSize: 14,
+    fontFamily: "Inter-SemiBold",
+    color: "#1F2937",
+    marginBottom: 2,
+  },
+  animalBreed: {
+    fontSize: 12,
+    color: "#6B7280",
+    fontFamily: "Inter-Regular",
+  },
+  quickInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  quickInfoItem: {
+    flex: 1,
+    alignItems: "center",
+    marginHorizontal: 4,
+  },
+  infoIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 6,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  infoIcon: {
+    width: 16,
+    height: 16,
+  },
+  quickInfoLabel: {
+    fontSize: 11,
+    color: "#9CA3AF",
+    fontFamily: "Inter-Medium",
+    marginBottom: 2,
+    textAlign: "center",
+  },
+  quickInfoValue: {
+    fontSize: 13,
+    color: "#1F2937",
+    fontFamily: "Inter-SemiBold",
+    textAlign: "center",
+  },
+  costValue: {
+    fontSize: 13,
+    color: "#059669",
+    fontFamily: "Inter-Bold",
+    textAlign: "center",
+  },
+  actionButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    marginHorizontal: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  viewButton: {
+    backgroundColor: "rgba(59, 130, 246, 0.05)",
+    borderColor: "rgba(59, 130, 246, 0.2)",
+  },
+  editButton: {
+    backgroundColor: "rgba(16, 185, 129, 0.05)",
+    borderColor: "rgba(16, 185, 129, 0.2)",
+  },
+  deleteButton: {
+    backgroundColor: "rgba(239, 68, 68, 0.05)",
+    borderColor: "rgba(239, 68, 68, 0.2)",
+  },
+  actionIcon: {
+    width: 14,
+    height: 14,
+    marginRight: 6,
+  },
+  actionButtonText: {
+    fontSize: 12,
+    fontFamily: "Inter-Medium",
+  },
+  viewButtonText: {
+    color: "#3B82F6",
+  },
+  editButtonText: {
+    color: COLORS.green3,
+  },
+  deleteButtonText: {
+    color: "#EF4444",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  filtersModal: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    height: "80%",
+    overflow: "hidden",
+  },
+  modalGradient: {
+    flex: 1,
+    minHeight: 400,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: "Inter-SemiBold",
+    color: "#1F2937",
+  },
+  closeButton: {
+    padding: 8,
+  },
+  closeIcon: {
+    width: 20,
+    height: 20,
+  },
+  filtersContent: {
+    flex: 1,
+    padding: 20,
+  },
+  filterSection: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: "Inter-SemiBold",
+    color: "#1F2937",
+    marginBottom: 12,
+  },
+  filterOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  selectedOption: {
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+    borderColor: "#10B981",
+  },
+  filterOptionText: {
+    fontSize: 14,
+    color: "#6B7280",
+    fontFamily: "Inter-Regular",
+  },
+  selectedOptionText: {
+    color: "#059669",
+    fontFamily: "Inter-Medium",
+  },
+  checkIcon: {
+    width: 16,
+    height: 16,
+  },
+  filterActions: {
+    flexDirection: "row",
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+  },
+  clearFiltersButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginRight: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    alignItems: "center",
+  },
+  clearFiltersText: {
+    fontSize: 14,
+    color: "#6B7280",
+    fontFamily: "Inter-Medium",
+  },
+  applyFiltersButton: {
+    flex: 1,
+    marginLeft: 8,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  applyGradient: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  applyFiltersText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontFamily: "Inter-SemiBold",
+  },
+  emptyContainer: {
+    flex: 1,
+    margin: 16,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  emptyGradient: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontFamily: "Inter-SemiBold",
+    color: "#1F2937",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+    fontFamily: "Inter-Regular",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  addFirstRecordButton: {
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  addFirstGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+  },
+  addFirstIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+  },
+  addFirstText: {
+    fontSize: 16,
+    color: "#FFFFFF",
+    fontFamily: "Inter-SemiBold",
   },
   fab: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 24,
     right: 24,
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: COLORS.green,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 6,
+    backgroundColor: COLORS.green3,
+    justifyContent: "center",
+    alignItems: "center",
     shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   fabIcon: {
     width: 24,
     height: 24,
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContent: {
-    backgroundColor: COLORS.white,
-    borderRadius: 16,
-    padding: 20,
-    width: '85%',
-    maxHeight: '80%',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.black,
-    marginBottom: 20,
-  },
-  filterOption: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.gray3,
-  },
-  selectedFilterOption: {
-    backgroundColor: COLORS.lightGreen,
-  },
-  filterOptionText: {
-    fontSize: 16,
-    color: COLORS.black,
-  },
-  selectedFilterOptionText: {
-    color: COLORS.green,
-    fontWeight: 'bold',
-  },
-  filterButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
-  },
-  applyButton: {
-    flex: 2,
-    backgroundColor: COLORS.green,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  applyButtonText: {
-    color: COLORS.white,
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  resetButton: {
-    flex: 1,
-    backgroundColor: COLORS.lightGray2,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.gray3,
-  },
-  resetButtonText: {
-    color: COLORS.black,
-    fontWeight: '500',
-    fontSize: 16,
-  },
-  animalType: {
-    fontSize: 14,
-    color: COLORS.black,
-    marginTop: 4,
-  },
-  vaccineStatusContainer: {
-    marginTop: 8,
-    padding: 12,
-    borderRadius: 8,
-  },
-  vaccineBadgeContainer: {
-    marginBottom: 10,
-  },
-  vaccineBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: COLORS.green,
-    borderRadius: 20,
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-  },
-  vaccineBadgeText: {
-    color: COLORS.white,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  statusRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  statusItem: {
-    flex: 1,
-  },
-  statusLabel: {
-    fontSize: 12,
-    color: COLORS.gray,
-    marginBottom: 2,
-  },
-  statusValue: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: COLORS.black,
-  },
-});
+})
 
-export default DewormingRecordsScreen;
+export default DewormingRecordsScreen

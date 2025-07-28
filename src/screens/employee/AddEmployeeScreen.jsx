@@ -230,7 +230,6 @@ const AddEmployeeScreen = ({ navigation }) => {
 
       setShowSuccessModal(true);
 
-
     } catch (error) {
       console.error('Error creating employee:', error);
       Alert.alert(
@@ -241,7 +240,6 @@ const AddEmployeeScreen = ({ navigation }) => {
       setLoading(false);
     }
   };
-
 
   const renderDropdownModal = (visible, setVisible, title, options, selectedValue, onSelect) => (
     <Modal visible={visible} transparent animationType="slide">
@@ -421,15 +419,16 @@ const AddEmployeeScreen = ({ navigation }) => {
             The employee has been successfully added to your team.
           </Text>
 
-          {/* Action Buttons */}
           <View style={styles.successButtonContainer}>
             <TouchableOpacity
               style={styles.successPrimaryButton}
               onPress={() => {
                 setShowSuccessModal(false);
-                if (navigation) {
-                  navigation.goBack();
-                }
+                navigation.navigate('FarmEmployeeTableScreen', {
+                  refresh: true,
+                  employeeAdded: true,
+                  timestamp: Date.now()
+                });
               }}>
               <Text style={styles.successPrimaryButtonText}>Done</Text>
             </TouchableOpacity>
@@ -472,7 +471,6 @@ const AddEmployeeScreen = ({ navigation }) => {
       </View>
     </Modal>
   );
-
 
   return (
     <SafeAreaView style={styles.container}>

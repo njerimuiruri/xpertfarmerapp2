@@ -1,31 +1,7 @@
 import api from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Helper function to get active farm
-async function getActiveFarm() {
-  try {
-    const user = JSON.parse((await AsyncStorage.getItem('user')) || '{}');
-    const farms = user?.farms || [];
-
-    if (farms.length === 0) return null;
-
-    const farm = farms[0];
-
-    return {
-      id: farm.id,
-      name: farm.name,
-      location: farm.administrativeLocation,
-      size: `${farm.size} acres`,
-      animals: Array.isArray(farm.farmingTypes) ? farm.farmingTypes : [],
-    };
-  } catch (error) {
-    console.error('[getActiveFarm] Error:', error);
-    return null;
-  }
-}
-
-// Create a new inventory item
-export async function createInventory(inventoryData) {
+export async function createInventoryItem(inventoryData) {
   try {
     const token = await AsyncStorage.getItem('token');
     console.log('Retrieved Token:', token);
@@ -60,14 +36,17 @@ export async function createInventory(inventoryData) {
     });
 
     console.log(
-      '[createInventory] Response:',
+      '[createInventoryItem] Response:',
       JSON.stringify(response.data, null, 2),
     );
 
-    return {data: response.data, error: null};
+    return {
+      data: response.data?.data || response.data,
+      error: null,
+    };
   } catch (error) {
     console.error(
-      '[createInventory] Error:',
+      '[createInventoryItem] Error:',
       JSON.stringify(error?.response?.data || error.message, null, 2),
     );
 
@@ -84,14 +63,26 @@ export async function createInventory(inventoryData) {
 export async function getFarmInventory() {
   try {
     const token = await AsyncStorage.getItem('token');
-    const activeFarm = await getActiveFarm();
 
-    if (!token || !activeFarm?.id) {
+    if (!token) {
       return {
         data: null,
-        error: 'Authentication failed or active farm not set',
+        error: 'Authentication failed: missing token',
       };
     }
+
+    const activeFarm = await getActiveFarm();
+    if (!activeFarm?.id) {
+      return {
+        data: null,
+        error: 'No active farm selected. Please select a farm first.',
+      };
+    }
+
+    console.log(
+      '[getFarmInventory] Fetching inventory for farm:',
+      activeFarm.id,
+    );
 
     const response = await api.get(`/inventory?farmId=${activeFarm.id}`, {
       headers: {
@@ -99,22 +90,163 @@ export async function getFarmInventory() {
       },
     });
 
-    console.log('Inventory fetched:', JSON.stringify(response.data, null, 2)); // Debug log
+    console.log(
+      '[getFarmInventory] Raw API Response:',
+      JSON.stringify(response.data, null, 2),
+    );
 
-    return {data: response.data?.data || [], error: null};
+    // Handle different possible response structures
+    let inventory = [];
+    if (response.data?.data) {
+      inventory = Array.isArray(response.data.data) ? response.data.data : [];
+    } else if (Array.isArray(response.data)) {
+      inventory = response.data;
+    } else if (response.data?.inventory) {
+      inventory = Array.isArray(response.data.inventory)
+        ? response.data.inventory
+        : [];
+    }
+
+    console.log(
+      '[getFarmInventory] Extracted inventory array:',
+      inventory.length,
+      'items',
+    );
+
+    // Transform the inventory data to flatten the structure
+    const transformedInventory = transformInventoryData(inventory);
+    console.log(
+      '[getFarmInventory] Transformed inventory:',
+      transformedInventory.length,
+      'items',
+    );
+
+    return {
+      data: transformedInventory,
+      error: null,
+    };
   } catch (error) {
-    console.error('[getFarmInventory] Error:', error);
+    console.error(
+      '[getFarmInventory] Error:',
+      error?.response?.data || error.message,
+    );
     return {
       data: null,
       error:
         error?.response?.data?.message ||
-        error?.message ||
-        'Failed to retrieve inventory items',
+        error.message ||
+        'Failed to retrieve inventory',
     };
   }
 }
 
-export async function getInventoryById(inventoryId) {
+// Transform nested inventory structure to flat array
+function transformInventoryData(inventoryArray) {
+  if (!Array.isArray(inventoryArray)) {
+    console.warn(
+      '[transformInventoryData] Input is not an array:',
+      inventoryArray,
+    );
+    return [];
+  }
+
+  const transformedItems = [];
+
+  inventoryArray.forEach((inventoryRecord, index) => {
+    console.log(
+      `[transformInventoryData] Processing inventory record ${index}:`,
+      {
+        id: inventoryRecord.id,
+        goodsCount: inventoryRecord.goodsInStock?.length || 0,
+        machineryCount: inventoryRecord.machinery?.length || 0,
+        utilitiesCount: inventoryRecord.utilities?.length || 0,
+      },
+    );
+
+    // Add goods in stock
+    if (Array.isArray(inventoryRecord.goodsInStock)) {
+      inventoryRecord.goodsInStock.forEach(item => {
+        transformedItems.push({
+          ...item,
+          type: 'goodsInStock',
+          inventoryId: inventoryRecord.id,
+          farmId: inventoryRecord.farmId,
+        });
+      });
+    }
+
+    // Add machinery
+    if (Array.isArray(inventoryRecord.machinery)) {
+      inventoryRecord.machinery.forEach(item => {
+        transformedItems.push({
+          ...item,
+          type: 'machinery',
+          inventoryId: inventoryRecord.id,
+          farmId: inventoryRecord.farmId,
+        });
+      });
+    }
+
+    // Add utilities
+    if (Array.isArray(inventoryRecord.utilities)) {
+      inventoryRecord.utilities.forEach(item => {
+        transformedItems.push({
+          ...item,
+          type: 'utility',
+          inventoryId: inventoryRecord.id,
+          farmId: inventoryRecord.farmId,
+        });
+      });
+    }
+  });
+
+  console.log(
+    '[transformInventoryData] Final transformed items:',
+    transformedItems.length,
+  );
+  return transformedItems;
+}
+
+// Get inventory counts by type
+export function getInventoryCounts(inventoryData) {
+  if (!Array.isArray(inventoryData)) {
+    console.warn('[getInventoryCounts] Input is not an array:', inventoryData);
+    return {
+      goodsInStock: 0,
+      machinery: 0,
+      utilities: 0,
+      total: 0,
+    };
+  }
+
+  const counts = inventoryData.reduce(
+    (acc, item) => {
+      switch (item.type) {
+        case 'goodsInStock':
+          acc.goodsInStock++;
+          break;
+        case 'machinery':
+          acc.machinery++;
+          break;
+        case 'utility':
+          acc.utilities++;
+          break;
+      }
+      acc.total++;
+      return acc;
+    },
+    {
+      goodsInStock: 0,
+      machinery: 0,
+      utilities: 0,
+      total: 0,
+    },
+  );
+
+  console.log('[getInventoryCounts] Processed counts:', counts);
+  return counts;
+}
+export async function getInventoryItemDetails(item) {
   try {
     const token = await AsyncStorage.getItem('token');
 
@@ -122,14 +254,123 @@ export async function getInventoryById(inventoryId) {
       throw new Error('Authentication failed: missing token');
     }
 
-    const response = await api.get(`/inventory/${inventoryId}`, {
+    // Use the main inventory record ID, not the sub-item ID
+    const inventoryRecordId = item.inventoryId || item.id;
+
+    if (!inventoryRecordId) {
+      throw new Error('No inventory record ID found');
+    }
+
+    console.log(
+      `[getInventoryItemDetails] Fetching inventory record: ${inventoryRecordId} for item type: ${item.type}`,
+    );
+
+    // Get the complete inventory record
+    const response = await api.get(`/inventory/${inventoryRecordId}`, {
       headers: {Authorization: `Bearer ${token}`},
     });
 
-    return response.data;
+    const inventoryRecord = response.data?.data || response.data;
+    console.log(
+      '[getInventoryItemDetails] Full inventory record:',
+      JSON.stringify(inventoryRecord, null, 2),
+    );
+
+    // Extract the specific item details based on type and ID
+    let itemDetails = null;
+
+    switch (item.type) {
+      case 'goodsInStock':
+        if (inventoryRecord.goodsInStock) {
+          // If it's an array, find the specific item
+          if (Array.isArray(inventoryRecord.goodsInStock)) {
+            itemDetails = inventoryRecord.goodsInStock.find(
+              goods => goods.id === item.id,
+            );
+          } else if (inventoryRecord.goodsInStock.id === item.id) {
+            // If it's a single object
+            itemDetails = inventoryRecord.goodsInStock;
+          }
+        }
+        break;
+
+      case 'machinery':
+        if (inventoryRecord.machinery) {
+          if (Array.isArray(inventoryRecord.machinery)) {
+            itemDetails = inventoryRecord.machinery.find(
+              machine => machine.id === item.id,
+            );
+          } else if (inventoryRecord.machinery.id === item.id) {
+            itemDetails = inventoryRecord.machinery;
+          }
+        }
+        break;
+
+      case 'utility':
+        if (inventoryRecord.utilities || inventoryRecord.utility) {
+          const utilities =
+            inventoryRecord.utilities || inventoryRecord.utility;
+          if (Array.isArray(utilities)) {
+            itemDetails = utilities.find(utility => utility.id === item.id);
+          } else if (utilities.id === item.id) {
+            itemDetails = utilities;
+          }
+        }
+        break;
+
+      default:
+        throw new Error(`Unknown item type: ${item.type}`);
+    }
+
+    if (!itemDetails) {
+      console.warn(
+        `[getInventoryItemDetails] Item not found in inventory record. Item ID: ${item.id}, Type: ${item.type}`,
+      );
+      // Return the original item data as fallback
+      return item;
+    }
+
+    // Merge with original item data and add inventory record context
+    const enrichedItemDetails = {
+      ...item,
+      ...itemDetails,
+      inventoryRecordId: inventoryRecordId,
+      farmId: inventoryRecord.farmId || item.farmId,
+      createdAt: inventoryRecord.createdAt || itemDetails.createdAt,
+      updatedAt: inventoryRecord.updatedAt || itemDetails.updatedAt,
+    };
+
+    console.log(
+      '[getInventoryItemDetails] Enriched item details:',
+      JSON.stringify(enrichedItemDetails, null, 2),
+    );
+    return enrichedItemDetails;
   } catch (error) {
     console.error(
-      '[getInventoryById] Error:',
+      '[getInventoryItemDetails] Error:',
+      error?.response?.data || error.message,
+    );
+
+    console.log('[getInventoryItemDetails] Falling back to original item data');
+    return item;
+  }
+}
+export async function getInventoryItemById(itemId) {
+  try {
+    const token = await AsyncStorage.getItem('token');
+
+    if (!token) {
+      throw new Error('Authentication failed: missing token');
+    }
+
+    const response = await api.get(`/inventory/${itemId}`, {
+      headers: {Authorization: `Bearer ${token}`},
+    });
+
+    return response.data?.data || response.data;
+  } catch (error) {
+    console.error(
+      '[getInventoryItemById] Error:',
       error?.response?.data || error.message,
     );
     throw (
@@ -140,7 +381,8 @@ export async function getInventoryById(inventoryId) {
   }
 }
 
-export async function updateMachinery(inventoryId, machineryData) {
+// Update goods in stock item
+export async function updateGoodsInStock(itemId, updateData) {
   try {
     const token = await AsyncStorage.getItem('token');
 
@@ -151,57 +393,17 @@ export async function updateMachinery(inventoryId, machineryData) {
       };
     }
 
-    const response = await api.patch(
-      `/inventory/machinery/${inventoryId}`,
-      machineryData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+    const response = await api.patch(`/inventory/goods/${itemId}`, updateData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
-    );
-
-    return {data: response.data, error: null};
-  } catch (error) {
-    console.error(
-      '[updateMachinery] Error:',
-      error?.response?.data || error.message,
-    );
+    });
 
     return {
-      data: null,
-      error:
-        error?.response?.data?.message ||
-        error?.message ||
-        'Failed to update machinery item',
+      data: response.data?.data || response.data,
+      error: null,
     };
-  }
-}
-
-export async function updateGoodsInStock(inventoryId, goodsData) {
-  try {
-    const token = await AsyncStorage.getItem('token');
-
-    if (!token) {
-      return {
-        data: null,
-        error: 'Authentication failed: missing token',
-      };
-    }
-
-    const response = await api.patch(
-      `/inventory/goods/${inventoryId}`,
-      goodsData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-
-    return {data: response.data, error: null};
   } catch (error) {
     console.error(
       '[updateGoodsInStock] Error:',
@@ -218,8 +420,8 @@ export async function updateGoodsInStock(inventoryId, goodsData) {
   }
 }
 
-// Update a utility item
-export async function updateUtility(inventoryId, utilityData) {
+// Delete goods in stock item
+export async function deleteGoodsInStock(itemId) {
   try {
     const token = await AsyncStorage.getItem('token');
 
@@ -230,79 +432,7 @@ export async function updateUtility(inventoryId, utilityData) {
       };
     }
 
-    const response = await api.patch(
-      `/inventory/utility/${inventoryId}`,
-      utilityData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-
-    return {data: response.data, error: null};
-  } catch (error) {
-    console.error(
-      '[updateUtility] Error:',
-      error?.response?.data || error.message,
-    );
-
-    return {
-      data: null,
-      error:
-        error?.response?.data?.message ||
-        error?.message ||
-        'Failed to update utility item',
-    };
-  }
-}
-
-// Delete a machinery item
-export async function deleteMachinery(inventoryId) {
-  try {
-    const token = await AsyncStorage.getItem('token');
-
-    if (!token) {
-      return {
-        data: null,
-        error: 'Authentication failed: missing token',
-      };
-    }
-
-    await api.delete(`/inventory/machinery/${inventoryId}`, {
-      headers: {Authorization: `Bearer ${token}`},
-    });
-
-    return {data: true, error: null};
-  } catch (error) {
-    console.error(
-      '[deleteMachinery] Error:',
-      error?.response?.data || error.message,
-    );
-
-    return {
-      data: null,
-      error:
-        error?.response?.data?.message ||
-        error?.message ||
-        'Failed to delete machinery item',
-    };
-  }
-}
-
-export async function deleteGoodsInStock(inventoryId) {
-  try {
-    const token = await AsyncStorage.getItem('token');
-
-    if (!token) {
-      return {
-        data: null,
-        error: 'Authentication failed: missing token',
-      };
-    }
-
-    await api.delete(`/inventory/goods/${inventoryId}`, {
+    await api.delete(`/inventory/goods/${itemId}`, {
       headers: {Authorization: `Bearer ${token}`},
     });
 
@@ -323,8 +453,8 @@ export async function deleteGoodsInStock(inventoryId) {
   }
 }
 
-// Delete a utility item
-export async function deleteUtility(inventoryId) {
+// Update machinery item
+export async function updateMachinery(itemId, updateData) {
   try {
     const token = await AsyncStorage.getItem('token');
 
@@ -335,7 +465,126 @@ export async function deleteUtility(inventoryId) {
       };
     }
 
-    await api.delete(`/inventory/utility/${inventoryId}`, {
+    const response = await api.patch(
+      `/inventory/machinery/${itemId}`,
+      updateData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    return {
+      data: response.data?.data || response.data,
+      error: null,
+    };
+  } catch (error) {
+    console.error(
+      '[updateMachinery] Error:',
+      error?.response?.data || error.message,
+    );
+
+    return {
+      data: null,
+      error:
+        error?.response?.data?.message ||
+        error?.message ||
+        'Failed to update machinery item',
+    };
+  }
+}
+
+// Delete machinery item
+export async function deleteMachinery(itemId) {
+  try {
+    const token = await AsyncStorage.getItem('token');
+
+    if (!token) {
+      return {
+        data: null,
+        error: 'Authentication failed: missing token',
+      };
+    }
+
+    await api.delete(`/inventory/machinery/${itemId}`, {
+      headers: {Authorization: `Bearer ${token}`},
+    });
+
+    return {data: true, error: null};
+  } catch (error) {
+    console.error(
+      '[deleteMachinery] Error:',
+      error?.response?.data || error.message,
+    );
+
+    return {
+      data: null,
+      error:
+        error?.response?.data?.message ||
+        error?.message ||
+        'Failed to delete machinery item',
+    };
+  }
+}
+
+// Update utility item
+export async function updateUtility(itemId, updateData) {
+  try {
+    const token = await AsyncStorage.getItem('token');
+
+    if (!token) {
+      return {
+        data: null,
+        error: 'Authentication failed: missing token',
+      };
+    }
+
+    const response = await api.patch(
+      `/inventory/utility/${itemId}`,
+      updateData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    return {
+      data: response.data?.data || response.data,
+      error: null,
+    };
+  } catch (error) {
+    console.error(
+      '[updateUtility] Error:',
+      error?.response?.data || error.message,
+    );
+
+    return {
+      data: null,
+      error:
+        error?.response?.data?.message ||
+        error?.message ||
+        'Failed to update utility item',
+    };
+  }
+}
+
+// Delete utility item
+export async function deleteUtility(itemId) {
+  try {
+    const token = await AsyncStorage.getItem('token');
+
+    if (!token) {
+      return {
+        data: null,
+        error: 'Authentication failed: missing token',
+      };
+    }
+
+    await api.delete(`/inventory/utility/${itemId}`, {
       headers: {Authorization: `Bearer ${token}`},
     });
 
@@ -356,167 +605,125 @@ export async function deleteUtility(inventoryId) {
   }
 }
 
-// Generic delete function that works with any inventory item
-export async function deleteInventory(inventoryId) {
+// Consistent getActiveFarm function that matches your livestock service pattern
+async function getActiveFarm() {
   try {
-    const token = await AsyncStorage.getItem('token');
-
-    if (!token) {
-      return {
-        data: null,
-        error: 'Authentication failed: missing token',
-      };
+    // First try to get from activeFarm storage (same as livestock service)
+    const activeFarmRaw = await AsyncStorage.getItem('activeFarm');
+    if (activeFarmRaw) {
+      const activeFarm = JSON.parse(activeFarmRaw);
+      if (activeFarm?.id) {
+        console.log('[getActiveFarm] Found activeFarm in storage:', {
+          id: activeFarm.id,
+          name: activeFarm.name,
+        });
+        return activeFarm;
+      }
     }
 
-    await api.delete(`/inventory/${inventoryId}`, {
-      headers: {Authorization: `Bearer ${token}`},
+    // Fallback to user's first farm (same as your farm service pattern)
+    const userRaw = await AsyncStorage.getItem('user');
+    const user = JSON.parse(userRaw || '{}');
+    const farms = user?.farms || [];
+
+    if (farms.length === 0) {
+      console.log('[getActiveFarm] No farms found');
+      return null;
+    }
+
+    const farm = farms[0];
+    console.log('[getActiveFarm] Using first farm from user:', {
+      id: farm.id,
+      name: farm.name,
     });
 
-    return {data: true, error: null};
-  } catch (error) {
-    console.error(
-      '[deleteInventory] Error:',
-      error?.response?.data || error.message,
-    );
-
+    // Return in consistent format
     return {
-      data: null,
-      error:
-        error?.response?.data?.message ||
-        error?.message ||
-        'Failed to delete inventory item',
+      id: farm.id,
+      name: farm.name,
+      location: farm.location || farm.administrativeLocation,
+      size: farm.size ? `${farm.size} acres` : undefined,
+      animals: Array.isArray(farm.animals)
+        ? farm.animals
+        : Array.isArray(farm.farmingTypes)
+        ? farm.farmingTypes
+        : [],
     };
+  } catch (error) {
+    console.error('[getActiveFarm] Error:', error);
+    return null;
   }
 }
 
-// Helper functions to format data for creation
+// Export the getActiveFarm function so it can be used elsewhere if needed
+export {getActiveFarm};
 
-export function formatMachineryData(formData) {
-  return {
-    machinery: {
-      equipmentName: formData.equipmentName,
-      equipmentId: formData.equipmentId,
-      purchaseDate: formData.purchaseDate,
-      currentLocation: formData.currentLocation,
-      condition: formData.condition,
-      lastServiceDate: formData.lastServiceDate,
-      nextServiceDate: formData.nextServiceDate,
-    },
-  };
-}
+// Format inventory data based on type
+export function formatInventoryData(formData, inventoryType) {
+  let formattedData = {};
 
-export function formatGoodsInStockData(formData) {
-  return {
-    goodsInStock: {
-      itemName: formData.itemName,
-      sku: formData.sku,
-      quantity: parseInt(formData.quantity, 10),
-      currentLocation: formData.currentLocation,
-      condition: formData.condition,
-      expirationDate: formData.expirationDate,
-    },
-  };
-}
+  switch (inventoryType) {
+    case 'goodsInStock':
+      formattedData = {
+        goodsInStock: {
+          itemName: formData.itemName,
+          sku: formData.sku,
+          quantity: parseInt(formData.quantity, 10) || 0,
+          currentLocation: formData.currentLocation,
+          condition: formData.condition,
+          expirationDate: formData.expirationDate,
+        },
+      };
+      break;
 
-export function formatUtilityData(formData) {
-  const utilityData = {
-    utilityType: formData.utilityType,
-    entryDate: formData.entryDate,
-    facilityCondition: formData.facilityCondition,
-  };
+    case 'machinery':
+      formattedData = {
+        machinery: {
+          equipmentName: formData.equipmentName,
+          equipmentId: formData.equipmentId,
+          purchaseDate: formData.purchaseDate,
+          currentLocation: formData.currentLocation,
+          condition: formData.condition,
+          lastServiceDate: formData.lastServiceDate,
+          nextServiceDate: formData.nextServiceDate,
+        },
+      };
+      break;
 
-  // Add water-specific fields
-  if (formData.utilityType === 'water') {
-    utilityData.waterLevel = parseInt(formData.waterLevel, 10);
-    utilityData.waterSource = formData.waterSource;
-    utilityData.waterStorage = parseInt(formData.waterStorage, 10);
-  }
+    case 'utility':
+      formattedData = {
+        utility: {
+          utilityType: formData.utilityType || 'water',
+          waterLevel: parseInt(formData.waterLevel, 10) || 0,
+          waterSource: formData.waterSource,
+          waterStorage: parseInt(formData.waterStorage, 10) || 0,
+          entryDate: formData.entryDate,
+          powerSource: formData.powerSource,
+          powerCapacity: formData.powerCapacity,
+          installationCost: parseFloat(formData.installationCost) || 0,
+          consumptionRate: parseFloat(formData.consumptionRate) || 0,
+          consumptionCost: parseFloat(formData.consumptionCost) || 0,
+          structureType: formData.structureType,
+          structureCapacity: formData.structureCapacity,
+          constructionCost: parseFloat(formData.constructionCost) || 0,
+          facilityCondition: formData.facilityCondition,
+          lastMaintenanceDate: formData.lastMaintenanceDate,
+          maintenanceCost: parseFloat(formData.maintenanceCost) || 0,
+        },
+      };
+      break;
 
-  // Add power-specific fields
-  if (
-    formData.utilityType === 'power' ||
-    formData.utilityType === 'electricity'
-  ) {
-    utilityData.powerSource = formData.powerSource;
-    utilityData.powerCapacity = formData.powerCapacity;
-    utilityData.installationCost = parseInt(formData.installationCost, 10);
-    utilityData.consumptionRate = parseInt(formData.consumptionRate, 10);
-    utilityData.consumptionCost = parseInt(formData.consumptionCost, 10);
-  }
-
-  // Add structure-specific fields
-  if (
-    formData.utilityType === 'structure' ||
-    formData.utilityType === 'building'
-  ) {
-    utilityData.structureType = formData.structureType;
-    utilityData.structureCapacity = formData.structureCapacity;
-    utilityData.constructionCost = parseInt(formData.constructionCost, 10);
-  }
-
-  // Add maintenance fields if provided
-  if (formData.lastMaintenanceDate) {
-    utilityData.lastMaintenanceDate = formData.lastMaintenanceDate;
-  }
-  if (formData.maintenanceCost) {
-    utilityData.maintenanceCost = parseInt(formData.maintenanceCost, 10);
-  }
-
-  return {
-    utility: utilityData,
-  };
-}
-
-// Helper function to get inventory statistics
-export function getInventoryStats(inventoryData) {
-  const stats = {
-    total: 0,
-    machinery: 0,
-    goodsInStock: 0,
-    utilities: 0,
-    alerts: {
-      servicesDue: 0,
-      expiringSoon: 0,
-    },
-  };
-
-  if (!inventoryData || !Array.isArray(inventoryData)) {
-    return stats;
-  }
-
-  const today = new Date();
-
-  inventoryData.forEach(item => {
-    stats.total++;
-
-    if (item.machinery) {
-      stats.machinery++;
-      // Check for service alerts
-      const nextServiceDate = new Date(item.machinery.nextServiceDate);
-      const daysUntilService = Math.floor(
-        (nextServiceDate - today) / (1000 * 60 * 60 * 24),
+    default:
+      console.error(
+        '[formatInventoryData] Unknown inventory type:',
+        inventoryType,
       );
-      if (daysUntilService <= 14) {
-        stats.alerts.servicesDue++;
-      }
-    }
+      return null;
+  }
 
-    if (item.goodsInStock) {
-      stats.goodsInStock++;
-      // Check for expiration alerts
-      const expirationDate = new Date(item.goodsInStock.expirationDate);
-      const daysUntilExpiry = Math.floor(
-        (expirationDate - today) / (1000 * 60 * 60 * 24),
-      );
-      if (daysUntilExpiry <= 30) {
-        stats.alerts.expiringSoon++;
-      }
-    }
-
-    if (item.utility) {
-      stats.utilities++;
-    }
-  });
-
-  return stats;
+  console.log(
+    '[formatInventoryData] Formatted data:',
+    JSON.stringify(formattedData, null, 2),
+  );
+  return formattedData;
 }

@@ -5,8 +5,6 @@ import {getLivestockForActiveFarm} from './livestock';
 export async function createBreedingRecord(data) {
   try {
     const token = await AsyncStorage.getItem('token');
-    console.log('Retrieved Token:', token);
-
     const userRaw = await AsyncStorage.getItem('user');
     const user = JSON.parse(userRaw || '{}');
     const userId = user?.id;
@@ -14,6 +12,11 @@ export async function createBreedingRecord(data) {
     const activeFarmRaw = await AsyncStorage.getItem('activeFarm');
     const activeFarm = JSON.parse(activeFarmRaw || '{}');
     const farmId = activeFarm?.id;
+
+    console.log('=== BREEDING SERVICE DEBUG ===');
+    console.log('Token exists:', !!token);
+    console.log('User ID:', userId);
+    console.log('Farm ID:', farmId);
 
     if (!token || !userId) {
       return {
@@ -29,79 +32,146 @@ export async function createBreedingRecord(data) {
       };
     }
 
+    // Build payload that EXACTLY matches your working backend example
     const payload = {
-      ...data,
-      farmId,
+      damId: data.damId,
+      sireId: data.sireId,
+      farmId: farmId,
+      purpose: data.purpose,
+      strategy: data.strategy,
+      serviceType: data.serviceType,
+      serviceDate: data.serviceDate,
+      numServices: parseInt(data.numServices) || 1,
+      firstHeatDate: data.firstHeatDate,
+      gestationDays: parseInt(data.gestationDays) || 280,
+      expectedBirthDate: data.expectedBirthDate,
+      sireCode: data.sireCode,
     };
-    if (payload.damGender) payload.damGender = payload.damGender.toLowerCase();
-    if (payload.sireGender)
-      payload.sireGender = payload.sireGender.toLowerCase();
 
-    console.log('=== BREEDING SERVICE DEBUG ===');
-    console.log('Dam ID being sent:', payload.damId);
-    console.log('Sire ID being sent:', payload.sireId);
-    console.log('Farm ID:', payload.farmId);
-    console.log('Full payload:', JSON.stringify(payload, null, 2));
+    // CRITICAL: Only add AI fields if serviceType is "Artificial Insemination"
+    // Your working example has AI fields even with "Natural Mating" - this might be the issue!
+    if (data.serviceType === 'Artificial Insemination') {
+      payload.aiType = data.aiType;
+      payload.aiSource = data.aiSource;
+      payload.aiCost = parseFloat(data.aiCost) || 0;
+    }
+
+    // DON'T send damCode - your working example doesn't have it
+    // Remove this line that was in your original code:
+    // payload.damCode = data.damCode;
+
+    // Validate required fields
+    const requiredFields = [
+      'damId',
+      'sireId',
+      'purpose',
+      'strategy',
+      'serviceType',
+    ];
+    const missingFields = requiredFields.filter(field => !payload[field]);
+
+    if (missingFields.length > 0) {
+      return {
+        data: null,
+        error: `Missing required fields: ${missingFields.join(', ')}`,
+      };
+    }
+
+    // Enhanced date validation and formatting
+    try {
+      // Ensure dates are properly formatted as ISO strings
+      if (payload.serviceDate instanceof Date) {
+        payload.serviceDate = payload.serviceDate.toISOString();
+      }
+      if (payload.firstHeatDate instanceof Date) {
+        payload.firstHeatDate = payload.firstHeatDate.toISOString();
+      }
+      if (payload.expectedBirthDate instanceof Date) {
+        payload.expectedBirthDate = payload.expectedBirthDate.toISOString();
+      }
+
+      // Validate date format
+      new Date(payload.serviceDate).toISOString();
+      new Date(payload.firstHeatDate).toISOString();
+      new Date(payload.expectedBirthDate).toISOString();
+    } catch (dateError) {
+      return {
+        data: null,
+        error: 'Invalid date format provided',
+      };
+    }
+
+    console.log('=== FINAL PAYLOAD (matching backend format) ===');
+    console.log(JSON.stringify(payload, null, 2));
 
     const response = await api.post('/breeding', payload, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
+      timeout: 10000,
     });
 
-    console.log(
-      'SUCCESS - Breeding record created:',
-      JSON.stringify(response.data, null, 2),
-    );
+    console.log('SUCCESS - Breeding record created:', response.data);
     return {data: response.data, error: null};
   } catch (error) {
     console.error('=== BREEDING SERVICE ERROR ===');
-    console.error('Full Error Object:', error);
-    console.error('Error Response:', error?.response);
-    console.error('Error Status:', error?.response?.status);
-    console.error('Error Data:', error?.response?.data);
+    console.error('Error type:', error.constructor.name);
+    console.error('Error message:', error.message);
 
-    let errorMessage = 'Failed to create breeding record';
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error(
+        'Response data:',
+        JSON.stringify(error.response.data, null, 2),
+      );
 
-    if (error?.response?.status === 500) {
-      errorMessage =
-        'Server error occurred. Please check your backend logs and try again.';
-    } else if (error?.response?.status === 400) {
-      // Enhanced error handling for validation errors
-      const backendMessage = error?.response?.data?.message;
+      // More specific error handling
+      if (error.response.status === 500) {
+        const serverError =
+          error.response.data?.message || error.response.data?.error;
 
-      if (backendMessage?.includes('Dam must be a female')) {
-        console.log(
-          '🔍 GENDER VALIDATION ERROR - Backend rejected dam as female',
-        );
-        console.log(
-          'This suggests a mismatch between frontend and backend gender validation',
-        );
-        errorMessage =
-          'Backend validation failed: Dam not recognized as female. This may be a data consistency issue.';
-      } else if (backendMessage?.includes('Sire must be a male')) {
-        console.log(
-          '🔍 GENDER VALIDATION ERROR - Backend rejected sire as male',
-        );
-        errorMessage =
-          'Backend validation failed: Sire not recognized as male. This may be a data consistency issue.';
-      } else {
-        errorMessage = backendMessage || 'Invalid data provided';
+        // Check for common 500 error causes
+        if (
+          serverError?.includes('foreign key') ||
+          serverError?.includes('constraint')
+        ) {
+          return {
+            data: null,
+            error:
+              'Invalid dam or sire selected. Please ensure the animals exist and try again.',
+          };
+        }
+
+        if (
+          serverError?.includes('duplicate') ||
+          serverError?.includes('unique')
+        ) {
+          return {
+            data: null,
+            error: 'A breeding record with these details already exists.',
+          };
+        }
+
+        return {
+          data: null,
+          error: `Server error: ${
+            serverError || 'Please check your backend logs for details'
+          }`,
+        };
       }
-    } else if (error?.response?.status === 401) {
-      errorMessage = 'Authentication failed. Please login again.';
-    } else if (error?.response?.status === 403) {
-      errorMessage = 'Permission denied. You may not have access to this farm.';
-    } else if (error?.response?.data?.message) {
-      errorMessage = error.response.data.message;
-    } else if (error?.message) {
-      errorMessage = error.message;
+
+      if (error.response.status === 400) {
+        return {
+          data: null,
+          error: error.response.data?.message || 'Invalid data provided',
+        };
+      }
     }
 
     return {
       data: null,
-      error: errorMessage,
+      error: error.message || 'Failed to create breeding record',
     };
   }
 }
@@ -164,6 +234,65 @@ export async function getBreedingRecordById(id) {
       error.message ||
       'Failed to fetch breeding record'
     );
+  }
+}
+export async function getBreedingRecordsForLivestock(livestockId) {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    const activeFarmRaw = await AsyncStorage.getItem('activeFarm');
+    const activeFarm = JSON.parse(activeFarmRaw || '{}');
+    const farmId = activeFarm?.id;
+
+    if (!token) {
+      return {
+        data: [],
+        error: 'Authentication failed: missing token',
+      };
+    }
+
+    if (!livestockId || !farmId) {
+      return {
+        data: [],
+        error: 'Livestock ID and Farm ID are required',
+      };
+    }
+
+    // Get all breeding records for the farm
+    const response = await getAllBreedingRecords(farmId);
+
+    if (response.error) {
+      return response;
+    }
+
+    // Filter records for this specific livestock
+    const breedingRecords = response.data || [];
+    const filteredRecords = breedingRecords.filter(record => {
+      const damMatches =
+        record.damId === livestockId ||
+        record.damId?.toString() === livestockId?.toString();
+      const sireMatches =
+        record.sireId === livestockId ||
+        record.sireId?.toString() === livestockId?.toString();
+
+      return damMatches || sireMatches;
+    });
+
+    console.log(
+      `Found ${filteredRecords.length} breeding records for livestock ${livestockId}`,
+    );
+    return {data: filteredRecords, error: null};
+  } catch (error) {
+    console.error(
+      '[getBreedingRecordsForLivestock] Error:',
+      error?.response?.data || error.message,
+    );
+    return {
+      data: [],
+      error:
+        error?.response?.data?.message ||
+        error.message ||
+        'Failed to retrieve breeding records for livestock',
+    };
   }
 }
 
@@ -706,5 +835,37 @@ export async function getOffspringWithParentInfo(breedingId, offspringId) {
   } catch (error) {
     console.error('[getOffspringWithParentInfo] Error:', error);
     throw error;
+  }
+}
+export async function validateBreedingData(data) {
+  try {
+    const activeFarmRaw = await AsyncStorage.getItem('activeFarm');
+    const activeFarm = JSON.parse(activeFarmRaw || '{}');
+    const farmId = activeFarm?.id;
+
+    console.log('=== VALIDATION TEST ===');
+    console.log('Farm ID:', farmId);
+    console.log('Dam ID:', data.damId);
+    console.log('Sire ID:', data.sireId);
+
+    // Get livestock to validate IDs exist
+    const livestock = await getLivestockForActiveFarm();
+    const dam = livestock.find(animal => animal.id === data.damId);
+    const sire = livestock.find(animal => animal.id === data.sireId);
+
+    console.log('Dam found:', !!dam);
+    console.log('Sire found:', !!sire);
+
+    if (!dam) {
+      return {valid: false, error: 'Dam not found in farm livestock'};
+    }
+
+    if (!sire) {
+      return {valid: false, error: 'Sire not found in farm livestock'};
+    }
+
+    return {valid: true, error: null};
+  } catch (error) {
+    return {valid: false, error: error.message};
   }
 }

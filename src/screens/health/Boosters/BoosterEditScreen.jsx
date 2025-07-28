@@ -23,24 +23,27 @@ import { icons } from '../../../constants';
 import { COLORS } from '../../../constants/theme';
 import SecondaryHeader from '../../../components/headers/secondary-header';
 import {
-    getAllergyById,
-    updateAllergy,
-    validateAllergyData
+    getBoosterById,
+    updateBooster,
+    validateBoosterData
 } from '../../../services/healthservice';
 import { getLivestockForActiveFarm } from '../../../services/livestock';
 
 const { width } = Dimensions.get('window');
 
-const EditAllergyRecord = ({ navigation, route }) => {
+const BoosterEditScreen = ({ navigation, route }) => {
     const { recordId, recordData } = route.params;
     const toast = useToast();
 
     // Form state
     const [formData, setFormData] = useState({
         animalIdOrFlockId: '',
-        dateRecorded: new Date(),
-        cause: '',
-        remedy: '',
+        boostersOrAdditives: '',
+        purpose: '',
+        quantityGiven: '',
+        quantityUnit: '',
+        dateAdministered: new Date(),
+        costOfBooster: '',
         livestockId: '',
     });
 
@@ -52,7 +55,7 @@ const EditAllergyRecord = ({ navigation, route }) => {
     const [originalData, setOriginalData] = useState(null);
 
     useEffect(() => {
-        Promise.all([fetchAllergyData(), loadLivestock()]);
+        Promise.all([fetchBoosterData(), loadLivestock()]);
     }, [recordId]);
 
     const loadLivestock = async () => {
@@ -84,10 +87,10 @@ const EditAllergyRecord = ({ navigation, route }) => {
         return `${animal.type.toUpperCase()} - ID: ${animal.id}`;
     };
 
-    const fetchAllergyData = async () => {
+    const fetchBoosterData = async () => {
         try {
             setIsLoadingData(true);
-            const result = await getAllergyById(recordId);
+            const result = await getBoosterById(recordId);
 
             if (result.error) {
                 Alert.alert('Error', result.error);
@@ -95,23 +98,26 @@ const EditAllergyRecord = ({ navigation, route }) => {
                 return;
             }
 
-            const allergyData = result.data;
-            setOriginalData(allergyData);
+            const boosterData = result.data;
+            setOriginalData(boosterData);
 
             setFormData({
-                animalIdOrFlockId: allergyData.animalIdOrFlockId || '',
-                dateRecorded: allergyData.dateRecorded
-                    ? new Date(allergyData.dateRecorded)
+                animalIdOrFlockId: boosterData.animalIdOrFlockId || '',
+                boostersOrAdditives: boosterData.boostersOrAdditives || '',
+                purpose: boosterData.purpose || '',
+                quantityGiven: boosterData.quantityGiven?.toString() || '',
+                quantityUnit: boosterData.quantityUnit || '',
+                dateAdministered: boosterData.dateAdministered
+                    ? new Date(boosterData.dateAdministered)
                     : new Date(),
-                cause: allergyData.cause || '',
-                remedy: allergyData.remedy || '',
-                livestockId: allergyData.livestockId || recordData?.livestockId,
+                costOfBooster: boosterData.costOfBooster?.toString() || '',
+                livestockId: boosterData.livestockId || '',
             });
 
-            console.log('Fetched allergy data:', allergyData);
+            console.log('Fetched booster data:', boosterData);
         } catch (error) {
-            console.error('Error fetching allergy data:', error);
-            Alert.alert('Error', 'Failed to load allergy data. Please try again.');
+            console.error('Error fetching booster data:', error);
+            Alert.alert('Error', 'Failed to load booster data. Please try again.');
             navigation.goBack();
         } finally {
             setIsLoadingData(false);
@@ -128,19 +134,31 @@ const EditAllergyRecord = ({ navigation, route }) => {
     const handleDateChange = (event, selectedDate) => {
         setShowDatePicker(false);
         if (selectedDate) {
-            setFormData(prev => ({ ...prev, dateRecorded: selectedDate }));
+            setFormData(prev => ({ ...prev, dateAdministered: selectedDate }));
         }
     };
 
     const validateForm = () => {
         const newErrors = {};
 
-        if (!formData.cause.trim()) {
-            newErrors.cause = 'Please specify the cause of the allergy';
+        if (!formData.boostersOrAdditives.trim()) {
+            newErrors.boostersOrAdditives = 'Please enter the booster/additive name';
         }
 
-        if (!formData.remedy.trim()) {
-            newErrors.remedy = 'Please enter the remedy/treatment';
+        if (!formData.purpose.trim()) {
+            newErrors.purpose = 'Please enter the purpose';
+        }
+
+        if (!formData.quantityGiven || isNaN(parseFloat(formData.quantityGiven)) || parseFloat(formData.quantityGiven) <= 0) {
+            newErrors.quantityGiven = 'Please enter a valid quantity greater than 0';
+        }
+
+        if (!formData.quantityUnit.trim()) {
+            newErrors.quantityUnit = 'Please enter the quantity unit';
+        }
+
+        if (formData.costOfBooster && (isNaN(parseFloat(formData.costOfBooster)) || parseFloat(formData.costOfBooster) < 0)) {
+            newErrors.costOfBooster = 'Please enter a valid cost (cannot be negative)';
         }
 
         setErrors(newErrors);
@@ -158,21 +176,24 @@ const EditAllergyRecord = ({ navigation, route }) => {
         try {
             const payload = {
                 animalIdOrFlockId: formData.animalIdOrFlockId,
-                dateRecorded: formData.dateRecorded.toISOString(),
-                cause: formData.cause.trim(),
-                remedy: formData.remedy.trim(),
-                livestockId: formData.livestockId || recordData?.livestockId,
+                boostersOrAdditives: formData.boostersOrAdditives.trim(),
+                purpose: formData.purpose.trim(),
+                quantityGiven: parseFloat(formData.quantityGiven),
+                quantityUnit: formData.quantityUnit.trim(),
+                dateAdministered: formData.dateAdministered.toISOString(),
+                costOfBooster: formData.costOfBooster ? parseFloat(formData.costOfBooster) : 0,
+                livestockId: formData.livestockId,
             };
 
-            const validation = validateAllergyData(payload);
+            const validation = validateBoosterData(payload);
             if (!validation.isValid) {
                 Alert.alert('Validation Error', validation.errors.join('\n'));
                 return;
             }
 
-            console.log('Updating allergy with payload:', payload);
+            console.log('Updating booster with payload:', payload);
 
-            const result = await updateAllergy(recordId, payload);
+            const result = await updateBooster(recordId, payload);
 
             if (result.error) {
                 Alert.alert('Error', result.error);
@@ -181,7 +202,7 @@ const EditAllergyRecord = ({ navigation, route }) => {
 
             toast.show({
                 title: 'Success',
-                description: 'Allergy record has been updated successfully!',
+                description: 'Booster record has been updated successfully!',
                 status: 'success',
                 placement: 'top',
                 duration: 3000,
@@ -190,7 +211,7 @@ const EditAllergyRecord = ({ navigation, route }) => {
             });
             navigation.goBack();
         } catch (error) {
-            console.error('Error updating allergy:', error);
+            console.error('Error updating booster:', error);
             Alert.alert(
                 'Error',
                 'An unexpected error occurred. Please check your connection and try again.'
@@ -213,12 +234,15 @@ const EditAllergyRecord = ({ navigation, route }) => {
                         if (originalData) {
                             setFormData({
                                 animalIdOrFlockId: originalData.animalIdOrFlockId || '',
-                                dateRecorded: originalData.dateRecorded
-                                    ? new Date(originalData.dateRecorded)
+                                boostersOrAdditives: originalData.boostersOrAdditives || '',
+                                purpose: originalData.purpose || '',
+                                quantityGiven: originalData.quantityGiven?.toString() || '',
+                                quantityUnit: originalData.quantityUnit || '',
+                                dateAdministered: originalData.dateAdministered
+                                    ? new Date(originalData.dateAdministered)
                                     : new Date(),
-                                cause: originalData.cause || '',
-                                remedy: originalData.remedy || '',
-                                livestockId: originalData.livestockId || recordData?.livestockId,
+                                costOfBooster: originalData.costOfBooster?.toString() || '',
+                                livestockId: originalData.livestockId || '',
                             });
                             setErrors({});
                         }
@@ -266,25 +290,25 @@ const EditAllergyRecord = ({ navigation, route }) => {
         return (
             <SafeAreaView style={styles.container}>
                 <SecondaryHeader
-                    title="Edit Allergy Record"
+                    title="Edit Booster Record"
                     showBack={true}
                     onBack={() => navigation.goBack()}
                 />
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color="#10B981" />
-                    <Text style={styles.loadingText}>Loading allergy data...</Text>
+                    <Text style={styles.loadingText}>Loading booster data...</Text>
                 </View>
             </SafeAreaView>
         );
     }
 
-    // Get the animal info using the same method as other screens
-    const animal = getAnimalInfo(formData.livestockId || recordData?.livestockId);
+    // Get the animal info
+    const animal = getAnimalInfo(formData.livestockId);
 
     return (
         <SafeAreaView style={styles.container}>
             <SecondaryHeader
-                title="Edit Allergy Record"
+                title="Edit Booster Record"
                 showBack={true}
                 onBack={() => navigation.goBack()}
                 rightComponent={
@@ -312,7 +336,7 @@ const EditAllergyRecord = ({ navigation, route }) => {
                         style={styles.animalInfoCard}>
                         <View style={styles.animalCardHeader}>
                             <LinearGradient
-                                colors={['#EF4444', '#DC2626']}
+                                colors={['#10B981', '#059669']}
                                 style={styles.animalAvatarContainer}>
                                 <FastImage
                                     source={icons.livestock || icons.account}
@@ -329,39 +353,60 @@ const EditAllergyRecord = ({ navigation, route }) => {
                         </View>
                     </LinearGradient>
 
-                    {renderFormGroup('Allergy Information', (
+                    {renderFormGroup('Booster Information', (
+                        <>
+                            {renderInput('Booster/Additive Name', 'boostersOrAdditives', {
+                                required: true,
+                                placeholder: 'e.g., Vitamin B12, Iron supplement, etc.'
+                            })}
+                            {renderInput('Purpose', 'purpose', {
+                                required: true,
+                                placeholder: 'e.g., Growth promotion, Health maintenance, etc.',
+                                multiline: true,
+                                numberOfLines: 2
+                            })}
+                        </>
+                    ))}
+
+                    {renderFormGroup('Dosage Details', (
+                        <>
+                            {renderInput('Quantity Given', 'quantityGiven', {
+                                required: true,
+                                placeholder: '10.5',
+                                keyboardType: 'numeric'
+                            })}
+                            {renderInput('Quantity Unit', 'quantityUnit', {
+                                required: true,
+                                placeholder: 'e.g., ml, mg, tablets, etc.'
+                            })}
+                        </>
+                    ))}
+
+                    {renderFormGroup('Administration Details', (
                         <>
                             <View style={styles.inputContainer}>
                                 <Text style={styles.inputLabel}>
-                                    Date Recorded <Text style={styles.required}>*</Text>
+                                    Date Administered <Text style={styles.required}>*</Text>
                                 </Text>
                                 <TouchableOpacity
                                     style={[styles.dateInput, (isLoading || isLoadingData) && styles.inputDisabled]}
                                     onPress={() => !isLoading && !isLoadingData && setShowDatePicker(true)}
                                     disabled={isLoading || isLoadingData}>
                                     <Text style={styles.dateText}>
-                                        {formData.dateRecorded.toLocaleDateString()}
+                                        {formData.dateAdministered.toLocaleDateString()}
                                     </Text>
                                     <FastImage source={icons.calendar} style={styles.calendarIcon} />
                                 </TouchableOpacity>
                             </View>
+                        </>
+                    ))}
 
-                            {renderInput('Cause of Allergy', 'cause', {
-                                required: true,
-                                multiline: true,
-                                numberOfLines: 3,
-                                placeholder: 'e.g., Pollen, certain feed types, environmental factors, etc.'
-                            })}
-
-                            {renderInput('Remedy/Treatment', 'remedy', {
-                                required: true,
-                                multiline: true,
-                                numberOfLines: 3,
-                                placeholder: 'e.g., Antihistamines, changed feed, environmental modifications, etc.'
-                            })}
-
-                            {renderInput('Animal/Flock ID Reference', 'animalIdOrFlockId', {
-                                placeholder: 'Optional reference ID for the affected animal/flock'
+                    {/* Cost Information */}
+                    {renderFormGroup('Cost Information (Optional)', (
+                        <>
+                            {renderInput('Cost of Booster', 'costOfBooster', {
+                                keyboardType: 'numeric',
+                                placeholder: '50.25'
                             })}
                         </>
                     ))}
@@ -380,7 +425,7 @@ const EditAllergyRecord = ({ navigation, route }) => {
                             onPress={handleSubmit}
                             disabled={isLoading}>
                             <LinearGradient
-                                colors={isLoading ? ['#9CA3AF', '#6B7280'] : ['#EF4444', '#DC2626']}
+                                colors={isLoading ? ['#9CA3AF', '#6B7280'] : ['#10B981', '#059669']}
                                 style={styles.submitGradient}>
                                 <Text style={styles.submitText}>
                                     {isLoading ? 'Updating...' : 'Update Record'}
@@ -395,7 +440,7 @@ const EditAllergyRecord = ({ navigation, route }) => {
 
             {showDatePicker && (
                 <DateTimePicker
-                    value={formData.dateRecorded}
+                    value={formData.dateAdministered}
                     mode="date"
                     display="default"
                     onChange={handleDateChange}
@@ -531,7 +576,6 @@ const styles = StyleSheet.create({
         color: '#1F2937',
         backgroundColor: '#FFFFFF',
         fontWeight: '500',
-        textAlignVertical: 'top',
     },
     inputError: {
         borderColor: '#EF4444',
@@ -596,7 +640,7 @@ const styles = StyleSheet.create({
         flex: 2,
         borderRadius: 16,
         overflow: 'hidden',
-        shadowColor: '#EF4444',
+        shadowColor: '#10B981',
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
         shadowRadius: 16,
@@ -625,4 +669,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default EditAllergyRecord;
+export default BoosterEditScreen;

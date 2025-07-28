@@ -484,7 +484,62 @@ export async function getFeedingStatistics(programId) {
     };
   }
 }
+export async function getFeedingProgramsForLivestock(livestockId) {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    const activeFarmRaw = await AsyncStorage.getItem('activeFarm');
+    const activeFarm = JSON.parse(activeFarmRaw || '{}');
+    const farmId = activeFarm?.id;
 
+    if (!token) {
+      return {
+        data: [],
+        error: 'Authentication failed: missing token',
+      };
+    }
+
+    if (!livestockId || !farmId) {
+      return {
+        data: [],
+        error: 'Livestock ID and Farm ID are required',
+      };
+    }
+
+    // Get all feeding programs for the farm
+    const response = await api.get(`/feeding/${farmId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const feedingPrograms = response.data?.data || response.data || [];
+
+    // Filter programs for this specific livestock
+    const filteredPrograms = feedingPrograms.filter(program => {
+      return (
+        program.animalId === livestockId ||
+        program.animalId?.toString() === livestockId?.toString()
+      );
+    });
+
+    console.log(
+      `Found ${filteredPrograms.length} feeding programs for livestock ${livestockId}`,
+    );
+    return {data: filteredPrograms, error: null};
+  } catch (error) {
+    console.error(
+      '[getFeedingProgramsForLivestock] Error:',
+      error?.response?.data || error.message,
+    );
+    return {
+      data: [],
+      error:
+        error?.response?.data?.message ||
+        error.message ||
+        'Failed to retrieve feeding programs for livestock',
+    };
+  }
+}
 export async function recordFeedingEvent(feedingEventData) {
   try {
     const token = await AsyncStorage.getItem('token');

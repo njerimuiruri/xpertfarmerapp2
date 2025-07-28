@@ -115,56 +115,259 @@ const FarmFeedsScreen = ({ navigation }) => {
 
   const getAnimalOptions = () => {
     if (programType === 'Single Animal') {
+      // Filter for mammals (non-poultry livestock)
       return livestock
-        .filter(animal => animal.category === 'mammal')
+        .filter(animal => animal.category === 'mammal' || animal.type !== 'poultry')
         .map(animal => ({
           id: animal.id,
           idNumber: animal.mammal?.idNumber || animal.id,
           type: animal.type,
           breedType: animal.mammal?.breedType || '',
           gender: animal.mammal?.gender || '',
+          specificType: getSpecificAnimalType(animal),
+          displayName: `${animal.mammal?.idNumber || animal.id} - ${getSpecificAnimalType(animal)} (${animal.mammal?.breedType || 'Unknown breed'})`
         }));
     } else if (programType === 'Group') {
+      // Filter for poultry groups
       return livestock
-        .filter(animal => animal.category === 'poultry')
+        .filter(animal => animal.category === 'poultry' || animal.type === 'poultry')
         .map(animal => ({
           id: animal.id,
           flockId: animal.poultry?.flockId || animal.id,
           type: animal.type,
           breedType: animal.poultry?.breedType || '',
           quantity: animal.poultry?.currentQuantity || animal.poultry?.initialQuantity || 0,
+          specificType: getSpecificAnimalType(animal),
+          displayName: `${animal.poultry?.flockId || animal.id} - ${getSpecificAnimalType(animal)} (${animal.poultry?.quantity || 0} birds)`
         }));
     }
     return [];
   };
 
+
   const getAnimalTypeFromLivestockType = (livestockType) => {
     const typeMapping = {
-      'dairyCattle': 'Dairy',
-      'beefCattle': 'Beef',
+      // Cattle types from your registration
+      'dairyCattle': 'Dairy Cattle',
+      'beefCattle': 'Beef Cattle',
+
+      // Goat types from your registration
+      'dairyGoats': 'Dairy Goats',
+      'meatGoats': 'Meat Goats',
+
+      // Other livestock from your registration
+      'sheep': 'Sheep',
+      'rabbit': 'Rabbit',
       'swine': 'Swine',
-      'sheep': 'Sheep and Goats',
-      'goats': 'Sheep and Goats',
       'poultry': 'Poultry',
+
+      // Additional mappings for compatibility
+      'cattle': 'Beef Cattle',
+      'goats': 'Meat Goats',
+      'pigs': 'Swine',
+      'chickens': 'Poultry',
     };
+
     return typeMapping[livestockType] || livestockType;
   };
 
   const getLifecycleOptions = (type, isGroup = false) => {
     const options = {
-      Dairy: ['Calf', 'Heifer', 'Lactating cows', 'Dry Cows'],
-      Beef: ['Starter', 'Grower', 'Finisher'],
-      Swine: ['Starter', 'Grower', 'Finisher', 'Breeding herd'],
+      // Dairy Cattle - specific to dairy operations
+      'Dairy Cattle': [
+        'Calf (0-6 months)',
+        'Weaned Calf (6-12 months)',
+        'Yearling Heifer (12-15 months)',
+        'Breeding Heifer (15-24 months)',
+        'Pregnant Heifer (First pregnancy)',
+        'Fresh Cow (0-100 days in milk)',
+        'Peak Lactation (100-200 days in milk)',
+        'Mid Lactation (200-305 days in milk)',
+        'Late Lactation (305+ days in milk)',
+        'Dry Cow (60 days before calving)',
+        'Transition Cow (Pre/Post calving)',
+      ],
+
+      // Beef Cattle - meat production focused
+      'Beef Cattle': [
+        'Calf (0-6 months)',
+        'Weaned Calf (6-12 months)',
+        'Yearling (12-18 months)',
+        'Stocker/Backgrounder (18-24 months)',
+        'Finisher/Feedlot (24+ months)',
+        'Breeding Bull',
+        'Breeding Cow',
+        'Pregnant Cow',
+        'Lactating Cow'
+      ],
+
+      // Dairy Goats - milk production focused
+      'Dairy Goats': [
+        'Kid (0-3 months)',
+        'Weaned Kid (3-6 months)',
+        'Young Doe (6-12 months)',
+        'Breeding Doe (12+ months)',
+        'Pregnant Doe',
+        'Fresh Doe (Early lactation)',
+        'Peak Lactation Doe',
+        'Late Lactation Doe',
+        'Dry Doe',
+        'Breeding Buck',
+      ],
+
+      // Meat Goats - meat production focused
+      'Meat Goats': [
+        'Kid (0-3 months)',
+        'Weaned Kid (3-6 months)',
+        'Growing Kid (6-9 months)',
+        'Market Goat (9-12 months)',
+        'Breeding Doe',
+        'Pregnant Doe',
+        'Lactating Doe',
+        'Breeding Buck',
+        'Wether (Castrated male)',
+      ],
+
+      // Sheep - combined meat and wool
+      'Sheep': [
+        'Lamb (0-4 months)',
+        'Weaned Lamb (4-6 months)',
+        'Replacement Ewe Lamb (6-12 months)',
+        'Yearling Ewe (12-18 months)',
+        'Breeding Ewe',
+        'Pregnant Ewe',
+        'Lactating Ewe',
+        'Dry Ewe',
+        'Ram (Breeding male)',
+        'Wether (Castrated male)',
+        'Market Lamb',
+      ],
+
+      // Rabbit - fast reproduction cycle
+      'Rabbit': [
+        'Kit (0-4 weeks)',
+        'Junior (4-6 months)',
+        'Intermediate (6-8 months)',
+        'Senior (8+ months)',
+        'Breeding Doe',
+        'Pregnant Doe',
+        'Lactating Doe (with litter)',
+        'Breeding Buck',
+        'Market Rabbit',
+      ],
+
+      // Swine - pork production
+      'Swine': [
+        'Piglet/Suckling (0-3 weeks)',
+        'Weaner (3-8 weeks)',
+        'Nursery Pig (8-10 weeks)',
+        'Grower (10-16 weeks)',
+        'Finisher (16-24 weeks)',
+        'Gilt (Young breeding female)',
+        'Sow (Breeding female)',
+        'Pregnant Sow',
+        'Lactating Sow',
+        'Boar (Breeding male)',
+        'Market Hog',
+      ],
+
+      // Poultry - covers all bird types from your breeds
+      'Poultry': [
+        'Day-old Chick/Poult',
+        'Starter (0-6 weeks)',
+        'Grower (6-16 weeks)',
+        'Developer (16-20 weeks)',
+        'Layer (20+ weeks)',
+        'Broiler (Meat bird)',
+        'Breeder',
+        'Spent Bird',
+      ],
+
+      // Specific poultry types based on breed
+      'Broiler': [
+        'Starter (0-14 days)',
+        'Grower (15-28 days)',
+        'Finisher (29-42 days)',
+        'Withdrawal (43+ days)',
+      ],
+
+      'Layer': [
+        'Day-old Chick',
+        'Starter (0-6 weeks)',
+        'Grower (6-16 weeks)',
+        'Developer/Pullet (16-20 weeks)',
+        'Peak Production (20-40 weeks)',
+        'Late Production (40-72 weeks)',
+        'Spent Hen (72+ weeks)',
+      ],
+
+      'Turkey': [
+        'Poult (0-4 weeks)',
+        'Starter (0-6 weeks)',
+        'Grower (6-12 weeks)',
+        'Finisher (12-16 weeks)',
+        'Breeder Turkey',
+        'Market Turkey',
+      ],
+
+      'Duck': [
+        'Duckling (0-2 weeks)',
+        'Starter (0-3 weeks)',
+        'Grower (3-7 weeks)',
+        'Finisher (7-8 weeks)',
+        'Layer Duck',
+        'Breeder Duck',
+      ],
+
+      'Quail': [
+        'Chick (0-2 weeks)',
+        'Starter (0-6 weeks)',
+        'Grower (6-16 weeks)',
+        'Layer/Breeder (16+ weeks)',
+        'Market Quail',
+      ],
+
+      // Generic fallbacks
+      'Dairy': [
+        'Calf', 'Heifer', 'Lactating cows', 'Dry Cows'
+      ],
+      'Beef': [
+        'Starter', 'Grower', 'Finisher'
+      ],
       'Sheep and Goats': [
         'Lambs and Kids',
         'Growing',
         'Production',
         'Maintenance',
       ],
-      Poultry: ['Starter', 'Grower', 'Finisher', 'Layer'],
     };
+
     return type ? options[type] || [] : [];
   };
+  const getSpecificAnimalType = (livestockItem) => {
+    const baseType = getAnimalTypeFromLivestockType(livestockItem.type);
+
+    // For poultry, check breed type to get more specific type
+    if (livestockItem.type === 'poultry' && livestockItem.poultry?.breedType) {
+      const breedType = livestockItem.poultry.breedType;
+
+      // Map breed types to specific feeding categories
+      const breedMapping = {
+        'Broiler': 'Broiler',
+        'Layer': 'Layer',
+        'Turkey': 'Turkey',
+        'Duck': 'Duck',
+        'Quail': 'Quail',
+        'Dual Purpose': 'Poultry',
+        'Indigenous': 'Poultry',
+      };
+
+      return breedMapping[breedType] || 'Poultry';
+    }
+
+    return baseType;
+  };
+
 
   const toggleSelection = (item, field) => {
     setAnimalData(prev => {
@@ -208,12 +411,13 @@ const FarmFeedsScreen = ({ navigation }) => {
   const handleAnimalSelection = (animalId) => {
     const selectedAnimal = livestock.find(animal => animal.id === animalId);
     if (selectedAnimal) {
-      const animalType = getAnimalTypeFromLivestockType(selectedAnimal.type);
+      const specificType = getSpecificAnimalType(selectedAnimal);
+
       setAnimalData(prev => ({
         ...prev,
         id: animalId,
-        type: animalType,
-        lifecycleStages: [],
+        type: specificType,
+        lifecycleStages: [], // Reset lifecycle stages when animal changes
       }));
     }
   };
@@ -221,16 +425,147 @@ const FarmFeedsScreen = ({ navigation }) => {
   const handleGroupSelection = (groupId) => {
     const selectedGroup = livestock.find(animal => animal.id === groupId);
     if (selectedGroup) {
-      const groupType = getAnimalTypeFromLivestockType(selectedGroup.type);
+      const specificType = getSpecificAnimalType(selectedGroup);
+
       setAnimalData(prev => ({
         ...prev,
         groupId: groupId,
-        groupType: groupType,
-        groupLifecycleStages: [],
+        groupType: specificType,
+        groupLifecycleStages: [], // Reset lifecycle stages when group changes
       }));
     }
   };
+  const renderAnimalSelectionSection = () => {
+    // Check if no livestock exists
+    if (livestock.length === 0 && !loadingLivestock) {
+      return (
+        <VStack space={4}>
+          <Box bg={COLORS.lightYellow || '#FFF3CD'} p={4} borderRadius={12} borderWidth={1} borderColor={COLORS.orange || '#F0AD4E'}>
+            <HStack alignItems="center" space={3}>
+              <Text style={{ fontSize: 20 }}>⚠️</Text>
+              <VStack flex={1}>
+                <Text style={[styles.formLabel, { color: COLORS.orange || '#856404' }]}>
+                  No Livestock Found
+                </Text>
+                <Text style={[styles.helpText, { color: COLORS.orange || '#856404' }]}>
+                  You need to register livestock before creating a feeding program.
+                  Please add animals to your farm first.
+                </Text>
+              </VStack>
+            </HStack>
+          </Box>
+        </VStack>
+      );
+    }
 
+    if (programType === 'Single Animal') {
+      return (
+        <VStack space={4}>
+          <FormControl>
+            <FormControl.Label style={styles.formLabel}>Select Animal</FormControl.Label>
+            {loadingLivestock ? (
+              <Center py={8}>
+                <ActivityIndicator size="large" color={COLORS.green2} />
+                <Text style={styles.loadingText}>Loading animals...</Text>
+              </Center>
+            ) : (
+              <Select
+                selectedValue={animalData.id}
+                minWidth="100%"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="transparent"
+                borderRadius={12}
+                placeholder="Choose an animal"
+                fontSize={14}
+                _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+                onValueChange={handleAnimalSelection}>
+                {getAnimalOptions().map(animal => (
+                  <Select.Item
+                    key={animal.id}
+                    label={animal.displayName}
+                    value={animal.id}
+                  />
+                ))}
+              </Select>
+            )}
+          </FormControl>
+
+          {animalData.type && (
+            <FormControl>
+              <FormControl.Label style={styles.formLabel}>Lifecycle Stages</FormControl.Label>
+              <Text style={styles.helpText}>
+                Select applicable stages for your {animalData.type}
+              </Text>
+              {getLifecycleOptions(animalData.type).length > 0 ? (
+                renderSelectionButtons(
+                  getLifecycleOptions(animalData.type),
+                  animalData.lifecycleStages,
+                  (stage) => toggleSelection(stage, 'lifecycleStages')
+                )
+              ) : (
+                <Text style={styles.helpText}>
+                  No lifecycle stages available for {animalData.type}
+                </Text>
+              )}
+            </FormControl>
+          )}
+        </VStack>
+      );
+    } else {
+      return (
+        <VStack space={4}>
+          <FormControl>
+            <FormControl.Label style={styles.formLabel}>Select Group</FormControl.Label>
+            {loadingLivestock ? (
+              <Center py={8}>
+                <ActivityIndicator size="large" color={COLORS.green2} />
+                <Text style={styles.loadingText}>Loading groups...</Text>
+              </Center>
+            ) : (
+              <Select
+                selectedValue={animalData.groupId}
+                minWidth="100%"
+                backgroundColor={COLORS.lightGreen}
+                borderColor="transparent"
+                borderRadius={12}
+                placeholder="Choose a group"
+                fontSize={14}
+                _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
+                onValueChange={handleGroupSelection}>
+                {getAnimalOptions().map(group => (
+                  <Select.Item
+                    key={group.id}
+                    label={group.displayName}
+                    value={group.id}
+                  />
+                ))}
+              </Select>
+            )}
+          </FormControl>
+
+          {animalData.groupType && (
+            <FormControl>
+              <FormControl.Label style={styles.formLabel}>Lifecycle Stages</FormControl.Label>
+              <Text style={styles.helpText}>
+                Select applicable stages for your {animalData.groupType}
+              </Text>
+              {getLifecycleOptions(animalData.groupType, true).length > 0 ? (
+                renderSelectionButtons(
+                  getLifecycleOptions(animalData.groupType, true),
+                  animalData.groupLifecycleStages,
+                  (stage) => toggleSelection(stage, 'groupLifecycleStages')
+                )
+              ) : (
+                <Text style={styles.helpText}>
+                  No lifecycle stages available for {animalData.groupType}
+                </Text>
+              )}
+            </FormControl>
+          )}
+        </VStack>
+      );
+    }
+  };
   const validateStep1 = () => {
     if (!programType) {
       Alert.alert('Validation Error', 'Please select a program type to continue');
@@ -594,96 +929,9 @@ const FarmFeedsScreen = ({ navigation }) => {
             </VStack>
           </HStack>
 
-          {programType === 'Single Animal' ? (
-            <VStack space={4}>
-              <FormControl>
-                <FormControl.Label style={styles.formLabel}>Select Animal</FormControl.Label>
-                {loadingLivestock ? (
-                  <Center py={8}>
-                    <ActivityIndicator size="large" color={COLORS.green2} />
-                    <Text style={styles.loadingText}>Loading animals...</Text>
-                  </Center>
-                ) : (
-                  <Select
-                    selectedValue={animalData.id}
-                    minWidth="100%"
-                    backgroundColor={COLORS.lightGreen}
-                    borderColor="transparent"
-                    borderRadius={12}
-                    placeholder="Choose an animal"
-                    fontSize={14}
-                    _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
-                    onValueChange={handleAnimalSelection}>
-                    {getAnimalOptions().map(animal => (
-                      <Select.Item
-                        key={animal.id}
-                        label={`${animal.idNumber} - ${animal.type} (${animal.breedType})`}
-                        value={animal.id}
-                      />
-                    ))}
-                  </Select>
-                )}
-              </FormControl>
-
-              {animalData.type && (
-                <FormControl>
-                  <FormControl.Label style={styles.formLabel}>Lifecycle Stages</FormControl.Label>
-                  <Text style={styles.helpText}>Select applicable stages for your animal</Text>
-                  {renderSelectionButtons(
-                    getLifecycleOptions(animalData.type),
-                    animalData.lifecycleStages,
-                    (stage) => toggleSelection(stage, 'lifecycleStages')
-                  )}
-                </FormControl>
-              )}
-            </VStack>
-          ) : (
-            <VStack space={4}>
-              <FormControl>
-                <FormControl.Label style={styles.formLabel}>Select Group</FormControl.Label>
-                {loadingLivestock ? (
-                  <Center py={8}>
-                    <ActivityIndicator size="large" color={COLORS.green2} />
-                    <Text style={styles.loadingText}>Loading groups...</Text>
-                  </Center>
-                ) : (
-                  <Select
-                    selectedValue={animalData.groupId}
-                    minWidth="100%"
-                    backgroundColor={COLORS.lightGreen}
-                    borderColor="transparent"
-                    borderRadius={12}
-                    placeholder="Choose a group"
-                    fontSize={14}
-                    _focus={{ borderColor: COLORS.green2, backgroundColor: 'white' }}
-                    onValueChange={handleGroupSelection}>
-                    {getAnimalOptions().map(group => (
-                      <Select.Item
-                        key={group.id}
-                        label={`${group.flockId} - ${group.type} (${group.quantity} birds)`}
-                        value={group.id}
-                      />
-                    ))}
-                  </Select>
-                )}
-              </FormControl>
-
-              {animalData.groupType && (
-                <FormControl>
-                  <FormControl.Label style={styles.formLabel}>Lifecycle Stages</FormControl.Label>
-                  <Text style={styles.helpText}>Select applicable stages for your group</Text>
-                  {renderSelectionButtons(
-                    getLifecycleOptions(animalData.groupType, true),
-                    animalData.groupLifecycleStages,
-                    (stage) => toggleSelection(stage, 'groupLifecycleStages')
-                  )}
-                </FormControl>
-              )}
-            </VStack>
-          )}
+          {renderAnimalSelectionSection()}
         </Box>
       )}
-
       <HStack justifyContent="flex-end" mt={4}>
         <TouchableOpacity
           style={[styles.nextButton, !programType && styles.disabledButton]}

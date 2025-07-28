@@ -478,7 +478,6 @@ const LivestockModuleScreen = ({ navigation }) => {
           )}
         </View>
 
-        {/* Always show selectors */}
         <TypeSelector />
         <StatusSelector />
 
@@ -815,7 +814,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 25,
-    backgroundColor: COLORS.background || COLORS.lightGray2,
+    backgroundColor: COLORS.green3 || COLORS.white,
     marginRight: 12,
     borderWidth: 1,
     borderColor: COLORS.border || COLORS.lightGray2,
@@ -832,7 +831,7 @@ const styles = StyleSheet.create({
   filterChipText: {
     fontSize: 14,
     fontWeight: '500',
-    color: COLORS.text || COLORS.black,
+    color: COLORS.white || COLORS.black,
   },
   selectedFilterChipText: {
     color: COLORS.white,
@@ -847,10 +846,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     marginRight: 12,
     borderWidth: 2,
-    borderColor: COLORS.border || COLORS.lightGray2,
+    borderColor: COLORS.lightGreen || COLORS.lightGray2,
   },
   selectedStatusChip: {
-    backgroundColor: COLORS.background || COLORS.lightGray2,
+    backgroundColor: COLORS.lightGreen || COLORS.lightGray2,
   },
   statusDot: {
     width: 8,
@@ -1073,7 +1072,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: COLORS.success || '#10B981',
+    backgroundColor: COLORS.green3 || '#10B981',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: COLORS.black,

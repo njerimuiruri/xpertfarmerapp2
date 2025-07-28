@@ -27,6 +27,7 @@ import {
   updateVaccination,
   validateVaccinationData
 } from '../../../services/healthservice';
+import { getLivestockForActiveFarm } from '../../../services/livestock';
 
 const { width } = Dimensions.get('window');
 
@@ -48,6 +49,7 @@ const VaccineEditScreen = ({ navigation, route }) => {
     livestockId: '',
   });
 
+  const [livestock, setLivestock] = useState([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -55,8 +57,37 @@ const VaccineEditScreen = ({ navigation, route }) => {
   const [originalData, setOriginalData] = useState(null);
 
   useEffect(() => {
-    fetchVaccinationData();
+    Promise.all([fetchVaccinationData(), loadLivestock()]);
   }, [recordId]);
+
+  const loadLivestock = async () => {
+    try {
+      const result = await getLivestockForActiveFarm();
+      if (Array.isArray(result)) {
+        setLivestock(result);
+      } else {
+        setLivestock([]);
+      }
+    } catch (error) {
+      console.error('Failed to load livestock:', error);
+      setLivestock([]);
+    }
+  };
+
+  const getAnimalInfo = (animalId) => {
+    return livestock.find(animal => animal.id === animalId);
+  };
+
+  const formatAnimalDisplayName = (animal) => {
+    if (!animal) return 'Unknown Animal';
+
+    if (animal.category === 'poultry' && animal.poultry) {
+      return `${animal.type.toUpperCase()} - Flock ID: ${animal.poultry.flockId || 'N/A'}`;
+    } else if (animal.category === 'mammal' && animal.mammal) {
+      return `${animal.type.toUpperCase()} - ID: ${animal.mammal.idNumber || 'N/A'}`;
+    }
+    return `${animal.type.toUpperCase()} - ID: ${animal.id}`;
+  };
 
   const fetchVaccinationData = async () => {
     try {
@@ -283,6 +314,9 @@ const VaccineEditScreen = ({ navigation, route }) => {
     );
   }
 
+  // Get the animal info using the same method as VaccineRecordsScreen
+  const animal = getAnimalInfo(formData.livestockId || animalId);
+
   return (
     <SafeAreaView style={styles.container}>
       <SecondaryHeader
@@ -323,16 +357,17 @@ const VaccineEditScreen = ({ navigation, route }) => {
                 />
               </LinearGradient>
               <View style={styles.animalInfo}>
-                <Text style={styles.animalName}>{animalData?.title || 'Animal'}</Text>
-                <Text style={styles.animalId}>ID: {animalData?.idNumber || animalId}</Text>
-                <View style={styles.recordBadge}>
+                <Text style={styles.animalName}>{formatAnimalDisplayName(animal)}</Text>
+                <Text style={styles.animalId}>
+                  ID: {animal?.mammal?.idNumber || animal?.poultry?.flockId || animal?.id || 'N/A'}
+                </Text>
+                {/* <View style={styles.recordBadge}>
                   <Text style={styles.recordBadgeText}>Editing Record #{recordId}</Text>
-                </View>
+                </View> */}
               </View>
             </View>
           </LinearGradient>
 
-          {/* Vaccine Information */}
           {renderFormGroup('Vaccine Information', (
             <>
               {renderInput('Vaccination Against', 'vaccinationAgainst', {
@@ -350,7 +385,6 @@ const VaccineEditScreen = ({ navigation, route }) => {
             </>
           ))}
 
-          {/* Administration Details */}
           {renderFormGroup('Administration Details', (
             <>
               <View style={styles.inputContainer}>
