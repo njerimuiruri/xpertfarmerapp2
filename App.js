@@ -107,7 +107,7 @@ import {
   DairyDetailsScreen,
   SheepAndGoatProductionListScreen,
   PoultryProductionListScreen,
-  ProductionModuleLandingScreen,
+  SalesLandingPage,
   HealthRecordsScreen,
   LivestockModuleScreen,
   BreedingModuleLandingScreen,
@@ -118,6 +118,9 @@ import {
   InventoryDashboard,
   AddInventory,
   AddMachinery,
+  AssetsJournalScreen,
+  PayrollJournalScreen,
+  PurchaseJournalScreen,
   InventoryDetails,
   AddGoodsInStock,
   AddUtilityDetails,
@@ -125,6 +128,16 @@ import {
   EditInventoryItem,
   EditUtility,
   VerifyOtp,
+  GeneralJournalScreen,
+  SalesJournalScreen,
+  GeneralLedgerScreen,
+  EmployeesAnalyticsScreen,
+  LivestockAnalyticsScreen,
+  FeedingAnalyticsScreen,
+  HealthAnalyticsScreen,
+  BreedingAnalyticsScreen,
+  SalesAnalyticsScreen,
+  InventoryAnalyticsScreen,
 } from './src/screens/index';
 import DrawerNav from './src/navigation/drawer/DrawerNav1';
 
@@ -237,7 +250,6 @@ export default function App() {
                 component={BusinessAnalyticsScreen}
                 options={{headerShown: false}}
               />
-
               <Stack.Screen
                 name="ProfileScreen"
                 component={ProfileScreen}
@@ -566,8 +578,8 @@ export default function App() {
                 options={{headerShown: false}}
               />
               <Stack.Screen
-                name="ProductionModuleLandingScreen"
-                component={ProductionModuleLandingScreen}
+                name="SalesLandingPage"
+                component={SalesLandingPage}
                 options={{headerShown: false}}
               />
               <Stack.Screen
@@ -679,6 +691,71 @@ export default function App() {
               <Stack.Screen
                 name="InventoryDetails"
                 component={InventoryDetails}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="AssetsJournalScreen"
+                component={AssetsJournalScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="PayrollJournalScreen"
+                component={PayrollJournalScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="PurchaseJournalScreen"
+                component={PurchaseJournalScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="GeneralJournalScreen"
+                component={GeneralJournalScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="EmployeesAnalyticsScreen"
+                component={EmployeesAnalyticsScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="LivestockAnalyticsScreen"
+                component={LivestockAnalyticsScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="FeedingAnalyticsScreen"
+                component={FeedingAnalyticsScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="HealthAnalyticsScreen"
+                component={HealthAnalyticsScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="BreedingAnalyticsScreen"
+                component={BreedingAnalyticsScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="SalesAnalyticsScreen"
+                component={SalesAnalyticsScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="InventoryAnalyticsScreen"
+                component={InventoryAnalyticsScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="SalesJournalScreen"
+                component={SalesJournalScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="GeneralLedgerScreen"
+                component={GeneralLedgerScreen}
                 options={{headerShown: false}}
               />
             </Stack.Navigator>

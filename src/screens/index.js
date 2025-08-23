@@ -116,7 +116,7 @@ import HealthRecordsScreen from './health/HealthRecordsScreen';
 // Home DashboardScreen
 
 //productionsScreen
-import ProductionModuleLandingScreen from './production/ProductionModuleLandingScreen';
+import SalesLandingPage from './production/SalesLandingPage';
 //dairy
 import DairyProductionListScreen from './production/dairycattle/DairyProductionListScreen';
 import DairyDetailsScreen from './production/dairycattle/DairyDetailsScreen';
@@ -161,6 +161,29 @@ import EditInventoryItem from './inventory/EditInventoryItem';
 import EditUtility from './inventory/EditUtility';
 
 import VerifyOtp from './Auth/verify';
+import AssetsJournalScreen from './Business-Analytics/journals/AssetsJournalScreen';
+import PayrollJournalScreen from './Business-Analytics/journals/PayrollJournalScreen';
+
+import PurchaseJournalScreen from './Business-Analytics/journals/PurchaseJournalScreen';
+
+import GeneralJournalScreen from './Business-Analytics/journals/GeneralJournalScreen';
+
+import EmployeesAnalyticsScreen from './Business-Analytics/farm-operations/EmployeesAnalyticsScreen';
+
+import LivestockAnalyticsScreen from './Business-Analytics/farm-operations/LivestockAnalyticsScreen';
+
+import FeedingAnalyticsScreen from './Business-Analytics/farm-operations/FeedingAnalyticsScreen';
+
+import HealthAnalyticsScreen from './Business-Analytics/farm-operations/HealthAnalyticsScreen';
+import BreedingAnalyticsScreen from './Business-Analytics/farm-operations/BreedingAnalyticsScreen';
+
+import SalesAnalyticsScreen from './Business-Analytics/farm-operations/SalesAnalyticsScreen';
+
+import InventoryAnalyticsScreen from './Business-Analytics/farm-operations/InventoryAnalyticsScreen';
+
+import SalesJournalScreen from './Business-Analytics/journals/SalesJournalScreen';
+
+import GeneralLedgerScreen from './Business-Analytics/journals/GeneralLedgerScreen';
 
 export {
   LoginScreen,
@@ -265,7 +288,7 @@ export {
   PoultryProductionListScreen,
   PoultryDetailsScreen,
   HealthRecordsScreen,
-  ProductionModuleLandingScreen,
+  SalesLandingPage,
   //inventory
   InventoryDashboard,
   AddInventory,
@@ -276,4 +299,18 @@ export {
   EditInventoryItem,
   EditUtility,
   InventoryDetails,
+  //business Analytics
+  AssetsJournalScreen,
+  GeneralLedgerScreen,
+  PayrollJournalScreen,
+  PurchaseJournalScreen,
+  GeneralJournalScreen,
+  SalesJournalScreen,
+  EmployeesAnalyticsScreen,
+  LivestockAnalyticsScreen,
+  FeedingAnalyticsScreen,
+  HealthAnalyticsScreen,
+  BreedingAnalyticsScreen,
+  SalesAnalyticsScreen,
+  InventoryAnalyticsScreen,
 };

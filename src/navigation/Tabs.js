@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useRef} from 'react';
 import {View, Animated} from 'react-native';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
-import {HomeScreen} from '../screens';
+import {BusinessAnalyticsScreen, HomeScreen} from '../screens';
 import {useDrawerStatus} from '@react-navigation/drawer';
 import FastImage from 'react-native-fast-image';
 import {COLORS} from '../constants/theme';
@@ -22,7 +22,7 @@ const TabArr = [
     label: 'Business Analytics',
     activeIcon: icons.crops,
     inActiveIcon: icons.crops,
-    Component: HomeScreen,
+    Component: BusinessAnalyticsScreen,
   },
   {
     route: 'Reports',

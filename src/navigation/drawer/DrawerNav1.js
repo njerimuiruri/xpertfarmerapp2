@@ -16,7 +16,8 @@ import {
   FeedingModuleScreen,
   BeefCattleProductionListing,
   BreedingModuleLandingScreen,
-  ProductionModuleLandingScreen,
+  SalesLandingPage,
+  AssetsJournalScreen,
 } from '../../screens';
 
 const Drawer = createDrawerNavigator();
@@ -121,9 +122,9 @@ const DrawerNav = () => {
       />
       <Drawer.Screen
         name="ProductionRecords"
-        component={ProductionModuleLandingScreen}
+        component={SalesLandingPage}
         options={{
-          title: 'Production',
+          title: 'Sales',
           drawerIcon: () => (
             <FastImage
               source={icons.agriculture}

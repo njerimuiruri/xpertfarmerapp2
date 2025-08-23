@@ -1,1030 +1,994 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
-    SafeAreaView,
-    View,
-    Text,
-    TouchableOpacity,
-    ScrollView,
-    StyleSheet,
-    Dimensions,
-    Modal,
-    ActivityIndicator,
-    RefreshControl,
+    View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Dimensions,
 } from 'react-native';
-import FastImage from 'react-native-fast-image';
-import { icons } from '../../constants';
-import { COLORS, SIZES, FONTS } from '../../constants/theme';
-import SecondaryHeader from '../../components/headers/secondary-header';
-import { getLivestockForActiveFarm } from '../../services/livestock';
-import { getVaccinationsForActiveFarm } from '../../services/healthservice';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Header from '../../components/headers/main-header';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { COLORS } from '../../constants/theme';
+import { LineChart, PieChart, BarChart } from 'react-native-chart-kit';
 
-const { width } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
 
-const BusinessAnalyticsScreen = ({ navigation }) => {
+const BusinessAnalyticsScreen = () => {
+    const navigation = useNavigation();
     const [selectedPeriod, setSelectedPeriod] = useState('This month');
     const [showPeriodModal, setShowPeriodModal] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const [activeFarm, setActiveFarm] = useState(null);
-
-    // Updated Analytics Data based on Financial Records
-    const [analyticsData, setAnalyticsData] = useState({
-        livestock: {
-            totalAnimals: 51, // 50 cows + 1 calf
-            cattle: 51,
-            poultry: 0,
-            goats: 0,
-            sheep: 0,
-            swine: 0,
-            rabbits: 0,
-            growthRate: 2.0, // 1 new calf from 50 base animals
-            totalValue: 35000, // Current livestock value
-            biologicalGains: 10000, // Value of newborn calf
-        },
-        health: {
-            totalVaccinations: 50, // Based on vaccination records
-            totalDewormings: 50, // Based on deworming records
-            totalTreatments: 50, // Based on treatment records
-            healthScore: 92, // High due to comprehensive health program
-            upcomingVaccinations: 0,
-            healthTrend: 'positive',
-            totalHealthCost: 1175, // Sum of all health expenses
-            vaccinationCost: 215,
-            dewormingCost: 215,
-            treatmentCost: 215,
-            allergiesCost: 50,
-            geneticsCost: 50,
-            boostersCost: 380,
-            breedingServicesCost: 255,
-        },
-        production: {
-            milkProduction: 700, // Total milk produced (500L + 200L)
-            milkSold: 700, // All milk was sold
-            beefProduction: 800, // Total beef produced (500kg + 300kg)
-            beefSold: 800, // All beef was sold
-            milkRevenue: 1090, // Actual milk sales revenue
-            beefRevenue: 3500, // Actual beef sales revenue
-            totalProductionRevenue: 4590, // Combined milk + beef revenue
-            efficiency: 95, // High efficiency as all production was sold
-            trend: 'increasing',
-        },
-        financial: {
-            totalRevenue: 14590, // Including biological gains
-            productionRevenue: 4590, // Milk + Beef sales
-            biologicalGains: 10000, // Newborn calf value
-            directExpenses: 4460, // Total COGS/Direct expenses
-            operatingExpenses: 0, // No operating expenses recorded
-            grossProfit: 10130, // Revenue - Direct expenses
-            netProfit: 10130, // Same as gross profit (no operating expenses)
-            profitMargin: 69.4, // (10130/14590) * 100
-
-            // Expense breakdown
-            feedsCost: 840,
-            healthCosts: 1175, // Sum of all health-related expenses
-            salariesWages: 2240, // Updated to match trial balance
-            breedingCosts: 255,
-        },
-        feed: {
-            totalPurchased: 400, // 300kg + 100kg
-            totalCost: 840, // Actual feed costs
-            costPerKg: 2.1, // 840/400
-            efficiency: 100, // Assuming all feed was used
-            wastage: 0, // No wastage recorded
-            averageCostPerAnimal: 16.5, // 840/51 animals
-        },
-        employees: {
-            totalEmployees: 2, // John Doe + Jane Smith
-            fullTimeEmployees: 1, // John Doe
-            partTimeEmployees: 1, // Jane Smith
-            totalWages: 1120, // May payroll amount
-            yearToDateWages: 2240, // Trial balance amount
-            averageWagePerEmployee: 560, // 1120/2
-        },
-        assets: {
-            // Current Assets
-            currentAssets: {
-                boosterStock: 300,
-                cashPosition: -2240690, // Negative due to major investments
-                totalCurrentAssets: -2240390,
-            },
-
-            // Non-Current Assets
-            nonCurrentAssets: {
-                livestock: 35000,
-                waterInfrastructure: 2070000, // Tanks + Borehole
-                powerEquipment: 45000, // Generator
-                facilities: 99500, // Storage + Fencing + Barn
-                machinery: 1015, // Jembes + Wheelbarrow
-                totalNonCurrentAssets: 2250515,
-            },
-
-            totalAssets: 10125, // As per balance sheet
-        },
-        inventory: {
-            feedStock: 840, // Current feed inventory value
-            boosterStock: 300, // Boosters and additives
-            totalInventoryValue: 1140,
-
-            // Asset breakdown
-            waterAssets: 2070000,
-            powerAssets: 45000,
-            facilityAssets: 99500,
-            machineryAssets: 1015,
-        },
-        cashFlow: {
-            operatingCashInflow: 4590,
-            operatingCashOutflow: 4465,
-            netOperatingCash: 125,
-            investingCashOutflow: 2240815,
-            netCashMovement: -2240690,
-        },
-        performance: {
-            revenuePerAnimal: 286.1, // 14590/51
-            profitPerAnimal: 198.6, // 10130/51
-            feedCostPerAnimal: 16.5, // 840/51
-            healthCostPerAnimal: 23.0, // 1175/51
-            productivityScore: 88, // Based on efficiency metrics
-        }
-    });
+    const [selectedMetric, setSelectedMetric] = useState('overview');
+    const [activeTab, setActiveTab] = useState('revenue');
+    const [loading, setLoading] = useState(false);
 
     const timePeriods = ['This week', 'This month', 'This quarter', 'This year'];
 
-    useEffect(() => {
-        loadAnalyticsData();
-    }, [selectedPeriod]);
-
-    const loadAnalyticsData = async () => {
-        try {
-            setIsLoading(true);
-            await Promise.all([
-                loadLivestockAnalytics(),
-                loadHealthAnalytics(),
-                loadActiveFarm(),
-            ]);
-        } catch (error) {
-            console.error('Error loading analytics data:', error);
-        } finally {
-            setIsLoading(false);
+    const financialData = {
+        revenue: {
+            total: 14590,
+            dairySales: 1090,
+            beefSales: 3500,
+            biologicalGains: 10000
+        },
+        expenses: {
+            total: 4460,
+            feeds: 840,
+            health: 1075,
+            breeding: 255,
+            salaries: 2240,
+            machinery: 15
+        },
+        assets: {
+            total: 2250815,
+            livestock: 35000,
+            facilities: 99500,
+            waterStock: 2070000,
+            powerStock: 45000,
+            machinery: 1015,
+            boosterStock: 300
+        },
+        cashFlow: {
+            operating: 125,
+            investing: -2240815,
+            financing: 0
+        },
+        profitability: {
+            grossProfit: 10130,
+            netProfit: 10130,
+            profitMargin: 69.4
         }
     };
 
-    const loadLivestockAnalytics = async () => {
-        try {
-            const { data: livestock, error } = await getLivestockForActiveFarm();
+    // Chart configurations
+    const chartConfig = {
+        backgroundColor: '#ffffff',
+        backgroundGradientFrom: '#ffffff',
+        backgroundGradientTo: '#ffffff',
+        color: (opacity = 1) => `rgba(76, 113, 83, ${opacity})`,
+        strokeWidth: 2,
+        barPercentage: 0.7,
+        useShadowColorFromDataset: false,
+    };
 
-            if (error || !livestock) {
-                // Use default data from financial records if API fails
-                return;
-            }
+    // Revenue breakdown pie chart data
+    const revenueBreakdownData = [
+        {
+            name: 'Biological Gains',
+            population: financialData.revenue.biologicalGains,
+            color: '#4C7153',
+            legendFontColor: '#333',
+            legendFontSize: 12,
+        },
+        {
+            name: 'Beef Sales',
+            population: financialData.revenue.beefSales,
+            color: '#8CD18C',
+            legendFontColor: '#333',
+            legendFontSize: 12,
+        },
+        {
+            name: 'Dairy Sales',
+            population: financialData.revenue.dairySales,
+            color: '#A7E3A7',
+            legendFontColor: '#333',
+            legendFontSize: 12,
+        },
+    ];
 
-            const stats = {
-                totalAnimals: 0,
-                poultry: 0,
-                cattle: 0,
-                goats: 0,
-                sheep: 0,
-                swine: 0,
-                rabbits: 0,
-            };
+    // Expense breakdown pie chart data
+    const expenseBreakdownData = [
+        {
+            name: 'Salaries',
+            population: financialData.expenses.salaries,
+            color: '#D79F91',
+            legendFontColor: '#333',
+            legendFontSize: 12,
+        },
+        {
+            name: 'Health',
+            population: financialData.expenses.health,
+            color: '#BD91D7',
+            legendFontColor: '#333',
+            legendFontSize: 12,
+        },
+        {
+            name: 'Feeds',
+            population: financialData.expenses.feeds,
+            color: '#CBD18F',
+            legendFontColor: '#333',
+            legendFontSize: 12,
+        },
+        {
+            name: 'Breeding',
+            population: financialData.expenses.breeding,
+            color: '#91D79E',
+            legendFontColor: '#333',
+            legendFontSize: 12,
+        },
+    ];
 
-            livestock.forEach(animal => {
-                if (!animal || !animal.type) return;
+    // Monthly trend data (sample)
+    const monthlyTrendData = {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+        datasets: [
+            {
+                data: [8000, 9500, 12000, 13500, 14590],
+                color: (opacity = 1) => `rgba(76, 113, 83, ${opacity})`,
+                strokeWidth: 2,
+            },
+        ],
+    };
 
-                const animalType = animal.type.toLowerCase();
+    const kpiCards = [
+        {
+            title: 'Total Revenue',
+            value: `KES ${financialData.revenue.total.toLocaleString()}`,
+            change: '+12.5%',
+            changeType: 'positive',
+            icon: 'chart-line-variant',
+            colors: ['#8CD18C', '#4C7153'],
+        },
+        {
+            title: 'Net Profit',
+            value: `KES ${financialData.profitability.netProfit.toLocaleString()}`,
+            change: '+8.3%',
+            changeType: 'positive',
+            icon: 'trending-up',
+            colors: ['#A7E3A7', '#4C7153'],
+        },
+        {
+            title: 'Total Expenses',
+            value: `KES ${financialData.expenses.total.toLocaleString()}`,
+            change: '+5.1%',
+            changeType: 'negative',
+            icon: 'cash-minus',
+            colors: ['#F4EBD0', '#D79F91'],
+        },
+        {
+            title: 'Profit Margin',
+            value: `${financialData.profitability.profitMargin.toFixed(1)}%`,
+            change: '+2.1%',
+            changeType: 'positive',
+            icon: 'percent',
+            colors: ['#CBD18F', '#4C7153'],
+        },
+    ];
 
-                if (animalType === 'poultry') {
-                    const quantity = animal.poultry?.initialQuantity || 1;
-                    stats.poultry += quantity;
-                    stats.totalAnimals += quantity;
-                } else {
-                    stats.totalAnimals += 1;
-
-                    switch (animalType) {
-                        case 'cattle':
-                            stats.cattle += 1;
-                            break;
-                        case 'goats':
-                            stats.goats += 1;
-                            break;
-                        case 'sheep':
-                            stats.sheep += 1;
-                            break;
-                        case 'swine':
-                            stats.swine += 1;
-                            break;
-                        case 'rabbit':
-                            stats.rabbits += 1;
-                            break;
-                    }
-                }
-            });
-
-            // Update with real data if available, otherwise keep financial record data
-            if (stats.totalAnimals > 0) {
-                setAnalyticsData(prev => ({
-                    ...prev,
-                    livestock: {
-                        ...prev.livestock,
-                        ...stats,
-                        growthRate: calculateGrowthRate(stats.totalAnimals),
-                    },
-                }));
-            }
-        } catch (error) {
-            console.error('Error loading livestock analytics:', error);
+    // Farm Operations Sections
+    const farmSections = [
+        {
+            title: 'Employees',
+            subtitle: 'Staff management',
+            icon: 'account-group',
+            colors: ['#8CD18C', '#4C7153'],
+            onPress: () => navigation.navigate('EmployeesAnalyticsScreen'),
+        },
+        {
+            title: 'Livestock',
+            subtitle: 'Animal inventory',
+            icon: 'cow',
+            colors: ['#A7E3A7', '#4C7153'],
+            onPress: () => navigation.navigate('LivestockAnalyticsScreen'),
+        },
+        {
+            title: 'Feeding',
+            subtitle: 'Feed management',
+            icon: 'food',
+            colors: ['#CBD18F', '#4C7153'],
+            onPress: () => navigation.navigate('FeedingAnalyticsScreen'),
+        },
+        {
+            title: 'Health',
+            subtitle: 'Veterinary care',
+            icon: 'medical-bag',
+            colors: ['#BD91D7', '#91D79E'],
+            onPress: () => navigation.navigate('HealthAnalyticsScreen'),
+        },
+        {
+            title: 'Breeding',
+            subtitle: 'Reproduction tracking',
+            icon: 'heart',
+            colors: ['#D79F91', '#BD91D7'],
+            onPress: () => navigation.navigate('BreedingAnalyticsScreen'),
+        },
+        {
+            title: 'Sales',
+            subtitle: 'Milk & beef output',
+            icon: 'factory',
+            colors: ['#91D79E', '#4C7153'],
+            onPress: () => navigation.navigate('SalesAnalyticsScreen'),
+        },
+        {
+            title: 'Inventory',
+            subtitle: 'Assets & supplies',
+            icon: 'warehouse',
+            colors: ['#F4EBD0', '#D79F91'],
+            onPress: () => navigation.navigate('InventoryAnalyticsScreen'),
         }
-    };
+    ];
 
-    const loadHealthAnalytics = async () => {
-        try {
-            const result = await getVaccinationsForActiveFarm();
+    const analysisTabs = [
+        { id: 'revenue', label: 'Revenue', icon: 'chart-pie' },
+        { id: 'expenses', label: 'Expenses', icon: 'chart-donut' },
+        { id: 'cashflow', label: 'Cash Flow', icon: 'cash-fast' },
+        { id: 'assets', label: 'Assets', icon: 'bank' },
+    ];
 
-            if (result.error || !result.data) {
-                // Use default health data from financial records
-                return;
-            }
-
-            const vaccinations = result.data;
-
-            setAnalyticsData(prev => ({
-                ...prev,
-                health: {
-                    ...prev.health,
-                    totalVaccinations: vaccinations.length || prev.health.totalVaccinations,
-                    healthScore: calculateHealthScore(vaccinations),
-                },
-            }));
-        } catch (error) {
-            console.error('Error loading health analytics:', error);
-        }
-    };
-
-    const loadActiveFarm = async () => {
-        try {
-            const storedFarm = await AsyncStorage.getItem('activeFarm');
-            if (storedFarm) {
-                setActiveFarm(JSON.parse(storedFarm));
-            }
-        } catch (error) {
-            console.error('Error loading active farm:', error);
-        }
-    };
-
-    const calculateGrowthRate = (totalAnimals) => {
-        // Based on real data: had 50 cows, now have 51 (1 calf born)
-        const baseAnimals = 50;
-        return totalAnimals > baseAnimals ? ((totalAnimals - baseAnimals) / baseAnimals) * 100 : 0;
-    };
-
-    const calculateHealthScore = (vaccinations) => {
-        // High health score due to comprehensive vaccination, deworming, and treatment program
-        if (vaccinations.length === 0) return analyticsData.health.healthScore;
-
-        const recentVaccinations = vaccinations.filter(v => {
-            const vaccinationDate = new Date(v.dateAdministered);
-            const sixMonthsAgo = new Date();
-            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-            return vaccinationDate >= sixMonthsAgo;
-        });
-
-        return Math.min(85 + (recentVaccinations.length * 2), 100);
-    };
-
-    const onRefresh = useCallback(async () => {
-        setRefreshing(true);
-        await loadAnalyticsData();
-        setRefreshing(false);
-    }, []);
-
-    const formatCurrency = (amount) => {
-        return `KES ${amount.toLocaleString()}`;
-    };
-
-    const formatPercentage = (value) => {
-        return `${value.toFixed(1)}%`;
-    };
-
-    const formatWeight = (weight) => {
-        return `${weight.toLocaleString()}kg`;
-    };
-
-    const formatVolume = (volume) => {
-        return `${volume.toLocaleString()}L`;
-    };
-
-    const renderKPICard = ({ title, value, subtitle, icon, backgroundColor, trend }) => (
-        <View style={[styles.kpiCard, { backgroundColor }]} key={title}>
+    const renderKPICard = ({ title, value, change, changeType, icon, colors }) => (
+        <LinearGradient colors={colors} style={styles.kpiCard} key={title}>
             <View style={styles.kpiHeader}>
-                <View style={styles.kpiIconContainer}>
-                    <FastImage
-                        source={icon}
-                        style={styles.kpiIcon}
-                        tintColor={COLORS.white}
+                <Icon name={icon} size={24} color="#fff" />
+                <View style={[styles.changeContainer, { backgroundColor: changeType === 'positive' ? 'rgba(255,255,255,0.2)' : 'rgba(255,0,0,0.2)' }]}>
+                    <Icon
+                        name={changeType === 'positive' ? 'arrow-up' : 'arrow-down'}
+                        size={12}
+                        color="#fff"
                     />
+                    <Text style={styles.changeText}>{change}</Text>
                 </View>
-                {trend && (
-                    <View style={[styles.trendIndicator,
-                    trend === 'positive' ? styles.trendPositive : styles.trendNegative]}>
-                        <FastImage
-                            source={trend === 'positive' ? icons.arrowUp : icons.arrowDown}
-                            style={styles.trendIcon}
-                            tintColor={trend === 'positive' ? COLORS.green : COLORS.red}
-                        />
-                    </View>
-                )}
             </View>
-
-            <Text style={styles.kpiValue}>{value}</Text>
             <Text style={styles.kpiTitle}>{title}</Text>
-            <Text style={styles.kpiSubtitle}>{subtitle}</Text>
-        </View>
+            <Text style={styles.kpiValue}>{value}</Text>
+        </LinearGradient>
     );
 
-    const renderCategoryBreakdown = () => (
-        <View style={[styles.chartCard, { backgroundColor: COLORS.white }]}>
-            <View style={styles.chartHeader}>
-                <Text style={styles.chartTitle}>Livestock Distribution</Text>
-                <TouchableOpacity style={styles.chartMenuButton}>
-                    <FastImage source={icons.menu} style={styles.chartMenuIcon} tintColor={COLORS.gray} />
-                </TouchableOpacity>
-            </View>
-
-            <View style={styles.distributionContainer}>
-                {[
-                    { type: 'Cattle', count: analyticsData.livestock.cattle, color: COLORS.green, icon: icons.cow },
-                    { type: 'Poultry', count: analyticsData.livestock.poultry, color: COLORS.blue, icon: icons.bird },
-                    { type: 'Goats', count: analyticsData.livestock.goats, color: COLORS.orange, icon: icons.goat },
-                    { type: 'Sheep', count: analyticsData.livestock.sheep, color: COLORS.purple, icon: icons.sheep },
-                ].filter(item => item.count > 0).map((item, index) => (
-                    <View key={item.type} style={styles.distributionItem}>
-                        <View style={styles.distributionLeft}>
-                            <View style={[styles.distributionDot, { backgroundColor: item.color }]} />
-                            <FastImage
-                                source={item.icon || icons.livestock}
-                                style={styles.distributionIcon}
-                                tintColor={item.color}
-                            />
-                            <Text style={styles.distributionType}>{item.type}</Text>
-                        </View>
-                        <View style={styles.distributionRight}>
-                            <Text style={styles.distributionCount}>{item.count}</Text>
-                            <Text style={styles.distributionPercentage}>
-                                {((item.count / analyticsData.livestock.totalAnimals) * 100).toFixed(1)}%
-                            </Text>
-                        </View>
-                    </View>
-                ))}
-            </View>
-        </View>
-    );
-
-    const renderProductionBreakdown = () => (
-        <View style={[styles.chartCard, { backgroundColor: COLORS.white }]}>
-            <View style={styles.chartHeader}>
-                <Text style={styles.chartTitle}>Production Overview</Text>
-            </View>
-
-            <View style={styles.distributionContainer}>
-                <View style={styles.distributionItem}>
-                    <View style={styles.distributionLeft}>
-                        <View style={[styles.distributionDot, { backgroundColor: COLORS.blue }]} />
-                        <Text style={styles.distributionType}>Milk Production</Text>
-                    </View>
-                    <View style={styles.distributionRight}>
-                        <Text style={styles.distributionCount}>{formatVolume(analyticsData.production.milkProduction)}</Text>
-                        <Text style={styles.distributionPercentage}>{formatCurrency(analyticsData.production.milkRevenue)}</Text>
-                    </View>
+    const renderFarmSectionCard = ({ title, subtitle, icon, colors, onPress }) => (
+        <TouchableOpacity key={title} onPress={onPress} style={styles.sectionCardWrapper}>
+            <LinearGradient colors={colors} style={styles.sectionCard}>
+                <Icon name={icon} size={32} color="#fff" />
+                <View style={styles.sectionCardContent}>
+                    <Text style={styles.sectionCardTitle}>{title}</Text>
+                    <Text style={styles.sectionCardSubtitle}>{subtitle}</Text>
                 </View>
-
-                <View style={styles.distributionItem}>
-                    <View style={styles.distributionLeft}>
-                        <View style={[styles.distributionDot, { backgroundColor: COLORS.red }]} />
-                        <Text style={styles.distributionType}>Beef Production</Text>
-                    </View>
-                    <View style={styles.distributionRight}>
-                        <Text style={styles.distributionCount}>{formatWeight(analyticsData.production.beefProduction)}</Text>
-                        <Text style={styles.distributionPercentage}>{formatCurrency(analyticsData.production.beefRevenue)}</Text>
-                    </View>
-                </View>
-
-                <View style={styles.distributionItem}>
-                    <View style={styles.distributionLeft}>
-                        <View style={[styles.distributionDot, { backgroundColor: COLORS.green }]} />
-                        <Text style={styles.distributionType}>Biological Gains</Text>
-                    </View>
-                    <View style={styles.distributionRight}>
-                        <Text style={styles.distributionCount}>1 Calf</Text>
-                        <Text style={styles.distributionPercentage}>{formatCurrency(analyticsData.livestock.biologicalGains)}</Text>
-                    </View>
-                </View>
-            </View>
-        </View>
+                <Icon name="chevron-right" size={20} color="#fff" />
+            </LinearGradient>
+        </TouchableOpacity>
     );
 
-    const renderQuickActions = () => (
-        <View style={[styles.actionsCard, { backgroundColor: COLORS.white }]}>
-            <Text style={styles.actionsTitle}>Quick Actions</Text>
-
-            <View style={styles.actionsGrid}>
-                {[
-                    { title: 'Add Livestock', icon: icons.plus, screen: 'AddLivestockScreen', color: COLORS.green },
-                    { title: 'Health Record', icon: icons.medical, screen: 'AddHealthRecords', color: COLORS.blue },
-                    { title: 'Feed Record', icon: icons.feed, screen: 'FarmFeedsScreen', color: COLORS.orange },
-                    { title: 'Production', icon: icons.chart, screen: 'ProductionModuleLandingScreen', color: COLORS.purple },
-                ].map((action) => (
-                    <TouchableOpacity
-                        key={action.title}
-                        style={[styles.actionButton, { backgroundColor: COLORS.lightGray2 }]}
-                        onPress={() => navigation.navigate(action.screen)}
-                        activeOpacity={0.8}>
-                        <View style={[styles.actionIconContainer, { backgroundColor: action.color }]}>
-                            <FastImage
-                                source={action.icon}
-                                style={styles.actionIcon}
-                                tintColor={COLORS.white}
-                            />
-                        </View>
-                        <Text style={styles.actionTitle}>{action.title}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-        </View>
+    const renderAnalysisTab = ({ id, label, icon }) => (
+        <TouchableOpacity
+            key={id}
+            style={[styles.analysisTab, activeTab === id && styles.activeAnalysisTab]}
+            onPress={() => setActiveTab(id)}
+        >
+            <Icon name={icon} size={20} color={activeTab === id ? '#4C7153' : '#666'} />
+            <Text style={[styles.analysisTabText, activeTab === id && styles.activeAnalysisTabText]}>
+                {label}
+            </Text>
+        </TouchableOpacity>
     );
 
-    const renderExpenseBreakdown = () => (
-        <View style={[styles.chartCard, { backgroundColor: COLORS.white }]}>
-            <View style={styles.chartHeader}>
-                <Text style={styles.chartTitle}>Direct Expense Breakdown</Text>
-            </View>
-
-            <View style={styles.distributionContainer}>
-                {[
-                    { type: 'Salaries & Wages', amount: analyticsData.financial.salariesWages, color: COLORS.purple },
-                    { type: 'Health Services', amount: analyticsData.financial.healthCosts, color: COLORS.blue },
-                    { type: 'Animal Feeds', amount: analyticsData.financial.feedsCost, color: COLORS.green },
-                    { type: 'Breeding Services', amount: analyticsData.financial.breedingCosts, color: COLORS.orange },
-                ].map((expense) => (
-                    <View key={expense.type} style={styles.distributionItem}>
-                        <View style={styles.distributionLeft}>
-                            <View style={[styles.distributionDot, { backgroundColor: expense.color }]} />
-                            <Text style={styles.distributionType}>{expense.type}</Text>
-                        </View>
-                        <View style={styles.distributionRight}>
-                            <Text style={styles.distributionCount}>{formatCurrency(expense.amount)}</Text>
-                            <Text style={styles.distributionPercentage}>
-                                {((expense.amount / analyticsData.financial.directExpenses) * 100).toFixed(1)}%
-                            </Text>
+    const renderTabContent = () => {
+        switch (activeTab) {
+            case 'revenue':
+                return (
+                    <View style={styles.tabContent}>
+                        <PieChart
+                            data={revenueBreakdownData}
+                            width={screenWidth - 64}
+                            height={220}
+                            chartConfig={chartConfig}
+                            accessor="population"
+                            backgroundColor="transparent"
+                            paddingLeft="15"
+                            absolute
+                        />
+                        <View style={styles.insightContainer}>
+                            <Text style={styles.insightTitle}>Revenue Insights:</Text>
+                            <Text style={styles.insightText}>• Biological gains account for 68.5% of total revenue</Text>
+                            <Text style={styles.insightText}>• Beef sales contribute 24% to revenue stream</Text>
+                            <Text style={styles.insightText}>• Dairy sales show potential for growth optimization</Text>
                         </View>
                     </View>
-                ))}
-            </View>
-        </View>
-    );
+                );
 
-    const renderHealthBreakdown = () => (
-        <View style={[styles.chartCard, { backgroundColor: COLORS.white }]}>
-            <View style={styles.chartHeader}>
-                <Text style={styles.chartTitle}>Health Services Breakdown</Text>
-            </View>
-
-            <View style={styles.distributionContainer}>
-                {[
-                    { type: 'Boosters & Additives', amount: analyticsData.health.boostersCost, color: COLORS.purple, count: '50 doses' },
-                    { type: 'Vaccination', amount: analyticsData.health.vaccinationCost, color: COLORS.green, count: '50 animals' },
-                    { type: 'Deworming', amount: analyticsData.health.dewormingCost, color: COLORS.blue, count: '50 animals' },
-                    { type: 'Treatment', amount: analyticsData.health.treatmentCost, color: COLORS.red, count: '50 animals' },
-                    { type: 'Breeding Services', amount: analyticsData.health.breedingServicesCost, color: COLORS.orange, count: '3 services' },
-                    { type: 'Genetics', amount: analyticsData.health.geneticsCost, color: COLORS.secondary, count: '1 service' },
-                    { type: 'Allergies', amount: analyticsData.health.allergiesCost, color: COLORS.yellow, count: '1 service' },
-                ].map((item) => (
-                    <View key={item.type} style={styles.distributionItem}>
-                        <View style={styles.distributionLeft}>
-                            <View style={[styles.distributionDot, { backgroundColor: item.color }]} />
-                            <Text style={styles.distributionType}>{item.type}</Text>
-                        </View>
-                        <View style={styles.distributionRight}>
-                            <Text style={styles.distributionCount}>{formatCurrency(item.amount)}</Text>
-                            <Text style={styles.distributionPercentage}>{item.count}</Text>
+            case 'expenses':
+                return (
+                    <View style={styles.tabContent}>
+                        <PieChart
+                            data={expenseBreakdownData}
+                            width={screenWidth - 64}
+                            height={220}
+                            chartConfig={chartConfig}
+                            accessor="population"
+                            backgroundColor="transparent"
+                            paddingLeft="15"
+                            absolute
+                        />
+                        <View style={styles.insightContainer}>
+                            <Text style={styles.insightTitle}>Expense Analysis:</Text>
+                            <Text style={styles.insightText}>• Labor costs represent 50.2% of total expenses</Text>
+                            <Text style={styles.insightText}>• Health expenses require cost optimization review</Text>
+                            <Text style={styles.insightText}>• Feed management shows efficient cost control</Text>
                         </View>
                     </View>
-                ))}
-            </View>
-        </View>
-    );
+                );
 
-    const renderAssetBreakdown = () => (
-        <View style={[styles.chartCard, { backgroundColor: COLORS.white }]}>
-            <View style={styles.chartHeader}>
-                <Text style={styles.chartTitle}>Asset Distribution</Text>
-            </View>
-
-            <View style={styles.distributionContainer}>
-                {[
-                    { type: 'Water Infrastructure', amount: analyticsData.inventory.waterAssets, color: COLORS.secondary },
-                    { type: 'Power Equipment', amount: analyticsData.inventory.powerAssets, color: COLORS.orange },
-                    { type: 'Facilities', amount: analyticsData.inventory.facilityAssets, color: COLORS.purple },
-                    { type: 'Livestock', amount: analyticsData.livestock.totalValue, color: COLORS.green },
-                    { type: 'Machinery', amount: analyticsData.inventory.machineryAssets, color: COLORS.red },
-                    { type: 'Inventory Stock', amount: analyticsData.inventory.totalInventoryValue, color: COLORS.yellow },
-                ].map((asset) => (
-                    <View key={asset.type} style={styles.distributionItem}>
-                        <View style={styles.distributionLeft}>
-                            <View style={[styles.distributionDot, { backgroundColor: asset.color }]} />
-                            <Text style={styles.distributionType}>{asset.type}</Text>
-                        </View>
-                        <View style={styles.distributionRight}>
-                            <Text style={styles.distributionCount}>{formatCurrency(asset.amount)}</Text>
-                            <Text style={styles.distributionPercentage}>
-                                {((asset.amount / analyticsData.assets.nonCurrentAssets.totalNonCurrentAssets) * 100).toFixed(1)}%
-                            </Text>
-                        </View>
-                    </View>
-                ))}
-            </View>
-        </View>
-    );
-
-    const renderPeriodModal = () => (
-        <Modal
-            visible={showPeriodModal}
-            animationType="slide"
-            transparent={true}
-            onRequestClose={() => setShowPeriodModal(false)}>
-            <View style={styles.modalOverlay}>
-                <View style={[styles.periodModal, { backgroundColor: COLORS.white }]}>
-                    <View style={styles.modalHeader}>
-                        <Text style={styles.modalTitle}>Select Time Period</Text>
-                        <TouchableOpacity
-                            onPress={() => setShowPeriodModal(false)}
-                            style={styles.closeButton}>
-                            <FastImage source={icons.close} style={styles.closeIcon} tintColor={COLORS.gray} />
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.periodOptions}>
-                        {timePeriods.map((period) => (
-                            <TouchableOpacity
-                                key={period}
-                                style={[
-                                    styles.periodOption,
-                                    selectedPeriod === period && styles.selectedPeriodOption
-                                ]}
-                                onPress={() => {
-                                    setSelectedPeriod(period);
-                                    setShowPeriodModal(false);
-                                }}>
-                                <Text style={[
-                                    styles.periodOptionText,
-                                    selectedPeriod === period && styles.selectedPeriodOptionText
-                                ]}>
-                                    {period}
+            case 'cashflow':
+                return (
+                    <View style={styles.tabContent}>
+                        <View style={styles.cashFlowGrid}>
+                            <View style={styles.cashFlowItem}>
+                                <Text style={styles.cashFlowLabel}>Operating</Text>
+                                <Text style={[styles.cashFlowValue, { color: '#4C7153' }]}>
+                                    +KES {Math.abs(financialData.cashFlow.operating).toLocaleString()}
                                 </Text>
-                                {selectedPeriod === period && (
-                                    <FastImage source={icons.check} style={styles.checkIcon} tintColor={COLORS.green} />
-                                )}
-                            </TouchableOpacity>
-                        ))}
+                            </View>
+                            <View style={styles.cashFlowItem}>
+                                <Text style={styles.cashFlowLabel}>Investing</Text>
+                                <Text style={[styles.cashFlowValue, { color: '#D79F91' }]}>
+                                    -KES {Math.abs(financialData.cashFlow.investing).toLocaleString()}
+                                </Text>
+                            </View>
+                            <View style={styles.cashFlowItem}>
+                                <Text style={styles.cashFlowLabel}>Financing</Text>
+                                <Text style={styles.cashFlowValue}>
+                                    KES {financialData.cashFlow.financing.toLocaleString()}
+                                </Text>
+                            </View>
+                        </View>
+                        <View style={styles.insightContainer}>
+                            <Text style={styles.insightTitle}>Cash Flow Health:</Text>
+                            <Text style={styles.insightText}>• Positive operational cash flow indicates healthy operations</Text>
+                            <Text style={styles.insightText}>• Significant infrastructure investment period</Text>
+                            <Text style={styles.insightText}>• Consider diversifying revenue streams</Text>
+                        </View>
                     </View>
-                </View>
-            </View>
-        </Modal>
-    );
+                );
 
-    if (isLoading) {
-        return (
-            <SafeAreaView style={styles.container}>
-                <SecondaryHeader
-                    title="Business Analytics"
-                    onBackPress={() => navigation.goBack()}
-                    showNotification={true}
-                />
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={COLORS.primary} />
-                    <Text style={styles.loadingText}>Loading analytics data...</Text>
-                </View>
-            </SafeAreaView>
-        );
-    }
+            case 'assets':
+                return (
+                    <View style={styles.tabContent}>
+                        <View style={styles.assetGrid}>
+                            <View style={styles.assetItem}>
+                                <Text style={styles.assetLabel}>Water Infrastructure</Text>
+                                <Text style={styles.assetValue}>92%</Text>
+                            </View>
+                            <View style={styles.assetItem}>
+                                <Text style={styles.assetLabel}>Facilities</Text>
+                                <Text style={styles.assetValue}>4.4%</Text>
+                            </View>
+                            <View style={styles.assetItem}>
+                                <Text style={styles.assetLabel}>Livestock</Text>
+                                <Text style={styles.assetValue}>1.6%</Text>
+                            </View>
+                            <View style={styles.assetItem}>
+                                <Text style={styles.assetLabel}>Power Systems</Text>
+                                <Text style={styles.assetValue}>2%</Text>
+                            </View>
+                        </View>
+                        <View style={styles.insightContainer}>
+                            <Text style={styles.insightTitle}>Asset Distribution:</Text>
+                            <Text style={styles.insightText}>• Major capital allocation in water infrastructure</Text>
+                            <Text style={styles.insightText}>• Balanced facility and power system development</Text>
+                            <Text style={styles.insightText}>• Livestock expansion opportunities available</Text>
+                        </View>
+                    </View>
+                );
+
+            default:
+                return null;
+        }
+    };
+
+    const renderOverviewChart = () => (
+        <View style={styles.chartContainer}>
+            <Text style={styles.chartTitle}>Revenue Trend Overview</Text>
+            <LineChart
+                data={monthlyTrendData}
+                width={screenWidth - 32}
+                height={220}
+                chartConfig={chartConfig}
+                bezier
+                style={styles.chart}
+            />
+            <View style={styles.insightContainer}>
+                <Text style={styles.insightTitle}>Performance Overview:</Text>
+                <Text style={styles.insightText}>• Consistent revenue growth over 5-month period</Text>
+                <Text style={styles.insightText}>• 82% increase from January to May</Text>
+                <Text style={styles.insightText}>• Strong upward business trajectory</Text>
+            </View>
+        </View>
+    );
 
     return (
-        <SafeAreaView style={styles.container}>
-            <SecondaryHeader
-                title="Business Analytics"
-                onBackPress={() => navigation.goBack()}
-                showNotification={true}
-            />
+        <View style={styles.container}>
+            <Header navigation={navigation} />
+            <ScrollView style={styles.scrollView}>
+                {/* Welcome Banner */}
+                <LinearGradient
+                    colors={['#4C7153', '#8CD18C']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.welcomeBanner}
+                >
+                    <View style={styles.welcomeTextContainer}>
+                        <Text style={styles.welcomeTitle}>Business Analytics</Text>
+                        <Text style={styles.welcomeSubtitle}>
+                            Track your farm's financial performance{"\n"}and make data-driven decisions
+                        </Text>
+                    </View>
+                    <View style={styles.welcomeIconContainer}>
+                        <Icon name="chart-line" size={60} color="rgba(255,255,255,0.8)" />
+                    </View>
+                </LinearGradient>
 
-            {/* Period Selector */}
-            <View style={styles.periodContainer}>
-                <View style={[styles.periodSelector, { backgroundColor: COLORS.white }]}>
-                    <Text style={styles.farmName}>{activeFarm?.name || 'My Dairy Farm'}</Text>
-                    <TouchableOpacity
-                        style={styles.periodSelectorButton}
-                        onPress={() => setShowPeriodModal(true)}
-                        activeOpacity={0.8}>
-                        <Text style={styles.periodText}>{selectedPeriod}</Text>
-                        <FastImage source={icons.chevronDown} style={styles.chevronIcon} tintColor={COLORS.gray} />
+                {/* Period Selector */}
+                <View style={styles.overviewSection}>
+                    <Text style={styles.overviewTitle}>Financial Overview</Text>
+                    <TouchableOpacity style={styles.monthSelector} onPress={() => setShowPeriodModal(true)}>
+                        <Text style={styles.monthText}>{selectedPeriod}</Text>
+                        <Icon name="chevron-down" size={20} color="#666" />
                     </TouchableOpacity>
                 </View>
-            </View>
-
-            <ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.scrollContent}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        colors={[COLORS.primary]}
-                        tintColor={COLORS.primary}
-                    />
-                }
-                showsVerticalScrollIndicator={false}>
 
                 {/* KPI Cards */}
-                <View style={styles.kpiContainer}>
-                    {renderKPICard({
-                        title: 'Total Revenue',
-                        value: formatCurrency(analyticsData.financial.totalRevenue),
-                        subtitle: `Profit margin: ${formatPercentage(analyticsData.financial.profitMargin)}`,
-                        icon: icons.dollar,
-                        backgroundColor: COLORS.primary,
-                        trend: 'positive',
-                    })}
-
-                    {renderKPICard({
-                        title: 'Net Profit',
-                        value: formatCurrency(analyticsData.financial.netProfit),
-                        subtitle: `Direct expenses: ${formatCurrency(analyticsData.financial.directExpenses)}`,
-                        icon: icons.chart,
-                        backgroundColor: COLORS.secondary,
-                        trend: 'positive',
-                    })}
-
-                    {renderKPICard({
-                        title: 'Total Animals',
-                        value: analyticsData.livestock.totalAnimals.toString(),
-                        subtitle: `Growth rate: ${formatPercentage(analyticsData.livestock.growthRate)}`,
-                        icon: icons.livestock,
-                        backgroundColor: COLORS.blue,
-                        trend: 'positive',
-                    })}
-
-                    {renderKPICard({
-                        title: 'Health Score',
-                        value: `${analyticsData.health.healthScore}/100`,
-                        subtitle: `Total treatments: ${analyticsData.health.totalTreatments}`,
-                        icon: icons.medical,
-                        backgroundColor: COLORS.orange,
-                        trend: analyticsData.health.healthTrend === 'positive' ? 'positive' : 'negative',
-                    })}
-
-                    {renderKPICard({
-                        title: 'Production Revenue',
-                        value: formatCurrency(analyticsData.production.totalProductionRevenue),
-                        subtitle: `Efficiency: ${analyticsData.production.efficiency}%`,
-                        icon: icons.production,
-                        backgroundColor: COLORS.green,
-                        trend: 'positive',
-                    })}
-
-                    {renderKPICard({
-                        title: 'Feed Efficiency',
-                        value: `${formatCurrency(analyticsData.feed.averageCostPerAnimal)}/animal`,
-                        subtitle: `Total cost: ${formatCurrency(analyticsData.feed.totalCost)}`,
-                        icon: icons.feed,
-                        backgroundColor: COLORS.purple,
-                        trend: 'positive',
-                    })}
+                <View style={styles.kpiGrid}>
+                    {kpiCards.map(renderKPICard)}
                 </View>
 
-                {/* Distribution Charts */}
-                {renderCategoryBreakdown()}
-                {renderProductionBreakdown()}
-                {renderExpenseBreakdown()}
-                {renderHealthBreakdown()}
-                {renderAssetBreakdown()}
+                {/* Overview Chart */}
+                {renderOverviewChart()}
+
+                {/* Farm Operations Sections */}
+                <View style={styles.sectionsContainer}>
+                    <Text style={styles.sectionTitle}>Farm Operations</Text>
+                    <View style={styles.sectionsGrid}>
+                        {farmSections.map(renderFarmSectionCard)}
+                    </View>
+                </View>
+
+                {/* Detailed Analysis with Tabs */}
+                <View style={styles.analysisSection}>
+                    <Text style={styles.sectionTitle}>Detailed Financial Analysis</Text>
+
+                    <View style={styles.analysisTabsContainer}>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScrollView}>
+                            {analysisTabs.map(renderAnalysisTab)}
+                        </ScrollView>
+                    </View>
+
+                    <View style={styles.tabContentContainer}>
+                        {renderTabContent()}
+                    </View>
+                </View>
+
+                <View style={styles.journalSection}>
+                    <Text style={styles.sectionTitle}>Financial Journals</Text>
+                    <View style={styles.journalGrid}>
+                        <TouchableOpacity
+                            style={styles.journalCard}
+                            onPress={() => navigation.navigate('SalesJournalScreen')}
+                        >
+                            <LinearGradient colors={['#8CD18C', '#4C7153']} style={styles.journalGradient}>
+                                <Icon name="cash-register" size={28} color="#fff" />
+                                <Text style={styles.journalTitle}>Sales Journal</Text>
+                                <Text style={styles.journalSubtitle}>Revenue entries</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.journalCard}
+                            onPress={() => navigation.navigate('PurchaseJournalScreen')}
+                        >
+                            <LinearGradient colors={['#D79F91', '#BD91D7']} style={styles.journalGradient}>
+                                <Icon name="shopping" size={28} color="#fff" />
+                                <Text style={styles.journalTitle}>Purchases Journal</Text>
+                                <Text style={styles.journalSubtitle}>Expense tracking</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.journalCard}
+                            onPress={() => navigation.navigate('AssetsJournalScreen')}
+                        >
+                            <LinearGradient colors={['#CBD18F', '#4C7153']} style={styles.journalGradient}>
+                                <Icon name="bank" size={28} color="#fff" />
+                                <Text style={styles.journalTitle}>Assets Journal</Text>
+                                <Text style={styles.journalSubtitle}>Asset management</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.journalCard}
+                            onPress={() => navigation.navigate('PayrollJournalScreen')}
+                        >
+                            <LinearGradient colors={['#91D79E', '#4C7153']} style={styles.journalGradient}>
+                                <Icon name="account-group" size={28} color="#fff" />
+                                <Text style={styles.journalTitle}>Payroll Journal</Text>
+                                <Text style={styles.journalSubtitle}>Employee wages</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.journalCard}
+                            onPress={() => navigation.navigate('GeneralJournalScreen')}
+                        >
+                            <LinearGradient colors={['#F4EBD0', '#D79F91']} style={styles.journalGradient}>
+                                <Icon name="book-open-variant" size={28} color="#fff" />
+                                <Text style={styles.journalTitle}>General Journal</Text>
+                                <Text style={styles.journalSubtitle}>All transactions</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.journalCard}
+                            onPress={() => navigation.navigate('GeneralLedgerScreen')}
+                        >
+                            <LinearGradient colors={['#A7E3A7', '#4C7153']} style={styles.journalGradient}>
+                                <Icon name="book-multiple" size={28} color="#fff" />
+                                <Text style={styles.journalTitle}>General Ledger</Text>
+                                <Text style={styles.journalSubtitle}>Account summaries</Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    </View>
+                </View>
 
                 {/* Quick Actions */}
-                {renderQuickActions()}
-
-                {/* Performance Metrics */}
-                {/* Performance Metrics */}
-                <View style={[styles.chartCard, { backgroundColor: COLORS.white }]}>
-                    <View style={styles.chartHeader}>
-                        <Text style={styles.chartTitle}>Performance Metrics</Text>
+                <View style={styles.quickActionsSection}>
+                    <Text style={styles.sectionTitle}>Quick Actions</Text>
+                    <View style={styles.quickActionsGrid}>
+                        <TouchableOpacity style={styles.quickActionButton}>
+                            <Icon name="download" size={24} color="#4C7153" />
+                            <Text style={styles.quickActionText}>Export Report</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.quickActionButton}>
+                            <Icon name="calendar" size={24} color="#4C7153" />
+                            <Text style={styles.quickActionText}>Schedule Report</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.quickActionButton}>
+                            <Icon name="share" size={24} color="#4C7153" />
+                            <Text style={styles.quickActionText}>Share Analytics</Text>
+                        </TouchableOpacity>
                     </View>
-
-                    <View style={styles.distributionContainer}>
-                        {/* Revenue per Animal */}
-                        <View style={styles.distributionItem}>
-                            <View style={styles.distributionLeft}>
-                                <View style={[styles.distributionDot, { backgroundColor: COLORS.green }]} />
-                                <Text style={styles.distributionType}>Revenue per Animal</Text>
-                            </View>
-                            <View style={styles.distributionRight}>
-                                <Text style={styles.distributionCount}>{formatCurrency(analyticsData.performance.revenuePerAnimal)}</Text>
-                                <Text style={styles.distributionPercentage}>KES</Text>
-                            </View>
-                        </View>
-
-                        {/* Profit per Animal */}
-                        <View style={styles.distributionItem}>
-                            <View style={styles.distributionLeft}>
-                                <View style={[styles.distributionDot, { backgroundColor: COLORS.blue }]} />
-                                <Text style={styles.distributionType}>Profit per Animal</Text>
-                            </View>
-                            <View style={styles.distributionRight}>
-                                <Text style={styles.distributionCount}>{formatCurrency(analyticsData.performance.profitPerAnimal)}</Text>
-                                <Text style={styles.distributionPercentage}>KES</Text>
-                            </View>
-                        </View>
-
-                        {/* Feed Cost per Animal */}
-                        <View style={styles.distributionItem}>
-                            <View style={styles.distributionLeft}>
-                                <View style={[styles.distributionDot, { backgroundColor: COLORS.red }]} />
-                                <Text style={styles.distributionType}>Feed Cost per Animal</Text>
-                            </View>
-                            <View style={styles.distributionRight}>
-                                <Text style={styles.distributionCount}>{formatCurrency(analyticsData.performance.feedCostPerAnimal)}</Text>
-                                <Text style={styles.distributionPercentage}>KES</Text>
-                            </View>
-                        </View>
-
-                        {/* Health Cost per Animal */}
-                        <View style={styles.distributionItem}>
-                            <View style={styles.distributionLeft}>
-                                <View style={[styles.distributionDot, { backgroundColor: COLORS.orange }]} />
-                                <Text style={styles.distributionType}>Health Cost per Animal</Text>
-                            </View>
-                            <View style={styles.distributionRight}>
-                                <Text style={styles.distributionCount}>{formatCurrency(analyticsData.performance.healthCostPerAnimal)}</Text>
-                                <Text style={styles.distributionPercentage}>KES</Text>
-                            </View>
-                        </View>
-
-                        {/* Productivity Score */}
-                        <View style={styles.distributionItem}>
-                            <View style={styles.distributionLeft}>
-                                <View style={[styles.distributionDot, { backgroundColor: COLORS.purple }]} />
-                                <Text style={styles.distributionType}>Productivity Score</Text>
-                            </View>
-                            <View style={styles.distributionRight}>
-                                <Text style={styles.distributionCount}>{analyticsData.performance.productivityScore}</Text>
-                                <Text style={styles.distributionPercentage}>%</Text>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Refresh/Load more controls */}
-                <View style={styles.footerContainer}>
-                    <TouchableOpacity
-                        onPress={onRefresh}
-                        style={styles.refreshButton}>
-                        <Text style={styles.refreshButtonText}>Refresh Data</Text>
-                    </TouchableOpacity>
                 </View>
             </ScrollView>
 
-            {/* Period Modal */}
-            {renderPeriodModal()}
-        </SafeAreaView>
+            <Modal
+                visible={showPeriodModal}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setShowPeriodModal(false)}
+            >
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setShowPeriodModal(false)}
+                >
+                    <View style={styles.periodModalContainer}>
+                        <Text style={styles.modalTitle}>Select Time Period</Text>
+                        {timePeriods.map((period) => (
+                            <TouchableOpacity
+                                key={period}
+                                style={[styles.periodOption, selectedPeriod === period && styles.selectedPeriodOption]}
+                                onPress={() => {
+                                    setSelectedPeriod(period);
+                                    setShowPeriodModal(false);
+                                }}
+                            >
+                                <Text style={[styles.periodOptionText, selectedPeriod === period && styles.selectedPeriodOptionText]}>
+                                    {period}
+                                </Text>
+                                {selectedPeriod === period && <Icon name="check" size={20} color={COLORS.green} />}
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.lightGray1,
+        backgroundColor: '#F5F7FA'
     },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+    scrollView: {
+        flex: 1
     },
-    loadingText: {
-        marginTop: 10,
-        fontSize: 18,
-        fontFamily: FONTS.medium,
-        color: COLORS.primary,
-    },
-    periodContainer: {
-        paddingHorizontal: SIZES.padding,
-        marginTop: SIZES.margin,
-    },
-    periodSelector: {
+    welcomeBanner: {
+        margin: 16,
+        padding: 20,
+        borderRadius: 16,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: SIZES.base,
-        borderRadius: SIZES.radius,
-        borderWidth: 1,
-        borderColor: COLORS.gray,
+        overflow: 'hidden',
+        minHeight: 140,
     },
-    periodText: {
-        fontSize: 16,
-        fontFamily: FONTS.regular,
-        color: COLORS.black,
+    welcomeTextContainer: {
+        flex: 1,
+        paddingRight: 20
     },
-    chevronIcon: {
-        width: 15,
-        height: 15,
+    welcomeTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#fff',
+        marginBottom: 8
     },
-    kpiContainer: {
-        marginTop: SIZES.margin,
-        paddingHorizontal: SIZES.padding,
+    welcomeSubtitle: {
+        fontSize: 14,
+        color: '#fff',
+        lineHeight: 20,
+        opacity: 0.9
+    },
+    welcomeIconContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    overviewSection: {
+        paddingHorizontal: 16,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    overviewTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333'
+    },
+    monthSelector: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 20,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+    },
+    monthText: {
+        marginRight: 4,
+        color: '#333',
+        fontWeight: '500'
+    },
+    kpiGrid: {
+        paddingHorizontal: 16,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 12,
+        marginBottom: 24,
     },
     kpiCard: {
-        marginBottom: SIZES.base,
-        padding: SIZES.padding,
-        borderRadius: SIZES.radius,
-        shadowColor: COLORS.black,
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-        shadowOffset: { width: 0, height: 2 },
+        width: '47%',
+        padding: 16,
+        borderRadius: 12,
+        minHeight: 120,
     },
     kpiHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: 8,
     },
-    kpiIconContainer: {
-        width: 30,
-        height: 30,
-        justifyContent: 'center',
+    changeContainer: {
+        flexDirection: 'row',
         alignItems: 'center',
-        borderRadius: 15,
-        backgroundColor: COLORS.white,
-        elevation: 2,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 10,
+        gap: 2,
     },
-    kpiIcon: {
-        width: 20,
-        height: 20,
-    },
-    trendIndicator: {
-        width: 15,
-        height: 15,
-        borderRadius: 7.5,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    trendPositive: {
-        backgroundColor: COLORS.green,
-    },
-    trendNegative: {
-        backgroundColor: COLORS.red,
-    },
-    trendIcon: {
-        width: 12,
-        height: 12,
-    },
-    kpiValue: {
-        fontSize: 24,
-        fontFamily: FONTS.bold,
-        color: COLORS.black,
+    changeText: {
+        fontSize: 10,
+        color: '#fff',
+        fontWeight: '600',
     },
     kpiTitle: {
+        fontSize: 12,
+        color: '#fff',
+        opacity: 0.9,
+        marginBottom: 4,
+    },
+    kpiValue: {
         fontSize: 16,
-        fontFamily: FONTS.medium,
-        color: COLORS.gray,
+        fontWeight: 'bold',
+        color: '#fff',
     },
-    kpiSubtitle: {
-        fontSize: 14,
-        fontFamily: FONTS.regular,
-        color: COLORS.gray,
-    },
-    chartCard: {
-        marginTop: SIZES.base,
-        padding: SIZES.padding,
-        borderRadius: SIZES.radius,
-        backgroundColor: COLORS.white,
-    },
-    chartHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+    chartContainer: {
+        margin: 16,
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
     },
     chartTitle: {
-        fontSize: 18,
-        fontFamily: FONTS.bold,
-        color: COLORS.black,
-    },
-    distributionContainer: {
-        marginTop: SIZES.base,
-    },
-    distributionItem: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: SIZES.small,
-    },
-    distributionLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    distributionDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        marginRight: SIZES.base,
-    },
-    distributionIcon: {
-        width: 20,
-        height: 20,
-    },
-    distributionType: {
-        fontSize: 14,
-        fontFamily: FONTS.regular,
-        color: COLORS.black,
-    },
-    distributionRight: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    distributionCount: {
-        fontSize: 14,
-        fontFamily: FONTS.bold,
-        color: COLORS.black,
-    },
-    distributionPercentage: {
-        fontSize: 12,
-        fontFamily: FONTS.regular,
-        color: COLORS.gray,
-    },
-    footerContainer: {
-        marginVertical: SIZES.padding,
-        alignItems: 'center',
-    },
-    refreshButton: {
-        paddingVertical: SIZES.small,
-        paddingHorizontal: SIZES.base,
-        backgroundColor: COLORS.primary,
-        borderRadius: SIZES.radius,
-    },
-    refreshButtonText: {
         fontSize: 16,
-        fontFamily: FONTS.medium,
-        color: COLORS.white,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    chart: {
+        borderRadius: 8,
+    },
+    sectionsContainer: {
+        paddingHorizontal: 16,
+        marginBottom: 24,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 16,
+    },
+    sectionsGrid: {
+        gap: 12,
+    },
+    sectionCardWrapper: {
+        marginBottom: 8,
+    },
+    sectionCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        borderRadius: 12,
+        gap: 16,
+    },
+    sectionCardContent: {
+        flex: 1,
+    },
+    sectionCardTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginBottom: 4,
+    },
+    sectionCardSubtitle: {
+        fontSize: 13,
+        color: '#fff',
+        opacity: 0.9,
+    },
+    analysisSection: {
+        paddingHorizontal: 16,
+        marginBottom: 24,
+    },
+    analysisTabsContainer: {
+        marginBottom: 16,
+    },
+    tabScrollView: {
+        flexGrow: 0,
+    },
+    analysisTab: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        marginRight: 12,
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        gap: 6,
+    },
+    activeAnalysisTab: {
+        backgroundColor: '#E8F4EA',
+        borderColor: '#4C7153',
+        borderWidth: 1,
+    },
+    analysisTabText: {
+        fontSize: 14,
+        color: '#666',
+        fontWeight: '500',
+    },
+    activeAnalysisTabText: {
+        color: '#4C7153',
+        fontWeight: '600',
+    },
+    tabContentContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    tabContent: {
+        minHeight: 300,
+    },
+    insightContainer: {
+        marginTop: 20,
+        padding: 16,
+        backgroundColor: '#F8F9FA',
+        borderRadius: 8,
+    },
+    insightTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 8,
+    },
+    insightText: {
+        fontSize: 13,
+        color: '#666',
+        marginBottom: 4,
+        lineHeight: 18,
+    },
+    cashFlowGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 16,
+        marginBottom: 16,
+    },
+    cashFlowItem: {
+        flex: 1,
+        minWidth: '30%',
+        backgroundColor: '#F8F9FA',
+        padding: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    cashFlowLabel: {
+        fontSize: 12,
+        color: '#666',
+        marginBottom: 4,
+        textAlign: 'center',
+    },
+    cashFlowValue: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        textAlign: 'center',
+    },
+    assetGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 16,
+        marginBottom: 16,
+    },
+    assetItem: {
+        flex: 1,
+        minWidth: '45%',
+        backgroundColor: '#F8F9FA',
+        padding: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    assetLabel: {
+        fontSize: 12,
+        color: '#666',
+        marginBottom: 4,
+        textAlign: 'center',
+    },
+    assetValue: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#4C7153',
+        textAlign: 'center',
+    },
+    journalSection: {
+        paddingHorizontal: 16,
+        marginBottom: 24,
+    },
+    journalGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 12,
+    },
+    journalCard: {
+        width: '47%',
+        height: 120,
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    journalGradient: {
+        flex: 1,
+        padding: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 4,
+    },
+    journalTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#fff',
+        textAlign: 'center',
+    },
+    journalSubtitle: {
+        fontSize: 12,
+        color: '#fff',
+        opacity: 0.9,
+        textAlign: 'center',
+    },
+    quickActionsSection: {
+        paddingHorizontal: 16,
+        marginBottom: 32,
+    },
+    quickActionsGrid: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    quickActionButton: {
+        flex: 1,
+        backgroundColor: '#fff',
+        padding: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        gap: 8,
+    },
+    quickActionText: {
+        fontSize: 12,
+        color: '#4C7153',
+        fontWeight: '500',
+        textAlign: 'center',
     },
     modalOverlay: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: COLORS.overlay,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
     },
-    periodModal: {
-        width: '80%',
-        borderRadius: SIZES.radius,
-        padding: SIZES.padding,
-        elevation: 5,
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+    periodModalContainer: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 20,
+        maxHeight: '50%',
     },
     modalTitle: {
         fontSize: 18,
-        fontFamily: FONTS.bold,
-        color: COLORS.black,
-    },
-    closeButton: {
-        width: 24,
-        height: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    closeIcon: {
-        width: 12,
-        height: 12,
-    },
-    periodOptions: {
-        marginTop: SIZES.base,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 20,
+        textAlign: 'center',
     },
     periodOption: {
-        paddingVertical: SIZES.base,
-        paddingHorizontal: SIZES.padding,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 12,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.gray,
+        borderBottomColor: '#F0F0F0',
     },
     selectedPeriodOption: {
-        backgroundColor: COLORS.lightGray1,
+        backgroundColor: '#E8F4EA',
+        borderRadius: 8,
+        marginVertical: 2,
     },
     periodOptionText: {
         fontSize: 16,
-        fontFamily: FONTS.regular,
-        color: COLORS.black,
+        color: '#333',
     },
     selectedPeriodOptionText: {
-        fontWeight: 'bold',
-        color: COLORS.primary,
-    },
-    checkIcon: {
-        width: 16,
-        height: 16,
+        color: '#4C7153',
+        fontWeight: '600',
     },
 });
 

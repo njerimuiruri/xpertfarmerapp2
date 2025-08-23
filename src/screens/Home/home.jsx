@@ -31,7 +31,7 @@ const Dashboard = () => {
   const timePeriods = ['This week', 'This month', 'This quarter', 'This year'];
 
   const cardScreens = {
-    'Production Analysis': 'ProductionModuleLandingScreen',
+    'Production Analysis': 'SalesLandingPage',
     'Inventory Data': 'InventoryDashboard',
     'Health': 'AddHealthRecords',
     'Feeds': 'FarmFeedsScreen',
