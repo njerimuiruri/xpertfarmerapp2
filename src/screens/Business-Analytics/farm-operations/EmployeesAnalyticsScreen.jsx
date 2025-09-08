@@ -388,12 +388,13 @@ const EmployeesAnalyticsScreen = () => {
                             <Icon name="chevron-down" size={20} color="#666" />
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.manageButton}
-                            onPress={() => navigation.navigate('FarmEmployeeTableScreen')}
+                            style={styles.payrollButton}
+                            onPress={() => navigation.navigate('PayrollJournalScreen')}
                         >
-                            <Icon name="account-group" size={20} color="#fff" />
-                            <Text style={styles.manageButtonText}>Manage</Text>
+                            <Icon name="cash-multiple" size={20} color="#fff" />
+                            <Text style={styles.payrollButtonText}>Payroll</Text>
                         </TouchableOpacity>
+
                     </View>
                 </View>
 
@@ -425,10 +426,16 @@ const EmployeesAnalyticsScreen = () => {
                             <Icon name="account-group" size={24} color="#4C7153" />
                             <Text style={styles.quickActionText}>View All Employees</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.quickActionButton}>
+
+                        <TouchableOpacity
+                            style={styles.quickActionButton}
+                            onPress={() => navigation.navigate('PayrollJournalScreen')} // Navigate to payroll screen
+                        >
                             <Icon name="file-excel" size={24} color="#4C7153" />
                             <Text style={styles.quickActionText}>Export Payroll</Text>
                         </TouchableOpacity>
+
+
                         <TouchableOpacity style={styles.quickActionButton}>
                             <Icon name="chart-box-outline" size={24} color="#4C7153" />
                             <Text style={styles.quickActionText}>Generate Report</Text>
@@ -883,6 +890,25 @@ const styles = StyleSheet.create({
     selectedPeriodOptionText: {
         color: '#4C7153',
         fontWeight: '600',
+    },
+    payrollButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#2E5A3D',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 20,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        gap: 4,
+    },
+    payrollButtonText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
     },
 });
 

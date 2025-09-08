@@ -1,10 +1,10 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import FastImage from 'react-native-fast-image';
-import {COLORS} from '../../constants/theme';
-import {icons} from '../../constants';
+import { COLORS } from '../../constants/theme';
+import { icons } from '../../constants';
 
-const Header = ({navigation, title = "XpertFarmer"}) => {
+const Header = ({ navigation, title = "XpertFarmer" }) => {
   return (
     <View
       style={{
@@ -29,9 +29,9 @@ const Header = ({navigation, title = "XpertFarmer"}) => {
           {title}
         </Text>
         <View className="flex flex-row space-x-6">
-        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
-        <FastImage className="w-[10px] h-[10px]" source={icons.avatar} style={styles.avatar} />
-      </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+            <FastImage className="w-[10px] h-[10px]" source={icons.avatar} style={styles.avatar} />
+          </TouchableOpacity>
         </View>
       </View>
     </View>

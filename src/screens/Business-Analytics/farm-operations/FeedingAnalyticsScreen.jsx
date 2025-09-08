@@ -543,18 +543,18 @@ const FeedingAnalyticsScreen = () => {
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.quickActionButton}
-                            onPress={() => navigation.navigate('InventoryScreen')}
+                            onPress={() => navigation.navigate('InventoryAnalyticsScreen')}
                         >
                             <Icon name="warehouse" size={24} color="#4C7153" />
                             <Text style={styles.quickActionText}>Feed Inventory</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
+                        {/* <TouchableOpacity
                             style={styles.quickActionButton}
                             onPress={() => navigation.navigate('SuppliersScreen')}
                         >
                             <Icon name="truck-delivery" size={24} color="#4C7153" />
                             <Text style={styles.quickActionText}>Manage Suppliers</Text>
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
                         <TouchableOpacity
                             style={styles.quickActionButton}
                             onPress={() => navigation.navigate('FeedingScheduleScreen')}

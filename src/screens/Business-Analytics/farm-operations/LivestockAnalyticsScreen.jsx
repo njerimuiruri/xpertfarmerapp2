@@ -409,7 +409,6 @@ const LivestockAnalyticsScreen = () => {
                         {renderTabContent()}
                     </View>
                 </View>
-                {/* Farm Operations Navigation - Add this before Quick Actions */}
                 <View style={styles.farmOpsSection}>
                     <Text style={styles.sectionTitle}>Farm Operations</Text>
                     <View style={styles.farmOpsGrid}>
@@ -425,7 +424,7 @@ const LivestockAnalyticsScreen = () => {
 
                         <TouchableOpacity
                             style={styles.farmOpsButton}
-                            onPress={() => navigation.navigate('BreedingScreen')}
+                            onPress={() => navigation.navigate('BreedingModuleLandingScreen')}
                         >
                             <LinearGradient colors={['#D79F91', '#BD91D7']} style={styles.farmOpsGradient}>
                                 <Icon name="heart" size={28} color="#fff" />
@@ -435,7 +434,7 @@ const LivestockAnalyticsScreen = () => {
 
                         <TouchableOpacity
                             style={styles.farmOpsButton}
-                            onPress={() => navigation.navigate('HealthScreen')}
+                            onPress={() => navigation.navigate('HealthRecordsScreen')}
                         >
                             <LinearGradient colors={['#BD91D7', '#91D79E']} style={styles.farmOpsGradient}>
                                 <Icon name="medical-bag" size={28} color="#fff" />
@@ -445,17 +444,17 @@ const LivestockAnalyticsScreen = () => {
 
                         <TouchableOpacity
                             style={styles.farmOpsButton}
-                            onPress={() => navigation.navigate('ProductionScreen')}
+                            onPress={() => navigation.navigate('SalesLandingPage')}
                         >
                             <LinearGradient colors={['#91D79E', '#4C7153']} style={styles.farmOpsGradient}>
                                 <Icon name="factory" size={28} color="#fff" />
-                                <Text style={styles.farmOpsText}>Production</Text>
+                                <Text style={styles.farmOpsText}>Sales</Text>
                             </LinearGradient>
                         </TouchableOpacity>
 
                         <TouchableOpacity
                             style={styles.farmOpsButton}
-                            onPress={() => navigation.navigate('InventoryScreen')}
+                            onPress={() => navigation.navigate('InventoryDashboard')}
                         >
                             <LinearGradient colors={['#F4EBD0', '#D79F91']} style={styles.farmOpsGradient}>
                                 <Icon name="warehouse" size={28} color="#fff" />
@@ -477,7 +476,7 @@ const LivestockAnalyticsScreen = () => {
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.quickActionButton}
-                            onPress={() => navigation.navigate('LivestockManagementScreen')}
+                            onPress={() => navigation.navigate('LivestockModuleScreen')}
                         >
                             <Icon name="cow" size={24} color="#4C7153" />
                             <Text style={styles.quickActionText}>Manage Livestock</Text>
@@ -502,10 +501,10 @@ const LivestockAnalyticsScreen = () => {
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.quickActionButton}
-                            onPress={() => navigation.navigate('ProductionRecordsScreen')}
+                            onPress={() => navigation.navigate('SalesLandingPage')}
                         >
                             <Icon name="chart-box-outline" size={24} color="#4C7153" />
-                            <Text style={styles.quickActionText}>Production Records</Text>
+                            <Text style={styles.quickActionText}>Sales Records</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

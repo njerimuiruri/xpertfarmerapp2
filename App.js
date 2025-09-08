@@ -14,6 +14,7 @@ import {
   LoginScreen,
   HomeScreen,
   BusinessAnalyticsScreen,
+  AccountsScreen,
   Otp,
   SignupScreen,
   ForgotPasswordScreen,
@@ -138,6 +139,11 @@ import {
   BreedingAnalyticsScreen,
   SalesAnalyticsScreen,
   InventoryAnalyticsScreen,
+  ChartOfAccountsScreen,
+  TrialBalanceScreen,
+  BalanceSheetScreen,
+  ProfitLossScreen,
+  CashFlowScreen,
 } from './src/screens/index';
 import DrawerNav from './src/navigation/drawer/DrawerNav1';
 
@@ -756,6 +762,36 @@ export default function App() {
               <Stack.Screen
                 name="GeneralLedgerScreen"
                 component={GeneralLedgerScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="AccountsScreen"
+                component={AccountsScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="ChartOfAccountsScreen"
+                component={ChartOfAccountsScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="TrialBalanceScreen"
+                component={TrialBalanceScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="BalanceSheetScreen"
+                component={BalanceSheetScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="ProfitLossScreen"
+                component={ProfitLossScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="CashFlowScreen"
+                component={CashFlowScreen}
                 options={{headerShown: false}}
               />
             </Stack.Navigator>
